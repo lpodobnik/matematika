@@ -1,0 +1,68 @@
+# Decision Log: matematika GDD
+
+Every decision, change and version transition for this GDD.
+
+## 2026-11-05
+
+- **Intent: Create.** No prior GDD under `_bmad-output/planning-artifacts/gdds`. Input is the final game brief at `_bmad-output/planning-artifacts/briefs/brief-matematika-2026-11-05/` (`brief.md`, `addendum.md`, `.decision-log.md`).
+- **Configuration.** No skill overrides for `gds-gdd`; the defaults in `customize.toml` apply.
+- **Working agreement carried over from the brief.** Claude makes design and teaching calls and flags them for veto. Questions to Luka are limited to what only he knows. The game stays a surprise for his son. `jednadzbe.html` is not the basis.
+- **Claude's call, open to veto: game type.** Puzzle (primary), using the puzzle genre guide. The world structure borrows from the metroidvania guide: gating graph, softlock prevention, backtracking and combat. Sequence breaking does not apply, because rooms connect on a map with no free walking or real-time action.
+- **`needs_narrative` set.** The metroidvania guide recommends narrative design, so `gds-create-narrative` is offered at Finalize.
+- **Working mode: Facilitative.** Chosen by Luka. Sections are walked before drafting.
+- **Primary device: tablet.** From Luka. Layout is designed touch-first for a large screen; phone and computer still work, as the brief requires.
+- **Decided by Luka: revised pillars.** Replaces the brief's four. Its pillars 1 and 2 merge into "The machine teaches, not the text". "The city answers him" is new, because the brief's pillars were all about learning and none addressed why a Zelda player keeps going. "Every idea lands on paper" and "Making is proof" are unchanged. This rules out stars, scores and "correct" screens.
+- **Decided by Luka: writing drives the machine.** Replaces the brief's "solve, then write". The pans level first, each correct written line moves the machine, and the last line restarts it.
+- **Claude's call, open to veto: two nested loops.** A room loop and a city loop replace the brief's single six-step loop, because fights were missing from it and building can't follow every room. Right predictions earn bonus parts. A friend who receives a room can build one back.
+- **Decided by Luka: undo is a separate gear chain.** A chain of operations (x → ·2 → +7 → 25) that he runs backward, chosen over Claude's recommendation of a written shortcut. It adds a machine to build.
+- **Claude's call, open to veto: the chain and the pans move together.** Running a chain step backward also acts on the scale, so `2x + 7 = 25` reaches `2x = 18` on both. This keeps the brief's point that balancing is why undoing works.
+- **Claude's calls, open to veto: room machine spec.** Pans, x dial, tilt, readouts, poke window, prediction pin, dial limit, notebook, closing check line, wrong-line behaviour and fading, as recorded in `gdd.md`. Tuning numbers are provisional.
+- **Claude's call, open to veto: he chooses each inverse on the gear chain.** Otherwise the chain would be a button that does the thinking, the failure the brief found in the proof of concept.
+- **Claude's calls, open to veto: fight rules.** 3d6 placed as blade, charge and reach; 3 hull; 10 steam; clean cut doubles the reward; armour tiers 20, 30, 45 and 60; three upgrades. Simulated with scripted players, not tested with people. At armour 20 a wrong idea costs parts, not the fight, which differs from the brief and is deliberate.
+- **Decided by Luka: losing costs some parts.** Chosen over Claude's recommendation of no cost. The risk, from the brief's research digest, is that fear of losing makes him avoid harder fights; watch for it in playtesting.
+- **Claude's call, open to veto: a quarter, recoverable.** He drops a quarter of his unspent parts, rounded down, in a pile at that automaton, and beating it recovers the pile, as with item drops in Minecraft. Spent parts are safe, and leaving before the first strike is free. Parts never block rooms, so losing them can't cause a softlock.
+- **Claude's calls, open to veto: room builder.** Workshop after room 6; he chooses every number; costs; he must solve and write before sending; the room travels in the link; fixed title list; a reply link stamps a room "cracked", which gets the brief's later "did my friend crack it?" step without a server.
+- **Decided by Luka: blinds, planted mistakes and linked machines all go in the MVP.** Chosen over Claude's recommendation to leave linked machines for later. With the gear chain, the MVP is now larger than the brief's. Size to be checked in the epics.
+- **Claude's calls, open to veto: puzzle and world design.** 13 rooms rather than "about 12", because linked machines need a room of their own. Room types carry the four understanding tasks. Tools are earned in rooms 3, 7 and 12, with the workshop opening after room 6. The hint ladder, gating and softlock rules are in `gdd.md`.
+- **Claude's call, open to veto: book exercise 21 stays out of rooms.** The paper test uses it, so room 10 tells a different story.
+- **Decided by Luka: the vanished Clockmaker.** This answers the brief's open question of why the city stopped. Only the written steps remain and nobody knows why they work. He is the apprentice who finds out, and the automatons are the Clockmaker's helpers on their last orders.
+- **From Luka: the Clockmaker was kidnapped, so there is a villain.** This replaces "disappeared" and combines both story options. Only the written steps remain, as before, and writing keeps its story reason.
+- **Claude's calls, open to veto: the villain.** The villain took the Clockmaker to learn why the machines work, and now commands the automatons, which gives him a reason to hunt them. The villain isn't met in the MVP, only their marks on the city, so no boss or villain arc is added to its scope. The clues point to the foundry gate.
+- **Claude's calls, open to veto: character and language.** He names his character and picks a look; the name stays on the device. Croatian text avoids gendered verb forms.
+- **Claude's calls, open to veto, made while drafting:**
+  - Art: a living blueprint, with colour only on restarted machines. The brief left the style open.
+  - Audio: each restarted machine adds a loop, so the city's sound is the music. The brief left audio open.
+  - Economy numbers and asset budgets.
+  - Saving: automatic and on the device, with a backup link.
+  - Play log: on the device only, in a view for Luka his son doesn't see. No analytics.
+  - Success thresholds, such as 4 self-started sessions in 2 weeks.
+- **Scope change flagged: build estimate.** 52–76 hours, or about 5–8 weeks at 10 hours a week, against the brief's 3–4 weeks, because the MVP grew. Nothing was cut.
+- **First full draft of `gdd.md` and `epics.md` written.**
+- **Input reconciliation and discipline pass run by subagents; findings checked and applied, by Claude's judgement, open to veto:**
+  - Balance could not finish most rooms, because the splitter only halved. It now adds and removes on both pans and splits into n parts.
+  - Pans had no form for `x : 3` or subtracted numbers. A piece kit adds floats and a reducer.
+  - Tilt gave away the notches left, so it now follows the difference between the sides.
+  - Fading was impossible in rooms 1–3 and left the undo form unseen. Each way now fades on its own, and the first chain room shows the undo lines.
+  - Each room now states what x means, so a new room is a new place and not new numbers. The scale is a tool he carries to each machine.
+  - Rooms 4–6 no longer reuse paper-test numbers. Room 7's mistake now treats `3x` as 3 + x, a different mistake from the test's.
+  - Find the mistake now has him act out what the wrong line did, the brief's "explaining why" without free text.
+  - Friends can give up and see his solution, and a reply stamps the room "uncracked", because the brief's pride moment had no signal.
+  - Room 11 now follows room 9, which teaches its inverse. Springs, Balance and room 4 moved into epic 1, so the biggest bet is tested early. Total estimate unchanged.
+  - Armour 30 also mostly costs parts rather than the fight; from armour 45 a wrong idea costs the fight.
+  - Added dial ranges, poke windows, pin targets and finishing ways per room, map connections, a solution-space rule and the fight edge cases. Townspeople now doubt him at first, to carry "when nobody thought I could".
+- **Open-items triage.** No phase-blockers. Remaining `[ASSUMPTION]` tags stand and are deferred to playtesting: the final check line suits his class, rooms take 5–10 minutes each, and his tablet is a recent model running Chrome.
+- **From Luka: his tablet is Android.** Testing targets it first. Links must still open on iPads and iPhones, because friends' devices are unknown.
+- **Decided by Luka: narrative design next, before architecture.** Chosen over Claude's recommendation of doing it before epic 2. `gds-create-narrative` runs in a fresh context; "a story that is his", the villain and the townspeople are its starting points.
+- **Polish and handoffs.** `doc_standards` and `external_handoffs` are empty, so neither step ran.
+- **GDD marked final by Luka,** with Claude's calls standing and no vetoes. A fresh checklist run was not repeated after the fixes; room equations, dial ranges and leftover wording were rechecked directly.
+- **Update: narrative design applied, by Luka's go-ahead.** From `_bmad-output/narrative-design.md`:
+  - The villain is the First Automaton, and the Clockmaker is Majstor Kristijan, who is male, named by Luka after Christiaan Huygens.
+  - Story text grows to about 73 short lines, adding 13 notebook notes.
+  - Naming comes after room 1, not before play.
+  - Beaten automatons wind down and rewind, which explains why lairs restock.
+  - Three torn logbook pages, lore only, are carried in the armour 30, 45 and 60 lairs; they're added to epic 3.
+  - Explanation cards answer Nikola's "how?".
+  - Room 7's wrong line is Kristijan's planted signal.
+  - The Croatian text gets one read-through by Luka, in epic 6.
+
+  Estimates are unchanged. The GDD stays final.
