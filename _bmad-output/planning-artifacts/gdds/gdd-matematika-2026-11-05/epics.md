@@ -7,7 +7,7 @@ updated: 2026-11-05
 
 # matematika: Development Epics
 
-Each epic ends in something playable. Estimates are hours with Claude Code and are unverified. Story-level detail comes from `gds-create-epics-and-stories`.
+Each epic ends in something playable. Estimates are hours with Claude Code and are unverified. Story-level detail is in `_bmad-output/planning-artifacts/epics.md`, from `gds-create-epics-and-stories`.
 
 ## Epic 1: First machine
 

@@ -683,8 +683,7 @@ type PlayLogEvent = { at: string } & (
   | { type: 'room'; roomId: RoomId; action: 'enter' | 'done' | 'reset' }
   | { type: 'way'; roomId: RoomId; way: WayId }
   | { type: 'prediction'; roomId: RoomId; stage: number; right: boolean }
-  | { type: 'line'; roomId: RoomId; ok: boolean; text: string }
-  | { type: 'hint'; roomId: RoomId; level: number }
+  | { type: 'line'; roomId: RoomId; ok: boolean; text: string }   // hints are never logged (GDD: free and never recorded)
   | { type: 'fight'; lairId: LairId; won: boolean; parts: number }
   | { type: 'built'; roomId: string; sent: boolean }
 );
