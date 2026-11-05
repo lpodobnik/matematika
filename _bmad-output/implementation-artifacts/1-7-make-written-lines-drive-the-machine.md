@@ -1,6 +1,6 @@
 # Story 1.7: Make written lines drive the machine
 
-Status: review
+Status: done
 
 ## Story
 
@@ -109,3 +109,25 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/ui/notebook/Notebook.tsx`, `LineView.tsx`, `NumberPad.tsx`, `notebook.css`, `Notebook.test.tsx`, `pad-keys.test.ts` (modified)
 - `src/ui/scene/SceneRoot.tsx`, `src/ui/scene/scale/Pan.tsx`, `src/ui/scene/scale/Piece.tsx` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Findings
+
+- None. The review raised no findings that needed a fix, so no code changed.
+
+### Minor notes (not fixed, for Luka)
+
+- `C:\Users\lpodobnik\Claude\matematika\src\room\notebook.ts` (`writingPhases`): the check line also locks the stage from `arrive`, and in the real app it always does, because nothing leaves `arrive` until story 1.8. AC5's `open` to `locked` is covered only by a test that forces the phase to `open`.
+- `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\piece-tween.ts`: pieces are matched only on their own pan. So when a line swaps sides (`9 = x + 4` to `x + 4 = 9`), the gear fades out on one pan and in on the other instead of moving, which is narrower than the architecture's "pieces matched by kind and number move".
+- `C:\Users\lpodobnik\Claude\matematika\src\room\dial.ts` (`setDial`): acting out ends only on a change of notch. A dial drag that lands back on the same notch dispatches nothing, so it doesn't count as "the next exploring action".
+- `C:\Users\lpodobnik\Claude\matematika\src\room\notebook.ts` (`enterLine`): `LineAccepted.progress` is always true for answer and check lines. A repeated `x = n`, which the checker accepts again, reports progress while `machineProgress` stays at 0.9.
+- `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\use-piece-tween.ts`: when a tween is interrupted by a new layout, the earlier pieces still fading out disappear at once instead of finishing their fade.
+
+### Checks after the review
+
+- `npm run check`: 115 files, no errors (unchanged).
+- `npm test`: 43 files, 881 tests passing (unchanged).
+- `npm run build`: `tsc --noEmit` clean; 1.00 MB in 9 files, JavaScript 0.30 MB gzipped (unchanged).

@@ -1,5 +1,5 @@
 # generated: 2026-11-05
-# last_updated: 2026-11-05
+# last_updated: 2026-11-06
 # project: matematika
 # project_key: NOKEY
 # tracking_system: file-system
@@ -36,7 +36,7 @@
 #   then this workflow is re-run to add them.
 
 generated: 2026-11-05
-last_updated: 2026-11-05
+last_updated: 2026-11-06
 project: matematika
 project_key: NOKEY
 tracking_system: file-system
@@ -50,7 +50,7 @@ development_status:
   1-4-show-an-equation-on-the-scale: done
   1-5-drag-x: done
   1-6-write-in-the-notebook: done
-  1-7-make-written-lines-drive-the-machine: review
+  1-7-make-written-lines-drive-the-machine: done
   1-8-play-a-room-from-arrival-to-restart: backlog
   1-9-predict-before-the-dial-opens: backlog
   1-10-balance-with-the-tray: backlog
