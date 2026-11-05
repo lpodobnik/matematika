@@ -1,0 +1,70 @@
+/* The dev panel: development builds only, so it can be plain. It sits over the bottom-left
+   of the scene, above the notebook on a phone. */
+.dev-panel {
+  position: fixed;
+  bottom: 8px;
+  left: 8px;
+  z-index: 5;
+  box-sizing: border-box;
+  max-width: min(460px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  padding: 8px;
+  border: 2px dashed var(--ink);
+  border-radius: 8px;
+  background: rgb(244 239 227 / 0.94);
+  color: var(--ink);
+  font:
+    14px / 1.4 ui-monospace,
+    monospace;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.dev-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dev-panel__place {
+  flex: 1 1 auto;
+}
+
+.dev-panel__readout {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 8px;
+  margin: 8px 0;
+}
+
+.dev-panel__readout dd {
+  margin: 0;
+}
+
+.dev-panel__line {
+  font-weight: 700;
+}
+
+.dev-panel__jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dev-panel__button {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 10px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  touch-action: manipulation;
+}
+
+.dev-panel__button:active {
+  background: var(--ink);
+  color: var(--paper);
+}

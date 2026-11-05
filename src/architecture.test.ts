@@ -36,6 +36,8 @@ interface Violation {
 interface ImportRef {
   specifier: string;
   typeOnly: boolean;
+  /** `import('…')` or `require('…')`: loaded when the code runs, not with the file. */
+  dynamic: boolean;
 }
 
 type Target =
@@ -43,7 +45,12 @@ type Target =
   | { kind: 'internal'; path: string }
   | { kind: 'outside'; specifier: string };
 
-const importPatterns: { pattern: RegExp; typeGroup: number | null; specGroup: number }[] = [
+const importPatterns: {
+  pattern: RegExp;
+  typeGroup: number | null;
+  specGroup: number;
+  dynamic?: true;
+}[] = [
   // import x from '…', import { a, b } from '…', import type { T } from '…', multi-line too
   {
     pattern: /(?:^|[\s;])import\s+(type\s+)?[^'";]*?\sfrom\s*['"]([^'"]+)['"]/g,
@@ -63,16 +70,21 @@ const importPatterns: { pattern: RegExp; typeGroup: number | null; specGroup: nu
     pattern: /(?:\bimport|\brequire)\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
     typeGroup: null,
     specGroup: 1,
+    dynamic: true,
   },
 ];
 
 function findImports(source: string): ImportRef[] {
   const refs: ImportRef[] = [];
-  for (const { pattern, typeGroup, specGroup } of importPatterns) {
+  for (const { pattern, typeGroup, specGroup, dynamic } of importPatterns) {
     for (const match of source.matchAll(pattern)) {
       const specifier = match[specGroup];
       if (specifier === undefined) continue;
-      refs.push({ specifier, typeOnly: typeGroup !== null && match[typeGroup] !== undefined });
+      refs.push({
+        specifier,
+        typeOnly: typeGroup !== null && match[typeGroup] !== undefined,
+        dynamic: dynamic === true,
+      });
     }
   }
   return refs;
@@ -155,10 +167,32 @@ function checkContentImport(file: string, ref: ImportRef, target: Target): strin
   return 'content may import only other content, and types from pure folders';
 }
 
+/**
+ * The dev panel is in development builds only (architecture, Debug Tools): outside dev/,
+ * only a dynamic import in a file that checks `import.meta.env.DEV` may reach it, so a
+ * production build drops it. Tests may import it.
+ */
+function checkDevReach(file: string, source: string, ref: ImportRef, target: Target) {
+  if (target.kind !== 'internal' || !isUnder(target.path, 'dev')) return null;
+  if (isUnder(file, 'dev') || isTest(file)) return null;
+  if (ref.dynamic && source.includes('import.meta.env.DEV')) return null;
+  return 'dev/ loads only on demand, behind import.meta.env.DEV';
+}
+
+/** The rules of the folder the importing file is in; dev/ keeps the rest of ui's. */
+function checkFolder(file: string, ref: ImportRef, target: Target): string | null {
+  if (isPure(file)) return checkPureImport(file, target);
+  if (isUnder(file, 'ui') || isUnder(file, 'dev')) return checkUiImport(file, target);
+  if (isUnder(file, 'store')) return checkStoreImport(target);
+  if (isUnder(file, 'content')) return checkContentImport(file, ref, target);
+  return null;
+}
+
 function findViolations(files: SourceFile[]): Violation[] {
   const violations: Violation[] = [];
   for (const { path, source } of files) {
-    if ((isUnder(path, 'ui') || isUnder(path, 'app')) && croatianLetters.test(source)) {
+    const showsText = isUnder(path, 'ui') || isUnder(path, 'app') || isUnder(path, 'dev');
+    if (showsText && croatianLetters.test(source)) {
       violations.push({
         file: path,
         rule: 'Croatian text lives only in src/content/text/hr.ts',
@@ -177,11 +211,7 @@ function findViolations(files: SourceFile[]): Violation[] {
     }
     for (const ref of findImports(source)) {
       const target = resolveTarget(path, ref.specifier);
-      let rule: string | null = null;
-      if (isPure(path)) rule = checkPureImport(path, target);
-      else if (isUnder(path, 'ui')) rule = checkUiImport(path, target);
-      else if (isUnder(path, 'store')) rule = checkStoreImport(target);
-      else if (isUnder(path, 'content')) rule = checkContentImport(path, ref, target);
+      const rule = checkDevReach(path, source, ref, target) ?? checkFolder(path, ref, target);
       if (rule) violations.push({ file: path, rule, detail: `imports ${describeTarget(target)}` });
     }
   }
@@ -297,6 +327,24 @@ describe('architecture boundaries: fixtures', () => {
     );
     expect(one('ui/common/X.tsx', "import { save } from '@/store/effects/save';")).toHaveLength(1);
     expect(one('ui/common/X.tsx', "import { useGame } from '@/store/store';")).toEqual([]);
+  });
+
+  it('reaches dev/ only on demand, behind import.meta.env.DEV', () => {
+    const guarded =
+      "const Dev = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : null;";
+    expect(one('app/App.tsx', guarded)).toEqual([]);
+    expect(one('app/App.tsx', "const Dev = lazy(() => import('@/dev/DevPanel'));")).toHaveLength(1);
+    expect(one('app/App.tsx', "import DevPanel from '@/dev/DevPanel';")).toHaveLength(1);
+    expect(one('store/reducer.ts', "import { jump } from '../dev/jump';")).toHaveLength(1);
+    expect(one('dev/DevPanel.tsx', "import { devReadout } from '@/dev/dev-view';")).toEqual([]);
+    expect(one('dev/DevPanel.test.tsx', "import DevPanel from '@/dev/DevPanel';")).toEqual([]);
+  });
+
+  it('keeps dev/ to the rules of ui: no Pixi, save or audio, and no Croatian text', () => {
+    expect(one('dev/DevPanel.tsx', "import { Graphics } from 'pixi.js';")).toHaveLength(1);
+    expect(one('dev/DevPanel.tsx', "import { readSave } from '@/save/storage';")).toHaveLength(1);
+    expect(one('dev/DevPanel.tsx', "import { useGame } from '@/store/store';")).toEqual([]);
+    expect(one('dev/DevPanel.tsx', "const label = 'Ispočetka';")).toHaveLength(1);
   });
 
   it('keeps store away from ui', () => {

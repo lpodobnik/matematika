@@ -38,6 +38,11 @@ export function isLocked(phase: Phase): boolean {
   return lockedPhases.has(phase);
 }
 
+/** Phases in which the whole machine runs: its restart, and after it (Pattern 2, Restart). */
+export function isRunning(phase: Phase): boolean {
+  return phase === 'restart' || phase === 'done';
+}
+
 /** What the machine's skin shows. Flat, for selectors. */
 export interface MachineView {
   /** Which skin draws it. */
@@ -46,16 +51,29 @@ export interface MachineView {
   progress: number;
   jammed: boolean;
   locked: boolean;
+  /** The machine's parts, one per stage of the room (room 2's two lamps). */
+  parts: number;
+  /**
+   * How many parts have started: one for each stage solved, this one included once it
+   * locks. The stages before the one in play are solved, so they stay started.
+   */
+  partsStarted: number;
+  /** The whole machine runs: its restart is playing, or it has played. */
+  running: boolean;
 }
 
 /** The active machine of the stage in play, or null with no room. */
 export function machineView(room: RoomState | null): MachineView | null {
   if (!room) return null;
   const { stage } = room;
+  const locked = isLocked(stage.phase);
   return {
     id: room.spec.machine,
     progress: stage.machineProgress[stage.machine] ?? 0,
     jammed: stage.jam !== null,
-    locked: isLocked(stage.phase),
+    locked,
+    parts: room.spec.stages.length,
+    partsStarted: room.stageIndex + (locked ? 1 : 0),
+    running: isRunning(stage.phase),
   };
 }

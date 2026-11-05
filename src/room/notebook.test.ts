@@ -25,6 +25,7 @@ import {
   notebookWrites,
   typeToken,
 } from '@/room/notebook';
+import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
 import { scaleView } from '@/room/scale';
 import type { Phase, RoomSpec, RoomState, StageSpec } from '@/room/types';
@@ -34,9 +35,15 @@ import type { Phase, RoomSpec, RoomState, StageSpec } from '@/room/types';
 const roomOneStage: StageSpec = { ...(r01.stages[0] as StageSpec), fading: { try: 'blank' } };
 const freeRoomOne: RoomSpec = { ...r01, stages: [roomOneStage] };
 
+/** The room after his first touch on the machine: the stage is open, so he can write. */
+function opened(room: RoomState): RoomState {
+  return touchMachine(room)?.room ?? room;
+}
+
 function roomWith(equation: string, extra: Partial<StageSpec> = {}): RoomState {
-  return enterRoom({ ...r01, stages: [{ ...roomOneStage, machines: [{ equation }], ...extra }] })
-    .room;
+  return opened(
+    enterRoom({ ...r01, stages: [{ ...roomOneStage, machines: [{ equation }], ...extra }] }).room,
+  );
 }
 
 function tokens(text: string): Token[] {
@@ -57,14 +64,14 @@ function typed(room: RoomState, text: string): RoomState {
 
 /** Types the text, then presses enter. */
 function written(room: RoomState, text: string) {
-  return step(enterLine(typed(room, text)));
+  return step(enterLine(typed(room, text), 0));
 }
 
 function inPhase(room: RoomState, phase: Phase): RoomState {
   return { ...room, stage: { ...room.stage, phase } };
 }
 
-const roomOne = (): RoomState => enterRoom(freeRoomOne).room;
+const roomOne = (): RoomState => opened(enterRoom(freeRoomOne).room);
 
 describe('the notebook opens on the stage equation', () => {
   it('has line 0, read-only, and an empty draft', () => {
@@ -131,7 +138,7 @@ describe('enter judges the draft (story 1.3)', () => {
     ['aside', '5 + 4 = 9', 'aside'],
   ])('refuses an %s line (%s): it stays in the draft and wiggles', (_kind, text, verdict) => {
     const room = typed(roomOne(), text);
-    const result = step(enterLine(room));
+    const result = step(enterLine(room, 0));
     expect(result.verdict.kind).toBe(verdict);
     expect(result.room.stage.draft).toEqual(room.stage.draft);
     expect(result.room.stage.lines).toBe(room.stage.lines);
@@ -142,15 +149,15 @@ describe('enter judges the draft (story 1.3)', () => {
 
   it('wiggles again on every refusal', () => {
     let room = typed(roomOne(), 'x +');
-    room = step(enterLine(room)).room;
-    room = step(enterLine(room)).room;
-    room = step(enterLine(room)).room;
+    room = step(enterLine(room, 0)).room;
+    room = step(enterLine(room, 0)).room;
+    room = step(enterLine(room, 0)).room;
     expect(room.stage.refused).toBe(3);
   });
 
   it('keeps a wrong line in the draft, marked as wrong, never in lines', () => {
     const room = typed(roomOne(), 'x = 6');
-    const result = step(enterLine(room));
+    const result = step(enterLine(room, 0));
     expect(result.verdict.kind).toBe('wrong');
     expect(result.room.stage.draft).toEqual(tokens('x = 6'));
     expect(result.room.stage.lines).toEqual(room.stage.lines);
@@ -164,7 +171,7 @@ describe('enter judges the draft (story 1.3)', () => {
 
   it('ignores enter again until the wrong line is edited', () => {
     const jammed = written(roomOne(), 'x = 6').room;
-    expect(enterLine(jammed)).toBeNull();
+    expect(enterLine(jammed, 0)).toBeNull();
   });
 
   it('clears the mark on any edit, and judges the edited line again', () => {
@@ -173,11 +180,11 @@ describe('enter judges the draft (story 1.3)', () => {
     expect(deleted.stage.jam).toBeNull();
     expect(deleted.stage.draft).toEqual(tokens('x ='));
     const retyped = step(typeToken(deleted, '5')).room;
-    expect(step(enterLine(retyped)).verdict.kind).toBe('answer');
+    expect(step(enterLine(retyped, 0)).verdict.kind).toBe('answer');
 
     const extended = step(typeToken(jammed, '0')).room;
     expect(extended.stage.jam).toBeNull();
-    expect(step(enterLine(extended)).verdict.kind).toBe('wrong');
+    expect(step(enterLine(extended, 0)).verdict.kind).toBe('wrong');
   });
 
   it('appends a valid line to lines, read-only, and empties the draft', () => {
@@ -223,7 +230,7 @@ describe('enter judges the draft (story 1.3)', () => {
     expect(notebookWrites(done.stage)).toBe(false);
     expect(typeToken(done, '1')).toBeNull();
     expect(deleteToken(done)).toBeNull();
-    expect(enterLine(done)).toBeNull();
+    expect(enterLine(done, 0)).toBeNull();
   });
 
   it('judges each line against the committed lines before it', () => {
@@ -243,7 +250,7 @@ describe('enter judges the draft (story 1.3)', () => {
           (current, token) => step(typeToken(current, token)).room,
           roomOne(),
         );
-        const result = step(enterLine(room));
+        const result = step(enterLine(room, 0));
         const { stage } = result.room;
         if (isCommitted(result.verdict)) {
           expect(stage.lines).toHaveLength(2);
@@ -263,7 +270,7 @@ describe('enter judges the draft (story 1.3)', () => {
 
 describe('when the notebook takes keys (Pattern 2)', () => {
   it.each<[Phase, boolean]>([
-    ['arrive', true],
+    ['arrive', false],
     ['poke', false],
     ['pin', false],
     ['open', true],
@@ -275,7 +282,7 @@ describe('when the notebook takes keys (Pattern 2)', () => {
     expect(notebookWrites(room.stage)).toBe(writes);
     expect(typeToken(room, '1') !== null).toBe(writes);
     expect(deleteToken(room) !== null).toBe(writes);
-    expect(enterLine(room) !== null).toBe(writes);
+    expect(enterLine(room, 0) !== null).toBe(writes);
   });
 });
 
@@ -297,7 +304,7 @@ describe('a wrong line jams the machine (Pattern 2)', () => {
     };
     expect(step(typeToken(split, '1')).room.stage.jam).toEqual({ kind: 'split', parts: 2 });
     expect(step(deleteToken(split)).room.stage.jam).toEqual({ kind: 'split', parts: 2 });
-    expect(enterLine(split)).toBeNull();
+    expect(enterLine(split, 0)).toBeNull();
   });
 });
 
@@ -321,7 +328,7 @@ function equation(text: string): Equation {
 }
 
 /** Room 1 as authored: Try values fades to blanks. */
-const blanksRoomOne = (): RoomState => enterRoom(r01).room;
+const blanksRoomOne = (): RoomState => opened(enterRoom(r01).room);
 
 describe('a committed line is acted out (story 1.7)', () => {
   it("replaces the pans with the line's layout, leaving the dial where it is", () => {
@@ -396,7 +403,7 @@ describe('a committed line moves the machine (story 1.7)', () => {
   it('sets 0.9 on the answer line, then 1 on the check line, which locks the stage', () => {
     const answered = written(roomWith('2x + 7 = 25'), 'x = 9');
     expect(answered.room.stage.machineProgress).toEqual([tuning.progressAnswer]);
-    expect(answered.room.stage.phase).toBe('arrive');
+    expect(answered.room.stage.phase).toBe('open');
     const checked = written(answered.room, '2 · 9 + 7 = 25');
     expect(checked.room.stage.machineProgress).toEqual([1]);
     expect(checked.room.stage.phase).toBe('locked');
@@ -449,7 +456,7 @@ describe('a wrong line jams the machine (story 1.7)', () => {
     expect(room.stage.jamsInARow).toBe(1);
     room = written(step(deleteToken(room)).room, '7').room;
     expect(room.stage.jamsInARow).toBe(2);
-    room = step(enterLine(step(deleteToken(room)).room)).room; // `x =` is refused, not a jam
+    room = step(enterLine(step(deleteToken(room)).room, 0)).room; // `x =` is refused, not a jam
     expect(room.stage.jamsInARow).toBe(2);
     room = written(room, '8').room;
     expect(room.stage.jamsInARow).toBe(3);
@@ -467,7 +474,7 @@ describe('a wrong line jams the machine (story 1.7)', () => {
     expect(jammedLine(edited.stage)).toBeNull();
     expect(edited.stage.pans).toEqual(equation('2x = 18'));
     expect(lastCommitted(edited.stage)).toEqual(equation('2x = 18'));
-    expect(step(enterLine(step(typeToken(edited, '9')).room)).verdict.kind).toBe('answer');
+    expect(step(enterLine(step(typeToken(edited, '9')).room, 0)).verdict.kind).toBe('answer');
   });
 
   it('shows the pans as they were before the wrong line once it is edited', () => {
@@ -560,7 +567,7 @@ describe('Try values blanks (story 1.7)', () => {
   });
 
   it('refuses an empty blank with a wiggle, not a jam', () => {
-    const result = step(enterLine(blanksRoomOne()));
+    const result = step(enterLine(blanksRoomOne(), 0));
     expect(result.verdict.kind).toBe('incomplete');
     expect(result.room.stage.refused).toBe(1);
     expect(result.room.stage.jam).toBeNull();

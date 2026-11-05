@@ -5,6 +5,7 @@ import * as q from '@/math/rational';
 import { tokenize } from '@/math/tokens';
 import { setDial } from '@/room/dial';
 import { deleteToken, enterLine, typeToken } from '@/room/notebook';
+import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
 import { hiddenXLabel, readoutLabel, scaleView, showsReadouts, stageX } from '@/room/scale';
 import type { RoomSpec, RoomState } from '@/room/types';
@@ -12,7 +13,12 @@ import type { RoomSpec, RoomState } from '@/room/types';
 function roomWith(equation: string, extra: Partial<RoomSpec['stages'][number]> = {}): RoomState {
   const first = r01.stages[0];
   if (!first) throw new Error('room 1 has no stage');
-  return enterRoom({ ...r01, stages: [{ ...first, machines: [{ equation }], ...extra }] }).room;
+  const room = enterRoom({
+    ...r01,
+    stages: [{ ...first, machines: [{ equation }], ...extra }],
+  }).room;
+  // Opened by his first touch on the machine, so the notebook writes.
+  return touchMachine(room)?.room ?? room;
 }
 
 describe('scaleView', () => {
@@ -89,7 +95,7 @@ function write(room: RoomState, text: string): RoomState {
     if (!next) throw new Error(`"${token}" was ignored`);
     return next.room;
   }, room);
-  const entered = enterLine(typed);
+  const entered = enterLine(typed, 0);
   if (!entered) throw new Error('enter was ignored');
   return entered.room;
 }

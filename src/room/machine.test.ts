@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { r02 } from '@/content/rooms/r02-street-lamps';
 import type { Verdict } from '@/math/check';
-import { isLocked, machineView, progressAfter } from '@/room/machine';
+import { isLocked, isRunning, machineView, progressAfter } from '@/room/machine';
 import { enterRoom } from '@/room/room';
 import type { Phase, RoomState } from '@/room/types';
 
@@ -64,7 +65,22 @@ describe('machineView', () => {
       progress: 0,
       jammed: false,
       locked: false,
+      parts: 1,
+      partsStarted: 0,
+      running: false,
     });
+  });
+
+  it('has a part per stage, started for each stage solved and for this one once it locks', () => {
+    const lamps = enterRoom(r02).room;
+    const at = (stageIndex: number, phase: Phase) =>
+      machineView({ ...lamps, stageIndex, stage: { ...lamps.stage, phase } });
+    expect(at(0, 'open')).toMatchObject({ id: 'street-lamps', parts: 2, partsStarted: 0 });
+    expect(at(0, 'locked')).toMatchObject({ partsStarted: 1, running: false });
+    expect(at(1, 'arrive')).toMatchObject({ partsStarted: 1, running: false });
+    expect(at(1, 'locked')).toMatchObject({ partsStarted: 2, running: false });
+    expect(at(1, 'restart')).toMatchObject({ partsStarted: 2, running: true });
+    expect(at(1, 'done')).toMatchObject({ partsStarted: 2, running: true });
   });
 
   it("shows the active machine's progress, a jam of either kind, and a locked stage", () => {
@@ -90,5 +106,10 @@ describe('machineView', () => {
     ['done', true],
   ])('is locked in %s: %s', (phase, locked) => {
     expect(isLocked(phase)).toBe(locked);
+  });
+
+  it('runs as a whole only in restart and done', () => {
+    const phases = ['arrive', 'poke', 'pin', 'open', 'locked', 'restart', 'done'] as const;
+    expect(phases.filter(isRunning)).toEqual(['restart', 'done']);
   });
 });

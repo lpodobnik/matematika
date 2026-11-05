@@ -1,0 +1,42 @@
+/* Controls shared across screens. Placeholder blueprint colours from app.css. Touch
+   first: at least 48 CSS px, no hover states. */
+
+/* The reset control, in the scene area's top-left corner, above the canvas. On a phone the
+   notebook slides over from the right, so it stays in view. */
+.reset {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  touch-action: manipulation;
+}
+
+.reset:active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.reset:disabled {
+  opacity: 0.4;
+}
+
+.reset__icon {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

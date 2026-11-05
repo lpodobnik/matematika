@@ -5,6 +5,7 @@
 
 import * as q from '@/math/rational';
 import type { RoomEvent } from '@/room/events';
+import { touchMachine } from '@/room/phases';
 import { currentStageSpec } from '@/room/room';
 import { isLevel, sideValues } from '@/room/tilt';
 import type { DialSpec, Phase, RoomState } from '@/room/types';
@@ -31,8 +32,8 @@ export function isOnDial(dial: DialSpec, x: number): boolean {
 
 /**
  * Phases in which the dial turns (Pattern 2). In `pin` the pin has frozen it, and from
- * `locked` on the stage is solved. `arrive` is here until story 1.8 ends it on his first
- * touch on the machine, so the dial works before the room phases exist.
+ * `locked` on the stage is solved. In `arrive` it can be grabbed: the dial is part of the
+ * machine, so grabbing it is the first touch that ends arrive, and the drag goes on.
  */
 const turningPhases: ReadonlySet<Phase> = new Set<Phase>(['arrive', 'poke', 'open']);
 
@@ -81,7 +82,9 @@ export interface DialStep {
  * line's layout (Pattern 1). Null, so the action is ignored, when x is where the dial
  * already is, isn't one of its reachable notches, the phase holds the dial still, or the
  * machine is jammed (Pattern 2: while jammed he can only edit the draft, drag the splitter
- * off, reset or leave). The store only changes when the notch does.
+ * off, reset or leave). The store only changes when the notch does. A notch in `arrive` is
+ * a touch on the machine, so it ends arrive too (the scene reports the touch first, so this
+ * only matters if that report is ever missed).
  */
 export function setDial(room: RoomState, x: number): DialStep | null {
   const { dial } = currentStageSpec(room);
@@ -93,5 +96,6 @@ export function setDial(room: RoomState, x: number): DialStep | null {
   if (isLevel(sideValues(stage.pans, q.rational(x)))) {
     events.push({ type: 'PansLevel', roomId: room.spec.id, stage: room.stageIndex, x });
   }
-  return { room: { ...room, stage: { ...stage, dialX: x, actingOut: false } }, events };
+  const touched = touchMachine(room)?.room.stage ?? stage;
+  return { room: { ...room, stage: { ...touched, dialX: x, actingOut: false } }, events };
 }

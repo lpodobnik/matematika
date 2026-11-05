@@ -25,4 +25,8 @@ export const tuning = {
   /** Architecture, Which x the pans show: a wrong line acted out tips the pans at least
    * this many degrees, so a near miss still shows. */
   jamMinTilt: 4,
+  /** Architecture, Pattern 2 (Restart): a stage's lock or a room's restart that the UI
+   * never reports done ends after this long, so a missed animation event never strands the
+   * game. Longer than either animation (ui/scene/machine/layout.ts). */
+  presentationTimeoutMs: 8000,
 } as const;

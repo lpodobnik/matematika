@@ -3,6 +3,7 @@
 // fading, ways that can finish, paper-test equations) as their rooms arrive.
 
 import { describe, expect, it } from 'vitest';
+import { tuning } from '@/config/tuning';
 import { rooms } from '@/content/rooms';
 import { check, stageSolution } from '@/math/check';
 import { solve } from '@/math/linear';
@@ -12,7 +13,8 @@ import { fillBlanks, tokenize } from '@/math/tokens';
 import { dialValue, notchCount } from '@/room/dial';
 import { openingTemplates } from '@/room/fading';
 import { panPieces } from '@/room/pieces';
-import { sideValues } from '@/room/tilt';
+import { sideValues, tiltFor } from '@/room/tilt';
+import type { DialSpec } from '@/room/types';
 
 const machines = rooms.flatMap((room) =>
   room.stages.flatMap((stage, stageIndex) =>
@@ -39,6 +41,59 @@ describe('rooms', () => {
   it("gives room 1 the GDD's dial, 0–10 in ones, with readouts", () => {
     expect(rooms[0]?.stages[0]?.dial).toEqual({ min: 0, max: 10, step: 1 });
     expect(rooms[0]?.stages[0]?.readouts).toBe(true);
+  });
+
+  it('lists the rooms in play order: room 1, then room 2', () => {
+    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02']);
+  });
+
+  describe("room 2, the street lamps (GDD's Puzzle Progression tables)", () => {
+    const room = rooms[1];
+    const [first, second] = room?.stages ?? [];
+
+    it('has two Solve stages, 3x = 12 on a dial of 0–10, then x : 3 = 5 on 0–30 in 3s', () => {
+      expect(room?.machine).toBe('street-lamps');
+      expect(room?.stages).toHaveLength(2);
+      expect(first?.machines.map((m) => m.equation)).toEqual(['3x = 12']);
+      expect(first?.dial).toEqual({ min: 0, max: 10, step: 1 });
+      expect(second?.machines.map((m) => m.equation)).toEqual(['x : 3 = 5']);
+      expect(second?.dial).toEqual({ min: 0, max: 30, step: 3 });
+      for (const stage of [first, second]) {
+        expect(stage?.type).toBe('solve');
+        expect(stage?.readouts).toBe(true);
+        expect(stage?.pokeNotches).toBeUndefined();
+        expect(stage?.pin).toBeUndefined();
+        expect(stage?.ways).toEqual(['try']);
+        expect(stage?.fading).toEqual({ try: 'blanks' });
+      }
+      expect(room?.earns).toBeNull();
+    });
+
+    it('has the answers 4, then 15, both on the dial', () => {
+      const answers = [first, second].map((stage) => {
+        const parsed = parse(stage?.machines[0]?.equation ?? '');
+        if (!parsed.ok) throw new Error('does not parse');
+        return stageSolution(parsed.equation);
+      });
+      expect(answers).toEqual([4, 15]);
+    });
+
+    it('moves the pans by the same amount at every notch, so no notch hits the clamp', () => {
+      for (const stage of [first, second]) {
+        if (!stage || stage.dial === 'locked') throw new Error('no dial');
+        const parsed = parse(stage.machines[0]?.equation ?? '');
+        if (!parsed.ok) throw new Error('does not parse');
+        const tilts = Array.from({ length: notchCount(stage.dial) + 1 }, (_, notch) =>
+          tiltFor(
+            sideValues(parsed.equation, q.rational(dialValue(stage.dial as DialSpec, notch))),
+            stage.tiltPerUnit ?? tuning.tiltPerUnit,
+          ),
+        );
+        const steps = tilts.slice(1).map((tilt, i) => tilt - (tilts[i] ?? 0));
+        for (const change of steps) expect(change).toBeCloseTo(steps[0] ?? 0);
+        expect(Math.max(...tilts.map(Math.abs))).toBeLessThan(tuning.tiltMax);
+      }
+    });
   });
 
   it('has one entry per room id', () => {

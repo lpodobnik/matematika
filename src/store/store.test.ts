@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
+import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { tokenFromChar } from '@/math/tokens';
+import { dialView } from '@/room/dial';
+import { machineView } from '@/room/machine';
 import { panPieces } from '@/room/pieces';
 import { scaleView } from '@/room/scale';
 import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
+import type { Action } from '@/store/actions';
 import { effects, runEffects } from '@/store/effects';
 import type { DomainEvent } from '@/store/events';
 import { createReducer, initialGameState, reduce } from '@/store/reducer';
@@ -157,6 +161,7 @@ describe('notebook actions', () => {
       effects: [(e) => seen.push(e)],
     });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    store.getState().dispatch({ type: 'machine/touch' });
     seen.length = 0;
     return store;
   }
@@ -235,6 +240,7 @@ describe('written lines drive the machine (story 1.7)', () => {
   function roomOne(seen: DomainEvent[]) {
     const store = createGameStore({ makeCtx: () => fixedCtx, effects: [(e) => seen.push(e)] });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    store.getState().dispatch({ type: 'machine/touch' });
     seen.length = 0;
     return store;
   }
@@ -290,6 +296,213 @@ describe('written lines drive the machine (story 1.7)', () => {
     dispatch({ type: 'notebook/type', token: '1' });
     dispatch({ type: 'notebook/enter' });
     expect(store.getState().room).toBe(locked);
+  });
+});
+
+describe('a room from arrival to restart (story 1.8)', () => {
+  /** A store whose clock can be moved on, recording every event and the phase after each act. */
+  function playing(list?: readonly RoomSpec[]) {
+    const clock = { now: 0 };
+    const seen: DomainEvent[] = [];
+    const store = createGameStore({
+      makeCtx: () => ({ now: clock.now, rng: { next: () => 0.5 } }),
+      effects: [(event) => seen.push(event)],
+      ...(list ? { reduce: createReducer(list) } : {}),
+    });
+    const phases: string[] = [];
+    const act = (action: Action) => {
+      store.getState().dispatch(action);
+      const room = store.getState().room;
+      phases.push(room ? `${room.spec.id}.${room.stageIndex}:${room.stage.phase}` : 'none');
+    };
+    /** Fills the stage's two blanks with the answer, a digit at a time. */
+    const solve = (answer: string) => {
+      for (let line = 0; line < 2; line += 1) {
+        for (const char of answer) {
+          const token = tokenFromChar(char);
+          if (token) store.getState().dispatch({ type: 'notebook/type', token });
+        }
+        act({ type: 'notebook/enter' });
+      }
+    };
+    /** The UI reports the presentation playing now done. */
+    const presented = () => {
+      const room = store.getState().room as RoomState;
+      const { phase } = room.stage;
+      if (phase !== 'locked' && phase !== 'restart') throw new Error(`nothing plays in ${phase}`);
+      act({ type: 'presentation/done', roomId: room.spec.id, stage: room.stageIndex, phase });
+    };
+    return { store, clock, seen, phases, act, solve, presented };
+  }
+
+  it('runs room 1 arrive → open → locked → restart → done, with no instruction screen', () => {
+    const game = playing([r01]);
+    game.act({ type: 'room/enter', roomId: 'r01' });
+    game.act({ type: 'machine/touch' });
+    game.solve('5');
+    game.presented();
+    game.presented();
+    expect(game.phases).toEqual([
+      'r01.0:arrive',
+      'r01.0:open',
+      'r01.0:open',
+      'r01.0:locked',
+      'r01.0:restart',
+      'r01.0:done',
+    ]);
+    expect(game.seen.map((event) => event.type)).toEqual([
+      'StageArrived',
+      'LineAccepted',
+      'LineAccepted',
+      'StageLocked',
+      'RoomRestarted',
+    ]);
+    expect(game.store.getState().ui.screen).toBe('room');
+  });
+
+  it('keeps the notebook off until his first touch on the machine', () => {
+    const game = playing();
+    game.act({ type: 'room/enter', roomId: 'r01' });
+    game.store.getState().dispatch({ type: 'notebook/type', token: '5' });
+    expect(game.store.getState().room?.stage.draft).toEqual([]);
+    game.act({ type: 'machine/touch' });
+    game.store.getState().dispatch({ type: 'notebook/type', token: '5' });
+    expect(game.store.getState().room?.stage.draft).toEqual(['5']);
+  });
+
+  it('loads the next room in content when a restart ends: room 1, then room 2', () => {
+    const game = playing();
+    game.act({ type: 'room/enter', roomId: 'r01' });
+    game.act({ type: 'machine/touch' });
+    game.solve('5');
+    game.presented();
+    game.seen.length = 0;
+    game.presented();
+    const room = game.store.getState().room as RoomState;
+    expect(room.spec.id).toBe('r02');
+    expect(room.stageIndex).toBe(0);
+    expect(room.stage.phase).toBe('arrive');
+    expect(game.seen).toEqual([{ type: 'StageArrived', roomId: 'r02', stage: 0 }]);
+  });
+
+  it('plays room 2: the first lamp lights, the second stage arrives, then the machine restarts', () => {
+    const game = playing();
+    game.act({ type: 'room/enter', roomId: 'r02' });
+    game.act({ type: 'machine/touch' });
+    game.act({ type: 'dial/set', x: 4 });
+    game.solve('4');
+    expect(machineView(game.store.getState().room)).toMatchObject({ parts: 2, partsStarted: 1 });
+    game.presented();
+    let room = game.store.getState().room as RoomState;
+    expect(room.stageIndex).toBe(1);
+    expect(room.stage.phase).toBe('arrive');
+    expect(dialView(room)).toMatchObject({ min: 0, max: 30, step: 3, x: 0 });
+    expect(room.stage.lines.map((line) => line.tokens.join(''))).toEqual(['x:3=5']);
+    game.act({ type: 'machine/touch' });
+    game.act({ type: 'dial/set', x: 15 });
+    game.solve('15');
+    game.presented();
+    game.presented();
+    room = game.store.getState().room as RoomState;
+    // Room 2 is the last room in content for now, so it stays done (story 1.13 adds the
+    // "to be continued" screen after room 4).
+    expect(room.spec.id).toBe('r02');
+    expect(room.stage.phase).toBe('done');
+    expect(game.seen.filter((event) => event.type !== 'DialNotch')).toEqual([
+      { type: 'StageArrived', roomId: 'r02', stage: 0 },
+      { type: 'PansLevel', roomId: 'r02', stage: 0, x: 4 },
+      { type: 'LineAccepted', roomId: 'r02', stage: 0, source: 'typed', progress: true },
+      { type: 'LineAccepted', roomId: 'r02', stage: 0, source: 'typed', progress: true },
+      { type: 'StageLocked', roomId: 'r02', stage: 0 },
+      { type: 'StageArrived', roomId: 'r02', stage: 1 },
+      { type: 'PansLevel', roomId: 'r02', stage: 1, x: 15 },
+      { type: 'LineAccepted', roomId: 'r02', stage: 1, source: 'typed', progress: true },
+      { type: 'LineAccepted', roomId: 'r02', stage: 1, source: 'typed', progress: true },
+      { type: 'StageLocked', roomId: 'r02', stage: 1 },
+      { type: 'RoomRestarted', roomId: 'r02' },
+    ]);
+  });
+
+  it('ends the lock and the restart on the clock when the UI never reports them', () => {
+    const game = playing();
+    game.act({ type: 'room/enter', roomId: 'r01' });
+    game.act({ type: 'machine/touch' });
+    game.clock.now = 10_000;
+    game.solve('5');
+    game.clock.now += tuning.presentationTimeoutMs - 1_000;
+    game.act({ type: 'clock/tick' });
+    game.clock.now += 1_000;
+    game.act({ type: 'clock/tick' });
+    game.clock.now += tuning.presentationTimeoutMs;
+    game.act({ type: 'clock/tick' });
+    expect(game.phases.slice(-4)).toEqual([
+      'r01.0:locked',
+      'r01.0:locked',
+      'r01.0:restart',
+      'r02.0:arrive',
+    ]);
+  });
+
+  it('ignores a late report after the clock moved on', () => {
+    const game = playing();
+    game.act({ type: 'room/enter', roomId: 'r01' });
+    game.act({ type: 'machine/touch' });
+    game.solve('5');
+    game.clock.now += tuning.presentationTimeoutMs;
+    game.act({ type: 'clock/tick' });
+    const restarting = game.store.getState().room;
+    expect(restarting?.stage.phase).toBe('restart');
+    game.act({ type: 'presentation/done', roomId: 'r01', stage: 0, phase: 'locked' });
+    expect(game.store.getState().room).toBe(restarting);
+  });
+
+  it('leaves the state alone on a tick or a touch that does nothing', () => {
+    const game = playing();
+    game.act({ type: 'room/enter', roomId: 'r01' });
+    game.act({ type: 'machine/touch' });
+    const before = game.store.getState().room;
+    game.act({ type: 'clock/tick' });
+    game.act({ type: 'machine/touch' });
+    expect(game.store.getState().room).toBe(before);
+    for (const action of [
+      { type: 'clock/tick' },
+      { type: 'machine/touch' },
+      { type: 'stage/reset' },
+      { type: 'presentation/done', roomId: 'r01', stage: 0, phase: 'locked' },
+    ] as const) {
+      const { state, events } = reduce(initialGameState(), action, fixedCtx);
+      expect(state).toEqual(initialGameState());
+      expect(events).toEqual([]);
+    }
+  });
+
+  it('resets the stage in play through dispatch, and not once it is locked', () => {
+    const game = playing();
+    game.act({ type: 'room/enter', roomId: 'r02', stage: 1 });
+    game.act({ type: 'machine/touch' });
+    game.act({ type: 'dial/set', x: 9 });
+    game.solve('9'); // a wrong answer jams the machine
+    expect(game.store.getState().room?.stage.jam).toEqual({ kind: 'line' });
+    game.seen.length = 0;
+    game.act({ type: 'stage/reset' });
+    const room = game.store.getState().room as RoomState;
+    expect(room.stageIndex).toBe(1);
+    expect(room.stage).toMatchObject({ phase: 'open', dialX: 0, jam: null, machineProgress: [0] });
+    expect(room.stage.lines).toHaveLength(1);
+    expect(game.seen).toEqual([{ type: 'StageReset', roomId: 'r02', stage: 1 }]);
+    game.solve('15');
+    const locked = game.store.getState().room;
+    expect(locked?.stage.phase).toBe('locked');
+    game.act({ type: 'stage/reset' });
+    expect(game.store.getState().room).toBe(locked);
+  });
+
+  it('enters any room at any stage (the dev panel)', () => {
+    const game = playing();
+    game.act({ type: 'room/enter', roomId: 'r02', stage: 1 });
+    expect(game.phases).toEqual(['r02.1:arrive']);
+    expect(game.seen).toEqual([{ type: 'StageArrived', roomId: 'r02', stage: 1 }]);
+    expect(machineView(game.store.getState().room)?.partsStarted).toBe(1);
   });
 });
 

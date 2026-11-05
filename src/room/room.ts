@@ -1,5 +1,6 @@
 // Entering a room and opening its stages (architecture, Pattern 2). Pure: the store looks
-// the RoomSpec up in content and hands it in.
+// the RoomSpec up in content and hands it in. What happens after a stage arrives (his first
+// touch, the lock, the restart and reset) is in room/phases.ts.
 
 import { assert } from '@/lib/assert';
 import type { Equation } from '@/math/expr';
@@ -46,7 +47,8 @@ export function givenLine(stage: StageSpec, machine: number): NotebookLine {
 /**
  * A stage as it arrives: the first machine's equation on the pans and as the notebook's
  * line 0, an empty draft (or, with Try values `blanks`, the lines to fill), every machine
- * stopped, and the dial at its minimum, exploring.
+ * stopped, and the dial at its minimum, exploring. It waits in `arrive` for his first touch
+ * on the machine (room/phases.ts).
  */
 export function arriveAtStage(stage: StageSpec): StageState {
   // A locked dial (room 7) never moves; its x is decided with the find-the-mistake rules.
@@ -67,16 +69,26 @@ export function arriveAtStage(stage: StageSpec): StageState {
     dialX,
     // The whole range for now; story 1.9 narrows it to the poke window.
     dialOpen: dial === 'locked' ? { min: dialX, max: dialX } : { min: dial.min, max: dial.max },
+    presentedAt: null,
   };
 }
 
-/** Enters a room at its first stage. */
-export function enterRoom(spec: RoomSpec): RoomStep {
-  const first = spec.stages[0];
-  assert(first, `room ${spec.id} has no stages`);
+/** The `StageArrived` event for a stage of a room: it fires as the stage's arrive begins. */
+export function stageArrived(spec: RoomSpec, stage: number): RoomEvent {
+  return { type: 'StageArrived', roomId: spec.id, stage };
+}
+
+/**
+ * Enters a room at a stage, the first unless another is given (the dev panel jumps to any
+ * stage). The stages before it count as solved: the machine shows their parts running.
+ */
+export function enterRoom(spec: RoomSpec, stageIndex = 0): RoomStep {
+  assert(spec.stages.length > 0, `room ${spec.id} has no stages`);
+  const stage = spec.stages[stageIndex];
+  assert(stage, `room ${spec.id} has no stage ${stageIndex}`);
   return {
-    room: { spec, stageIndex: 0, stage: arriveAtStage(first) },
-    events: [{ type: 'StageArrived', roomId: spec.id, stage: 0 }],
+    room: { spec, stageIndex, stage: arriveAtStage(stage) },
+    events: [stageArrived(spec, stageIndex)],
   };
 }
 

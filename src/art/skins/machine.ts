@@ -3,11 +3,15 @@
 // guide, epic 6's final art). It is a door in a frame that rises with the machine's
 // progress (the door lift's "door rises partway"), so progress shows continuously.
 //
-//   frame    two posts, a sill, and a housing at the top the door rises into
-//   door     a panel of planks, drawn from its top edge down
-//   jam      a wedge driven in beside the door and steam lines: shape as well as colour (NFR4)
+//   frame      two posts, a sill, and a housing at the top the door rises into
+//   pulley     one of the housing's two pulleys, with spokes so it shows turning
+//   lamp       a lamp on the housing, one per part of the machine (a room's stage)
+//   lampLight  a lit lamp's flame and rays: shape as well as colour (NFR4)
+//   door       a panel of planks, drawn from its top edge down
+//   jam        a wedge driven in beside the door and steam lines: shape as well as colour (NFR4)
 //
-// The machine is drawn with its origin at the opening's top-left corner.
+// The machine is drawn with its origin at the opening's top-left corner; a pulley and a
+// lamp with theirs at their centre.
 
 import type { Graphics } from 'pixi.js';
 import { palette } from '@/art/palette';
@@ -19,6 +23,9 @@ export interface MachineShape {
   /** The housing above the opening, and the posts either side. */
   housing: number;
   post: number;
+  /** A lamp's glass radius, and the post it stands on, on top of the housing. */
+  lamp: number;
+  lampPost: number;
 }
 
 const ink = { width: 4, color: palette.ink };
@@ -26,8 +33,22 @@ const fineInk = { width: 2, color: palette.ink, alpha: 0.6 };
 const heavyFill = { color: palette.ink, alpha: 0.16 };
 const lightFill = { color: palette.paper };
 const jamInk = { width: 6, color: palette.jam };
+const flame = { color: palette.lamp, alpha: 0.9 };
+const rayInk = { width: 4, color: palette.lamp };
 
 const planks = 5;
+const spokes = 4;
+const rays = 8;
+
+/** A pulley's radius: a little over a quarter of the housing's height. */
+export function pulleyRadius(shape: MachineShape): number {
+  return shape.housing * 0.28;
+}
+
+/** How far a lit lamp's rays reach from its centre. */
+export function lampRayReach(shape: MachineShape): number {
+  return shape.lamp * 1.75;
+}
 
 export const machineSkin = {
   /** The frame around the opening. */
@@ -42,12 +63,53 @@ export const machineSkin = {
     g.roundRect(-post * 1.5, -housing, width + post * 3, housing, 8)
       .fill(lightFill)
       .stroke(ink);
-    // Two pulleys on the housing, for the door's chains.
-    for (const x of [width * 0.25, width * 0.75]) {
-      g.circle(x, -housing / 2, housing * 0.28)
-        .fill(lightFill)
-        .stroke(fineInk);
+  },
+
+  /** A pulley for the door's chains, centred on its axle, with spokes that show it turn. */
+  pulley(g: Graphics, shape: MachineShape): void {
+    g.clear();
+    const radius = pulleyRadius(shape);
+    g.circle(0, 0, radius).fill(lightFill).stroke(fineInk);
+    for (let i = 0; i < spokes; i += 1) {
+      const angle = (i * Math.PI) / spokes;
+      const dx = Math.cos(angle) * radius * 0.8;
+      const dy = Math.sin(angle) * radius * 0.8;
+      g.moveTo(-dx, -dy).lineTo(dx, dy);
     }
+    g.stroke(fineInk);
+    g.circle(0, 0, radius * 0.22).fill({ color: palette.ink, alpha: 0.6 });
+  },
+
+  /** An unlit lamp, centred on its glass: a cap, the glass and its post down to the housing. */
+  lamp(g: Graphics, shape: MachineShape): void {
+    g.clear();
+    const { lamp, lampPost } = shape;
+    g.rect(-lamp * 0.18, lamp, lamp * 0.36, lampPost)
+      .fill(heavyFill)
+      .stroke(fineInk);
+    g.circle(0, 0, lamp).fill(lightFill).stroke(ink);
+    g.roundRect(-lamp * 0.7, -lamp * 1.35, lamp * 1.4, lamp * 0.45, 4)
+      .fill(heavyFill)
+      .stroke(fineInk);
+  },
+
+  /** A lit lamp's flame in its glass, and rays around it. Drawn over the lamp. */
+  lampLight(g: Graphics, shape: MachineShape): void {
+    g.clear();
+    const { lamp } = shape;
+    g.circle(0, 0, lamp * 0.72).fill(flame);
+    const inner = lamp * 1.2;
+    const outer = lampRayReach(shape);
+    for (let i = 0; i < rays; i += 1) {
+      const angle = (i * 2 * Math.PI) / rays;
+      // The rays skip the lamp's post below it.
+      if (Math.abs(angle - Math.PI / 2) < 0.1) continue;
+      g.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner).lineTo(
+        Math.cos(angle) * outer,
+        Math.sin(angle) * outer,
+      );
+    }
+    g.stroke(rayInk);
   },
 
   /** The opening's back wall, seen once the door rises. */

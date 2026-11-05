@@ -1,8 +1,92 @@
 import { describe, expect, it } from 'vitest';
+import { lampRayReach, pulleyRadius } from '@/art/skins/machine';
 import { tuning } from '@/config/tuning';
 import { sceneSize } from '@/ui/scene/fit-scene';
-import { doorLift, joltOffset, machineBounds, machineGeometry } from '@/ui/scene/machine/layout';
+import {
+  doorLift,
+  joltOffset,
+  lampDelayMs,
+  lampGlow,
+  lampLightMs,
+  lampPositions,
+  machineBounds,
+  machineGeometry,
+  presentationMs,
+  pulleyPositions,
+  runningHum,
+} from '@/ui/scene/machine/layout';
 import { beamPose, scaleGeometry } from '@/ui/scene/scale/layout';
+
+describe('the lamps, one per part of the machine', () => {
+  const { shape } = machineGeometry;
+
+  it('stand evenly along the top of the housing, first on the left', () => {
+    for (const count of [1, 2, 3]) {
+      const lamps = lampPositions(count);
+      expect(lamps).toHaveLength(count);
+      const xs = lamps.map((lamp) => lamp.x);
+      expect([...xs].sort((a, b) => a - b)).toEqual(xs);
+      const gaps = xs.slice(1).map((x, i) => x - (xs[i] ?? 0));
+      for (const gap of gaps) expect(gap).toBeCloseTo(gaps[0] ?? 0);
+      for (const lamp of lamps) {
+        expect(lamp.x).toBeGreaterThan(-shape.post * 1.5);
+        expect(lamp.x).toBeLessThan(shape.width + shape.post * 1.5);
+        expect(lamp.y + shape.lamp).toBeLessThanOrEqual(-shape.housing);
+      }
+    }
+    expect(lampPositions(1)[0]?.x).toBeCloseTo(shape.width / 2);
+  });
+
+  it("don't touch each other even with three, rays and all", () => {
+    const [a, b] = lampPositions(3);
+    expect((b?.x ?? 0) - (a?.x ?? 0)).toBeGreaterThan(lampRayReach(shape) * 2);
+  });
+
+  it('fit inside the scene with their rays', () => {
+    expect(machineBounds().top).toBeGreaterThan(0);
+    const [lamp] = lampPositions(1);
+    expect(machineGeometry.y + (lamp?.y ?? 0) - lampRayReach(shape)).toBeGreaterThanOrEqual(
+      machineBounds().top,
+    );
+  });
+});
+
+describe('the pulleys', () => {
+  it('sit on the housing, inside it', () => {
+    const { shape } = machineGeometry;
+    for (const pulley of pulleyPositions()) {
+      expect(pulley.y - pulleyRadius(shape)).toBeGreaterThan(-shape.housing);
+      expect(pulley.y + pulleyRadius(shape)).toBeLessThan(0);
+    }
+  });
+});
+
+describe('the presentations', () => {
+  it('play inside the clock fallback, so the fallback never cuts one short', () => {
+    for (const ms of Object.values(presentationMs)) {
+      expect(ms).toBeGreaterThan(0);
+      expect(ms).toBeLessThan(tuning.presentationTimeoutMs);
+    }
+  });
+
+  it('light the lamp before the lock is reported done', () => {
+    expect(lampDelayMs + lampLightMs).toBeLessThan(presentationMs.locked);
+  });
+
+  it('bring a lamp on from nothing to full size and strength', () => {
+    expect(lampGlow(0).alpha).toBe(0);
+    expect(lampGlow(1)).toEqual({ alpha: 1, scale: 1 });
+    expect(Math.max(...[0.3, 0.5, 0.7].map((t) => lampGlow(t).scale))).toBeGreaterThan(1);
+  });
+
+  it('hum the machine while it restarts, from rest to rest', () => {
+    expect(runningHum(0)).toBe(0);
+    expect(runningHum(1)).toBeCloseTo(0);
+    const beats = [0.1, 0.3, 0.5, 0.7].map(runningHum);
+    expect(Math.max(...beats.map(Math.abs))).toBeGreaterThan(0.5);
+    expect(Math.max(...beats.map(Math.abs))).toBeLessThanOrEqual(3);
+  });
+});
 
 describe('the placeholder machine in the scene', () => {
   const box = machineBounds();

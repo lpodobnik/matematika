@@ -5,6 +5,7 @@ import { r01 } from '@/content/rooms/r01-door-lift';
 import { hr } from '@/content/text/hr';
 import { tokenize } from '@/math/tokens';
 import { draftDisplay, enterLine, fillsBlank, lineDisplays, typeToken } from '@/room/notebook';
+import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
 import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
 import { Notebook, NotebookPage, type NotebookPageProps } from '@/ui/notebook/Notebook';
@@ -15,7 +16,12 @@ const css = readFileSync(new URL('./notebook.css', import.meta.url), 'utf8');
 // blank page.
 const firstStage = r01.stages[0] as StageSpec;
 const freeRoomOne: RoomSpec = { ...r01, stages: [{ ...firstStage, fading: { try: 'blank' } }] };
-const freeRoom = (): RoomState => enterRoom(freeRoomOne).room;
+/** A room after his first touch on the machine, so the notebook writes. */
+const opened = (spec: RoomSpec): RoomState => {
+  const room = enterRoom(spec).room;
+  return touchMachine(room)?.room ?? room;
+};
+const freeRoom = (): RoomState => opened(freeRoomOne);
 
 function typed(room: RoomState, text: string): RoomState {
   const result = tokenize(text);
@@ -84,7 +90,7 @@ describe('the notebook page', () => {
   });
 
   it('has the 20 pad keys as buttons, never focused, with delete and enter named in hr.ts', () => {
-    const html = page(enterRoom(r01).room);
+    const html = page(opened(r01));
     const keys = html.match(/<button[^>]*class="pad__key[^"]*"[^>]*>/g) ?? [];
     expect(keys).toHaveLength(20);
     expect(
@@ -103,7 +109,7 @@ describe('the notebook page', () => {
   });
 
   it('marks a wrong line in the draft, and nothing else', () => {
-    const wrong = enterLine(typed(freeRoom(), 'x = 6'))?.room;
+    const wrong = enterLine(typed(freeRoom(), 'x = 6'), 0)?.room;
     if (!wrong) throw new Error('enter was ignored');
     expect(page(wrong)).toContain('class="line line--draft line--wrong"');
     expect(page(typed(freeRoom(), 'x = 6'))).not.toContain('line--wrong');
@@ -112,13 +118,13 @@ describe('the notebook page', () => {
   it('wiggles the draft after a refusal, and not before', () => {
     const room = typed(freeRoom(), 'x +');
     expect(page(room)).not.toContain('line--wiggle');
-    const refused = enterLine(room)?.room;
+    const refused = enterLine(room, 0)?.room;
     if (!refused) throw new Error('enter was ignored');
     expect(page(refused)).toContain('class="line line--draft line--wiggle"');
   });
 
   it('appends committed lines under line 0, read-only, and empties the draft', () => {
-    const room = enterLine(typed(freeRoom(), 'x=9-4'))?.room;
+    const room = enterLine(typed(freeRoom(), 'x=9-4'), 0)?.room;
     if (!room) throw new Error('enter was ignored');
     const html = page(room);
     expect(html).toMatch(/line--given[\s\S]*x \+ 4 = 9[\s\S]*line--written[\s\S]*x = 9 − 4/);
@@ -126,7 +132,7 @@ describe('the notebook page', () => {
   });
 
   it('shows the caret only while the notebook takes keys, and turns the keys off', () => {
-    const room = enterRoom(r01).room;
+    const room = opened(r01);
     expect(page(room)).toContain('line__caret');
     const off = page(room, { writes: false });
     expect(off).not.toContain('line__caret');
@@ -134,7 +140,7 @@ describe('the notebook page', () => {
   });
 
   it('has a handle that pushes the notebook aside or brings it back', () => {
-    const room = enterRoom(r01).room;
+    const room = opened(r01);
     expect(page(room)).toContain(`aria-label="${hr.notebook.pushAside}"`);
     expect(page(room)).toContain('data-aside="false"');
     const aside = page(room, { aside: true });
@@ -143,7 +149,7 @@ describe('the notebook page', () => {
   });
 
   it('opens room 1 with x = ☐ to fill and the check line with x blanked under it', () => {
-    const html = page(enterRoom(r01).room);
+    const html = page(opened(r01));
     expect(html).toContain(
       '<li class="line line--draft"><span class="line__text">x = <span class="line__blank" data-empty="true"><span class="line__caret" aria-hidden="true"></span></span></span></li>',
     );
@@ -153,14 +159,14 @@ describe('the notebook page', () => {
   });
 
   it('shows what he types inside the blank, with the caret there', () => {
-    const html = page(typed(enterRoom(r01).room, '15'));
+    const html = page(typed(opened(r01), '15'));
     expect(html).toContain(
       '<span class="line__blank" data-empty="false">15<span class="line__caret" aria-hidden="true"></span></span>',
     );
   });
 
   it('turns off every key but the digits, delete and enter while he fills a blank', () => {
-    const html = page(enterRoom(r01).room);
+    const html = page(opened(r01));
     const off = (html.match(/<button[^>]*disabled=""[^>]*>/g) ?? []).map(
       (key) => key.match(/aria-label="([^"]*)"/)?.[1],
     );
@@ -169,15 +175,15 @@ describe('the notebook page', () => {
   });
 
   it('marks a wrong fill in the draft', () => {
-    const wrong = enterLine(typed(enterRoom(r01).room, '6'))?.room;
+    const wrong = enterLine(typed(opened(r01), '6'), 0)?.room;
     if (!wrong) throw new Error('enter was ignored');
     expect(page(wrong)).toContain('class="line line--draft line--wrong"');
   });
 
   it('shows no success marks once the machine locks: no stars, scores or "correct" screen', () => {
-    let room = enterRoom(r01).room;
+    let room = opened(r01);
     for (const digits of ['5', '5']) {
-      const next = enterLine(typed(room, digits))?.room;
+      const next = enterLine(typed(room, digits), 0)?.room;
       if (!next) throw new Error('enter was ignored');
       room = next;
     }

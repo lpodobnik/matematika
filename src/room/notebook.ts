@@ -23,11 +23,11 @@ import type { NotebookLine, Phase, RoomState, StageState } from '@/room/types';
 export type NotebookKey = Token | 'delete' | 'enter';
 
 /**
- * Phases in which he writes (Pattern 2). The notebook is off in `poke` and `pin` (story
- * 1.9) and once the stage locks. `arrive` is here until story 1.8 ends it on his first
- * touch on the machine, as the dial does.
+ * Phases in which he writes (Pattern 2): only `open`. The notebook is off while the stage
+ * waits in `arrive` for his first touch on the machine, in `poke` and `pin` (story 1.9), and
+ * once the stage locks.
  */
-const writingPhases: ReadonlySet<Phase> = new Set<Phase>(['arrive', 'open']);
+const writingPhases: ReadonlySet<Phase> = new Set<Phase>(['open']);
 
 /** The check line is always the last line (Pattern 1, checker rule 4). */
 function endsWithCheck(stage: StageState): boolean {
@@ -163,11 +163,12 @@ function progressFor(stage: StageState, verdict: Verdict): number[] {
  * - `valid`, `answer`, `check`: appended to `lines`, read-only, and the draft empties (and,
  *   when he fills blanks, the next template comes up). The pans take the line's layout and
  *   act it out; the machine moves on; `jamsInARow` resets. The check line locks the stage
- *   (`StageLocked`).
+ *   (`StageLocked`), and the machine starts presenting the lock at `now` (ctx.now; see
+ *   room/phases.ts).
  * Acting out never fires `PansLevel`: only the dial does. Null when the notebook is off,
  * or while the machine is jammed (only an edit clears a line jam).
  */
-export function enterLine(room: RoomState): EnterStep | null {
+export function enterLine(room: RoomState, now: number): EnterStep | null {
   const { stage } = room;
   if (!notebookWrites(stage) || stage.jam !== null) return null;
   const tokens = lineTokens(stage);
@@ -200,6 +201,7 @@ export function enterLine(room: RoomState): EnterStep | null {
     machineProgress: progressFor(stage, verdict),
     pans: equationOf(tokens, 'a committed line'),
     actingOut: true,
+    presentedAt: locks ? now : stage.presentedAt,
   };
   const progress = verdict.kind === 'valid' ? verdict.progress : true;
   const events: RoomEvent[] = [{ type: 'LineAccepted', ...at, source: 'typed', progress }];

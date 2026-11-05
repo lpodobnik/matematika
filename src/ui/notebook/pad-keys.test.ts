@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { TOKENS } from '@/math/tokens';
+import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
 import type { RoomSpec, StageSpec } from '@/room/types';
 import { reduce } from '@/store/reducer';
@@ -67,7 +68,7 @@ describe('the pad and the keyboard write the same line', () => {
 
   function play(keys: readonly Parameters<typeof keyAction>[0][]): GameState {
     let state: GameState = {
-      room: enterRoom(freeRoom).room,
+      room: touchMachine(enterRoom(freeRoom).room)?.room ?? null,
       ui: { screen: 'room', notebookAside: false },
     };
     for (const key of keys) state = reduce(state, keyAction(key), ctx).state;

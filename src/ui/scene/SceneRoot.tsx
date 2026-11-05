@@ -1,7 +1,13 @@
 import { Application, extend, useApplication } from '@pixi/react';
-import { Container, Graphics, type Application as PixiApplication } from 'pixi.js';
+import {
+  Container,
+  type FederatedPointerEvent,
+  Graphics,
+  type Application as PixiApplication,
+} from 'pixi.js';
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { palette } from '@/art/palette';
+import { useGame } from '@/store/store';
 import { watchContextLoss } from '@/ui/scene/context-loss';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import { Machine } from '@/ui/scene/machine/Machine';
@@ -105,11 +111,32 @@ function drawPaper(g: Graphics): void {
 /**
  * The logical scene, scaled to fit and centred; layout goes through a ref. The scale factor
  * is also state (it changes only on resize), so labels can keep their minimum CSS size.
+ *
+ * Every press anywhere on the canvas, margins included, reports `machine/touch`: the scene
+ * is the machine, and the first touch ends the stage's arrive (Pattern 2). Presses bubble up
+ * to the stage from the dial too, after the dial has started its drag, so grabbing the dial
+ * is a touch like any other.
  */
 function SceneContent() {
   const { app, isInitialised } = useApplication();
   const sceneRef = useRef<Container>(null);
   const [sceneScale, setSceneScale] = useState(0);
+  const dispatch = useGame((s) => s.dispatch);
+
+  useEffect(() => {
+    if (!isInitialised) return;
+    const { stage } = app;
+    const touch = (event: FederatedPointerEvent) => {
+      if (event.button === 0) dispatch({ type: 'machine/touch' });
+    };
+    stage.eventMode = 'static';
+    // The screen rectangle is resized in place, so the hit area follows the canvas.
+    stage.hitArea = app.screen;
+    stage.on('pointerdown', touch);
+    return () => {
+      stage.off('pointerdown', touch);
+    };
+  }, [app, isInitialised, dispatch]);
 
   useEffect(() => {
     if (!isInitialised) return;

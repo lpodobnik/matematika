@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { r02 } from '@/content/rooms/r02-street-lamps';
 import type { Equation } from '@/math/expr';
 import { parse } from '@/math/parse';
 import {
@@ -54,13 +55,29 @@ describe('enterRoom', () => {
       actingOut: false,
       dialX: 0,
       dialOpen: { min: 0, max: 10 },
+      presentedAt: null,
     });
     expect(events).toEqual([{ type: 'StageArrived', roomId: 'r01', stage: 0 }]);
   });
 
-  it('refuses a room with no stages', () => {
+  it('waits in arrive, with no instruction screen: arrive is the first phase', () => {
+    expect(enterRoom(r02).room.stage.phase).toBe('arrive');
+  });
+
+  it('enters at a later stage when asked (the dev panel), and StageArrived names it', () => {
+    const { room, events } = enterRoom(r02, 1);
+    expect(room.stageIndex).toBe(1);
+    expect(room.stage.phase).toBe('arrive');
+    expect(room.stage.pans).toEqual(equation('x : 3 = 5'));
+    expect(room.stage.dialOpen).toEqual({ min: 0, max: 30 });
+    expect(events).toEqual([{ type: 'StageArrived', roomId: 'r02', stage: 1 }]);
+  });
+
+  it('refuses a room with no stages, or a stage the room does not have', () => {
     const empty: RoomSpec = { ...r01, stages: [] };
     expect(() => enterRoom(empty)).toThrow(/no stages/);
+    expect(() => enterRoom(r02, 2)).toThrow(/no stage 2/);
+    expect(() => enterRoom(r02, -1)).toThrow(/no stage -1/);
   });
 });
 
@@ -119,6 +136,7 @@ describe('givenLine', () => {
     expect(arrived.draft).toEqual([]);
     expect(arrived.jam).toBeNull();
     expect(arrived.refused).toBe(0);
+    expect(arrived.presentedAt).toBeNull();
   });
 
   it('refuses a machine the stage does not have', () => {

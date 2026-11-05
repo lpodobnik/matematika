@@ -27,4 +27,11 @@ export type RoomEvent =
   /** The machine jammed: on a wrong line, or (story 1.11) a split that doesn't divide (audio: a hiss). */
   | { type: 'MachineJammed'; roomId: RoomSpec['id']; kind: 'line' | 'split' }
   /** The check line locked the stage's machine. */
-  | { type: 'StageLocked'; roomId: RoomSpec['id']; stage: number };
+  | { type: 'StageLocked'; roomId: RoomSpec['id']; stage: number }
+  /** He reset the stage to line 0 (the play log's room `reset`). Earlier stages stay solved. */
+  | { type: 'StageReset'; roomId: RoomSpec['id']; stage: number }
+  /**
+   * The room's last stage locked and the whole machine starts running (audio: its loop
+   * joins; the play log's room `done`). The next room loads when the restart ends.
+   */
+  | { type: 'RoomRestarted'; roomId: RoomSpec['id'] };

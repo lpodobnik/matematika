@@ -113,7 +113,8 @@ export type Jam = { kind: 'line' } | { kind: 'split'; parts: number };
 
 /**
  * The stage in play: the part of Pattern 2's `StageState` that the scale, the dial, the
- * notebook and the machine need so far. Later stories add the pin and hints.
+ * notebook, the machine and the room's phases need so far. Later stories add the pin and
+ * hints.
  */
 export interface StageState {
   phase: Phase;
@@ -151,6 +152,12 @@ export interface StageState {
   dialX: number;
   /** The part of the dial he can reach: the poke window (story 1.9), then the full range. */
   dialOpen: { min: number; max: number };
+  /**
+   * ctx.now when the machine began presenting the stage's lock or the room's restart (the
+   * `locked` and `restart` phases); null in every other phase. The clock ends a presentation
+   * the UI never reports done (Pattern 2, Restart).
+   */
+  presentedAt: number | null;
 }
 
 export interface RoomState {

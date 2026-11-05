@@ -8,6 +8,10 @@ export const hr = {
       tapToRestart: 'Dodirni za ponovno pokretanje.',
     },
   },
+  ui: {
+    /** The reset control: the stage in play starts again from its first line. */
+    reset: 'Ispočetka',
+  },
   notebook: {
     label: 'Bilježnica',
     delete: 'Obriši',
