@@ -1,0 +1,117 @@
+import { describe, expect, it, vi } from 'vitest';
+import { r01 } from '@/content/rooms/r01-door-lift';
+import { panPieces } from '@/room/pieces';
+import { scaleView } from '@/room/scale';
+import type { RoomSpec } from '@/room/types';
+import { effects, runEffects } from '@/store/effects';
+import type { DomainEvent } from '@/store/events';
+import { createReducer, initialGameState, reduce } from '@/store/reducer';
+import { createGameStore, gameStore } from '@/store/store';
+import type { Ctx } from '@/store/types';
+
+const fixedCtx: Ctx = { now: 1_000, rng: { next: () => 0.5 } };
+
+describe('the store', () => {
+  it('starts with no room', () => {
+    const store = createGameStore();
+    expect(store.getState().room).toBeNull();
+    expect(store.getState().ui).toEqual({ screen: 'room' });
+  });
+
+  it('loads room 1: one x-gear and a weight of 4 on the left, a weight of 9 on the right', () => {
+    const store = createGameStore({ makeCtx: () => fixedCtx });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    const room = store.getState().room;
+    expect(room?.spec.id).toBe('r01');
+    if (!room) return;
+    const pieces = panPieces(room.stage.pans);
+    expect(pieces.left.map((p) => p.kind)).toEqual(['gear', 'weight']);
+    expect(pieces.left[1]).toMatchObject({ kind: 'weight', value: { n: 4n, d: 1n } });
+    expect(pieces.right).toEqual([
+      { key: 'right-weight-0', kind: 'weight', value: { n: 9n, d: 1n } },
+    ]);
+    expect(scaleView(room).tilt).toBe(-5);
+  });
+
+  it('hands each domain event to the effects, after storing the new state', () => {
+    const seen: [DomainEvent, string | undefined][] = [];
+    const store = createGameStore({
+      effects: [(event, state) => seen.push([event, state.room?.spec.id])],
+    });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    expect(seen).toEqual([[{ type: 'StageArrived', roomId: 'r01', stage: 0 }, 'r01']]);
+  });
+
+  it('gives the reducer a fresh ctx on every dispatch', () => {
+    const makeCtx = vi.fn(() => fixedCtx);
+    const reduceSpy = vi.fn(reduce);
+    const store = createGameStore({ makeCtx, reduce: reduceSpy });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    expect(makeCtx).toHaveBeenCalledTimes(2);
+    expect(reduceSpy.mock.calls[0]?.[2]).toBe(fixedCtx);
+  });
+
+  it('keeps dispatch in the store and only game state in what the reducer sees', () => {
+    const reduceSpy = vi.fn(reduce);
+    const store = createGameStore({ reduce: reduceSpy });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    expect(Object.keys(reduceSpy.mock.calls[0]?.[0] ?? {}).sort()).toEqual(['room', 'ui']);
+    expect(typeof store.getState().dispatch).toBe('function');
+  });
+
+  it('is one store for the game', () => {
+    expect(gameStore.getState().room).toBeNull();
+  });
+});
+
+describe('the root reducer', () => {
+  it('is pure: the same state, action and ctx give the same result, and the input is untouched', () => {
+    const state = initialGameState();
+    const first = reduce(state, { type: 'room/enter', roomId: 'r01' }, fixedCtx);
+    const second = reduce(state, { type: 'room/enter', roomId: 'r01' }, fixedCtx);
+    expect(first).toEqual(second);
+    expect(state).toEqual(initialGameState());
+    expect(first.state).not.toBe(state);
+  });
+
+  it('enters a room from the list it was given', () => {
+    const other: RoomSpec = {
+      ...r01,
+      id: 'r02',
+      stages: r01.stages.map((stage) => ({ ...stage, machines: [{ equation: '3x = 12' }] })),
+    };
+    const { state, events } = createReducer([other])(
+      initialGameState(),
+      { type: 'room/enter', roomId: 'r02' },
+      fixedCtx,
+    );
+    expect(state.room?.spec).toBe(other);
+    expect(events).toEqual([{ type: 'StageArrived', roomId: 'r02', stage: 0 }]);
+  });
+
+  it('refuses a room that is not in content', () => {
+    expect(() =>
+      reduce(initialGameState(), { type: 'room/enter', roomId: 'r13' }, fixedCtx),
+    ).toThrow(/no room r13/);
+  });
+});
+
+describe('effects', () => {
+  it('has no effects in epic 1', () => {
+    expect(effects).toEqual([]);
+  });
+
+  it('runs events in order through effects in order', () => {
+    const calls: string[] = [];
+    const events: DomainEvent[] = [
+      { type: 'StageArrived', roomId: 'r01', stage: 0 },
+      { type: 'StageArrived', roomId: 'r01', stage: 1 },
+    ];
+    runEffects(events, initialGameState(), [
+      (event) => calls.push(`a${event.type === 'StageArrived' ? event.stage : ''}`),
+      (event) => calls.push(`b${event.type === 'StageArrived' ? event.stage : ''}`),
+    ]);
+    expect(calls).toEqual(['a0', 'b0', 'a1', 'b1']);
+  });
+});

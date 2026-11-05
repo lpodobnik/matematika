@@ -6,6 +6,7 @@ import { watchContextLoss } from '@/ui/scene/context-loss';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
+import { Scale } from '@/ui/scene/scale/Scale';
 
 extend({ Container, Graphics });
 
@@ -89,7 +90,7 @@ export function SceneRoot({ resizeTo }: Props) {
   );
 }
 
-function drawEmptyScene(g: Graphics): void {
+function drawPaper(g: Graphics): void {
   const { width, height } = sceneSize;
   g.clear();
   g.rect(0, 0, width, height).fill(palette.paper);
@@ -99,10 +100,14 @@ function drawEmptyScene(g: Graphics): void {
   g.rect(3, 3, width - 6, height - 6).stroke({ width: 6, color: palette.ink, alpha: 0.6 });
 }
 
-/** The empty logical scene, scaled to fit and centred; layout goes through a ref. */
+/**
+ * The logical scene, scaled to fit and centred; layout goes through a ref. The scale factor
+ * is also state (it changes only on resize), so labels can keep their minimum CSS size.
+ */
 function SceneContent() {
   const { app, isInitialised } = useApplication();
   const sceneRef = useRef<Container>(null);
+  const [sceneScale, setSceneScale] = useState(0);
 
   useEffect(() => {
     if (!isInitialised) return;
@@ -113,6 +118,7 @@ function SceneContent() {
       const fit = fitScene(app.screen.width, app.screen.height);
       scene.scale.set(fit.scale);
       scene.position.set(fit.x, fit.y);
+      setSceneScale(fit.scale);
     };
     layout();
     renderer.on('resize', layout);
@@ -123,7 +129,8 @@ function SceneContent() {
 
   return (
     <pixiContainer ref={sceneRef}>
-      <pixiGraphics draw={drawEmptyScene} />
+      <pixiGraphics draw={drawPaper} />
+      <Scale sceneScale={sceneScale} />
     </pixiContainer>
   );
 }
