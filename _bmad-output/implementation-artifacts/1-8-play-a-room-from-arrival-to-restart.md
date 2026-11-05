@@ -1,6 +1,6 @@
 # Story 1.8: Play a room from arrival to restart
 
-Status: review
+Status: done
 
 ## Story
 
@@ -110,3 +110,25 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/app/App.tsx`, `src/architecture.test.ts` (modified)
 - `src/ui/notebook/Notebook.test.tsx`, `pad-keys.test.ts` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Findings
+
+- None. The review raised no findings that needed a fix, so no code changed.
+
+### Minor notes (not fixed, for Luka)
+
+- Hidden tab: `C:\Users\lpodobnik\Claude\matematika\src\app\clock.ts` keeps ticking while rAF-driven Motion animations are paused, so if he switches away during a lock, the 8 s fallback runs the restart and loads the next room without him seeing it. One fix is to skip `clock/tick` while `document.visibilityState` is `'hidden'`.
+- `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\machine\Machine.tsx` turns the pulleys forever in `done` with Motion's infinite repeat. The Consistency Rules put continuous motion on the Pixi ticker (`useTick`), although the Communication section also allows Motion `onUpdate` for "a gear turning".
+- `checkDevReach` in `C:\Users\lpodobnik\Claude\matematika\src\architecture.test.ts` passes any file that contains the text `import.meta.env.DEV` anywhere, even in a comment. It does not check that the dynamic import of `dev/` actually sits behind that guard.
+- `isToggleKey` in `C:\Users\lpodobnik\Claude\matematika\src\dev\dev-view.ts` ignores `shiftKey`, so Shift+Backquote (`~` on a US layout) also toggles the dev panel. On a Croatian layout AltGr+7 is probably a dead key (key `'Dead'`), so only the key left of 1 toggles it there (dev only).
+- Arrive ends on a press anywhere on the canvas, including the letterbox margins (`C:\Users\lpodobnik\Claude\matematika\src\ui\scene\SceneRoot.tsx`). That is wider than "on the machine" in AC1, but this story file records it as a deliberate call ("the scene is the machine").
+
+### Checks after the review
+
+- `npm run check`: 128 files, no errors (unchanged).
+- `npm test`: 48 files, 968 tests passing (unchanged).
+- `npm run build`: `tsc --noEmit` clean; 1.00 MB in 9 files, JavaScript 0.30 MB gzipped (unchanged).
