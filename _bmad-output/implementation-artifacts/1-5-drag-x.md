@@ -1,6 +1,6 @@
 # Story 1.5: Drag x
 
-Status: review
+Status: done
 
 ## Story
 
@@ -96,3 +96,26 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/ui/scene/SceneRoot.tsx`, `src/ui/scene/scale/Scale.tsx`, `Pan.tsx`, `Piece.tsx`, `layout.ts`, `layout.test.ts`, `src/art/skins/scale.ts` (modified)
 - `src/content/rooms/rooms.test.ts` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Findings
+
+- None. The review raised no findings that needed a fix, so no code changed.
+
+### Minor notes (not fixed, for Luka)
+
+- A fast flick that crosses more than one 24 px notch in a single pointer move sends one `dial/set` and one `DialNotch` for the jump (`src/ui/scene/scale/dial-drag.ts`, `move()`). That matches the architecture sketch, but epic 6's tick per notch and the drum's "every dial value tried" (room 13) will miss the skipped notches unless intermediate notches are dispatched or the effects fill them in.
+- Pattern 2 says ignored actions are logged at debug level. `setDial` in `src/room/dial.ts` and the `dial/set` case in `src/store/reducer.ts` drop them silently because `lib/log.ts` does not exist yet.
+- `dial/set` is accepted in the `arrive` phase as a stopgap (`turningPhases` in `src/room/dial.ts`). Story 1.8 has to remove it once the first touch ends arrive, or the dial will turn before arrive ends.
+- Only room 1 was checked in the browser, and it never scrolls, so the scrolling track and its stencil mask (`Dial.tsx`, `followScroll`) are covered by unit tests only. Room 3's 0–20 dial at 640 × 360 is the first real case.
+- `sprint-status.yaml` moved `1-5-drag-x` from `backlog` straight to `review`, without the intermediate statuses.
+- A 5-digit readout such as room 11's 5 905 would run off the scene at 640 × 360; that is deferred to epic 4 and does not affect rooms 1–4.
+
+### Checks after the review
+
+- `npm run check`: 90 files, no errors.
+- `npm test`: 33 files, 642 tests passing (unchanged).
+- `npm run build`: clean; 0.92 MB in 9 files, JavaScript 0.28 MB gzipped (unchanged).
