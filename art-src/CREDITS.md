@@ -1,11 +1,11 @@
-images generated: 21/30
+images generated: 28/30
 
 # Art credits
 
 Every image source in `art-src/` has an entry here: file, origin and licence, and for
 AI-generated images the model, prompt, seed and date (architecture, Asset Management). The
 count above covers every image generated for the art style guide, retries included; the cap
-is 30, with 6 kept in reserve for review fixes.
+is 30, with 6 kept in reserve for review fixes. The review fixes used t22–t28, so 2 remain.
 
 The test images in `art-src/tests/` explore the style in `_bmad-output/art-bible.md`. They are
 not production sources, and `scripts/build-art.ts` must skip `art-src/tests/`.
@@ -17,7 +17,14 @@ entry is exactly what was sent. "Review" is the verdict after looking at the ima
 References name local files that are not in the repository: `<name>.tNN.png` is the
 full-size PNG original of `tests/<name>.tNN.webp`, and `style-ref-a.png` is the original of
 t01 cropped to 1920 × 1130 to remove its signature. References were sent at about 1 MP as
-JPEG data URIs.
+JPEG data URIs. The two layout guides are the exception: `housing-layout-guide.png` (t27)
+and `backdrop-layout-guide.png` (t28) are kept in `tests/`. They are flat shapes drawn at
+1920 × 1200 from `src/art/scene-zones.ts` (scene units × 1.2), not AI images, and count
+toward nothing.
+
+From t22 on, "Review" quotes the overlay check, `node art-src/tools/quiet-zone.mjs
+<backdrop|housing> <out-dir> <image>`, against the scale drawn in code (art bible, "Review
+every image"). The verdicts added to t01, t03–t07 and t21 come from the same check.
 
 ## Test images
 
@@ -31,7 +38,7 @@ JPEG data URIs.
 - Date: 2026-11-05
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Style anchor, text to image.
-- Review: Good ink-and-wash look and a quiet centre; became the style anchor. Signed in the bottom-right corner, so the reference copy (style-ref-a.png, not kept) was cropped to 1920 × 1130.
+- Review: Good ink-and-wash look and a quiet centre; became the style anchor. Signed in the bottom-right corner, so the reference copy (style-ref-a.png, not kept) was cropped to 1920 × 1130. Review fix (overlay check, `tools/quiet-zone.mjs`): fails against the scale in code, with pan zones at 6.6 % and 20.1 % ink and the opening at 4.4 %. The door, chains and pulleys stand where the right pan swings, and the door belongs in code anyway.
 - Prompt:
 
   ```text
@@ -65,7 +72,7 @@ JPEG data URIs.
 - Date: 2026-11-05
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Backdrop with the cropped t01 (style-ref-a.png) as the style reference.
-- Review: Rejected. Signed with digits, a TV antenna, lamp glass painted lit, heavy paper grain from the edit endpoint. Composition good.
+- Review: Rejected. Signed with digits, a TV antenna, lamp glass painted lit, heavy paper grain from the edit endpoint. Composition good. Review fix: fails the overlay check (pan zones 11.3 % and 14.4 % ink: the lamp posts).
 - Prompt:
 
   ```text
@@ -82,7 +89,7 @@ JPEG data URIs.
 - Date: 2026-11-05
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Backdrop with style-ref-a.png as the style reference.
-- Review: Usable concept. No signature; brass handwheel reads well; quiet centre. Heavy paper grain; a little splash at the gate.
+- Review: Usable concept. No signature; brass handwheel reads well; quiet centre. Heavy paper grain; a little splash at the gate. Review fix: fails the overlay check (pan zones 38.0 % and 9.8 %, opening 8.2 %, dial ground 14.7 %); the gate belongs in code.
 - Prompt:
 
   ```text
@@ -99,7 +106,7 @@ JPEG data URIs.
 - Date: 2026-11-05
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Backdrop with style-ref-a.png as the style reference.
-- Review: Usable concept. Good wheel and pipework; drew a margin line round the picture and heavy grain.
+- Review: Usable concept. Good wheel and pipework; drew a margin line round the picture and heavy grain. Review fix: fails the overlay check (right pan zone 31.4 %: the wheel and pipes); the wheel belongs in code.
 - Prompt:
 
   ```text
@@ -116,7 +123,7 @@ JPEG data URIs.
 - Date: 2026-11-05
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Retry of t03 with the same seed and style block v3, to test the signature, grain and antenna fixes.
-- Review: Better: v3 removed the signature and the antenna. Lantern glass still shows bulb-like shapes; three lamps instead of four; grain remains (edit endpoint).
+- Review: Better: v3 removed the signature and the antenna. Lantern glass still shows bulb-like shapes; three lamps instead of four; grain remains (edit endpoint). Review fix: fails the overlay check (pan zones 19.4 % and 28.7 %: the lamp posts and the copper pipe).
 - Prompt:
 
   ```text
@@ -133,7 +140,7 @@ JPEG data URIs.
 - Date: 2026-11-05
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Housing on the full 16:10 scene canvas so it lines up with the backdrop.
-- Review: Good housing: clean opening, a central bracket for the beam pivot, a slot for the dial. Too wide for the backdrop (covers its door and crank) and needs a cut-out; a faint ground line.
+- Review: Good housing: clean opening, a central bracket for the beam pivot, a slot for the dial. Too wide for the backdrop (covers its door and crank) and needs a cut-out; a faint ground line. Review fix: drawn for the old hanging scale. Against the standing scale in code its columns stand where the pans swing (pan zones 11.4 % and 9.8 % ink) and its plinth covers the dial (5.4 %). Superseded by t23, t25 and t27.
 - Prompt:
 
   ```text
@@ -371,9 +378,128 @@ JPEG data URIs.
 - Date: 2026-11-05
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Same slots and seed as t04, but text to image with style v4 and no reference, to test whether backdrops need the reference.
-- Review: Best backdrop. Without a reference, v4 alone matches t01 and t04, with smoother paper and no artefacts.
+- Review: Best backdrop. Without a reference, v4 alone matches t01 and t04, with smoother paper and no artefacts. Review fix: still the best match for the style, but it fails the overlay check worst of all (pan zones 60.4 % and 24.4 %, opening 21.6 %): the gate, rack, wheel and canal water fill the middle. Not a layout template.
 - Prompt:
 
   ```text
   A room backdrop: a stone-walled canal lock in the lower town. A heavy wooden sluice gate in an iron frame closes the canal at the left, with a toothed iron rack and a large brass handwheel above it. Behind the gate the water stands high and still; in front of it the channel is almost dry, with wet stones. Stone steps and an iron railing at the right edge. Houses with terracotta roofs behind the far wall. Straight-on frontal elevation at standing eye level, with very weak perspective, like a flat theatre backdrop. The stone quay fills the bottom fifth. The middle of the picture, from about a fifth to four fifths of the width and from a sixth to four fifths of the height, is a plain quiet stretch of canal wall with very little detail, because a machine will be placed in front of it later. Detail sits at the left and right edges and along the top. The sky is bare paper. Everything is still and at rest: no people, no animals, no vehicles, no moving parts, no flowing or splashing water, no smoke, no steam. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 22. `tests/backdrop-r01-door-lift.t22.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 1101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 76, 280 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-05
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Review fix: proves the tightened Backdrop slot for the code's standing scale (pans over almost the full width); the door is left out because code draws it. No style key, so the script's new default (the newest block) is used.
+- Review: Closest backdrop. Plain wall in both pan zones (1.9 % ink each) and an empty, centred, arched gateway, in the style of t21. Fails narrowly: the ground line landed at about y 730, so cobbles show along the bottom of the left pan zone (4 busy cells, max 3), and the arch’s jambs and ring sit inside the opening (3.2 % ink, max 3). Paper fibres visible.
+- Prompt:
+
+  ```text
+  A room backdrop: the old town wall facing a small cobbled square. In the exact centre of the wall is one tall empty arched gateway, about a quarter of the picture's width, from just under the top of the wall down to the ground. Its door has been taken out: the gateway holds no door, no portcullis, no chains and no pulleys, and through it the passage is plain pale paper. Straight-on frontal elevation at standing eye level, with very weak perspective, like a flat theatre backdrop. The wall runs straight across the whole picture from edge to edge. Its top is a simple stone coping a sixth of the way down; only above it, along the top sixth, do a few baroque house fronts with terracotta roofs peek over, and the sky is bare paper. The cobbled ground fills the bottom fifth, with large plain flagstones in the middle. To the left and to the right of the gateway, from the gateway out to both edges of the picture and from the coping down to the ground, the wall is completely plain smooth pale limestone with only faint thin joints: no windows, no doors, no posts, no lamps, no pipes, no chains, no machines, no plants, no water and nothing standing in front of it, because the game draws its moving machine parts there later. Everything is still and at rest: no people, no animals, no vehicles, no moving parts, no flames, no smoke, no steam. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 23. `tests/housing-r01-door-lift.t23.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 3101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 82, 180 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-05
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Review fix: regenerates the door-lift housing for the code's standing scale, as a narrow frame round the machine bay (x 560-1040) that leaves the pan zones empty. Text to image, no reference.
+- Review: Right shape (a narrow frame, an empty opening, two axle brackets, clean outer thirds), wrong size: the columns stand inside the opening (about x 590–640 and 935–1000), leaving 280 units where the stand’s 320-unit foot goes, and the feet reach y 940, into the dial ground (2.9 % ink). Copper pipes outside the columns and a cast shadow. Fails.
+- Prompt:
+
+  ```text
+  A machine housing for a game, drawn on its own: the frame of a counterweight door lift. Two tall slim riveted iron columns stand upright, a quarter of the picture's width apart, one on each side of the centre. A heavy polished brass crossbeam joins their tops, with two small empty brass axle brackets on its underside. Each column stands on a small square stone foot with a brass cap. Small details: rivets, oil cups, a thin copper pipe down the outside of each column. Straight-on frontal elevation, symmetrical, with no perspective. The frame is tall and narrow and stands in the middle of the picture: it is a little less than a third of the picture's width, from near the top edge to about five sixths of the way down. Between the columns is one tall empty opening of plain flat cream paper with nothing in it: no door, no gate, no beam, no pans, no weights, no chains, no pulleys, no gears and no dials. Left and right of the frame, the outer thirds of the picture are empty paper. At rest: no motion, no steam, no smoke. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no wall, no scenery and no shadow.
+  ```
+
+### 24. `tests/backdrop-r01-door-lift.t24.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 1101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 76, 253 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-05
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Review fix, retry of t22: the wall's foot named at four fifths (t22 put it at about 0.73) and a rectangular gateway as wide as the housing's bay, so its jambs sit behind the columns. No style key (newest block).
+- Review: Rejected. The ground line is better (about y 745), but the wall top fell to y 350, so house fronts fill the top of every zone, and the roofs grew antennas despite the style block. Fails.
+- Prompt:
+
+  ```text
+  A room backdrop: the old town wall facing a small cobbled square. In the exact centre of the wall is one tall empty rectangular gateway, a little under a third of the picture's width, with plain stone jambs and a flat stone lintel just under the top of the wall, running down to the ground. Its door has been taken out: the gateway holds no door, no portcullis, no chains and no pulleys, and through it the passage is plain pale paper. Straight-on frontal elevation at standing eye level, with very weak perspective, like a flat theatre backdrop. The wall runs straight across the whole picture from edge to edge. Its top is a simple stone coping a fifth of the way down; only above it, along the top fifth, do a few baroque house fronts with terracotta roofs peek over, and the sky is bare paper. The foot of the wall is four fifths of the way down: the cobbled ground is a strip along the bottom fifth only, with large plain flagstones in the middle. To the left and to the right of the gateway, from the gateway out to both edges of the picture and from the coping down to the foot of the wall, the wall is completely plain smooth pale limestone with only faint thin joints: no windows, no doors, no posts, no lamps, no pipes, no chains, no machines, no plants, no water and nothing standing in front of it, because the game draws its moving machine parts there later. Everything is still and at rest: no people, no animals, no vehicles, no moving parts, no flames, no smoke, no steam. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 25. `tests/housing-r01-door-lift.t25.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 3101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 82, 69 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-05
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Review fix, retry of t23: columns placed at the edges of the middle third so the opening is a quarter of the width (t23's was about 0.18, too narrow for the stand's foot), feet stopped at four fifths, no outside pipes, no shadow.
+- Review: Overshot: the columns stand at about x 420–520 and 1080–1180, inside both pan zones (12.0 % and 11.1 % ink), and a hatched ground line runs under the feet. The opening is empty. Fails.
+- Prompt:
+
+  ```text
+  A machine housing for a game, drawn on its own: the frame of a counterweight door lift. Two slim riveted iron columns stand upright, joined at the top by a heavy polished brass crossbeam with two small empty brass axle brackets on its underside. Each column stands on a small square stone foot with a brass cap. Small details: rivets and oil cups. Straight-on frontal elevation, symmetrical, with no perspective. The frame stands in the middle third of the picture. Its two columns stand just inside the left and right edges of the middle third, so the empty opening between them is wide: a quarter of the picture's width. The crossbeam is near the top edge, and the feet stop four fifths of the way down. The opening holds nothing: no door, no gate, no beam, no pans, no weights, no chains, no pulleys, no gears and no dials, only plain flat cream paper. The outer thirds of the picture and its bottom fifth are empty paper. At rest: no motion, no steam, no smoke. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no wall, no scenery and no shadow under the feet.
+  ```
+
+### 26. `tests/backdrop-r01-door-lift.t26.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 1101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 82, 278 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-05
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Review fix, third try at the Backdrop slot: t22's wording for the top (its coping landed at about 0.2), t24's for the ground (its wall foot landed at about 0.75), roofs with chimneys only (t24 drew antennas) and a wider gateway with slim jambs. No style key (newest block).
+- Review: Ground line right (about y 805), plain walls (2.3 % and 2.7 % ink) and an empty rectangular gateway, but the coping landed at y 250, so windows of the houses behind dip into the top of the zones (10 and 7 busy cells), and the style drifted to a photographic wall on white, not cream. Fails.
+- Prompt:
+
+  ```text
+  A room backdrop: the old town wall facing a small cobbled square. In the exact centre of the wall is one tall empty rectangular gateway, a third of the picture's width, with slim plain stone jambs and a flat stone lintel just under the top of the wall, running down to the ground. Its door has been taken out: the gateway holds no door, no portcullis, no chains and no pulleys, and through it the passage is plain pale paper. Straight-on frontal elevation at standing eye level, with very weak perspective, like a flat theatre backdrop. The wall runs straight across the whole picture from edge to edge. Its top is a simple stone coping a sixth of the way down; only above it, along the top sixth, do a few baroque house fronts with terracotta roofs and plain chimneys peek over, and the sky is bare paper. The foot of the wall is four fifths of the way down: the cobbled ground is a strip along the bottom fifth only, with large plain flagstones in the middle. To the left and to the right of the gateway, from the gateway out to both edges of the picture and from the coping down to the foot of the wall, the wall is completely plain smooth pale limestone with only faint thin joints: no windows, no doors, no posts, no lamps, no pipes, no chains, no machines, no plants, no water and nothing standing in front of it, because the game draws its moving machine parts there later. Everything is still and at rest: no people, no animals, no vehicles, no moving parts, no flames, no smoke, no steam. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 27. `tests/housing-r01-door-lift.t27.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 3101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 82, 179 KB
+- References: `housing-layout-guide.png`
+- Style block: v4
+- Date: 2026-11-05
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Review fix, third try at the housing: words placed the columns too close (t23) and then too far apart (t25), so this one follows a flat layout guide drawn from src/art/scene-zones.ts (tests/housing-layout-guide.png: columns x 560-600 and 1000-1040, crossbeam y 80-160, feet down to y 850, in scene units) through the edit endpoint.
+- Review: Best housing. The layout guide placed the frame within about 7 units of every mount point (columns at about x 553–600 and 995–1040, crossbeam y 65–160, feet to y 850), with the pan zones and dial ground clean apart from the edges. Fails narrowly: the column edges cross into the left pan zone and the opening by 5–7 units, two copper fittings hang from the brackets into the opening, and a watercolour ground wash under the feet must go in the cut-out step. Paper grain from the edit endpoint, as expected.
+- Prompt:
+
+  ```text
+  Image 1 is a flat layout guide, not a drawing to copy. Redraw it as the finished housing described below, keeping every shape exactly where it is and exactly its size: the two columns, the crossbeam, the two small brackets under it and the two feet. Everything that is plain cream in image 1 stays plain empty cream paper. Do not keep its flat grey fill or its plain outlines. A machine housing for a game, drawn on its own: the frame of a counterweight door lift. Two slim riveted iron columns, joined at the top by a heavy polished brass crossbeam with two small empty brass axle brackets on its underside. Each column stands on a small square stone foot with a brass cap. Small details: rivets and oil cups. Straight-on frontal elevation, symmetrical, with no perspective. The opening between the columns holds nothing: no door, no gate, no beam, no pans, no weights, no chains, no pulleys, no gears and no dials, only plain flat cream paper. At rest: no motion, no steam, no smoke. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no ground line, no wall, no scenery and no shadow under the feet.
+  ```
+
+### 28. `tests/backdrop-r01-door-lift.t28.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 1101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 76, 293 KB
+- References: `backdrop-layout-guide.png`
+- Style block: v4
+- Date: 2026-11-05
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Review fix, fourth try at the Backdrop slot: words left the wall top up to 150 units and the ground line up to 70 units off in t22, t24 and t26, so this one follows a flat layout guide drawn from src/art/scene-zones.ts (tests/backdrop-layout-guide.png: roofs only above y 200, wall to y 800, gateway x 560-1040 with its passage x 600-1000, in scene units) through the edit endpoint, as t27 did for the housing.
+- Review: The guide held the top band (the roofs end at y 200) and the walls stayed plain (the right pan zone passes), but the gateway became a deep, dark-framed reveal (opening 11.4 % ink), the ground line still landed near y 730, the cobbles under the dial are dense (16.8 %) and the paper has grain. Fails.
+- Prompt:
+
+  ```text
+  Image 1 is a flat layout guide, not a drawing to copy. Redraw it as the finished backdrop described below, keeping every area exactly where it is and exactly its size: the row of house fronts and roofs along the top, the top of the wall, the gateway with its jambs and lintel, the empty passage, the foot of the wall and the ground. Where image 1 shows plain wall, the wall stays plain. Do not keep its flat fills or its plain outlines. A room backdrop: the old town wall facing a small cobbled square, with one tall empty rectangular gateway in its centre. The gateway's door has been taken out: it holds no door, no portcullis, no chains and no pulleys, and through it the passage is plain pale paper. Straight-on frontal elevation at standing eye level, with very weak perspective, like a flat theatre backdrop. Baroque house fronts with terracotta roofs and plain chimneys peek over the top of the wall, and the sky is bare paper. Left and right of the gateway, the wall is completely plain smooth pale limestone with only faint thin joints: no windows, no doors, no posts, no lamps, no pipes, no chains, no machines, no plants, no water and nothing standing in front of it, because the game draws its moving machine parts there later. The ground is cobbles with large plain flagstones in the middle. Everything is still and at rest: no people, no animals, no vehicles, no moving parts, no flames, no smoke, no steam. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
   ```

@@ -4,7 +4,11 @@
 //   node art-src/tools/fal-generate.mjs <job.json> <originals-dir>
 //
 // job.json: { name, seed, size: { width, height }, slots: { subject, camera, composition,
-//             state, background }, references?: [path, ...], reserve?: true, style?: 'v1' }
+//             state, background }, references?: [path, ...], reserve?: true,
+//             style?: 'v1' | 'v2' | 'v3' | 'v4' }
+//
+// A job without `style` gets the newest block (LATEST_STYLE), never an old one, and CREDITS
+// records the key that was used.
 //
 // The key comes only from process.env.FAL_KEY. It is never printed, logged or written.
 // The script refuses to run past the cap: 30 images in all, and 24 unless the job says
@@ -103,10 +107,19 @@ const REFERENCE_LINE = {
   2: 'Match the drawing style of image 1 exactly: the same ink line weight, hatching, watercolour washes, paper colour and palette. Use image 2 for the design of the subject. Do not copy the subject of image 1.',
 };
 
+/** The newest style block: keys are added in order, so it is the last one. */
+export const LATEST_STYLE = Object.keys(STYLE).at(-1);
+
+/** The style block a job uses: its own `style`, or the newest when it names none. */
+export function styleKey(job) {
+  const key = job.style ?? LATEST_STYLE;
+  if (!Object.hasOwn(STYLE, key)) throw new Error(`Unknown style block ${key}`);
+  return key;
+}
+
 export function buildPrompt(job) {
   const s = job.slots;
-  const style = STYLE[job.style ?? 'v1'];
-  if (!style) throw new Error(`Unknown style block ${job.style}`);
+  const style = STYLE[styleKey(job)];
   const refs = job.references?.length ?? 0;
   const parts = [
     refs ? (s.reference ?? REFERENCE_LINE[Math.min(refs, 2)]) : '',
@@ -230,7 +243,7 @@ async function main() {
     `- Seed: ${result.seed ?? job.seed}`,
     `- Generated at ${job.size.width} × ${job.size.height} PNG; saved as WebP ${webp.info.width} × ${webp.info.height}, quality ${webp.quality}, ${Math.round(webp.data.length / 1000)} KB`,
     `- References: ${refNames}`,
-    `- Style block: ${job.style ?? 'v1'}`,
+    `- Style block: ${styleKey(job)}`,
     `- Date: ${date}`,
     '- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs',
     `- Notes: ${job.notes ?? ''}`,
