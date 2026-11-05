@@ -1,6 +1,6 @@
 # Story 1.4: Show an equation on the scale
 
-Status: review
+Status: done
 
 ## Story
 
@@ -62,7 +62,7 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - **Labels:** small gears and springs show the dial's x (the architecture's "which x the pans show" table), large ones their count as `27x`, dividers their number.
 - **Label size grows on small screens:** 44 scene units normally (about 24 CSS px on a 1280 × 800 tablet), and larger whenever the scene's scale would put them under 20 CSS px (80 units at 640 × 360 with the notebook beside). The scene scale is React state in `SceneContent`, which changes only on resize.
 - **Pans ride on posts above the beam's ends** and stay level, so stacked pieces never clash with strings; the heavier pan is lower, and a needle on the beam against fixed ticks shows the tilt by position too. Every piece kind has its own shape (weight block, balloon float, toothed gear, coil spring, small divider wheel).
-- **Tilt spring:** Motion `springValue`, stiffness 120, damping 14: a small overshoot (about 0.4° on a 5° swing), settled in about a second. The scale starts level and swings to the stage's tilt.
+- **Tilt spring:** Motion `springValue`, stiffness 120, damping 14: a small overshoot (about 0.4° on a 5° swing), settled in about a second. The scale starts level and swings to the stage's tilt. The drawn angle is clamped at ±15° as well, so the overshoot never carries the beam past the clamp (added in the review fixes, see Review).
 - **`main.tsx` enters room 1 at start-up** (`room/enter`), until the map and room sequencing exist. An unknown room id is a programmer error (`assert`).
 - **Room 1's data:** `xMeaning` "counterweight still needed to lift the door", `mapChange` `'door-lift-opens'`, dial 0–10 step 1, readouts on, ways `['try']`, Try values fading `'blanks'` (GDD Fading table, rooms 1–3). A locked dial (room 7) starts at 0 until its rules are written.
 - **Content tests also require the solution to be 0 or more** (5th grade has no negative numbers), and every machine to have pieces on both pans.
@@ -97,3 +97,27 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/ui/scene/scale/Scale.tsx`, `Pan.tsx`, `Piece.tsx`, `layout.ts`, `layout.test.ts`, `tilt-spring.ts`, `tilt-spring.test.ts` (new)
 - `src/ui/scene/SceneRoot.tsx` (modified: draws the scale and keeps the scene scale), `src/main.tsx` (modified: enters room 1)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Finding (fixed)
+
+- **Bug: the drawn tilt went past the ±15° clamp** (`src/ui/scene/scale/tilt-spring.ts`). `tiltFor` clamps the target, but the Motion spring (stiffness 120, damping 14, damping ratio about 0.64, about 7% overshoot) carried the beam past it before settling, and `Scale.tsx` passed the raw spring value to `beamPose`. A swing from 0 to 15° peaked at about 16.1°, and one from −15° to 15° at 17.20°, so the needle also swung past the stand's last tick. AC3, FR3 and the GDD all say the tilt is clamped at ±15°. Room 1 at load doesn't show it (target −5°), but any dial move that reaches the clamp would from story 1.5 on.
+  - **Fix:** `createTiltSpring` now clamps the angle to ±`tuning.tiltMax` before it reaches `onChange`, and `current()` returns the clamped angle too, so `Scale.tsx` needs no change. The beam stops at 15° like a real end stop and keeps its springy swing inside the range. The spring's own value is not clamped, so a retarget still keeps its speed.
+  - **Tests** (`src/ui/scene/scale/tilt-spring.test.ts`, 3 new): a swing from level to 15° never draws beyond 15° on any frame and reaches exactly 15°; a swing from −15° to 15° stays within ±15°, touches both ends and settles at 15°; a swing to 10° still overshoots past 10° but stays under 15°. The first two failed against the old `tilt-spring.ts` (the first stopped at the first frame past the clamp, 15.32°; the second saw a peak of 17.20°) and pass now.
+
+### Minor notes (not fixed, for Luka)
+
+- At 640 × 360 the labels grow to 80 scene units, so a 12-gear pan (`12x`) stacks 6 rows (about 1,030 units) and runs off the top of the 1000-unit scene. `layoutPan` in `src/ui/scene/scale/layout.ts` (line 141) has no height check, and the layout tests check only width and overlap. Room 1 can't reach this.
+- `src/room/pieces.ts` lines 89-90 simplify `kx : n` before making pieces: `3x : 3` shows one gear with no divider, and `6x : 4` shows 3 gears on dividers of 2 instead of 6 on dividers of 4. Worth deciding before story 1.7 acts out division lines.
+- `src/ui/scene/scale/Piece.tsx` line 28 rebuilds the shape whenever the `piece` object changes, and `scaleView` makes a new one on every room change. So every piece's Graphics is redrawn on each dial notch from story 1.5 on, against the architecture's rule that Graphics are built once and then transformed.
+- The content tests in `src/content/rooms/rooms.test.ts` don't check that a stage's `tiltPerUnit` is above 0. `tiltFor` asserts it, so a typo in room data would crash the scene instead of failing a test.
+- The reviewer verified: `npm test` passed (25 files, 369 tests); `tsc --noEmit` and `biome ci` were clean. AC1, AC2, AC4 and AC5 were met, and no `project-context.md` rule or import boundary was broken.
+
+### Checks after the review fixes
+
+- `npm run check`: 73 files, no errors.
+- `npm test`: 25 files, 372 tests passing (3 new in `src/ui/scene/scale/tilt-spring.test.ts`).
+- `npm run build`: clean; 0.91 MB in 9 files, JavaScript 0.27 MB gzipped (unchanged).
