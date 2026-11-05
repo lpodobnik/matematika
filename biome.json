@@ -14,7 +14,8 @@
       "playwright.config.ts",
       "biome.json",
       "package.json",
-      "tsconfig.json"
+      "tsconfig.json",
+      "!!.claude"
     ]
   },
   "formatter": {
