@@ -30,6 +30,7 @@ describe('enterRoom', () => {
       machine: 0,
       pans: equation('x + 4 = 9'),
       dialX: 0,
+      dialOpen: { min: 0, max: 10 },
     });
     expect(events).toEqual([{ type: 'StageArrived', roomId: 'r01', stage: 0 }]);
   });
@@ -41,12 +42,14 @@ describe('enterRoom', () => {
 });
 
 describe('arriveAtStage', () => {
-  it('starts the dial at its minimum', () => {
+  it('starts the dial at its minimum, with its whole range open', () => {
     expect(arriveAtStage(stage).dialX).toBe(3);
+    expect(arriveAtStage(stage).dialOpen).toEqual({ min: 3, max: 6 });
   });
 
-  it('starts a locked dial at 0', () => {
+  it('starts a locked dial at 0, with nothing open', () => {
     expect(arriveAtStage({ ...stage, dial: 'locked' }).dialX).toBe(0);
+    expect(arriveAtStage({ ...stage, dial: 'locked' }).dialOpen).toEqual({ min: 0, max: 0 });
   });
 });
 

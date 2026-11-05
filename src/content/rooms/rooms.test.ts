@@ -7,12 +7,23 @@ import { rooms } from '@/content/rooms';
 import { solve } from '@/math/linear';
 import { parse } from '@/math/parse';
 import * as q from '@/math/rational';
+import { dialValue, notchCount } from '@/room/dial';
 import { panPieces } from '@/room/pieces';
+import { sideValues } from '@/room/tilt';
 
 const machines = rooms.flatMap((room) =>
   room.stages.flatMap((stage, stageIndex) =>
-    stage.machines.map((machine) => ({ room: room.id, stage: stageIndex, ...machine })),
+    stage.machines.map((machine) => ({
+      room: room.id,
+      stage: stageIndex,
+      dial: stage.dial,
+      ...machine,
+    })),
   ),
+);
+
+const stages = rooms.flatMap((room) =>
+  room.stages.map((stage, index) => ({ room: room.id, index, stage })),
 );
 
 describe('rooms', () => {
@@ -20,6 +31,11 @@ describe('rooms', () => {
     expect(rooms[0]?.id).toBe('r01');
     expect(rooms[0]?.machine).toBe('door-lift');
     expect(rooms[0]?.stages[0]?.machines.map((m) => m.equation)).toEqual(['x + 4 = 9']);
+  });
+
+  it("gives room 1 the GDD's dial, 0–10 in ones, with readouts", () => {
+    expect(rooms[0]?.stages[0]?.dial).toEqual({ min: 0, max: 10, step: 1 });
+    expect(rooms[0]?.stages[0]?.readouts).toBe(true);
   });
 
   it('has one entry per room id', () => {
@@ -43,7 +59,36 @@ describe('rooms', () => {
     });
   });
 
-  describe.each(machines)('$room stage $stage: $equation', ({ equation }) => {
+  describe.each(stages)('$room stage $index', ({ stage }) => {
+    it('has a dial of whole numbers from 0 up, ending on a notch', () => {
+      if (stage.dial === 'locked') return;
+      const { min, max, step } = stage.dial;
+      for (const value of [min, max, step]) expect(Number.isInteger(value)).toBe(true);
+      expect(min).toBeGreaterThanOrEqual(0);
+      expect(max).toBeGreaterThan(min);
+      expect(step).toBeGreaterThanOrEqual(1);
+      expect((max - min) % step).toBe(0);
+    });
+
+    it('tilts by more than 0° per unit when it sets its own tilt', () => {
+      if (stage.tiltPerUnit !== undefined) expect(stage.tiltPerUnit).toBeGreaterThan(0);
+    });
+  });
+
+  describe.each(machines)('$room stage $stage: $equation', ({ equation, dial }) => {
+    it('weighs a whole number of 0 or more on each side at every notch, for the readouts', () => {
+      if (dial === 'locked') return;
+      const parsed = parse(equation);
+      if (!parsed.ok) throw new Error(`does not parse: ${parsed.reason}`);
+      for (let notch = 0; notch <= notchCount(dial); notch += 1) {
+        const values = sideValues(parsed.equation, q.rational(dialValue(dial, notch)));
+        for (const value of [values.left, values.right]) {
+          expect(q.isInteger(value)).toBe(true);
+          expect(q.compare(value, q.zero)).toBeGreaterThanOrEqual(0);
+        }
+      }
+    });
+
     it('parses, with one solution, a whole number', () => {
       const parsed = parse(equation);
       expect(parsed.ok).toBe(true);

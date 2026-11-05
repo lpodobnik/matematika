@@ -15,17 +15,18 @@ interface Props {
   fontSize: number;
 }
 
-/** One piece on a pan, with its number drawn as Pixi text (architecture, Text in the scene). */
+/**
+ * One piece on a pan, with its number drawn as Pixi text (architecture, Text in the scene).
+ * Each dial notch gives new piece objects with new labels; the Graphics is redrawn only
+ * when the piece's shape changes, never just because its label did.
+ */
 export function Piece({ piece, box, fontSize }: Props) {
+  const { kind } = piece;
+  const large = (piece.kind === 'gear' || piece.kind === 'spring') && piece.count > 1n;
+  const { width, height, dividerHeight } = box;
   const shape: PieceShape = useMemo(
-    () => ({
-      kind: piece.kind,
-      width: box.width,
-      height: box.height,
-      dividerHeight: box.dividerHeight,
-      large: (piece.kind === 'gear' || piece.kind === 'spring') && piece.count > 1n,
-    }),
-    [piece, box.width, box.height, box.dividerHeight],
+    () => ({ kind, width, height, dividerHeight, large }),
+    [kind, width, height, dividerHeight, large],
   );
   const draw = useCallback((g: Graphics) => scaleSkin.piece(g, shape), [shape]);
   const style: TextStyleOptions = useMemo(

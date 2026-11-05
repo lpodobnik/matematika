@@ -6,6 +6,7 @@ import { watchContextLoss } from '@/ui/scene/context-loss';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
+import { Dial } from '@/ui/scene/scale/Dial';
 import { Scale } from '@/ui/scene/scale/Scale';
 
 extend({ Container, Graphics });
@@ -131,6 +132,7 @@ function SceneContent() {
     <pixiContainer ref={sceneRef}>
       <pixiGraphics draw={drawPaper} />
       <Scale sceneScale={sceneScale} />
+      <Dial sceneScale={sceneScale} />
     </pixiContainer>
   );
 }

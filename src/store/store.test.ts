@@ -97,6 +97,53 @@ describe('the root reducer', () => {
   });
 });
 
+describe('dial/set', () => {
+  function storeInRoomOne() {
+    const seen: DomainEvent[] = [];
+    const store = createGameStore({
+      makeCtx: () => fixedCtx,
+      effects: [(event) => seen.push(event)],
+    });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    seen.length = 0;
+    return { store, seen };
+  }
+
+  it('turns the dial a notch, fires DialNotch, and the x-gear shows the new x', () => {
+    const { store, seen } = storeInRoomOne();
+    store.getState().dispatch({ type: 'dial/set', x: 3 });
+    expect(store.getState().room?.stage.dialX).toBe(3);
+    expect(seen).toEqual([{ type: 'DialNotch', x: 3 }]);
+    const room = store.getState().room;
+    if (room) expect(scaleView(room).left.pieces[0]?.label).toBe('3');
+  });
+
+  it('fires PansLevel when the notch levels the pans', () => {
+    const { store, seen } = storeInRoomOne();
+    store.getState().dispatch({ type: 'dial/set', x: 5 });
+    expect(seen).toEqual([
+      { type: 'DialNotch', x: 5 },
+      { type: 'PansLevel', roomId: 'r01', stage: 0, x: 5 },
+    ]);
+  });
+
+  it('changes nothing, and fires nothing, unless the notch changes', () => {
+    const { store, seen } = storeInRoomOne();
+    const before = store.getState().room;
+    store.getState().dispatch({ type: 'dial/set', x: 0 });
+    store.getState().dispatch({ type: 'dial/set', x: 11 });
+    store.getState().dispatch({ type: 'dial/set', x: 2.5 });
+    expect(store.getState().room).toBe(before);
+    expect(seen).toEqual([]);
+  });
+
+  it('is ignored before a room is entered', () => {
+    const { state, events } = reduce(initialGameState(), { type: 'dial/set', x: 3 }, fixedCtx);
+    expect(state).toEqual(initialGameState());
+    expect(events).toEqual([]);
+  });
+});
+
 describe('effects', () => {
   it('has no effects in epic 1', () => {
     expect(effects).toEqual([]);

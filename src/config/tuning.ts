@@ -10,4 +10,6 @@ export const tuning = {
   /** GDD, Piece kit: above this many x-gears (or springs) in one term, one large gear
    * shows the count instead. */
   maxSmallGears: 12,
+  /** GDD, Controls and Input: the x dial moves one notch per 24 CSS px of drag. */
+  dialNotchPx: 24,
 } as const;

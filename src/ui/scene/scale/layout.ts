@@ -6,6 +6,7 @@
 
 import { isNumberPiece } from '@/room/pieces';
 import type { PieceView } from '@/room/scale';
+import type { Side } from '@/room/types';
 
 export const scaleGeometry = {
   /** The beam turns about this point. */
@@ -14,10 +15,14 @@ export const scaleGeometry = {
   /** From a beam end up to its pan's surface. */
   postHeight: 40,
   panWidth: 470,
-  /** The stand's foot; the dial (story 1.5) goes below it. */
+  /** The stand's foot; the dial goes below it. */
   floorY: 820,
   /** Space between pieces, and between rows of pieces. */
   gap: 12,
+  /** A readout hangs under the outer half of its pan, centred this far out from the post. */
+  readoutOffset: 150,
+  /** From the pan's surface down to the readout's top, clear of the dish. */
+  readoutDrop: 30,
 } as const;
 
 export type ScaleGeometry = typeof scaleGeometry;
@@ -141,4 +146,34 @@ export function layoutPan(
     bottom -= Math.max(...pieceRow.map((p) => p.height)) + gap;
   }
   return boxes;
+}
+
+export interface ReadoutBox {
+  /** Centre, from the pan's centre; positive y is down, under the pan. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Where a side's readout sits on its pan: under the dish, on the outer half, away from the
+ * post and the beam, so it moves with its pan and can't be mistaken for the other side's.
+ * Its number is drawn at the same size as the pieces' numbers.
+ */
+export function readoutBox(
+  side: Side,
+  label: string,
+  fontSize: number,
+  geometry: ScaleGeometry = scaleGeometry,
+): ReadoutBox {
+  const width = Math.max(fontSize * 2.2, labelWidth(label, fontSize) + fontSize);
+  const height = fontSize * 1.4;
+  const outward = side === 'left' ? -1 : 1;
+  return {
+    x: outward * geometry.readoutOffset,
+    y: geometry.readoutDrop + height / 2,
+    width,
+    height,
+  };
 }

@@ -5,6 +5,7 @@ import { enterRoom } from '@/room/room';
 import { type PieceView, scaleView } from '@/room/scale';
 import type { RoomState } from '@/room/types';
 import { fitScene } from '@/ui/scene/fit-scene';
+import { dialLayout } from '@/ui/scene/scale/dial-layout';
 import {
   baseLabelSize,
   beamPose,
@@ -14,6 +15,7 @@ import {
   minNumberCssPx,
   type PieceBox,
   pieceSize,
+  readoutBox,
   scaleGeometry,
 } from '@/ui/scene/scale/layout';
 
@@ -166,5 +168,58 @@ describe('layoutPan', () => {
     const wide = leftPieces('9 999 999 + 9 999 999 + x = 9');
     const boxes = layoutPan(wide, 200);
     expect(new Set(boxes.map((b) => b.y)).size).toBe(boxes.length);
+  });
+});
+
+describe('readoutBox', () => {
+  // The tablet beside the notebook, then 640 × 360 with the notebook beside the scene.
+  const screens = [fitScene(1280 - 0.32 * 1280, 800).scale, fitScene(400, 360).scale].map(
+    (scale) => ({ scale, fontSize: labelFontSize(scale) }),
+  );
+  // Rooms 1–4 reach 23; room 11's 5 905 must fit on the tablet.
+  const labelsFor = (fontSize: number) =>
+    fontSize === baseLabelSize ? ['0', '9', '23', '120', '5\u202f905'] : ['0', '9', '23', '120'];
+
+  it("hangs each side's readout under the outer half of its own pan", () => {
+    const left = readoutBox('left', '4', baseLabelSize);
+    const right = readoutBox('right', '9', baseLabelSize);
+    expect(left.x).toBeLessThan(0);
+    expect(right.x).toBeGreaterThan(0);
+    expect(right.x).toBe(-left.x);
+    // Under the dish, which is 18 units deep.
+    expect(left.y - left.height / 2).toBeGreaterThan(18);
+  });
+
+  it('fits its number, and keeps clear of the post and the beam', () => {
+    for (const { fontSize } of screens) {
+      for (const label of labelsFor(fontSize)) {
+        const box = readoutBox('left', label, fontSize);
+        expect(labelWidth(label, fontSize), label).toBeLessThan(box.width);
+        expect(fontSize).toBeLessThan(box.height);
+        expect(box.x + box.width / 2, `${label} at ${fontSize}`).toBeLessThan(-6);
+      }
+    }
+  });
+
+  it('stays inside the scene, and above the dial, at the largest tilt', () => {
+    for (const { scale, fontSize } of screens) {
+      const dial = dialLayout(scale, 20);
+      const dialTop = dial.trackY - Math.max(dial.knob.height, dial.tickHeight * 2) / 2;
+      for (const tilt of [-15, 15]) {
+        const pose = beamPose(tilt);
+        for (const label of labelsFor(fontSize)) {
+          const left = readoutBox('left', label, fontSize);
+          const right = readoutBox('right', label, fontSize);
+          expect(pose.left.x + left.x - left.width / 2).toBeGreaterThan(0);
+          expect(pose.right.x + right.x + right.width / 2).toBeLessThan(1600);
+          for (const [pan, box] of [
+            [pose.left, left],
+            [pose.right, right],
+          ] as const) {
+            expect(pan.y + box.y + box.height / 2).toBeLessThan(dialTop);
+          }
+        }
+      }
+    }
   });
 });

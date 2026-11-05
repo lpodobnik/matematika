@@ -4,4 +4,9 @@
 
 import type { RoomSpec } from '@/room/types';
 
-export type RoomEvent = { type: 'StageArrived'; roomId: RoomSpec['id']; stage: number };
+export type RoomEvent =
+  | { type: 'StageArrived'; roomId: RoomSpec['id']; stage: number }
+  /** The dial landed on a new notch (audio: a tick). */
+  | { type: 'DialNotch'; x: number }
+  /** The dial levelled the pans (audio: a thunk). Never fired by acting out a line. */
+  | { type: 'PansLevel'; roomId: RoomSpec['id']; stage: number; x: number };

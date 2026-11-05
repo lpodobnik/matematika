@@ -57,11 +57,19 @@ export interface MachineSpec {
   equation: string;
 }
 
+/** The x dial's range: whole numbers from min to max, one notch per step (GDD, Mechanics). */
+export interface DialSpec {
+  min: number;
+  max: number;
+  /** In division forms, the divisor, so every notch is a multiple of it. */
+  step: number;
+}
+
 export interface StageSpec {
   type: 'solve' | 'compare' | 'predict' | 'mistake' | 'story';
   /** 1–3; later ones may hold a ☐ fed by the previous answer. */
   machines: MachineSpec[];
-  dial: { min: number; max: number; step: number } | 'locked';
+  dial: DialSpec | 'locked';
   /** Overrides tuning.tiltPerUnit (1°) for this stage. */
   tiltPerUnit?: number;
   /** Number of dial positions open before the pin. */
@@ -92,8 +100,8 @@ export type PinSpec =
 export type Phase = 'arrive' | 'poke' | 'pin' | 'open' | 'locked' | 'restart' | 'done';
 
 /**
- * The stage in play: the part of Pattern 2's `StageState` that the scale needs so far.
- * Later stories add the notebook lines, draft, jam, machine progress, dial window and pin.
+ * The stage in play: the part of Pattern 2's `StageState` that the scale and the dial need
+ * so far. Later stories add the notebook lines, draft, jam, machine progress and pin.
  */
 export interface StageState {
   phase: Phase;
@@ -102,6 +110,8 @@ export interface StageState {
   /** The last committed line plus exploratory moves; the scale draws it. */
   pans: Equation;
   dialX: number;
+  /** The part of the dial he can reach: the poke window (story 1.9), then the full range. */
+  dialOpen: { min: number; max: number };
 }
 
 export interface RoomState {

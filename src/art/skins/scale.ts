@@ -5,6 +5,7 @@
 //   weight   a trapezoid block with a handle          float    a balloon on a tether
 //   gear     a toothed wheel (more teeth when large)  spring   a coil under a cap
 //   divider  a small toothed wheel under a gear or spring
+//   readout  a display window with a double frame under a pan, unlike any piece
 //
 // Pieces are drawn with their origin at the bottom centre, rising into negative y.
 
@@ -160,5 +161,14 @@ export const scaleSkin = {
   /** Where the divider's number is centred. */
   dividerSpot(shape: PieceShape): LabelSpot {
     return { x: 0, y: -shape.dividerHeight / 2 };
+  },
+
+  /** A readout's display window, centred on the side's value. */
+  readout(g: Graphics, width: number, height: number): void {
+    g.clear();
+    g.roundRect(-width / 2, -height / 2, width, height, 8)
+      .fill(lightFill)
+      .stroke({ ...ink, width: 3 });
+    g.roundRect(-width / 2 + 7, -height / 2 + 7, width - 14, height - 14, 4).stroke(fineInk);
   },
 };

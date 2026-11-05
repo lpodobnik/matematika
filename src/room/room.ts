@@ -23,12 +23,16 @@ export function machineEquation(stage: StageSpec, machine: number): Equation {
 
 /** A stage as it arrives: the first machine's equation on the pans, the dial at its minimum. */
 export function arriveAtStage(stage: StageSpec): StageState {
+  // A locked dial (room 7) never moves; its x is decided with the find-the-mistake rules.
+  const { dial } = stage;
+  const dialX = dial === 'locked' ? 0 : dial.min;
   return {
     phase: 'arrive',
     machine: 0,
     pans: machineEquation(stage, 0),
-    // A locked dial (room 7) never moves; its x is decided with the find-the-mistake rules.
-    dialX: stage.dial === 'locked' ? 0 : stage.dial.min,
+    dialX,
+    // The whole range for now; story 1.9 narrows it to the poke window.
+    dialOpen: dial === 'locked' ? { min: dialX, max: dialX } : { min: dial.min, max: dial.max },
   };
 }
 

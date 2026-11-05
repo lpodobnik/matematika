@@ -5,6 +5,7 @@
 import { castDraft, produce } from 'immer';
 import { rooms } from '@/content/rooms';
 import { assert } from '@/lib/assert';
+import { setDial } from '@/room/dial';
 import { enterRoom } from '@/room/room';
 import type { RoomSpec } from '@/room/types';
 import type { DomainEvent } from '@/store/events';
@@ -30,6 +31,14 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
           const step = enterRoom(findRoom(action.roomId, roomList));
           draft.room = castDraft(step.room);
           draft.ui.screen = 'room';
+          events.push(...step.events);
+          break;
+        }
+        case 'dial/set': {
+          // Ignored with no room, in a phase that holds the dial, or off its notches.
+          const step = state.room ? setDial(state.room, action.x) : null;
+          if (!step) break;
+          draft.room = castDraft(step.room);
           events.push(...step.events);
           break;
         }

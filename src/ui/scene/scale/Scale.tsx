@@ -69,8 +69,20 @@ export function Scale({ sceneScale }: Props) {
       <pixiContainer ref={beamRef} x={scaleGeometry.pivot.x} y={scaleGeometry.pivot.y}>
         <pixiGraphics draw={drawBeam} />
       </pixiContainer>
-      <Pan containerRef={leftRef} pan={view?.left ?? emptyPan} fontSize={fontSize} />
-      <Pan containerRef={rightRef} pan={view?.right ?? emptyPan} fontSize={fontSize} />
+      <Pan
+        side="left"
+        containerRef={leftRef}
+        pan={view?.left ?? emptyPan}
+        readout={view?.readouts?.left ?? null}
+        fontSize={fontSize}
+      />
+      <Pan
+        side="right"
+        containerRef={rightRef}
+        pan={view?.right ?? emptyPan}
+        readout={view?.readouts?.right ?? null}
+        fontSize={fontSize}
+      />
     </pixiContainer>
   );
 }
