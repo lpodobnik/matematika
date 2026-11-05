@@ -2,11 +2,25 @@
 // beside the code that emits them, because pure folders can't import the store; the one
 // DomainEvent union in src/store/events.ts is made of these.
 
-import type { RoomSpec } from '@/room/types';
+import type { RoomSpec, WayId } from '@/room/types';
 
 export type RoomEvent =
   | { type: 'StageArrived'; roomId: RoomSpec['id']; stage: number }
   /** The dial landed on a new notch (audio: a tick). */
   | { type: 'DialNotch'; x: number }
   /** The dial levelled the pans (audio: a thunk). Never fired by acting out a line. */
-  | { type: 'PansLevel'; roomId: RoomSpec['id']; stage: number; x: number };
+  | { type: 'PansLevel'; roomId: RoomSpec['id']; stage: number; x: number }
+  /**
+   * A line was committed to the notebook (saving from epic 2; the play log). `progress` is
+   * whether it moves the machine: a valid line's own progress, and always for the answer
+   * and check lines.
+   */
+  | {
+      type: 'LineAccepted';
+      roomId: RoomSpec['id'];
+      stage: number;
+      source: 'typed' | WayId;
+      progress: boolean;
+    }
+  /** Enter judged a line wrong; it stays in the draft (the play log keeps the text). */
+  | { type: 'LineWrong'; roomId: RoomSpec['id']; stage: number; line: string };

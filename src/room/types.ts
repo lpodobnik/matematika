@@ -2,7 +2,9 @@
 // data: authored rooms, rooms built in the workshop and friends' rooms all use RoomSpec
 // and the same engine, with no per-room code.
 
+import type { Verdict } from '@/math/check';
 import type { Equation } from '@/math/expr';
+import type { Token } from '@/math/tokens';
 
 export type RoomId =
   | 'r01'
@@ -99,14 +101,31 @@ export type PinSpec =
 /** Pattern 2: arrive → poke (if pokeNotches) → pin (if pin) → open → locked → restart → done. */
 export type Phase = 'arrive' | 'poke' | 'pin' | 'open' | 'locked' | 'restart' | 'done';
 
+/** A committed notebook line (Data Architecture). Line 0, the stage equation, is `given`. */
+export interface NotebookLine {
+  tokens: Token[];
+  source: 'given' | 'typed' | WayId;
+  verdict: Verdict;
+}
+
+/** Pattern 2: a wrong line jams the machine until he edits it; a split jams until he drags the splitter off. */
+export type Jam = { kind: 'line' } | { kind: 'split'; parts: number };
+
 /**
- * The stage in play: the part of Pattern 2's `StageState` that the scale and the dial need
- * so far. Later stories add the notebook lines, draft, jam, machine progress and pin.
+ * The stage in play: the part of Pattern 2's `StageState` that the scale, the dial and the
+ * notebook need so far. Later stories add machine progress, acting out, the pin and hints.
  */
 export interface StageState {
   phase: Phase;
   /** Index of the active machine, 0–2. */
   machine: number;
+  /** Committed lines only; [0] is the stage equation, read-only. A wrong line is never here. */
+  lines: NotebookLine[];
+  /** The line he is writing; a wrong line's tokens stay here, marked by `jam`. */
+  draft: Token[];
+  jam: Jam | null;
+  /** How many times enter has refused a line in this stage; the notebook wiggles each time. */
+  refused: number;
   /** The last committed line plus exploratory moves; the scale draws it. */
   pans: Equation;
   dialX: number;

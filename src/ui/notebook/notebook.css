@@ -1,0 +1,205 @@
+/* The notebook (FR15, NFR4). Placeholder blueprint colours from app.css; keep in step
+   with src/art/palette.ts. Touch first: keys at least 48 CSS px, no hover states. */
+
+/* Tablet in landscape: beside the scale. The scene area beside it shrinks to fit. */
+.notebook-area {
+  position: relative;
+  display: flex;
+  flex: 0 0 clamp(280px, 32%, 440px);
+  min-width: 0;
+  border-left: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+.notebook {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 8px;
+}
+
+.notebook__lines {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  list-style: none;
+  font-size: clamp(20px, 3.6dvh, 30px);
+  font-variant-numeric: tabular-nums;
+}
+
+.line {
+  min-height: 1.6em;
+  line-height: 1.6em;
+  border-bottom: 1px solid var(--rule);
+  overflow-wrap: anywhere;
+}
+
+/* Line 0, the stage equation: printed, read-only. */
+.line--given {
+  font-weight: 700;
+  border-bottom: 2px solid var(--ink);
+}
+
+/* A wrong line stays in the draft: a wavy underline marks it, not colour alone. */
+.line--wrong .line__text {
+  color: var(--jam);
+  text-decoration: underline wavy var(--jam);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+
+.line__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--ink);
+}
+
+/* Enter refused the line (incomplete, nonlinear, aside): it wiggles once and stays. */
+.line--wiggle {
+  animation: line-wiggle 360ms ease-in-out;
+}
+
+@keyframes line-wiggle {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-6px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.pad {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(5, minmax(48px, 1fr));
+  grid-auto-rows: clamp(48px, 8.5dvh, 72px);
+  gap: 6px;
+}
+
+.pad__key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(20px, 3.4dvh, 28px);
+  touch-action: manipulation;
+}
+
+.pad__key:active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.pad__key:disabled {
+  opacity: 0.4;
+}
+
+.pad__key--enter {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.pad__key--enter:active {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.pad__icon,
+.notebook__chevron {
+  width: 1.1em;
+  height: 1.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The handle exists only in the phone layout. */
+.notebook__handle {
+  display: none;
+}
+
+/* Phone in landscape, under 500 CSS px tall: the notebook slides over the scale, and the
+   handle on its edge pushes it aside (off to the right) or brings it back. */
+@media (max-height: 499.98px) {
+  .notebook-area {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    width: clamp(280px, 45vw, 340px);
+    box-shadow: -4px 0 12px rgb(61 75 92 / 0.25);
+    transition: transform 220ms ease-out;
+  }
+
+  .notebook-area[data-aside="true"] {
+    transform: translateX(100%);
+    box-shadow: none;
+  }
+
+  .notebook__handle {
+    position: absolute;
+    top: 8px;
+    left: -50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 96px;
+    padding: 0;
+    border: 2px solid var(--ink);
+    border-right: 0;
+    border-radius: 8px 0 0 8px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 28px;
+    touch-action: manipulation;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notebook-area {
+    transition: none;
+  }
+
+  .line--wiggle {
+    animation: line-blink 360ms steps(2, jump-none) 2;
+  }
+}
+
+@keyframes line-blink {
+  50% {
+    opacity: 0.3;
+  }
+}

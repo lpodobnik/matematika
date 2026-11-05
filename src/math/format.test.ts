@@ -13,10 +13,17 @@ import {
   sub,
   xVar,
 } from '@/math/expr';
-import { formatEquation, formatExpr, formatNumber, thousandsSeparator } from '@/math/format';
+import {
+  formatEquation,
+  formatExpr,
+  formatNumber,
+  formatTokens,
+  thousandsSeparator,
+} from '@/math/format';
 import { solve } from '@/math/linear';
 import { parse } from '@/math/parse';
 import * as q from '@/math/rational';
+import { TOKENS, tokenize } from '@/math/tokens';
 
 const x = xVar();
 
@@ -142,6 +149,75 @@ describe('format and parse round-trip (fast-check)', () => {
       fc.property(exprArb, exprArb, (left, right) => {
         const equation: Equation = { left, right };
         expect(parse(formatEquation(equation))).toEqual({ ok: true, equation });
+      }),
+      { numRuns: 1000 },
+    );
+  });
+});
+
+describe('formatTokens', () => {
+  const typed = (text: string): string => {
+    const result = tokenize(text);
+    if (!result.ok) throw new Error(`"${text}" has a symbol that isn't on the pad`);
+    return formatTokens(result.tokens);
+  };
+
+  it('writes a line typed without spaces in school notation', () => {
+    expect(typed('2x+7=25')).toBe('2x + 7 = 25');
+    expect(typed('2*9+7=25')).toBe('2 · 9 + 7 = 25');
+    expect(typed('x=18/2')).toBe('x = 18 : 2');
+    expect(typed('20-x=6')).toBe('20 − x = 6');
+    expect(typed('2*(x+3)=10')).toBe('2 · (x + 3) = 10');
+  });
+
+  it('groups thousands as he types: 5905 shows as 5 905', () => {
+    expect(typed('5')).toBe('5');
+    expect(typed('59')).toBe('59');
+    expect(typed('590')).toBe('590');
+    expect(typed('5905')).toBe('5 905');
+    expect(typed('5905-27x=316')).toBe('5 905 − 27x = 316');
+    expect(typed('1200x=9999999')).toBe('1 200x = 9 999 999');
+  });
+
+  it('keeps leading zeros as typed', () => {
+    expect(typed('x=009')).toBe('x = 009');
+    expect(typed('x=0009')).toBe('x = 0 009');
+  });
+
+  it('shows a line that is not finished yet, or never parses, as typed', () => {
+    expect(formatTokens([])).toBe('');
+    expect(typed('2x+')).toBe('2x +');
+    expect(typed('2x=')).toBe('2x =');
+    expect(typed('=')).toBe('=');
+    expect(typed('-x=14')).toBe('−x = 14');
+    expect(typed('2*-3=x')).toBe('2 · −3 = x');
+    expect(typed('(-5)')).toBe('(−5)');
+    expect(typed('(2+)')).toBe('(2 +)');
+    expect(typed('x3=12')).toBe('x3 = 12');
+    expect(typed('2(x+1)')).toBe('2(x + 1)');
+    expect(typed('(x)(2)')).toBe('(x)(2)');
+    expect(typed('x==')).toBe('x = =');
+  });
+
+  it('uses only the school signs and U+202F', () => {
+    expect(typed('5905*2-1:3')).toBe('5 905 · 2 − 1 : 3');
+    expect([...typed('1000-1*1')].filter((c) => /[-*/]/.test(c))).toEqual([]);
+  });
+
+  it('gives the same text as formatEquation for any equation (fast-check)', () => {
+    fc.assert(
+      fc.property(exprArb, exprArb, (left, right) => {
+        const text = formatEquation({ left, right });
+        expect(typed(text)).toBe(text);
+      }),
+      { numRuns: 1000 },
+    );
+  });
+
+  it('writes text that reads back as the same tokens (fast-check)', () => {
+    fc.assert(
+      fc.property(fc.array(fc.constantFrom(...TOKENS), { maxLength: 40 }), (tokens) => {
+        expect(tokenize(formatTokens(tokens))).toEqual({ ok: true, tokens });
       }),
       { numRuns: 1000 },
     );

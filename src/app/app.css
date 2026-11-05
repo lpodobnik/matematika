@@ -3,6 +3,7 @@
   --table: #d9d2c1;
   --paper: #f4efe3;
   --ink: #3d4b5c;
+  --jam: #a8432f;
   --rule: rgb(61 75 92 / 0.18);
   color-scheme: light;
 }
@@ -27,6 +28,7 @@ body {
 }
 
 .app {
+  position: relative;
   display: flex;
   width: 100vw;
   height: 100dvh;
@@ -44,20 +46,6 @@ body {
   inset: 0;
   display: block;
   touch-action: none;
-}
-
-/* Placeholder until story 1.6 builds the notebook. */
-.notebook-area {
-  flex: 0 0 clamp(240px, 32%, 440px);
-  border-left: 2px solid var(--ink);
-  background-color: var(--paper);
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 47px,
-    var(--rule) 47px,
-    var(--rule) 48px
-  );
 }
 
 .portrait-overlay {

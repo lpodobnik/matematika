@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { tokenFromChar } from '@/math/tokens';
 import { panPieces } from '@/room/pieces';
 import { scaleView } from '@/room/scale';
 import type { RoomSpec } from '@/room/types';
@@ -15,7 +16,7 @@ describe('the store', () => {
   it('starts with no room', () => {
     const store = createGameStore();
     expect(store.getState().room).toBeNull();
-    expect(store.getState().ui).toEqual({ screen: 'room' });
+    expect(store.getState().ui).toEqual({ screen: 'room', notebookAside: false });
   });
 
   it('loads room 1: one x-gear and a weight of 4 on the left, a weight of 9 on the right', () => {
@@ -141,6 +142,81 @@ describe('dial/set', () => {
     const { state, events } = reduce(initialGameState(), { type: 'dial/set', x: 3 }, fixedCtx);
     expect(state).toEqual(initialGameState());
     expect(events).toEqual([]);
+  });
+});
+
+describe('notebook actions', () => {
+  function roomOneStore(seen: DomainEvent[] = []) {
+    const store = createGameStore({ makeCtx: () => fixedCtx, effects: [(e) => seen.push(e)] });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    seen.length = 0;
+    return store;
+  }
+
+  function typeLine(store: ReturnType<typeof roomOneStore>, text: string): void {
+    for (const char of text) {
+      const token = tokenFromChar(char);
+      if (token) store.getState().dispatch({ type: 'notebook/type', token });
+    }
+  }
+
+  it('types, deletes from the end and enters through dispatch', () => {
+    const seen: DomainEvent[] = [];
+    const store = roomOneStore(seen);
+    typeLine(store, 'x=55');
+    store.getState().dispatch({ type: 'notebook/delete' });
+    expect(store.getState().room?.stage.draft).toEqual(['x', '=', '5']);
+    store.getState().dispatch({ type: 'notebook/enter' });
+    const stage = store.getState().room?.stage;
+    expect(stage?.lines.map((line) => line.tokens.join(''))).toEqual(['x+4=9', 'x=5']);
+    expect(stage?.draft).toEqual([]);
+    expect(seen).toEqual([
+      { type: 'LineAccepted', roomId: 'r01', stage: 0, source: 'typed', progress: true },
+    ]);
+  });
+
+  it('keeps a refused line in the draft and counts the wiggle', () => {
+    const store = roomOneStore();
+    typeLine(store, 'x+');
+    store.getState().dispatch({ type: 'notebook/enter' });
+    expect(store.getState().room?.stage.draft).toEqual(['x', '+']);
+    expect(store.getState().room?.stage.refused).toBe(1);
+  });
+
+  it('marks a wrong line, holds the dial, and an edit clears the mark', () => {
+    const seen: DomainEvent[] = [];
+    const store = roomOneStore(seen);
+    typeLine(store, 'x=6');
+    store.getState().dispatch({ type: 'notebook/enter' });
+    expect(store.getState().room?.stage.jam).toEqual({ kind: 'line' });
+    expect(seen).toEqual([{ type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' }]);
+    const jammed = store.getState().room;
+    store.getState().dispatch({ type: 'dial/set', x: 1 });
+    expect(store.getState().room).toBe(jammed);
+    store.getState().dispatch({ type: 'notebook/delete' });
+    expect(store.getState().room?.stage.jam).toBeNull();
+  });
+
+  it('is ignored before a room is entered', () => {
+    for (const action of [
+      { type: 'notebook/type', token: '5' },
+      { type: 'notebook/delete' },
+      { type: 'notebook/enter' },
+    ] as const) {
+      const { state, events } = reduce(initialGameState(), action, fixedCtx);
+      expect(state).toEqual(initialGameState());
+      expect(events).toEqual([]);
+    }
+  });
+
+  it('pushes the notebook aside and brings it back (the phone layout)', () => {
+    const store = roomOneStore();
+    const room = store.getState().room;
+    store.getState().dispatch({ type: 'notebook/slide', aside: true });
+    expect(store.getState().ui.notebookAside).toBe(true);
+    store.getState().dispatch({ type: 'notebook/slide', aside: false });
+    expect(store.getState().ui.notebookAside).toBe(false);
+    expect(store.getState().room).toBe(room);
   });
 });
 

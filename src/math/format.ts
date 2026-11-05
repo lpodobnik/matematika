@@ -5,18 +5,22 @@
 
 import { assert } from '@/lib/assert';
 import type { Equation, Expr } from '@/math/expr';
+import { isDigit, type Token } from '@/math/tokens';
 
 export const thousandsSeparator = '\u202f';
 
 const signs = { add: '+', sub: '−', mul: '·', div: ':' } as const;
 
+/** Groups of three from the right: `5905` → `5 905`. Leading zeros stay as written. */
+function groupDigits(digits: string): string {
+  return digits.replace(/\B(?=(\d{3})+$)/g, thousandsSeparator);
+}
+
 /** A whole number in school notation: `5905` → `5 905`, `999` → `999`. */
 export function formatNumber(value: number | bigint): string {
   assert(typeof value === 'bigint' || Number.isSafeInteger(value), `not a whole number: ${value}`);
   const big = BigInt(value);
-  const digits = (big < 0n ? -big : big).toString();
-  // Groups of three from the right: 5905 → 5, 905.
-  const grouped = digits.replace(/\B(?=(\d{3})+$)/g, thousandsSeparator);
+  const grouped = groupDigits((big < 0n ? -big : big).toString());
   return big < 0n ? `−${grouped}` : grouped;
 }
 
@@ -54,4 +58,41 @@ export function formatExpr(expr: Expr): string {
 /** `2x + 7 = 25`, `5 905 − 27x = 316`. */
 export function formatEquation(equation: Equation): string {
   return `${formatExpr(equation.left)} = ${formatExpr(equation.right)}`;
+}
+
+const operatorTokens: ReadonlySet<Token> = new Set<Token>(['+', '−', '·', ':', '=']);
+
+/**
+ * A notebook line as he typed it, in school notation, whether or not it parses: digit runs
+ * grouped by thousands (`5905` → `5 905`), a space either side of an operator that follows a
+ * number, x or `)`, and none inside brackets or between a number and x (`2x`, `2 · (x + 3)`).
+ * For any equation, the tokens of `formatEquation` come back as the same text.
+ */
+export function formatTokens(tokens: readonly Token[]): string {
+  let text = '';
+  let digits = '';
+  // Whether the last thing written was a number, x or `)`, so an operator is binary.
+  let afterOperand = false;
+  for (const token of tokens) {
+    if (isDigit(token)) {
+      digits += token;
+      continue;
+    }
+    if (digits !== '') {
+      text += groupDigits(digits);
+      digits = '';
+      afterOperand = true;
+    }
+    if (operatorTokens.has(token)) {
+      text += afterOperand ? ` ${token} ` : token;
+      afterOperand = false;
+    } else if (token === ')') {
+      text = `${text.trimEnd()})`;
+      afterOperand = true;
+    } else {
+      text += token;
+      afterOperand = token === 'x';
+    }
+  }
+  return (text + groupDigits(digits)).trimEnd();
 }

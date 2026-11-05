@@ -40,7 +40,10 @@ export function dialTurns(phase: Phase): boolean {
   return turningPhases.has(phase);
 }
 
-/** What the dial shows: its notches, the part he can reach, where it is and whether it turns. */
+/**
+ * What the dial shows: its notches, the part he can reach, where it is and whether it
+ * turns (not in a phase that holds it, nor while the machine is jammed).
+ */
 export interface DialView extends DialSpec {
   /** The reachable part: the poke window (story 1.9), then the full range. */
   openMin: number;
@@ -62,7 +65,7 @@ export function dialView(room: RoomState | null): DialView | null {
     openMin: stage.dialOpen.min,
     openMax: stage.dialOpen.max,
     x: stage.dialX,
-    turns: dialTurns(stage.phase),
+    turns: dialTurns(stage.phase) && stage.jam === null,
   };
 }
 
@@ -74,13 +77,14 @@ export interface DialStep {
 /**
  * Turns the dial to x (`dial/set`): the pans are weighed at x, `DialNotch` fires, and
  * `PansLevel` too when the sides are equal there. Null, so the action is ignored, when x is
- * where the dial already is, isn't one of its reachable notches, or the phase holds the
- * dial still. The store only changes when the notch does.
+ * where the dial already is, isn't one of its reachable notches, the phase holds the dial
+ * still, or the machine is jammed (Pattern 2: while jammed he can only edit the draft,
+ * drag the splitter off, reset or leave). The store only changes when the notch does.
  */
 export function setDial(room: RoomState, x: number): DialStep | null {
   const { dial } = currentStageSpec(room);
   const { stage } = room;
-  if (dial === 'locked' || !dialTurns(stage.phase)) return null;
+  if (dial === 'locked' || !dialTurns(stage.phase) || stage.jam !== null) return null;
   if (x === stage.dialX || !isOnDial(dial, x)) return null;
   if (x < stage.dialOpen.min || x > stage.dialOpen.max) return null;
   const events: RoomEvent[] = [{ type: 'DialNotch', x }];

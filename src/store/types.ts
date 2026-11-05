@@ -21,6 +21,8 @@ export type Screen = 'room';
 
 export interface UiState {
   screen: Screen;
+  /** On a phone, whether the notebook is pushed aside off the scale. The tablet ignores it. */
+  notebookAside: boolean;
 }
 
 /**

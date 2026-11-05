@@ -12,4 +12,7 @@ export const tuning = {
   maxSmallGears: 12,
   /** GDD, Controls and Input: the x dial moves one notch per 24 CSS px of drag. */
   dialNotchPx: 24,
+  /** The most pad tokens a draft line holds; further keys are ignored. Room 11's check
+   * line `5 905 − 27 · 207 = 316` is 15, so this only stops runaway typing. */
+  draftMaxTokens: 40,
 } as const;

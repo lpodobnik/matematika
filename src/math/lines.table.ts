@@ -26,6 +26,9 @@ const r02b = 'x : 3 = 5';
 const r03a = 'x − 6 = 8';
 const r03b = '20 − x = 6';
 const r04 = '2x + 5 = 23';
+/** U+202F, the thousands separator the notebook writes. */
+const nnbsp = ' ';
+const r11 = `5${nnbsp}905 − 27x = 316`;
 
 export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
   'story 1.3 acceptance criteria (2x + 7 = 25)': [
@@ -234,5 +237,27 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r04, line: 'x = 36', verdict: 'wrong', note: 'multiplied' },
     { stage: r04, line: 'x · 2 + 5 = 23', verdict: 'valid', progress: false, move: 'none' },
     { stage: r04, before: ['x = 9'], line: '2 · 9 + 5 = 24', verdict: 'wrong' },
+  ],
+  // Story 1.6: lines as the notebook writes them (`formatTokens`, with U+202F between
+  // thousands) and as typed on a computer (no spaces, `*`, `/` and `-`).
+  'typed in the notebook (story 1.6)': [
+    { stage: r01, line: 'x=9-4', verdict: 'valid', progress: true, note: 'keyboard -' },
+    { stage: r01, line: 'x=5', verdict: 'answer', note: 'no spaces' },
+    { stage: r01, before: ['x=5'], line: '5+4=9', verdict: 'check', note: 'no spaces' },
+    { stage: ac, line: 'x=18/2', verdict: 'valid', progress: true, note: 'keyboard /' },
+    { stage: ac, before: ['x = 9'], line: '2*9+7=25', verdict: 'check', note: 'keyboard *' },
+    { stage: ac, line: `2x = 1${nnbsp}018 − 1${nnbsp}000`, verdict: 'valid', progress: true },
+    { stage: ac, line: '2x=1018-1000', verdict: 'valid', progress: true, note: 'as typed' },
+    { stage: ac, line: 'x = 009', verdict: 'answer', note: 'leading zeros' },
+    { stage: ac, line: '2x +', verdict: 'incomplete', note: 'not finished' },
+    { stage: r11, line: `27x = 5${nnbsp}905 − 316`, verdict: 'valid', progress: true },
+    { stage: r11, line: `27x = 5${nnbsp}589`, verdict: 'valid', progress: true },
+    { stage: r11, line: `x = 5${nnbsp}589 : 27`, verdict: 'valid', progress: true },
+    { stage: r11, line: 'x = 207', verdict: 'answer' },
+    { stage: r11, before: ['x = 207'], line: `5${nnbsp}905 − 27 · 207 = 316`, verdict: 'check' },
+    { stage: r11, before: ['x = 207'], line: '5905-27*207=316', verdict: 'check', note: 'typed' },
+    { stage: r11, line: `27x = 6${nnbsp}221`, verdict: 'wrong', note: '5 905 + 316' },
+    { stage: r11, line: `x = 5${nnbsp}589`, verdict: 'wrong', note: 'not divided' },
+    { stage: r11, line: `5${nnbsp}905 − 27 · 207 = 316`, verdict: 'aside', note: 'before x = 207' },
   ],
 };

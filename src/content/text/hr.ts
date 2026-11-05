@@ -8,4 +8,11 @@ export const hr = {
       tapToRestart: 'Dodirni za ponovno pokretanje.',
     },
   },
+  notebook: {
+    label: 'Bilježnica',
+    delete: 'Obriši',
+    enter: 'Upiši',
+    pushAside: 'Skloni bilježnicu',
+    bringBack: 'Vrati bilježnicu',
+  },
 } as const;
