@@ -1,6 +1,6 @@
 # Story 1.3: Judge a written line
 
-Status: review
+Status: done
 
 ## Story
 
@@ -87,3 +87,25 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/math/steps.ts`, `src/math/steps.test.ts`
 - `src/math/lines.table.ts`, `src/math/lines.table.test.ts`
 - `_bmad-output/implementation-artifacts/1-3-judge-a-written-line.md` (this file)
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Findings
+
+- None. The review raised no findings to fix, so no code changed in this pass.
+
+### Minor notes (not fixed, for Luka)
+
+- **Sprint status not updated:** on `lane/1-3`, `_bmad-output/implementation-artifacts/sprint-status.yaml` still has `1-3-judge-a-written-line: backlog` while this story file says `Status: review`. Story 1.2's commit 6e59550 did set its own entry to review. This may be deliberate, to keep parallel lanes from conflicting. (Left alone here as instructed: the merge step updates it.)
+- **`splitParts` has no upper limit:** `src/math/moves.ts` `splitParts` accepts any whole ratio of 2 or more, so `24x = 48` → `2x = 4` is labelled `split-both` with parts 12. The architecture's splitter only goes from 2 to 9, so anything acting out by `parts` later should check the range.
+- **Un-evaluating is also `evaluate`:** `src/math/moves.ts` `classifyMove` calls un-evaluating a side `evaluate` too: `2x = 18` → `2x = 25 − 7` gives `{ kind: 'evaluate', side: 'right' }`, but the architecture means pieces merging (`25 − 7` → `18`).
+- **Terms counted as written:** because terms are counted as written, `2x + 7 − 7 = 25 − 7` is valid but makes no progress (3,1,1 against 2,1,0), so a common school line that has a move to act out does not move the machine (FR18). The story flags this as a reading of the architecture. Worth Luka confirming.
+- **Progress against the previous line only:** progress is compared only with the previous committed line, as the architecture says. Alternating `2x = 18` and `2x + 8 = 26` therefore earns progress every time it goes back to `2x = 18` (capped at 0.8 by story 1.7). The story notes this as harmless.
+
+### Checks after the review
+
+- `npm run check`: 52 files, no errors.
+- `npm test`: 21 files, 446 tests passing (unchanged).
+- `npm run build`: clean; 0.85 MB in 9 files, JavaScript 0.25 MB gzipped (unchanged).
