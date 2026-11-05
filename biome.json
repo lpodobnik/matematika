@@ -1,0 +1,99 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "src/**",
+      "scripts/**",
+      "e2e/**",
+      "vite.config.ts",
+      "playwright.config.ts",
+      "biome.json",
+      "package.json",
+      "tsconfig.json"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "src/math/**",
+        "src/room/**",
+        "src/fight/**",
+        "src/city/**",
+        "src/economy/**",
+        "src/workshop/**",
+        "src/links/**",
+        "src/playlog/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "react": "Pure folders never import React (architecture, Architectural Boundaries).",
+                  "react-dom": "Pure folders never import React (architecture, Architectural Boundaries).",
+                  "zustand": "Pure folders never import the store library (architecture, Architectural Boundaries).",
+                  "motion": "Pure folders never import Motion (architecture, Architectural Boundaries).",
+                  "pixi.js": "Pure folders never import Pixi (architecture, Architectural Boundaries).",
+                  "@pixi/react": "Pure folders never import Pixi (architecture, Architectural Boundaries).",
+                  "pixi-filters": "Pure folders never import Pixi (architecture, Architectural Boundaries)."
+                },
+                "patterns": [
+                  {
+                    "group": [
+                      "@/ui",
+                      "@/ui/**",
+                      "@/store",
+                      "@/store/**",
+                      "@/save",
+                      "@/save/**",
+                      "@/audio",
+                      "@/audio/**"
+                    ],
+                    "message": "Pure folders never import ui, store, save or audio (architecture, Architectural Boundaries)."
+                  }
+                ]
+              }
+            },
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "window": "Pure folders never use the DOM.",
+                  "document": "Pure folders never use the DOM.",
+                  "navigator": "Pure folders never use the DOM.",
+                  "localStorage": "Pure folders never use storage.",
+                  "sessionStorage": "Pure folders never use storage.",
+                  "indexedDB": "Pure folders never use storage."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

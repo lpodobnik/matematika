@@ -1,0 +1,137 @@
+/* Placeholder blueprint colours; keep in step with src/art/palette.ts. */
+:root {
+  --table: #d9d2c1;
+  --paper: #f4efe3;
+  --ink: #3d4b5c;
+  --rule: rgb(61 75 92 / 0.18);
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--table);
+  color: var(--ink);
+  font-family: system-ui, sans-serif;
+}
+
+.app {
+  display: flex;
+  width: 100vw;
+  height: 100dvh;
+}
+
+.scene-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.scene-area canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  touch-action: none;
+}
+
+/* Placeholder until story 1.6 builds the notebook. */
+.notebook-area {
+  flex: 0 0 clamp(240px, 32%, 440px);
+  border-left: 2px solid var(--ink);
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 47px,
+    var(--rule) 47px,
+    var(--rule) 48px
+  );
+}
+
+.portrait-overlay {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .portrait-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 24px;
+    background: var(--paper);
+    text-align: center;
+  }
+}
+
+.portrait-overlay__device {
+  width: 64px;
+  height: 104px;
+  border: 4px solid var(--ink);
+  border-radius: 12px;
+  animation: turn-device 2.4s ease-in-out infinite;
+}
+
+.portrait-overlay__text {
+  margin: 0;
+  font-size: 24px;
+}
+
+@keyframes turn-device {
+  0%,
+  25% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait-overlay__device {
+    animation: none;
+    transform: rotate(-90deg);
+  }
+}
+
+.crash-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  border: 0;
+  padding: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.crash-screen__title {
+  font-size: 32px;
+}
+
+.crash-screen__action {
+  font-size: 20px;
+}
