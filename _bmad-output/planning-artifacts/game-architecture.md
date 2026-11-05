@@ -11,7 +11,7 @@ versionsVerified: '2026-11-05, npm registry'
 
 # Source Documents
 gdd: '_bmad-output/planning-artifacts/gdds/gdd-matematika-2026-11-05/gdd.md'
-epics: '_bmad-output/planning-artifacts/gdds/gdd-matematika-2026-11-05/epics.md'
+epics: '_bmad-output/planning-artifacts/epics.md'
 brief: '_bmad-output/planning-artifacts/briefs/brief-matematika-2026-11-05/brief.md'
 narrative: '_bmad-output/narrative-design.md'
 ---
@@ -159,7 +159,7 @@ State management, persistence, link format, the equation model, room data, audio
 | Text | One Croatian module, typed keys | n/a | 2, 6 | GDD: all text in one place |
 | Lint and format | Biome | 2.6.5 | All | `typescript-eslint` does not support TypeScript above 6.0 |
 | Unit tests | Vitest, fast-check for property tests | 5.1.0, 4.10.2 | All | Line-checker table, codecs, balance |
-| E2E tests | Playwright, Android tablet, iPad, iPhone and desktop profiles | 1.65.0 | 1, 5, 6 | Device and link checks |
+| E2E tests | Playwright, Android tablet, iPad, iPhone and desktop profiles | 1.65.0 | 5, 6 | Link flows from epic 5; the full device set in epic 6 |
 | Offline and install | `vite-plugin-pwa`, update applied only on the map | 2.0.0 | 6 | Home-screen app, durable storage |
 | Hosting | GitHub Pages from GitHub Actions; Cloudflare Pages if the repo stays private on a free plan | n/a | 6 | Static, free; the origin is fixed before handover |
 | Runtime | Node | 26 (installed: 26.13.0) | All | Vite 8 needs 20.19+ or 22.12+ |
@@ -237,7 +237,7 @@ The encoding is in Pattern 3.
 | `math/tokens.ts` | Number-pad tokens: digits, `x`, `+`, `−`, `·`, `:`, `=`, `(`, `)` |
 | `math/parse.ts` | Tokens to `Equation`; returns `{ ok: false, reason }`, never throws on user input |
 | `math/expr.ts` | AST types, substitution, structural comparison up to commuting terms and swapped sides |
-| `math/rational.ts` | Exact fractions on safe integers, always reduced |
+| `math/rational.ts` | Exact fractions on `BigInt`, always reduced, so no chain of `·` can overflow |
 | `math/linear.ts` | Expression to `a·x + b`, or `nonlinear` for `x · x` and `18 : x` |
 | `math/check.ts` | Judges a line against the stage (verdicts below) |
 | `math/moves.ts` | Classifies the change between two equations for the pans to act out; measures progress |
@@ -267,17 +267,35 @@ export type Verdict =
 
 **Checker rules**
 
-1. Parse. If parsing fails, the verdict is `incomplete`; if the line isn't linear, `nonlinear`.
-2. If the line has no x: it is `check` if it is true and structurally equal to the stage's equation with the solution put in for x (`2 · 9 + 7 = 25`, not `25 = 25`). Any other true line is `aside`; a false one is `wrong`.
+1. Parse. These are `incomplete`: anything that doesn't parse, more than one `=`, x followed by a digit (`x3`), division by zero, a leading minus, and numbers above 9 999 999. A line that isn't linear is `nonlinear`.
+2. If the line has no x: it is `check` if it is true, comes after the answer line, and equals the stage's equation with the solution put in for x, up to factor order, commuted terms and swapped sides (`2 · 9 + 7 = 25` and `9 · 2 + 7 = 25` both count; `25 = 25` doesn't). A check line before the answer line, and any other true line, is `aside`. A false one is `wrong`.
 3. Otherwise, solve it exactly. A line is correct only if it has **one solution equal to the stage's solution**. Any other result, including no solution or every number being a solution, is `wrong`.
-4. `x = n` is `answer`. It must come before `check`, which must be the last line (GDD: the shortest solution is these two lines).
+4. `x = n` or `n = x`, with the stage's n, is `answer`. It must come before `check`, which must be the last line (GDD: the shortest solution is these two lines).
 5. Any other correct line is `valid`, with `progress` measured as below.
 
-**Progress ("moves the machine one stage").** Each equation gets a complexity tuple, `(terms on the x side, 1 if x's coefficient isn't 1 else 0, operators on the number side)`, compared lexicographically. A valid line makes progress if its tuple is smaller than the previous committed line's. `2x + 7 = 25` (2,1,0) → `2x = 25 − 7` (1,1,1) → `2x = 18` (1,1,0) → `x = 18 : 2` (1,0,1) → `x = 9` (1,0,0): each step makes progress. `2x + 8 = 26` doesn't, so it is accepted without moving the machine, as the GDD specifies. Rooms with x on both sides are outside the MVP, and the builder can't make them.
+**Progress.** Each equation gets a complexity tuple, `(terms on the x side, 1 if x's coefficient isn't 1 else 0, operators on the number side)`, compared lexicographically. A valid line makes progress if its tuple is smaller than the previous committed line's. `2x + 7 = 25` (2,1,0) → `2x = 25 − 7` (1,1,1) → `2x = 18` (1,1,0) → `x = 18 : 2` (1,0,1) → `x = 9` (1,0,0): each step makes progress. `2x + 8 = 26` doesn't, so it is accepted without moving the machine, as the GDD specifies. Rooms with x on both sides are outside the MVP, and the builder can't make them.
 
-**Acting out.** The pans always render an `Equation`. To act out a line, the machine evaluates both sides **at the stage's true solution**, whatever the dial shows:
-- A correct line keeps the pans level, and the pieces animate from the old layout to the new one by the classified `Move`.
-- A wrong line makes the sides differ, so the pans tip by the usual tilt rule and the machine jams. The child sees exactly what his line claimed.
+**Machine progress ("moves the machine one stage").** `machineProgress` runs from 0 to 1, per machine. Each valid line with progress adds `tuning.progressStep` (0.2), up to 0.8. The answer line sets 0.9, and the check line sets 1 and locks the machine. A valid line without progress adds nothing. Each machine's skin shows progress continuously (the door rises partway, the lamps glow brighter), so any number of lines works, including the two-line shortest solution. "Stage" always means a room stage; the Pixi root component is `SceneRoot`.
+
+**Which x the pans show**
+
+| Situation | x for the pans | Gear labels | Readouts |
+|---|---|---|---|
+| Exploring: dial, tray, splitter | The dial's x | The dial's x | Shown, unless the stage hides them |
+| Acting out a written line | The stage's solution | `?` | Hidden |
+
+- Acting out never changes the dial's value. Any exploring action (dial, tray or splitter) ends acting out and returns the pans to the dial's x, in the last committed line's layout.
+- A correct line acted out stays level. A wrong one tips, by at least `tuning.jamMinTilt` (4°), so a near miss still shows, and the machine jams. The child sees exactly what his line claimed.
+- `PansLevel` fires only when the dial levels the pans. Pins resolve then, or when the stage locks, and never from acting out.
+- Pieces move from the old layout to the new one with **one generic tween**: pieces matched by kind and number move, and the rest fade out or in. `Move` feeds the play log and later flourishes; epic 1 needs nothing per move kind.
+
+**Balance moves**
+
+- The tray holds **weights and floats only**, numbered 1–99 with a stepper (− and + buttons, which repeat when held). X-gears and springs can't be added or dragged off.
+- After each drop, the number pieces on that pan combine into one piece of their sum: a weight if positive, a float if negative, nothing if zero. A drop that would leave a pan with no x pieces below 0 is refused and slides back.
+- A change to one pan makes the pans' equation differ from the last committed line, so the pans tip at the dial's x. The move is complete when the pans' equation again has the stage's solution. With Balance fading `auto`, that equation is written as the next line, unless it is `x = n`, which he writes himself.
+- The splitter, set to 2–9 parts, first combines each pan's number pieces as a drop does (so `2x = 23 − 5` becomes `2x = 18`), then divides each pan's gear count and number. If any of them doesn't divide evenly, the machine jams (`jam.kind = 'split'`) until he drags the splitter off.
+- Room 4 as a worked sequence: `2x + 5 = 23`; a float 5 on the left gives `2x = 23`, which tips and writes nothing; a float 5 on the right gives `2x = 18`, which is written; the splitter at 2 gives `x = 9` on the pans; he writes `x = 9`, then `2 · 9 + 5 = 23`.
 
 ```ts
 export type Move =
@@ -302,21 +320,21 @@ export type Move =
                      Scale, Notebook, Chain and Drum render from the same stage state
 ```
 
-**Two layers on the scale.** `lines` holds what is written; it is committed and saved. `pans` is what the scale shows: the last committed line plus any exploratory moves. Exploratory moves are free and reversible (GDD). Writing a line replaces `pans` with that line's layout. Reset returns to the stage's first line.
+**Two layers on the scale.** `lines` holds what is committed and saved. Line 0 is the stage equation, shown read-only at the top of the notebook. **A wrong line is never in `lines`**: its tokens go back into the draft, marked as jammed, and he deletes from the end and retypes (there is no caret). Any edit to the draft clears the jam and returns the pans to the last committed line, and enter judges the line again. In `blanks` mode, delete clears the current blank, never the template's own text. `pans` is the last committed line plus exploratory moves, which are free and reversible by dragging pieces back (GDD). Writing a line replaces `pans` with that line's layout.
 
 **Fading.** Each way has a line mode per room, taken from the room data:
 
-| Mode | When he moves on the machine | GDD |
+| Mode | What appears | GDD |
 |---|---|---|
-| `auto` | The move's line is appended and committed; he writes the last two lines himself | "Lines appear as he moves" |
-| `blanks` | A template such as `2x = ☐` appears, and he fills in the blank | "He fills in blanks" |
-| `blank` | No line appears; he writes everything | "Blank page" |
+| `auto` | After each completed move on the machine, its line is appended; he writes the answer and check lines | "Lines appear as he moves" |
+| `blanks` | Try values: when the stage opens, `x = ☐` and the check line with x blanked (`☐ + 4 = 9`). Balance and Undo: after each completed move, its line with the result blanked (`2x = ☐`). Pad input fills only the current blank | "He fills in blanks" |
+| `blank` | Nothing; he writes every line | "Blank page" |
 
 **The gear chain** is a view of the current equation, available when x appears once. Its links are computed from the AST: `2x + 7 = 25` gives `x → ·2 → +7 → 25`, and `135 − 5x = 100` gives `x → ·5 → 135 − ☐ → 100`. He picks the operation and number for the last link. A right inverse produces the next equation, which flows through the same pipeline: the pans act it out, and the line is written in `auto` mode. A wrong inverse produces an equation with a different solution, so it jams exactly like a wrong line.
 
 **The recording drum** records `(x, left side's value)` for every dial value tried in the stage. The right side is drawn as the level line. No other state is involved.
 
-**Edge cases.** Whole-number dial only; division forms step by the divisor. A split that doesn't divide evenly jams. Numbers above 9 999 999 are refused as `incomplete`. A leading minus (`−x = −14`) is `incomplete`, because 5th grade has no negative numbers; binary minus works everywhere. Brackets parse, but no room needs them. Leading zeros are allowed. The number pad can't produce letters other than x.
+**Edge cases.** Whole-number dial only; division forms step by the divisor. A leading minus is refused because 5th grade has no negative numbers; binary minus works everywhere. Brackets parse, but no room needs them, and a line with brackets is acted out from its `toLinear` form. Leading zeros are allowed. The number pad can't produce letters other than x.
 
 ### Pattern 2: Room Stage State Machine
 
@@ -329,13 +347,15 @@ type Phase = 'arrive' | 'poke' | 'pin' | 'open' | 'locked' | 'restart' | 'done';
 interface StageState {
   phase: Phase;
   machine: number;                 // index of the active machine, 0–2
-  lines: NotebookLine[];           // committed lines; [0] is the stage equation
-  draft: Token[];
-  jam: { lineIndex: number } | null;
+  lines: NotebookLine[];           // committed lines only; [0] is the stage equation, read-only
+  draft: Token[];                  // a jammed line's tokens come back here
+  jam: { kind: 'line' } | { kind: 'split'; parts: number } | null;
+  machineProgress: number[];       // 0–1 per machine
   pans: Equation;
+  actingOut: boolean;              // true from a written line until the next exploring action (dial, tray, splitter)
   dialX: number;
   dialOpen: { min: number; max: number };   // poke window, then the full range
-  pin: PinValue | null;
+  pin: { value: PinValue; locked: boolean; resolved: boolean } | null;
   jamsInARow: number;
   hintLevel: 0 | 1 | 2 | 3 | 4;
   lastActionAt: number;
@@ -346,12 +366,17 @@ interface StageState {
 
 | Rule | Behaviour |
 |---|---|
-| Jams | While `jam` is set, only editing or deleting the wrong line, reset, or leaving is allowed |
+| Arrive | Ends on his first touch anywhere on the machine |
+| Poke | The dial moves only over the positions min, min + step, …, min + (pokeNotches − 1)·step; the tray, splitter and notebook are off |
+| Pin | Starts when he first drags the pin, which freezes the dial; a second drag moves it; confirming locks it and opens the stage. The pin track runs over the dial's range, or to twice the dial's maximum when the pin spec says `beyondDial` |
+| Resolution | A `level-x` pin resolves when the dial levels the pans or the stage locks; an `effect` pin about direction resolves on the first dial notch after it is confirmed. A right pin emits `PredictionMade` with `right: true` (parts from epic 3, once per stage, recorded in `save.economy.paidPredictions` as `"r05:1"`). A wrong pin briefly shows its own value's tilt on the pans |
+| Jams | While `jam` is set, he can only edit the draft (which clears a line jam), drag the splitter off (which clears a split jam), reset or leave |
 | Room types | `type` selects a small strategy module (`room/types/compare.ts` and so on) that hooks into the common phases. There is no per-room code |
-| Prediction | A pin resolves once; a right call emits `PredictionRight` and pays 2 parts once per stage, recorded in `save.economy.paidPredictions` as `"r05:1"` |
+| First use | The first time the pin, tray or splitter is available, it wiggles once (hint level 1) |
 | Hints | A `clock/tick` action each second checks `ctx.now − lastActionAt ≥ 60 s`; `jamsInARow ≥ 3` raises the level at once. The content comes from `math/steps.ts` |
-| Presentation | `restart` ends when the UI dispatches `presentation/done`, with a timeout fallback so a missed animation event never strands the game |
-| Reset and leave | Allowed in every phase. Leaving keeps the committed lines; reset clears them |
+| Restart | When a stage locks, part of the machine starts; when the last stage locks, the whole machine restarts. Both end when the UI dispatches `presentation/done`, with a timeout fallback so a missed animation event never strands the game |
+| Reset | Resets the current stage only: lines back to line 0, `machineProgress` to 0, the dial to its minimum, exploratory moves and jams cleared. With a locked pin, the pin stays and the stage returns to `open` with the full dial range; without one, it returns to `poke` (or `open` if the stage has no poke window). Reset is off while the stage is `locked` or restarting |
+| Leave | Keeps the committed lines (from epic 2, when there is a map) |
 
 ### Pattern 3: Rooms in Links
 
@@ -379,13 +404,18 @@ Reducers emit events, and three effect modules listen; components never call the
 ```ts
 // src/store/events.ts
 export type DomainEvent =
-  | { type: 'LineAccepted'; roomId: RoomId; stage: number; way: WayId; progress: boolean }
+  | { type: 'StageArrived'; roomId: RoomId; stage: number }
+  | { type: 'DialNotch'; x: number }
+  | { type: 'PansLevel'; roomId: RoomId; stage: number; x: number }
+  | { type: 'WayUsed'; roomId: RoomId; stage: number; way: WayId }          // a completed move on the machine
+  | { type: 'LineAccepted'; roomId: RoomId; stage: number; source: 'typed' | WayId; progress: boolean }
   | { type: 'LineWrong'; roomId: RoomId; stage: number; line: string }
-  | { type: 'MachineJammed'; roomId: RoomId }
+  | { type: 'MachineJammed'; roomId: RoomId; kind: 'line' | 'split' }
   | { type: 'PredictionMade'; roomId: RoomId; stage: number; right: boolean }
+  | { type: 'StageLocked'; roomId: RoomId; stage: number }
   | { type: 'RoomRestarted'; roomId: RoomId }
   | { type: 'FightEnded'; lairId: LairId; won: boolean; parts: number }
-  // …one union, in one file
+  // …one union, in one file; "ways used" in the play log comes from WayUsed
 ```
 
 ---
@@ -398,10 +428,10 @@ export type DomainEvent =
 |---|---|
 | Expected outcomes (wrong line, illegal move, bad link) | Typed results (`Verdict`, `{ ok: false, reason }`). Never thrown |
 | Programmer errors (impossible state) | `assert(cond, msg)` throws; caught by the error boundary |
-| Render crash | The top-level React error boundary shows an in-fiction "the machine jammed, tap to restart" screen. The save is untouched, and the tap reloads into the map |
+| Render crash | The top-level React error boundary shows an in-fiction "the machine jammed, tap to restart" screen. The save is untouched, and the tap reloads the game. Set up in epic 1's first story |
 | Global errors | `window.onerror` and `unhandledrejection` write to `matematika:errors` |
 | Storage failure (quota, private mode) | The game keeps running in memory and shows a quiet "progress isn't being saved" notice in Luka's view and on the map |
-| WebGL context lost (common on Android when the app is in the background) | The scene unmounts and remounts on `webglcontextrestored`; textures reload from cache. No game state lives in Pixi objects, so nothing is lost |
+| WebGL context lost (common on Android when the app is in the background) | The scene unmounts and remounts on `webglcontextrestored`, and also on `visibilitychange` back to visible if the context is still lost, because the restore event may never come after long backgrounding. Tearing down the old app keeps cached textures. No game state lives in Pixi objects, so nothing is lost |
 | No WebGL at all | An in-fiction screen asking to open the game in up-to-date Chrome or Safari. Pixi falls back to WebGL 1 first; WebGPU is not used |
 
 Messages to the child are in-fiction Croatian, from the text module. Technical detail goes only to the error log.
@@ -421,9 +451,9 @@ There is no remote logging, analytics or crash reporting (GDD privacy). The **pl
 
 | Kind | Location |
 |---|---|
-| Tuning numbers from the GDD (tilt 1° per unit and ±15°, 24 px per notch, 60 s and 3 jams for hints, 2 parts per prediction, fight values, costs, lair rewind of 15 min) | `src/config/tuning.ts`, one exported `const` object. The GDD numbers are provisional, so they all live in this one file |
+| Tuning numbers from the GDD and this document (tilt 1° per unit and ±15°, minimum jam tilt 4°, progress step 0.2, 24 px per notch, 60 s and 3 jams for hints, 2 parts per prediction, quality thresholds, fight values, costs, lair rewind of 15 min) | `src/config/tuning.ts`, one exported `const` object. The GDD numbers are provisional, so they all live in this one file |
 | Content (rooms, map, lairs, titles, text) | `src/content/` |
-| Player settings (mute) | `save.settings` |
+| Player settings (mute, quality) | `save.settings` |
 | Build flags | `import.meta.env.DEV`; no other environment variables |
 
 ### Event System
@@ -496,7 +526,7 @@ matematika/
     │   └── shaders/                                # paper, ink, brass, glow; each can switch off
     ├── ui/
     │   ├── scene/                                  # Pixi (WebGL) components
-    │   │   ├── Stage.tsx                           # <Application>, resize, resolution, context loss
+    │   │   ├── SceneRoot.tsx                       # <Application>, resize, resolution, context loss
     │   │   ├── scale/                              # Scale, Pan, Piece, Dial, Pin, Tray, Splitter
     │   │   ├── chain/  drum/  map/  fight/  workshop/  effects/   # effects: steam, sparks, glow
     │   ├── notebook/                               # HTML: Notebook, NumberPad, LineView
@@ -524,7 +554,7 @@ matematika/
 
 | Folder | May import | Must not import |
 |---|---|---|
-| `math`, `room`, `fight`, `city`, `economy`, `workshop`, `links`, `playlog` | Each other's types and functions, `config`, `lib` | `react`, `zustand`, `motion`, `pixi.js`, `ui`, `store`, `save`, `audio`, any DOM or storage API |
+| `math`, `room`, `fight`, `city`, `economy`, `workshop`, `links`, `playlog` | Each other's types and functions, `config`, `lib`, `immer` | `react`, `zustand`, `motion`, `pixi.js`, `ui`, `store`, `save`, `audio`, any DOM or storage API |
 | `ui/scene` | Everything `ui` may, plus `pixi.js`, `@pixi/react`, `pixi-filters` | HTML elements |
 | Rest of `ui` | | `pixi.js` |
 | `content` | Types from the pure folders | Anything with behaviour |
@@ -545,9 +575,9 @@ Components read with selectors and act only through `dispatch`. Systems talk onl
 // src/ui/scene/scale/Dial.tsx (sketch)
 const x = useGame(s => s.room!.stage.dialX);
 const dispatch = useGame(s => s.dispatch);
-// onGlobalPointerMove: move the knob through its ref every move (no React render),
-// and dispatch only when the notch changes
-knobRef.current!.rotation = angleFor(dragOffsetPx);
+// onGlobalPointerMove: slide the knob along the track through its ref every move
+// (no React render), and dispatch only when the notch changes
+knobRef.current!.x = trackX(dragOffsetPx);
 if (notch !== lastNotch) dispatch({ type: 'dial/set', x: min + notch * step });
 ```
 
@@ -555,7 +585,7 @@ if (notch !== lastNotch) dispatch({ type: 'dial/set', x: min + notch * step });
 
 ### Entity Creation
 
-Nothing is instantiated imperatively. Rooms, machines, pieces, lairs and map nodes are **data** (`RoomSpec`, `MachineSpec`, `NodeSpec`). Pieces are derived from the AST: a number becomes a weight, a subtracted number a float, `kx` becomes k x-gears (one large gear above 12), `−kx` becomes springs, and `x : n` becomes a reducer. React renders the derived list with stable keys of the form `${side}-${kind}-${index}`.
+Nothing is instantiated imperatively. Rooms, machines, pieces, lairs and map nodes are **data** (`RoomSpec`, `MachineSpec`, `NodeSpec`). Pieces are derived from the AST: a number becomes a weight, a subtracted number a float, `kx` becomes k x-gears (one large gear above 12), `−kx` becomes springs, and `x : n` becomes a divider (the GDD's "reducer", renamed in code so it isn't confused with state reducers). Any term without x that isn't a bare number (`2 · 9`, `18 : 2`) becomes one weight, or one float if subtracted, of its value, so every check line can be acted out. A line with brackets is acted out from its `toLinear` form. React renders the derived list with stable keys of the form `${side}-${kind}-${index}`.
 
 ### State Transitions
 
@@ -580,10 +610,13 @@ export const hr = {
 // src/content/rooms/r04-water-wheel.ts
 export const r04: RoomSpec = {
   id: 'r04',
+  machine: 'water-wheel',
+  xMeaning: 'load per bucket',
   stages: [{
     type: 'solve',
     machines: [{ equation: '2x + 5 = 23' }],
     dial: { min: 0, max: 6, step: 1 },
+    tiltPerUnit: 0.75,                 // so no poke-window notch hits the 15° clamp
     pokeNotches: 4,
     pin: { kind: 'level-x', beyondDial: true },
     readouts: true,
@@ -595,7 +628,7 @@ export const r04: RoomSpec = {
 };
 ```
 
-Equations are written as strings in school notation and parsed when loaded. **Content tests** check every room: each equation parses and has one whole-number solution; dial ranges and poke windows match the GDD table; every listed way can finish under that room's limits (using `math/steps.ts`); the fading matrix matches the GDD; no paper-test equation appears (`content/paper-test.ts`); every room has a `mapChange`.
+Equations are written as strings in school notation and parsed when loaded. **Content tests** check every room: each equation parses and has one whole-number solution; dial ranges and poke windows match the GDD table; no poke-window notch hits the tilt clamp; every listed way can finish under that room's limits (using `math/steps.ts`), and the dial can't reach the answer where the GDD says it stops short; the fading matrix matches the GDD; no paper-test equation appears, compared up to swapped sides and commuted terms (`content/paper-test.ts`); every room has a `machine`, an `xMeaning` and a `mapChange`. `xMeaning` is a design note in English that the machine's skin must make visible; it is never shown as text.
 
 ### Consistency Rules
 
@@ -606,8 +639,9 @@ Equations are written as strings in school notation and parsed when loaded. **Co
 | Notation | Only `math/format.ts` formats equations and numbers: `·` (U+00B7), `:`, `−` (U+2212), and U+202F narrow no-break space as the thousands separator from 1 000. The parser ignores spaces |
 | Physical keyboard | `*` → `·`, `/` → `:`, `-` → `−`, `x` or `X` → x, Enter, Backspace |
 | No OS keyboard in play | The notebook is not an `<input>`, so the OS keyboard never opens; only the name dialog uses one |
-| Input | Scene: Pixi pointer events (`onPointerDown`, then `onGlobalPointerMove` and `onPointerUp` for drags). HTML: Pointer Events with `setPointerCapture`. `touch-action: none` on the canvas and `manipulation` elsewhere; `overscroll-behavior: none`; no hover-only affordances |
-| Gesture sizes | Thresholds in CSS pixels, not scene units (24 px per notch). Hit areas are at least 48 CSS px at the smallest supported viewport, using an enlarged `hitArea` where a drawing is smaller |
+| Input | Scene: Pixi pointer events (`onPointerDown`, then `onGlobalPointerMove` for drags, ending on `onPointerUp`, `onPointerUpOutside` and `pointercancel`, or a dropped drag sticks on Android). HTML: Pointer Events with `setPointerCapture`. `touch-action: none` on the canvas and `manipulation` elsewhere; `overscroll-behavior: none`; no hover-only affordances |
+| Gesture sizes | Thresholds in CSS pixels, not scene units (24 px per notch). Hit areas are at least 48 CSS px at the smallest supported viewport, 640 × 360 CSS px in landscape, using an enlarged `hitArea` where a drawing is smaller |
+| The dial | A horizontal track under the scale, dragged left and right, one notch per 24 CSS px, with a tick per notch. x starts at the dial's minimum. When the range is wider than the space, the track scrolls under a fixed window |
 | Scene coordinates | One logical scene of 1600 × 1000, scaled to fit the area beside the notebook; layout changes only between the tablet and phone layouts |
 | Animation | Continuous motion on the Pixi ticker, discrete changes with Motion; nothing per frame through React state. Logic never waits for an animation, except `presentation/done` |
 | Effects | Filters go on containers that are cached as textures or are few in number, never one per piece. `Graphics` are built once and transformed, not redrawn each frame. Every effect has a quality switch |
@@ -639,6 +673,8 @@ Equations are written as strings in school notation and parsed when loaded. **Co
 ```ts
 interface RoomSpec {
   id: RoomId | `built-${string}`;
+  machine: MachineId;                  // which skin: 'door-lift', 'street-lamps', …
+  xMeaning: string;                    // design note: what x is here; shown only through the skin
   stages: StageSpec[];
   earns: ToolId | null;
   mapChange: string | null;            // null for built and friends' rooms
@@ -647,8 +683,9 @@ interface StageSpec {
   type: 'solve' | 'compare' | 'predict' | 'mistake' | 'story';
   machines: MachineSpec[];             // 1–3; later ones may hold a ☐ fed by the previous answer
   dial: { min: number; max: number; step: number } | 'locked';
-  pokeNotches?: number | 'all';
-  pin?: PinSpec;                       // level-x | x-hidden | wrong-line | story-choice | range | next-dot | effect
+  tiltPerUnit?: number;                // overrides tuning.tiltPerUnit (1°) for this stage
+  pokeNotches?: number | 'all';        // number of dial positions open before the pin
+  pin?: PinSpec;
   readouts: boolean;
   ways: WayId[];                       // ways that can finish
   fading: Partial<Record<WayId, 'auto' | 'blanks' | 'blank'>>;
@@ -657,6 +694,23 @@ interface StageSpec {
   blinds?: { readouts?: true; stillPans?: true; shortDial?: number };
   drum?: true;
 }
+
+type Side = 'left' | 'right';
+type Term =                            // one piece's worth of an equation side
+  | { kind: 'num'; value: number; sign: 1 | -1 }                    // weight or float
+  | { kind: 'x'; coef: number; sign: 1 | -1; divisor?: number };    // x-gears, springs, divider
+interface NotebookLine { tokens: Token[]; source: 'given' | 'typed' | WayId; verdict: Verdict }
+type PinSpec =
+  | { kind: 'level-x'; beyondDial?: true }   // where it levels
+  | { kind: 'x-hidden' }                     // compare: x before anything moves
+  | { kind: 'wrong-line' }                   // find the mistake
+  | { kind: 'story-choice' }
+  | { kind: 'range'; bounds: number[] }      // room 11: under 100, 100–300, over 300
+  | { kind: 'next-dot' }                     // the drum
+  | { kind: 'effect'; options: string[]; resolvesOn: 'first-notch' | 'level' };  // predict what a change does; options are text keys
+type PinValue =
+  | { kind: 'x'; x: number } | { kind: 'line'; index: number }
+  | { kind: 'choice'; index: number } | { kind: 'bucket'; index: number };
 
 interface SaveV1 {
   v: 1;
@@ -675,7 +729,7 @@ interface SaveV1 {
   fight: FightState | null;
   workshop: { rooms: { id: string; payload: string; title: TitleId; stamp: 'cracked' | 'uncracked' | null }[] };
   cityLog: { at: string; roomId: RoomId }[];
-  settings: { muted: boolean };
+  settings: { muted: boolean; quality: 'high' | 'medium' | 'low' | null };
 }
 
 type PlayLogEvent = { at: string } & (
@@ -730,7 +784,7 @@ The link formats are versioned, and old versions stay decodable (Pattern 3).
 | Dragging | 60 FPS in a three-machine room with effects on | Per-frame values through refs; the dial dispatches per notch; cached filter containers |
 | Touch latency | Within one frame | No work in `onGlobalPointerMove` besides moving the knob and the notch calculation |
 | Audio | No main-thread spikes | A 25 ms lookahead timer schedules 100 ms ahead on the audio clock |
-| Quality | Steady 60 FPS on his tablet | A quality setting (`high`, `medium`, `low`) picked from a short frame-time test on first launch, stored in `save.settings`. Effects switch off in a fixed order: bloom, then particles, then shaders |
+| Quality | Steady 60 FPS on his tablet | A quality setting picked by a 2-second frame-time test with all effects on, timed only after the scene has settled (1 second after its first frame, so mount and texture-upload spikes don't count): 95th-percentile frame time up to `tuning.qualityHighMs` (18 ms) gives `high`, up to `tuning.qualityMediumMs` (25 ms) `medium`, otherwise `low`. Stored in `save.settings.quality`, so it runs on first launch only (every launch until saving exists in epic 2). Effects switch off in a fixed order: bloom, then particles, then shaders |
 
 Epic 1 ends with a profile on the tablet, with effects on.
 
@@ -760,7 +814,7 @@ Epic 1 ends with a profile on the tablet, with effects on.
 
 | Epic | Main locations | Patterns |
 |---|---|---|
-| 1. First machine | `math/`, `room/`, `ui/scene/Stage.tsx`, `ui/scene/scale/`, `ui/notebook/`, `content/rooms/r01`–`r04`, `store/`, quality setting | 1, 2, 4 |
+| 1. First machine | `math/`, `room/`, `ui/scene/SceneRoot.tsx`, `ui/scene/scale/`, `ui/notebook/`, `content/rooms/r01`–`r04`, `store/`, quality setting | 1, 2, 4 |
 | 2. The city | `city/`, `save/`, `links/` (backup), `playlog/`, `ui/scene/map/`, `ui/cards/`, `ui/luka/`, loading screen, `content/text/`, `r05`–`r07` | 2, 3, 4 |
 | 3. Automaton fights | `fight/`, `economy/`, `ui/scene/fight/`, `content/lairs.ts`, `fight/balance.test.ts` | 4 |
 | 4. The whole district | `math/chain.ts`, `room/types/story.ts`, linked machines, drum, `ui/scene/chain/`, `ui/scene/drum/`, `r08`–`r13` | 1, 2 |
@@ -822,6 +876,8 @@ npx playwright install chromium webkit
 ```
 
 In `package.json`, set `"private": true` and `"type": "module"`. Scripts: `dev` (`vite`), `build` (`tsc --noEmit && vite build && node scripts/check-size.ts`), `test` (`vitest run`), `check` (`biome ci .`), `e2e` (`playwright test`). Node 26 runs the standalone `.ts` script directly. Imports inside `src/` use the `@/` alias, set in both `tsconfig.json` and `vite.config.ts`.
+
+`tsconfig.json` for TypeScript 7, which removed options that 6.0 deprecated: `"strict": true`, `"module": "esnext"`, `"moduleResolution": "bundler"`, `"paths": { "@/*": ["./src/*"] }` with **no `baseUrl`**, `"noUncheckedIndexedAccess": true`, `"verbatimModuleSyntax": true`, `"jsx": "react-jsx"`, `"noEmit": true`. The app runs under React StrictMode, so `SceneRoot` must survive StrictMode's double mount of `@pixi/react`'s asynchronous `<Application>` in development.
 
 ### First Steps
 

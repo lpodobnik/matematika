@@ -284,7 +284,7 @@ Room types carry the four understanding tasks from the brief:
 |---|---|---|---|---|
 | 1 | 0–10 | None | None | Try values |
 | 2 | 0–10, then 0–30 in 3s | None | None | Try values |
-| 3 | 6–20, then 0–20 | First 4 notches | Where it levels | Try values |
+| 3 | 6–20, then 0–20 | First 4 notches, then none | Where it levels, then which way the pan moves as x grows | Try values |
 | 4 | 0–6 | First 4 notches | Where it levels, beyond the dial | Balance |
 | 5 | 0–10 | First 4 notches | Where it levels, then where it levels after the change | Try values, Balance |
 | 6 | 20–40 | None | x, with readouts hidden | Try values, Balance |
@@ -298,7 +298,7 @@ Room types carry the four understanding tasks from the brief:
 
 **Line reveal.** The recording drum draws a dot for each x he tries, with the right-hand side as a level line. In `3x + 5 = 20`, x = 3 to 7 gives 14, 17, 20, 23, 26. He pins the next dot before dragging, the dots form a straight line, and it crosses the level line at the answer. The second equation draws a falling line. Only then does the explanation appear: "linearna" comes from "linija".
 
-**Difficulty pacing.** Numbers stay small until each idea has landed. Room 11 is the deliberate hard point. Numbers from the paper test, before or after, must not appear in any room.
+**Difficulty pacing.** Numbers stay small until each idea has landed. Room 11 is the deliberate hard point. Equations from the paper test, before or after, must not appear in any room, compared up to swapped sides and the order of terms.
 
 ### Level Structure
 
@@ -332,7 +332,7 @@ No instructions appear before a room. Help arrives when he goes 60 seconds witho
 | 3 | The notebook shows the structure of the next line, with blanks. |
 | 4 | The machine solves the same form with other numbers. |
 
-After a room's first use of an idea, a card of one or two sentences connects it to the school term, as the answer to Nikola's "how did you do that?" Every move is reversible until he writes, wrong lines can be edited, and a reset control restarts the room. Required rooms can't be skipped, but rooms 5–6 and 9–10 can be done in either order, and fights and the workshop stay open, so he has somewhere else to go when stuck.
+After a room's first use of an idea, a card of one or two sentences connects it to the school term, as the answer to Nikola's "how did you do that?" Every move is reversible until he writes, wrong lines can be edited, and a reset control restarts the current machine stage, so earlier stages of the room stay solved. Required rooms can't be skipped, but rooms 5–6 and 9–10 can be done in either order, and fights and the workshop stay open, so he has somewhere else to go when stuck.
 
 ### Replayability
 
