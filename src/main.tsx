@@ -4,8 +4,8 @@ import '@/app/app.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from '@/app/App';
-import { crashReporter } from '@/app/crash';
 import { ErrorBoundary } from '@/app/ErrorBoundary';
+import { crashReporter } from '@/lib/crash';
 
 // Later stories add: read the fragment, load the save, then mount.
 crashReporter.install(window);

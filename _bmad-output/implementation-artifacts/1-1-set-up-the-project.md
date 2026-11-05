@@ -1,6 +1,6 @@
 # Story 1.1: Set up the project
 
-Status: review
+Status: done
 
 ## Story
 
@@ -103,8 +103,39 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `.github/workflows/ci.yml`
 - `scripts/check-size.ts`, `scripts/check-size.test.ts`
 - `src/main.tsx`, `src/architecture.test.ts`
-- `src/app/App.tsx`, `src/app/ErrorBoundary.tsx`, `src/app/ErrorBoundary.test.tsx`, `src/app/PortraitOverlay.tsx`, `src/app/PortraitOverlay.test.tsx`, `src/app/crash.ts`, `src/app/crash.test.ts`, `src/app/app.css`
-- `src/ui/scene/SceneRoot.tsx`, `src/ui/scene/fit-scene.ts`, `src/ui/scene/fit-scene.test.ts`, `src/ui/scene/context-loss.ts`, `src/ui/scene/context-loss.test.ts`
-- `src/lib/error-log.ts`, `src/lib/error-log.test.ts`
+- `src/app/App.tsx`, `src/app/ErrorBoundary.tsx`, `src/app/ErrorBoundary.test.tsx`, `src/app/PortraitOverlay.tsx`, `src/app/PortraitOverlay.test.tsx`, `src/app/app.css`
+- `src/ui/scene/SceneRoot.tsx`, `src/ui/scene/SceneErrorBoundary.tsx`, `src/ui/scene/SceneErrorBoundary.test.ts`, `src/ui/scene/renderer.ts`, `src/ui/scene/renderer.test.ts`, `src/ui/scene/fit-scene.ts`, `src/ui/scene/fit-scene.test.ts`, `src/ui/scene/context-loss.ts`, `src/ui/scene/context-loss.test.ts`
+- `src/lib/error-log.ts`, `src/lib/error-log.test.ts`, `src/lib/crash.ts`, `src/lib/crash.test.ts` (moved from `src/app/` in the review fixes)
 - `src/art/palette.ts`, `src/content/text/hr.ts`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+One review pass, fixes applied in one go (unattended, 2026-11-05). No second review.
+
+### Findings fixed
+
+1. **Bug: render errors inside the Pixi tree never reached the error boundary or `matematika:errors` (AC6).** `@pixi/react`'s `<Application>` renders its children in a React root of its own whose error callbacks only call `console.error`, so a scene render error left a blank scene with no crash screen and no log entry.
+   - **Done:** `crashReporter` moved from `src/app/crash.ts` to `src/lib/crash.ts` (with its test), so `ui/` does not depend on `app/`. New `src/ui/scene/SceneErrorBoundary.tsx` wraps `<SceneContent />` inside `<Application>`; it renders nothing once it fails and calls `crashReporter.report('render', error, componentStack)`. The reporter writes `matematika:errors` and the top-level boundary, already subscribed, switches to the crash screen. `report` gained an optional component stack so scene entries carry one like DOM entries do.
+   - **Tests:** `SceneErrorBoundary.test.ts` (reports with source `render`, tells subscribers, renders children then nothing); `crash.test.ts` (the component stack reaches the log; the default recorder writes `matematika:errors`).
+   - **Browser check:** with a temporary throw in `SceneContent`, the dev build showed "Stroj se zaglavio." and wrote one `render` entry with the stack `at SceneContent … at SceneErrorBoundary`; the console named `SceneErrorBoundary` as the catching boundary. The temporary throw was removed, and the normal load showed one WebGL 2 canvas, no crash screen and no log entry.
+2. **Bug: `preference="webgl"` let Pixi fall back to WebGPU and Canvas2D.** A string only puts WebGL first.
+   - **Done:** the preference is now the array `['webgl']` (`src/ui/scene/renderer.ts`), which restricts Pixi to WebGL (WebGL 2, then WebGL 1). Without WebGL, init rejects with "No available renderer for the current environment" and reaches the crash screen through `unhandledrejection`, until the in-fiction no-WebGL screen is built.
+   - **Correction to the review:** `@pixi/react` 8.0.5 declares the `<Application>` prop as `'webgl' | 'webgpu'`, not `RendererPreference | RendererPreference[]` (that is Pixi 8.22's own type), so `tsc` rejected the array. `@pixi/react` passes the options to `app.init` unchanged, so `SceneRoot.tsx` casts with a comment saying why.
+   - **Test:** `renderer.test.ts` runs Pixi's `autoDetectRenderer` with the preference in Node (no WebGL, no WebGPU) and expects "No available renderer". With the old string the same call goes on to the Canvas2D renderer instead (checked once; it fails there with `document is not defined`).
+3. **Bug: JSX in a pure folder got past AC5.** With `"jsx": "react-jsx"`, JSX imports `react/jsx-runtime` without an import statement.
+   - **Done:** `findViolations` in `src/architecture.test.ts` now flags any `.tsx` file in a pure folder (tests included, since pure tests may not import React either) and in `content/` (except content tests, which may import anything).
+   - **Tests:** fixtures per pure folder (`<folder>/Board.tsx` and `<folder>/board.test.tsx` each give one violation), plus `content/rooms/r01.tsx` (violation), `content/rooms/rooms.test.tsx`, `ui/notebook/Notebook.tsx` and `app/App.tsx` (none).
+
+### Minor notes (not fixed, for Luka)
+
+- Not yet checked on real hardware or CI: Luka's tablet check (AC1, AC3) is still open, and branch `epic-1` has never been pushed (only `origin/main` exists), so GitHub Actions hasn't run (AC4). The `actions/checkout@v7` and `actions/setup-node@v7` tags exist upstream. Tests (8 files, 120 passing at review time), `tsc --noEmit` and `biome ci` all pass locally.
+- Biome's `noRestrictedGlobals` in `biome.json` misses `globalThis.localStorage`, `self`, `fetch` and `location`. Nothing catches `Date.now()` or `Math.random()` in pure folders, which the architecture's Consistency Rules forbid.
+- Biome's `noRestrictedImports` `paths` only match exact package names: `react/jsx-runtime`, `react-dom/client` and relative `../ui/...` imports get through. That leaves `architecture.test.ts` as the only real check.
+- `tsconfig.json` has `types: ["node", ...]`, which lets browser code under `src/` use `process` and `Buffer` without a type error.
+- The import scanner in `src/architecture.test.ts` misses template-literal dynamic imports (``import(`react`)``), and the Croatian-letter check misses escaped letters such as `'č'`.
+
+### After the fixes
+
+- `npm run check`: 30 files, no errors. `npm test`: 10 files, 136 tests passing. `npm run build` (`tsc --noEmit`, `vite build`, size check): 0.85 MB in 9 files; JavaScript 0.25 MB gzipped.
+- Still open: Luka's tablet check and the first GitHub Actions run (see the first minor note).

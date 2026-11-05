@@ -4,6 +4,8 @@ import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { palette } from '@/art/palette';
 import { watchContextLoss } from '@/ui/scene/context-loss';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
+import { rendererPreference } from '@/ui/scene/renderer';
+import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
 
 extend({ Container, Graphics });
 
@@ -73,11 +75,16 @@ export function SceneRoot({ resizeTo }: Props) {
       resolution={mount.resolution}
       autoDensity
       antialias
-      preference="webgl"
+      // @pixi/react 8.0.5 declares this prop as 'webgl' | 'webgpu', older than Pixi 8.22's
+      // array form; it passes the value to app.init unchanged, so the array reaches Pixi.
+      preference={rendererPreference as unknown as 'webgl'}
       background={palette.table}
       onInit={handleInit}
     >
-      <SceneContent />
+      {/* <Application> renders its children in a separate React root: see SceneErrorBoundary. */}
+      <SceneErrorBoundary>
+        <SceneContent />
+      </SceneErrorBoundary>
     </Application>
   );
 }

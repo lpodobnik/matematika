@@ -1,8 +1,8 @@
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCrashReporter } from '@/app/crash';
 import { CrashScreen, ErrorBoundary } from '@/app/ErrorBoundary';
 import { hr } from '@/content/text/hr';
+import { createCrashReporter } from '@/lib/crash';
 import { errorLogKey, readErrors } from '@/lib/error-log';
 
 function memoryStorage() {

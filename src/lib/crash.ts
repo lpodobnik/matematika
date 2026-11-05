@@ -1,16 +1,18 @@
 import { type ErrorSource, recordError } from '@/lib/error-log';
 
-// Global errors (window.onerror, unhandledrejection) take the game to the same
-// "tap to restart" screen as a render crash. The error boundary listens here.
+// Global errors (window.onerror, unhandledrejection) and render errors inside the Pixi
+// tree take the game to the same "tap to restart" screen as a render crash in the DOM
+// tree. The top-level error boundary listens here. It lives in lib, not app, so that
+// ui/scene can report to it without depending on app.
 
 export interface CrashReporter {
-  report(source: ErrorSource, error: unknown): void;
+  report(source: ErrorSource, error: unknown, componentStack?: string): void;
   isCrashed(): boolean;
   subscribe(listener: () => void): () => void;
   install(target: EventTarget): () => void;
 }
 
-type RecordError = (source: ErrorSource, error: unknown) => void;
+type RecordError = (source: ErrorSource, error: unknown, componentStack?: string) => void;
 
 // Chrome reports this through window.onerror although nothing is broken.
 const benignMessages = [/ResizeObserver loop/];
@@ -20,13 +22,15 @@ export function isBenignError(message: unknown): boolean {
 }
 
 export function createCrashReporter(
-  record: RecordError = (source, error) => recordError(source, error),
+  record: RecordError = (source, error, componentStack) =>
+    recordError(source, error, componentStack ? { componentStack } : {}),
 ): CrashReporter {
   let crashed = false;
   const listeners = new Set<() => void>();
 
-  const report = (source: ErrorSource, error: unknown) => {
-    record(source, error);
+  const report = (source: ErrorSource, error: unknown, componentStack?: string) => {
+    if (componentStack) record(source, error, componentStack);
+    else record(source, error);
     crashed = true;
     for (const listener of listeners) listener();
   };

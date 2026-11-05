@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { type CrashReporter, crashReporter } from '@/app/crash';
 import { hr } from '@/content/text/hr';
+import { type CrashReporter, crashReporter } from '@/lib/crash';
 import { recordError } from '@/lib/error-log';
 
 // Architecture, Error Handling: a crash shows an in-fiction screen; the save is untouched

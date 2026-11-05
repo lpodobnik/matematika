@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 // Enforces the architecture's Architectural Boundaries table by scanning import
-// statements, plus the rule that no Croatian letters appear in ui/ or app/.
+// statements and .tsx files (JSX imports react/jsx-runtime implicitly), plus the rule that
+// no Croatian letters appear in ui/ or app/.
 // Type-only imports count too: a pure folder must not even name a forbidden module.
 
 const pureFolders = [
@@ -165,6 +166,15 @@ function findViolations(files: SourceFile[]): Violation[] {
       });
     }
     if (!/\.tsx?$/.test(path)) continue;
+    // With "jsx": "react-jsx", JSX compiles to an import of react/jsx-runtime that never
+    // appears in the source, so the import scan alone would miss it.
+    if (path.endsWith('.tsx') && (isPure(path) || (isUnder(path, 'content') && !isTest(path)))) {
+      violations.push({
+        file: path,
+        rule: 'pure folders and content hold no JSX (it imports react/jsx-runtime)',
+        detail: 'is a .tsx file',
+      });
+    }
     for (const ref of findImports(source)) {
       const target = resolveTarget(path, ref.specifier);
       let rule: string | null = null;
@@ -214,6 +224,20 @@ describe('architecture boundaries: fixtures', () => {
       ].join('\n');
       expect(one(`${folder}/sample.ts`, source)).toEqual([]);
     });
+
+    it('fails when it holds JSX, which imports react/jsx-runtime unseen', () => {
+      expect(one(`${folder}/Board.tsx`, 'export const B = () => <b />;')).toEqual([
+        expect.objectContaining({ file: `${folder}/Board.tsx`, detail: 'is a .tsx file' }),
+      ]);
+      expect(one(`${folder}/board.test.tsx`, "it('draws', () => <b />);")).toHaveLength(1);
+    });
+  });
+
+  it('keeps JSX out of content, but not out of ui, app or content tests', () => {
+    expect(one('content/rooms/r01.tsx', 'export const r = <b />;')).toHaveLength(1);
+    expect(one('content/rooms/rooms.test.tsx', "it('lists', () => <b />);")).toEqual([]);
+    expect(one('ui/notebook/Notebook.tsx', 'export const N = () => <b />;')).toEqual([]);
+    expect(one('app/App.tsx', 'export const A = () => <b />;')).toEqual([]);
   });
 
   it('catches type-only, re-exported, side-effect, dynamic and multi-line imports', () => {
@@ -246,7 +270,7 @@ describe('architecture boundaries: fixtures', () => {
     ['ui/common/Mute.tsx', '// ćao', 'ć'],
     ['ui/scene/map/City.tsx', "const city = 'Međugorje';", 'đ'],
     ['app/App.tsx', "const word = 'šalica';", 'š'],
-    ['app/crash.ts', "const word = 'žaba';", 'ž'],
+    ['app/ErrorBoundary.tsx', "const word = 'žaba';", 'ž'],
     ['app/app.css', '/* ŽUTO */', 'Ž'],
   ])('fails when %s contains a Croatian letter', (path, source, letter) => {
     expect(one(path, source)).toEqual([

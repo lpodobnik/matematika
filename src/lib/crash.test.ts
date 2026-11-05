@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createCrashReporter, isBenignError } from '@/app/crash';
+import { createCrashReporter, isBenignError } from '@/lib/crash';
+import { readErrors } from '@/lib/error-log';
 
 function errorEvent(message: string, error?: unknown): Event {
   return Object.assign(new Event('error'), { message, error });
@@ -78,4 +79,43 @@ describe('crash reporter', () => {
     reporter.report('error', new Error('direct'));
     expect(listener).not.toHaveBeenCalled();
   });
+
+  it('passes a render error and its component stack on to the log', () => {
+    const record = vi.fn();
+    const reporter = createCrashReporter(record);
+    const listener = vi.fn();
+    reporter.subscribe(listener);
+    const error = new Error('scene render failed');
+    reporter.report('render', error, '\n  at SceneContent');
+    expect(record).toHaveBeenCalledWith('render', error, '\n  at SceneContent');
+    expect(listener).toHaveBeenCalledOnce();
+    expect(reporter.isCrashed()).toBe(true);
+  });
+
+  it('writes to matematika:errors by default', () => {
+    const storage = memoryStorage();
+    vi.stubGlobal('localStorage', storage);
+    try {
+      createCrashReporter().report('render', new Error('scene'), '\n  at Pan');
+      expect(readErrors(storage)).toEqual([
+        expect.objectContaining({
+          source: 'render',
+          message: 'Error: scene',
+          componentStack: '\n  at Pan',
+        }),
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
+
+function memoryStorage() {
+  const data = new Map<string, string>();
+  return {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      data.set(key, value);
+    },
+  };
+}
