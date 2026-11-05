@@ -1,6 +1,6 @@
 # Story 1.6: Write in the notebook
 
-Status: review
+Status: done
 
 ## Story
 
@@ -99,3 +99,25 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/store/actions.ts`, `src/store/types.ts`, `src/store/reducer.ts`, `src/store/store.test.ts` (modified)
 - `src/app/App.tsx`, `src/app/app.css`, `src/art/palette.ts`, `src/config/tuning.ts`, `src/content/text/hr.ts` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Findings
+
+- None. The review raised no findings that needed a fix, so no code changed.
+
+### Minor notes (not fixed, for Luka)
+
+- `C:\Users\lpodobnik\Claude\matematika\src\room\dial.ts` (`setDial`, `dialView`): when a line is wrong, the dial stops turning, as Pattern 2 says. Until story 1.7 nothing on the machine shows it is jammed, so in 1.6 the dial just stops responding and only the red wavy draft line explains why.
+- `C:\Users\lpodobnik\Claude\matematika\src\room\notebook.ts` (`enterLine`): pressing enter while a wrong line is still marked is ignored with no wiggle or other feedback, so the enter key looks enabled but does nothing.
+- `C:\Users\lpodobnik\Claude\matematika\src\ui\notebook\keyboard.ts` (`watchKeyboard`): it catches and acts on mapped keys (Backspace, Enter, `/`) even when the notebook is off or pushed aside on a phone. A computer keyboard then types into a hidden notebook, and those keys never reach the browser.
+- `C:\Users\lpodobnik\Claude\matematika\src\room\types.ts`: `StageState.refused` (the wiggle counter) is a field that Pattern 2's `StageState` list doesn't have. The dev agent recorded this as one of its own decisions, and it should be written into the architecture so later stories keep it.
+- Checks run by the review: 772/772 tests pass, `biome ci` and `tsc --noEmit` are clean. The phone layout has not been checked on a real Android device; that check is deferred to story 1.13.
+
+### Checks after the review
+
+- `npm run check`: 101 files, no errors.
+- `npm test`: 37 files, 772 tests passing (unchanged).
+- `npm run build`: `tsc --noEmit` clean; 0.93 MB in 9 files, JavaScript 0.28 MB gzipped (unchanged).
