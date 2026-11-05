@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kula vaga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Grenze+Gotisch:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* One world: a stone tower at night, the brass scale is the hero, wisps are the only cold light. Single column. */
+  --stone:#17192a;
+  --wall:#22263b;
+  --wall-2:#2c3150;
+  --brass:#e0ad4a;
+  --ember:#ff8a4c;
+  --glow:#9ff0ff;
+  --ink:#efe8d8;
+  --muted:#a2a5be;
+  --line:#3a3f63;
+  --display:"Grenze Gotisch","Palatino Linotype",Georgia,serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--stone);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45}
+body{background:radial-gradient(ellipse 90% 50% at 50% -5%,#2b3052 0%,var(--stone) 70%) var(--stone)}
+#app{max-width:680px;margin:0 auto;padding:18px 16px 48px}
+#view{display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--display);font-weight:800;font-size:3rem;line-height:.95;margin:0;color:var(--brass);letter-spacing:.01em;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:1.7rem;line-height:1;margin:0;color:var(--brass);text-wrap:balance}
+h3{font-size:.85rem;margin:0;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+p{margin:0}
+.sub{color:var(--muted);font-size:.92rem}
+.stack{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.card{background:var(--wall);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.vagar{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.face{width:40px;height:40px;border-radius:10px;background:#5b6080;border:2px solid #8f94b5;position:relative}
+.face::before,.face::after{content:"";position:absolute;top:13px;width:7px;height:7px;border-radius:50%;background:var(--brass);box-shadow:0 0 6px var(--brass)}
+.face::before{left:9px}.face::after{right:9px}
+.who{font-family:var(--display);font-weight:600;color:var(--brass);font-size:1.15rem;line-height:1;margin-bottom:4px}
+.say{font-size:1.05rem}
+.say.warn{color:var(--ember)}
+.say.ok{color:var(--glow)}
+button{font:inherit;font-weight:700;color:var(--ink);background:var(--wall-2);border:1px solid #474d78;border-radius:12px;padding:10px 14px;cursor:pointer;min-height:48px;touch-action:manipulation;text-align:center}
+button:hover:not(:disabled){border-color:var(--brass)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--glow);outline-offset:2px}
+button.primary{background:var(--brass);color:#22180a;border-color:var(--brass)}
+button.ghost{background:transparent}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.action{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 16px;font-size:1.1rem;background:#3a3220;border-color:var(--brass)}
+button.action .note{font-weight:400;font-size:.85rem;color:var(--brass)}
+.grow{flex:1 1 0}
+.scale-wrap{border-radius:16px;background:radial-gradient(circle at 50% 45%,rgba(224,173,74,.14),transparent 62%)}
+svg.scale{width:100%;height:auto;display:block;overflow:visible}
+.beam,.pan{transition:transform .75s cubic-bezier(.3,1.5,.5,1)}
+.eq{font-size:2.1rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.eq .rel{display:inline-block;min-width:1.2em}
+.eq.bal .rel{color:var(--glow)}
+.eq.unbal .rel{color:var(--ember)}
+.eq .q{color:var(--brass)}
+.ask{display:flex;flex-direction:column;gap:10px}
+.ask .sum{font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums}
+.answer-row{display:flex;gap:8px}
+.answer-row input{flex:1 1 0;min-width:0;font:inherit;font-size:1.6rem;font-weight:700;text-align:center;background:#1b1e31;color:var(--ink);border:2px solid var(--brass);border-radius:12px;padding:6px;font-variant-numeric:tabular-nums}
+.stepper{display:inline-flex;align-items:stretch;border:1px solid #474d78;border-radius:10px;overflow:hidden;background:var(--wall-2)}
+.stepper button{border:0;border-radius:0;min-width:46px;background:transparent}
+.stepper input{width:64px;background:#1b1e31;color:var(--ink);border:0;text-align:center;font:inherit;font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.92rem;color:var(--muted)}
+.build-grid{display:grid;grid-template-columns:1fr auto;gap:10px 14px;align-items:center}
+.notebook{background:#f2ead6;color:#272a40;border-radius:6px;padding:4px 16px 8px 44px;position:relative;background-image:linear-gradient(#c9d3ea 1px,transparent 1px);background-size:100% 2rem;line-height:2rem;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.notebook::before{content:"";position:absolute;left:30px;top:0;bottom:0;width:2px;background:#e39a96}
+.nb-line{display:flex;justify-content:space-between;gap:16px}
+.nb-line .op{color:#b3432a;font-weight:700}
+.tower{display:flex;flex-direction:column;gap:6px;padding:14px 12px 12px;background:linear-gradient(#262a44,#1c1f33);border:1px solid var(--line);border-radius:22px 22px 6px 6px;position:relative;margin-top:8px}
+.tower::before{content:"";position:absolute;left:50%;top:-14px;width:64%;height:14px;transform:translateX(-50%);background:repeating-linear-gradient(90deg,#2b2f4c 0 26px,transparent 26px 38px);border-radius:4px 4px 0 0}
+.floor{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--wall);border:1px solid #32375c;text-align:left;width:100%;min-height:58px}
+.floor .num{font-size:.8rem;color:var(--muted);font-weight:400}
+.win-ico{width:26px;height:36px;border-radius:13px 13px 3px 3px;background:#0e1020;border:2px solid #4a4f78}
+.floor.done .win-ico{background:var(--glow);border-color:#e4fcff;box-shadow:0 0 16px var(--glow),0 0 34px rgba(159,240,255,.35)}
+.floor.next{border-color:var(--brass)}
+.floor:disabled{opacity:.45}
+.stars{color:var(--brass);letter-spacing:2px;white-space:nowrap;font-size:1.2rem}
+.stars .off{color:#4a4f78}
+.winp{border-color:var(--glow);box-shadow:0 0 0 1px rgba(159,240,255,.25),0 0 40px rgba(159,240,255,.12)}
+.winp .big{font-size:2.6rem;font-weight:700;color:var(--glow);font-variant-numeric:tabular-nums;line-height:1}
+input.code,textarea{background:#1b1e31;color:var(--ink);border:1px solid #474d78;border-radius:10px;padding:10px 12px;font:inherit}
+input.code{width:9em;font-variant-numeric:tabular-nums}
+textarea{width:100%;min-height:84px;resize:vertical}
+.small{font-size:.88rem;color:var(--muted)}
+.sprite{animation:rise 2.2s ease-out forwards}
+@keyframes rise{0%{transform:translateY(0) scale(.5);opacity:0}15%{opacity:1}75%{opacity:1}100%{transform:translateY(-140px) scale(1.3);opacity:0}}
+.pop{animation:pop .45s ease-out}
+@keyframes pop{0%{transform:scale(.97);opacity:.3}100%{transform:scale(1);opacity:1}}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:420px){h1{font-size:2.5rem}.eq{font-size:1.8rem}}
+</style>
+</head>
+<body>
+<div id="app"><main id="view"></main></div>
+<script>
+(function(){
+"use strict";
+
+/* ---------- levels (boxes always on the left) ---------- */
+const LEVELS=[
+ {id:"k1",name:"Ulaz",L:{c:1,s:3},R:{c:0,s:7},x:4,tutorial:true,
+  story:"U ovoj je kutiji zarobljen svjetlić. Kutija teži x. Uz nju stoji uteg 3, a na drugoj strani uteg 7. Vaga je u ravnoteži, dakle x + 3 = 7. Ostavi kutiju samu na vagi i oslobodi svjetlića."},
+ {id:"k2",name:"Dvorana baklji",L:{c:1,s:8},R:{c:0,s:15},x:7,
+  story:"Isti trik, veći utezi."},
+ {id:"k3",name:"Soba blizanaca",L:{c:2,s:0},R:{c:0,s:16},x:8,
+  story:"Dvije jednake kutije. Kutiju ne možeš skinuti, ali možeš obje strane podijeliti na jednake dijelove i zadržati samo jedan dio."},
+ {id:"k4",name:"Spremište",L:{c:3,s:0},R:{c:0,s:27},x:9,
+  story:"Tri jednake kutije teže koliko uteg 27."},
+ {id:"k5",name:"Stubište",L:{c:2,s:4},R:{c:0,s:14},x:5,
+  story:"Sad trebaš oba poteza. Razmisli koji ide prvi."},
+ {id:"k6",name:"Knjižnica",L:{c:4,s:3},R:{c:0,s:31},x:7,
+  story:"Četiri kutije i uteg 3. Jedan od poteza još ne radi. Otkrij koji."},
+ {id:"k7",name:"Mlin",L:{c:3,s:2},R:{c:0,s:20},x:6,
+  riddle:"Mlinar na vagu stavi tri jednake vreće brašna i uteg od 2 kg. Vaga pokazuje 20 kg. Koliko je teška jedna vreća?",
+  labels:["Vreće (svaka vreća je jedna kutija)","Uteg uz vreće (kg)","Što vaga pokazuje (kg)"],
+  answer:x=>"Jedna vreća teži "+x+" kg."},
+ {id:"k8",name:"Riznica",L:{c:5,s:6},R:{c:0,s:46},x:8,
+  riddle:"Pet jednakih ključeva i još 6 zlatnika vrijede jednako kao 46 zlatnika. Koliko vrijedi jedan ključ?",
+  labels:["Ključevi (svaki ključ je jedna kutija)","Zlatnici uz ključeve","Zlatnici na drugoj strani"],
+  answer:x=>"Jedan ključ vrijedi "+x+" zlatnika."},
+ {id:"k9",name:"Vagarova dvorana",L:{c:6,s:12},R:{c:0,s:48},x:6,
+  story:"Vagar je star i umoran. Riješi njegovu vagu i oslobodit će posljednjeg svjetlića. Ova se vaga može riješiti na dva različita načina."}
+];
+LEVELS.forEach(l=>{if(l.L.c*l.x+l.L.s!==l.R.s)console.error("Bad level",l.id);});
+
+/* ---------- saving ---------- */
+let store={stars:{}};
+try{const raw=localStorage.getItem("towerOfScales");if(raw){const o=JSON.parse(raw);if(o&&o.stars)store=o;}}catch(e){}
+function save(){try{localStorage.setItem("towerOfScales",JSON.stringify(store));}catch(e){}}
+
+/* ---------- helpers ---------- */
+const view=document.getElementById("view");
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function dijelova(n){const m=n%100,d=n%10;return (d>=2&&d<=4&&!(m>=12&&m<=14))?"jednaka dijela":"jednakih dijelova";}
+function sideStr(p){const a=[];if(p.c===1)a.push("x");else if(p.c>1)a.push(p.c+"x");if(p.s>0||!a.length)a.push(String(p.s));return a.join(" + ");}
+function eqOf(L,R){return sideStr(L)+" = "+sideStr(R);}
+function starsHTML(n){let h="";for(let i=0;i<3;i++)h+=i<n?"★":'<span class="off">★</span>';return '<span class="stars" aria-label="'+n+' od 3 zvjezdice">'+h+"</span>";}
+function stepper(id,v,min,max,label){return '<div class="stepper"><button data-act="inc" data-for="'+id+'" data-d="-1" aria-label="'+label+' manje">−</button><input id="'+id+'" type="number" inputmode="numeric" min="'+min+'" max="'+max+'" value="'+v+'" aria-label="'+label+'"><button data-act="inc" data-for="'+id+'" data-d="1" aria-label="'+label+' više">+</button></div>';}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* ---------- the scale (SVG) ---------- */
+const PX=200,PY=58,ARM=142;
+function scaleSkeleton(){
+ const pan=id=>'<g id="'+id+'" class="pan"><line x1="0" y1="0" x2="-58" y2="86" stroke="#b8893a" stroke-width="1.5"/><line x1="0" y1="0" x2="58" y2="86" stroke="#b8893a" stroke-width="1.5"/><circle r="4" fill="#f4cf7d"/><g class="items"></g><path d="M-64 86 Q0 116 64 86 Z" fill="url(#bowl)" stroke="#f0c76a" stroke-width="1.5"/><g class="fx"></g></g>';
+ return '<svg class="scale" viewBox="-14 0 428 262" role="img" aria-label="Vaga">'+
+ '<defs><linearGradient id="brass" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f6d58a"/><stop offset="1" stop-color="#a8792c"/></linearGradient>'+
+ '<linearGradient id="bowl" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#d9a446"/><stop offset="1" stop-color="#7d5a22"/></linearGradient>'+
+ '<radialGradient id="glowg"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#9ff0ff"/><stop offset="1" stop-color="#9ff0ff" stop-opacity="0"/></radialGradient></defs>'+
+ '<path d="M160 256 L240 256 L226 238 L174 238 Z" fill="#8a6a2c"/>'+
+ '<rect x="195" y="'+PY+'" width="10" height="182" rx="3" fill="url(#brass)"/>'+
+ '<g class="beam" style="transform-origin:'+PX+'px '+PY+'px"><rect x="'+(PX-ARM-4)+'" y="'+(PY-4)+'" width="'+(2*ARM+8)+'" height="8" rx="4" fill="url(#brass)"/><path d="M'+PX+' '+(PY-4)+' l-7 -14 h14 Z" fill="#f4cf7d"/></g>'+
+ '<circle cx="'+PX+'" cy="'+PY+'" r="9" fill="#f4cf7d" stroke="#7d5a22" stroke-width="2"/>'+
+ pan("panL")+pan("panR")+'</svg>';
+}
+function crateSVG(x,y,reveal){
+ const open=reveal!=null;
+ return '<g><rect x="'+x+'" y="'+y+'" width="24" height="24" rx="3" fill="'+(open?"#2a5560":"#6b4a26")+'" stroke="'+(open?"#9ff0ff":"#e0ad4a")+'" stroke-width="1.5"/>'+
+ (open?"":'<line x1="'+x+'" y1="'+(y+8)+'" x2="'+(x+24)+'" y2="'+(y+8)+'" stroke="#8d6532" stroke-width="1"/>')+
+ '<text x="'+(x+12)+'" y="'+(y+18)+'" text-anchor="middle" font-family="Atkinson Hyperlegible,sans-serif" font-size="'+(open?14:15)+'" font-weight="700" fill="'+(open?"#e4fcff":"#ffe3a6")+'">'+(open?reveal:"x")+"</text></g>";
+}
+function stoneSVG(x,y,w,label,q){
+ return '<g><rect x="'+x+'" y="'+y+'" width="'+w+'" height="24" rx="11" fill="'+(q?"#3a3220":"#7f849c")+'" stroke="'+(q?"#e0ad4a":"#c0c4d8")+'" stroke-width="1.4"'+(q?' stroke-dasharray="4 3"':"")+'/><text x="'+(x+w/2)+'" y="'+(y+17.5)+'" text-anchor="middle" font-family="Atkinson Hyperlegible,sans-serif" font-size="15" font-weight="700" fill="'+(q?"#e0ad4a":"#14162a")+'">'+label+"</text></g>";
+}
+// p: {c,s}; opts: {reveal, label, q}
+function itemsSVG(p,o){
+ o=o||{};
+ const label=o.label!=null?String(o.label):String(p.s);
+ const items=[];for(let i=0;i<p.c;i++)items.push({t:"c",w:24});
+ if(p.s>0||o.label!=null)items.push({t:"s",w:26+9*label.length});
+ const rows=[];let cur=[],w=0;
+ for(const it of items){const nw=cur.length?w+3+it.w:it.w;if(cur.length&&nw>118){rows.push(cur);cur=[it];w=it.w;}else{cur.push(it);w=nw;}}
+ if(cur.length)rows.push(cur);
+ let out="";
+ rows.forEach((row,ri)=>{const tw=row.reduce((a,it)=>a+it.w,0)+3*(row.length-1);let x=-tw/2;const y=86-25*(ri+1);
+  row.forEach(it=>{out+=it.t==="c"?crateSVG(x,y,o.reveal):stoneSVG(x,y,it.w,label,o.q);x+=it.w+3;});});
+ return out;
+}
+function setScale(root,L,R,ang,lo,ro,sprite){
+ const svg=root&&root.querySelector("svg.scale");if(!svg)return;
+ svg.querySelector(".beam").style.transform="rotate("+ang+"deg)";
+ const r=ang*Math.PI/180,cx=Math.cos(r)*ARM,cy=Math.sin(r)*ARM;
+ const pl=svg.querySelector("#panL"),pr=svg.querySelector("#panR");
+ pl.style.transform="translate("+(PX-cx)+"px,"+(PY-cy)+"px)";
+ pr.style.transform="translate("+(PX+cx)+"px,"+(PY+cy)+"px)";
+ pl.querySelector(".items").innerHTML=itemsSVG(L,lo);
+ pr.querySelector(".items").innerHTML=itemsSVG(R,ro);
+ pl.querySelector(".fx").innerHTML=sprite?'<circle class="sprite" cx="0" cy="50" r="16" fill="url(#glowg)"/>':"";
+}
+function tiltFor(diff){return diff===0?0:-Math.sign(diff)*Math.min(12,4+Math.abs(diff)*.7);}
+
+/* ---------- game state ---------- */
+// phases: tut0, tut1, build, choose, answer, won
+let S={view:"map"};let P=null;
+let W={a:3,b:2,x:6,text:""};
+
+function startLevel(def,opts){
+ opts=opts||{};
+ P={def,custom:!!opts.custom,practice:!!opts.practice,L:{...def.L},R:{...def.R},x:def.x,
+  log:[{eq:eqOf(def.L,def.R),op:""}],op:null,wrong:0,usedHint:false,hint:0,
+  phase:def.tutorial?"tut0":def.riddle?"build":"choose",build:{lc:0,ls:0,rs:0},
+  msg:"",tone:"",wrongShow:null};
+ S.view="level";renderLevel();window.scrollTo(0,0);
+}
+function say(m,t){P.msg=m;P.tone=t||"";}
+
+function chooseRemove(){
+ const k=P.L.s;if(k<=0)return;
+ const before=P.R.s;
+ P.L={c:P.L.c,s:0};
+ P.op={type:"minus",k,before,expect:before-k,sum:before+" − "+k};
+ P.phase="answer";P.hint=0;
+ say("Maknuo si "+k+" s obje strane. Lijeva strana je sad "+sideStr(P.L)+". Koliko je ostalo na desnoj?","");
+ renderLevel();
+}
+function chooseSplit(){
+ const n=P.L.c;if(n<2)return;
+ if(P.L.s%n){
+  say("Ne možeš podijeliti "+sideStr(P.L)+" na "+n+" "+dijelova(n)+", jer se "+P.L.s+" ne može podijeliti s "+n+". Prvo makni "+P.L.s+".","warn");
+  return renderLevel();
+ }
+ const before=P.R.s;
+ P.L={c:1,s:P.L.s/n};
+ P.op={type:"div",k:n,before,expect:before/n,sum:before+" : "+n};
+ P.phase="answer";P.hint=0;
+ say("Podijelio si obje strane na "+n+" "+dijelova(n)+" i zadržao jedan. Lijeva strana je sad "+sideStr(P.L)+". Koliko je na desnoj?","");
+ renderLevel();
+}
+function submitAnswer(){
+ const inp=document.getElementById("ans");if(!inp)return;
+ const v=parseInt(inp.value,10);
+ if(isNaN(v)){say("Prvo upiši broj.","warn");return renderLevel(true);}
+ const o=P.op;
+ if(v===o.expect){
+  P.log[P.log.length-1].op="/ "+(o.type==="minus"?"−":":")+o.k;
+  P.R={c:0,s:v};P.log.push({eq:eqOf(P.L,P.R),op:""});P.op=null;
+  if(P.L.c===1&&P.L.s===0)return win();
+  P.phase="choose";say("Ravnoteža! Zapisano u bilježnicu. Što sad?","ok");
+  return renderLevel();
+ }
+ P.wrong++;
+ P.wrongShow=v;
+ say("Vaga se nagnula, znači "+v+" nije točno. Izračunaj još jednom "+o.sum+".","warn");
+ renderLevel();
+ setTimeout(()=>{if(P&&P.phase==="answer"&&P.wrongShow===v){P.wrongShow=null;drawScale();}},1400);
+}
+function giveHint(){
+ if(P.phase==="build"){
+  say(P.hint?"Kutije su one jednake stvari. Broj koji stoji uz njih isto ide lijevo. Ukupno ide desno.":"Pročitaj zagonetku još jednom. Koliko ima jednakih stvari?","");
+  P.hint++;return renderLevel();
+ }
+ if(P.phase==="choose"){
+  if(P.hint===0)say("Želiš da kutija ostane sama. Stoji li išta uz kutije?","");
+  else{say(P.L.s>0?"Prvo makni "+P.L.s+".":"Podijeli obje strane na "+P.L.c+".","");P.usedHint=true;}
+  P.hint++;return renderLevel();
+ }
+}
+function checkBuild(){
+ const b=P.build,d=P.def;
+ if(b.lc===d.L.c&&b.ls===d.L.s&&b.rs===d.R.s){
+  P.phase="choose";P.hint=0;say("Vaga je složena: "+eqOf(d.L,d.R)+". Sad je riješi.","ok");return renderLevel();
+ }
+ if(b.lc!==d.L.c)say("Broj kutija nije dobar. Koliko jednakih stvari ima u zagonetci?","warn");
+ else if(b.ls!==d.L.s)say("Kutije su dobre. Što još stoji na vagi uz njih?","warn");
+ else say("Lijeva strana je dobra. Koliko je ukupno na drugoj strani?","warn");
+ renderLevel();
+}
+function win(){
+ P.phase="won";
+ let st=P.wrong===0?3:P.wrong<=2?2:1;if(P.usedHint)st=Math.min(st,2);
+ P.stars=st;
+ if(!P.custom&&!P.practice){const id=P.def.id;store.stars[id]=Math.max(store.stars[id]||0,st);save();}
+ say("Svjetlić je slobodan!","ok");
+ renderLevel();
+}
+
+/* ---------- map ---------- */
+function unlocked(i){return i===0||!!store.stars[LEVELS[i-1].id];}
+function renderMap(){
+ S.view="map";P=null;
+ const freed=LEVELS.filter(l=>store.stars[l.id]).length;
+ let floors="";
+ for(let i=LEVELS.length-1;i>=0;i--){
+  const l=LEVELS[i],st=store.stars[l.id]||0,open=unlocked(i),next=open&&!st;
+  floors+='<button class="floor'+(st?" done":"")+(next?" next":"")+'" data-act="play" data-i="'+i+'"'+(open?"":" disabled")+">"+
+   '<span class="win-ico" aria-hidden="true"></span><span><span class="num">'+(i+1)+". kat</span><br>"+esc(l.name)+"</span>"+
+   (st?starsHTML(st):open?'<span class="small">Igraj</span>':'<span class="small">Zaključano</span>')+"</button>";
+ }
+ view.innerHTML=
+ '<header class="stack" style="gap:6px"><h1>Kula vaga</h1><p class="sub">Jednadžbe poput 3x + 2 = 20 · oslobođeni svjetlići: '+freed+" od "+LEVELS.length+"</p></header>"+
+ '<div class="card vagar"><span class="face" aria-hidden="true"></span><div><div class="who">Vagar</div><p>'+
+ (freed===LEVELS.length?"Kula sja od podruma do krova. Sad je red na tebi: u Radionici složi vagu za nekog drugog.":
+  "Zaključao sam svjetliće u kutije. Na svakom katu stoji jedna vaga, a svaka kutija ima tajnu težinu x. Otkrij x, ali pazi: moje vage uvijek moraju ostati u ravnoteži.")+
+ "</p></div></div>"+
+ '<div class="tower">'+floors+"</div>"+
+ '<div class="card stack"><h3>Izvan kule</h3><div class="row">'+
+ '<button class="grow" data-act="workshop">Radionica: složi svoju vagu</button>'+
+ '<button class="grow" data-act="practice">Vježba: nasumična vaga</button></div>'+
+ '<div class="row" style="align-items:flex-end"><label class="f" for="codein">Imaš nečiji kod?<input id="codein" class="code" placeholder="npr. 3-2-20" inputmode="numeric" autocomplete="off"></label>'+
+ '<button data-act="opencode">Riješi</button></div><p class="small" id="codemsg" style="color:var(--ember)"></p></div>';
+}
+
+/* ---------- level ---------- */
+function levelTitle(){
+ if(P.custom)return P.def.name;
+ if(P.practice)return "Vježba";
+ const i=LEVELS.indexOf(P.def);return (i+1)+". kat · "+P.def.name;
+}
+function drawScale(){
+ const el=document.getElementById("lv-scale");if(!el)return;
+ const ph=P.phase;
+ if(ph==="build"){const b=P.build;return setScale(el,{c:b.lc,s:b.ls},{c:0,s:b.rs},0);}
+ if(ph==="tut1")return setScale(el,{c:1,s:0},{c:0,s:7},tiltFor(P.x-7));
+ if(ph==="answer"){
+  const lv=P.L.c*P.x+P.L.s;
+  if(P.wrongShow!=null)return setScale(el,P.L,{c:0,s:P.wrongShow},tiltFor(lv-P.wrongShow),null,{label:P.wrongShow});
+  return setScale(el,P.L,{c:0,s:1},0,null,{label:"?",q:true});
+ }
+ if(ph==="won")return setScale(el,P.L,P.R,0,{reveal:P.x},null,true);
+ setScale(el,P.L,P.R,0);
+}
+function eqHTML(){
+ const ph=P.phase;
+ if(ph==="build"){const b=P.build;return {c:"eq",h:esc(sideStr({c:b.lc,s:b.ls}))+' <span class="rel">=</span> '+esc(sideStr({c:0,s:b.rs}))};}
+ if(ph==="tut1")return {c:"eq unbal",h:'x <span class="rel">≠</span> 7'};
+ if(ph==="answer"){
+  if(P.wrongShow!=null)return {c:"eq unbal",h:esc(sideStr(P.L))+' <span class="rel">≠</span> '+P.wrongShow};
+  return {c:"eq bal",h:esc(sideStr(P.L))+' <span class="rel">=</span> <span class="q">?</span>'};
+ }
+ if(ph==="won")return {c:"eq bal",h:'x <span class="rel">=</span> '+P.x};
+ return {c:"eq bal",h:esc(sideStr(P.L))+' <span class="rel">=</span> '+esc(sideStr(P.R))};
+}
+function controlsHTML(){
+ const ph=P.phase,d=P.def;
+ if(ph==="tut0")return '<button class="primary" data-act="tut-next">Pokaži što se dogodi ako varam</button><button class="ghost" data-act="tut-skip">Preskoči</button>';
+ if(ph==="tut1")return '<button class="primary" data-act="tut-skip">Jasno, sad ja!</button>';
+ if(ph==="build"){
+  const b=P.build,lb=d.labels;
+  return '<div class="card stack"><h3>Složi vagu</h3><div class="build-grid">'+
+  '<label class="f" for="b-lc">'+esc(lb[0])+"</label>"+stepper("b-lc",b.lc,0,9,lb[0])+
+  '<label class="f" for="b-ls">'+esc(lb[1])+"</label>"+stepper("b-ls",b.ls,0,99,lb[1])+
+  '<label class="f" for="b-rs">'+esc(lb[2])+"</label>"+stepper("b-rs",b.rs,0,99,lb[2])+
+  '</div><p class="small">Kutije i uteg uz njih idu lijevo. Ukupno ide desno.</p>'+
+  '<div class="row"><button class="primary grow" data-act="build">Postavi vagu</button><button data-act="hint">Savjet</button></div></div>';
+ }
+ if(ph==="choose"){
+  let h='<h3>Odaberi potez</h3>';
+  if(P.L.s>0)h+='<button class="action" data-act="remove">Makni '+P.L.s+' s obje strane<span class="note">U bilježnicu: / −'+P.L.s+"</span></button>";
+  if(P.L.c>1)h+='<button class="action" data-act="split">Podijeli obje strane na '+P.L.c+' '+dijelova(P.L.c)+'<span class="note">U bilježnicu: / :'+P.L.c+"</span></button>";
+  h+='<div class="row"><button class="grow" data-act="reset">Ispočetka</button><button class="grow" data-act="hint">Savjet</button></div>';
+  return h;
+ }
+ if(ph==="answer"){
+  return '<div class="card ask"><h3>Sad ti računaj</h3><div class="sum">'+esc(P.op.sum)+' = ?</div>'+
+  '<form class="answer-row" id="ansform"><input id="ans" type="number" inputmode="numeric" autocomplete="off" aria-label="Tvoj odgovor"><button class="primary" type="submit">Provjeri</button></form></div>';
+ }
+ if(ph==="won"){
+  const a=d.L.c,b=d.L.s,x=P.x;
+  const left=(a===1?"":a+" · ")+x+(b?" + "+b:"");
+  const mid=a!==1&&b?" = "+(a*x)+" + "+b:"";
+  const i=LEVELS.indexOf(d),isLast=i===LEVELS.length-1;
+  let nextBtn;
+  if(P.practice)nextBtn='<button class="primary grow" data-act="practice">Nova vaga</button>';
+  else if(P.custom)nextBtn='<button class="primary grow" data-act="map">Natrag u kulu</button>';
+  else if(isLast)nextBtn='<button class="primary grow" data-act="workshop">U Radionicu</button>';
+  else nextBtn='<button class="primary grow" data-act="play" data-i="'+(i+1)+'">Sljedeći kat</button>';
+  return '<div class="card winp stack pop"><div class="row between"><span class="big">x = '+x+"</span>"+starsHTML(P.stars)+"</div>"+
+  (d.answer?"<p><strong>"+esc(d.answer(x))+"</strong></p>":"")+
+  "<p>Provjera: "+esc(left+mid)+" = "+(a*x+b)+' <span style="color:var(--glow)">✓</span></p>'+
+  '<p class="small">Pogrešni odgovori: '+P.wrong+"."+(P.usedHint?" Uz savjet najviše dvije zvjezdice.":"")+(P.stars<3&&!P.usedHint?" Za tri zvjezdice svaki račun riješi iz prve.":"")+"</p>"+
+  (isLast&&!P.custom&&!P.practice?"<p>Kula sja. Vagar se smiješi: sad ti složi vagu za nekog drugog.</p>":"")+
+  '<div class="row">'+nextBtn+'<button class="grow" data-act="replay">Igraj ponovno</button></div></div>';
+ }
+ return "";
+}
+function renderLevel(shake){
+ const d=P.def;
+ const intro=d.riddle||d.story;
+ const e=eqHTML();
+ const showNb=!["tut0","tut1","build"].includes(P.phase);
+ view.innerHTML=
+ '<div class="row between"><button class="ghost" data-act="map">← Kula</button></div>'+
+ "<h2>"+esc(levelTitle())+"</h2>"+
+ '<div class="card vagar"><span class="face" aria-hidden="true"></span><div><div class="who">'+(d.riddle?"Zagonetka":"Vagar")+'</div><p>'+esc(intro)+"</p></div></div>"+
+ '<div class="scale-wrap" id="lv-scale">'+scaleSkeleton()+"</div>"+
+ '<div class="'+e.c+'" aria-live="polite">'+e.h+"</div>"+
+ (P.msg?'<p class="say '+P.tone+(shake?" shake":"")+'" aria-live="polite">'+esc(P.msg)+"</p>":"")+
+ '<div class="stack" id="lv-ctrl">'+controlsHTML()+"</div>"+
+ (showNb?'<div class="stack" style="gap:8px"><h3>Bilježnica</h3><div class="notebook">'+P.log.map(l=>'<div class="nb-line"><span>'+esc(l.eq)+'</span><span class="op">'+esc(l.op)+"</span></div>").join("")+"</div></div>":"");
+ // keep the scale at its previous pose for one frame so it animates
+ requestAnimationFrame(()=>requestAnimationFrame(drawScale));
+ drawScaleInstant();
+ const ans=document.getElementById("ans");if(ans)ans.focus({preventScroll:true});
+}
+let lastPose=null;
+function drawScaleInstant(){
+ // draw immediately with transitions off at the last pose, then drawScale() animates to the new one
+ const el=document.getElementById("lv-scale");if(!el)return;
+ const svg=el.querySelector("svg");svg.querySelectorAll(".beam,.pan").forEach(g=>g.style.transition="none");
+ if(lastPose){setScale(el,lastPose.L,lastPose.R,lastPose.ang,lastPose.lo,lastPose.ro);}
+ else drawScale();
+ svg.getBoundingClientRect();
+ svg.querySelectorAll(".beam,.pan").forEach(g=>g.style.transition="");
+}
+// remember the pose setScale last drew for the level view
+const _setScale=setScale;
+setScale=function(root,L,R,ang,lo,ro,sprite){
+ if(root&&root.id==="lv-scale"&&!sprite)lastPose={L:{...L},R:{...R},ang,lo,ro};
+ if(root&&root.id==="lv-scale"&&sprite)lastPose=null;
+ return _setScale(root,L,R,ang,lo,ro,sprite);
+};
+
+/* ---------- workshop ---------- */
+function renderWorkshop(){
+ S.view="workshop";P=null;lastPose=null;
+ view.innerHTML=
+ '<div class="row between"><button class="ghost" data-act="map">← Kula</button></div>'+
+ "<h2>Radionica</h2>"+
+ '<div class="card vagar"><span class="face" aria-hidden="true"></span><div><div class="who">Vagar</div><p>Sad si ti čuvar. Odaberi koliko kutija, koliki uteg stoji uz njih i koliko jedna kutija tajno teži. Drugu stranu izračunam ja. Pošalji kod nekome i vidi može li ga riješiti.</p></div></div>'+
+ '<div class="card"><div class="build-grid">'+
+ '<label class="f" for="w-a">Kutije</label>'+stepper("w-a",W.a,1,9,"Kutije")+
+ '<label class="f" for="w-b">Uteg uz kutije</label>'+stepper("w-b",W.b,0,50,"Uteg uz kutije")+
+ '<label class="f" for="w-x">Tajna težina jedne kutije (x)</label>'+stepper("w-x",W.x,1,30,"Tajna težina")+
+ "</div></div>"+
+ '<div class="scale-wrap" id="w-scale">'+scaleSkeleton()+"</div>"+
+ '<div class="eq bal" id="w-eq"></div>'+
+ '<div class="card stack"><div class="row between"><span>Kod: <strong id="w-code" style="font-size:1.3rem"></strong></span><button data-act="wplay">Isprobaj sam</button></div>'+
+ '<label class="f" for="w-text">Napiši zagonetku uz vagu (ako želiš)<textarea id="w-text" placeholder="npr. Tri jednaka zmaja i jedan mali zmaj od 2 kg teže 20 kg…">'+esc(W.text)+"</textarea></label>"+
+ '<button class="primary" data-act="wcopy">Kopiraj zagonetku i kod</button>'+
+ '<p class="small" id="w-copied" aria-live="polite">Tko dobije kod, upiše ga na dnu stranice s kulom.</p></div>';
+ updateWorkshop();
+}
+function wCode(){return W.a+"-"+W.b+"-"+(W.a*W.x+W.b);}
+function updateWorkshop(){
+ const L={c:W.a,s:W.b},R={c:0,s:W.a*W.x+W.b};
+ setScale(document.getElementById("w-scale"),L,R,0);
+ document.getElementById("w-eq").innerHTML=esc(sideStr(L))+' <span class="rel">=</span> '+esc(sideStr(R));
+ document.getElementById("w-code").textContent=wCode();
+}
+function customDef(a,b,c,text){
+ return {id:"custom",name:"Vaga "+a+"-"+b+"-"+c,L:{c:a,s:b},R:{c:0,s:c},x:(c-b)/a,
+  story:text||"Netko je složio ovu vagu za tebe. Možeš li je riješiti?"};
+}
+function parseCode(s){
+ const n=String(s).split(/[^0-9]+/).filter(Boolean).map(Number);
+ if(n.length!==3)return null;const [a,b,c]=n;
+ if(a<1||a>9||c<=b||(c-b)%a)return null;return {a,b,c};
+}
+function randomDef(){
+ const a=1+Math.floor(Math.random()*6),x=1+Math.floor(Math.random()*12);
+ let b=Math.floor(Math.random()*21);if(a===1&&b===0)b=1+Math.floor(Math.random()*12);
+ return {id:"practice",name:"Vježba",L:{c:a,s:b},R:{c:0,s:a*x+b},x,story:"Nasumična vaga. Svaki račun riješi iz prve."};
+}
+
+/* ---------- events ---------- */
+view.addEventListener("click",e=>{
+ const t=e.target.closest("[data-act]");if(!t||t.disabled)return;
+ switch(t.dataset.act){
+  case "play":lastPose=null;startLevel(LEVELS[+t.dataset.i]);break;
+  case "map":lastPose=null;renderMap();window.scrollTo(0,0);break;
+  case "workshop":renderWorkshop();window.scrollTo(0,0);break;
+  case "practice":lastPose=null;startLevel(randomDef(),{practice:true});break;
+  case "replay":lastPose=null;startLevel(P.def,{custom:P.custom,practice:P.practice});break;
+  case "tut-next":P.phase="tut1";say("Maknuo sam 3 samo s lijeve strane. Vaga se nagnula i sad je x ≠ 7. Što napraviš jednoj strani, moraš napraviti i drugoj.","warn");renderLevel();break;
+  case "tut-skip":P.phase="choose";say("Tvoj red. Pazi na ravnotežu.","");renderLevel();break;
+  case "remove":chooseRemove();break;
+  case "split":chooseSplit();break;
+  case "reset":{const d=P.def;P.L={...d.L};P.R={...d.R};P.log=[{eq:eqOf(d.L,d.R),op:""}];P.op=null;P.phase="choose";say("Natrag na početak.","");renderLevel();break;}
+  case "hint":giveHint();break;
+  case "build":checkBuild();break;
+  case "inc":{const inp=document.getElementById(t.dataset.for);if(!inp)break;
+   inp.value=clamp((parseInt(inp.value,10)||0)+(+t.dataset.d),+inp.min,+inp.max);inp.dispatchEvent(new Event("input",{bubbles:true}));break;}
+  case "opencode":{const c=parseCode(document.getElementById("codein").value);
+   if(!c){document.getElementById("codemsg").textContent="Taj kod ne radi. Kod izgleda ovako: 3-2-20.";break;}
+   lastPose=null;startLevel(customDef(c.a,c.b,c.c),{custom:true});break;}
+  case "wplay":lastPose=null;startLevel(customDef(W.a,W.b,W.a*W.x+W.b,W.text.trim()),{custom:true});break;
+  case "wcopy":{const txt=(W.text.trim()?W.text.trim()+"\n":"")+"Kod za Kulu vaga: "+wCode();
+   const out=document.getElementById("w-copied");
+   try{navigator.clipboard.writeText(txt).then(()=>{out.textContent="Kopirano. Zalijepi u poruku.";},()=>{out.textContent="Kopiranje nije uspjelo. Zapiši kod: "+wCode();});}
+   catch(err){out.textContent="Kopiranje nije uspjelo. Zapiši kod: "+wCode();}
+   break;}
+ }
+});
+view.addEventListener("submit",e=>{if(e.target.id==="ansform"){e.preventDefault();submitAnswer();}});
+view.addEventListener("input",e=>{
+ const id=e.target.id;if(!id)return;
+ const n=parseInt(e.target.value,10);
+ if(id.startsWith("b-")&&P){
+  const key={"b-lc":"lc","b-ls":"ls","b-rs":"rs"}[id];P.build[key]=isNaN(n)?0:clamp(n,+e.target.min,+e.target.max);
+  drawScale();const eq=view.querySelector(".eq");const h=eqHTML();eq.className=h.c;eq.innerHTML=h.h;
+ }else if(id.startsWith("w-")){
+  if(id==="w-text"){W.text=e.target.value;return;}
+  const key={"w-a":"a","w-b":"b","w-x":"x"}[id];if(!key)return;
+  W[key]=isNaN(n)?+e.target.min:clamp(n,+e.target.min,+e.target.max);updateWorkshop();
+ }
+});
+view.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="codein"){e.preventDefault();view.querySelector('[data-act="opencode"]').click();}});
+
+/* ---------- start ---------- */
+function start(data){
+ data=data||{};
+ const m=/^#code-(\d+)-(\d+)-(\d+)$/.exec(location.hash||"");
+ if(m){const c=parseCode(m[1]+"-"+m[2]+"-"+m[3]);if(c)return startLevel(customDef(c.a,c.b,c.c),{custom:true});}
+ if(data.view==="level"&&data.lvl>=0&&LEVELS[data.lvl])return startLevel(LEVELS[data.lvl]);
+ if(data.view==="workshop"){if(data.W)W=data.W;return renderWorkshop();}
+ renderMap();
+}
+try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>({view:S.view,lvl:P&&!P.custom&&!P.practice?LEVELS.indexOf(P.def):-1,W}));}catch(e){}
+const hot=window.claude&&window.claude.hot;
+if(hot&&hot.ready)hot.ready(start);else start(hot&&hot.data?hot.data:{});
+})();
+</script>
+</body>
+</html>
