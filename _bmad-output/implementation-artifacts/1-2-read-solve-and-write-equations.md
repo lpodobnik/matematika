@@ -1,6 +1,6 @@
 # Story 1.2: Read, solve and write equations
 
-Status: review
+Status: done
 
 ## Story
 
@@ -55,7 +55,7 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - **A 500-token limit (`too-long`)** keeps recursion shallow for any input, such as a hostile room link in epic 5. A notebook line is far shorter.
 - **Text input takes the keyboard stand-ins** (`*`, `/`, `-`, `X`) and ignores every kind of whitespace, so room files may be written in ASCII. Pad tokens are the school signs themselves (`−`, `·`), and `tokenFromChar` is the one map for both the text parser and the physical keyboard (story 1.6).
 - **Structural comparison is built now,** because the architecture puts it in `expr.ts`: chains of + and − (or ·) are flattened along their left spine and compared as sorted terms; a bracketed group on the right stays one term (`20 − (5 − 3)` is not `20 − 5 + 3`); division doesn't commute; sides may swap. Story 1.3 uses it for check lines.
-- **Nonlinear is judged by value:** `0 · x` and `(x − x) · x` are linear (0); `x · x`, `18 : x` and `18 : (x + 1)` are not. A divisor that is 0, such as `18 : (x − x)`, is division by zero. When a side has both, the first one from the left is reported.
+- **Nonlinear is judged by value:** `0 · x` and `(x − x) · x` are linear (0); `x · x`, `18 : x` and `18 : (x + 1)` are not. A divisor that is 0, such as `18 : (x − x)`, is division by zero. When a line has both, division by zero wins, wherever it is (changed in review; see Review).
 - **`solve` lives in `linear.ts`** (the architecture names no module for it) and returns `one`, `none`, `every`, `nonlinear` or `division-by-zero`.
 - **`format` writes brackets only where the tree needs them,** including around an equal operation on the right (`20 + (5 − 3)`), so format then parse always gives back the same tree. `3 · x` comes out as `3x`; `x · 3` stays as it is. Negative numbers (never in a line; possible in later readouts) get `−` U+2212.
 - **Thousands are grouped from 1 000, four-digit numbers included,** as the criterion and the GDD's `5 905` say.
@@ -94,3 +94,27 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/lib/assert.ts`, `src/lib/assert.test.ts`
 - `biome.json` (modified: `"!!.claude"`)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Finding (fixed)
+
+- **Bug: nonlinear hid division by zero** (`src/math/linear.ts`). `toLinear` and `solve` returned whichever problem came first from the left, so `x · x + 18 : 0`, `x · x : 0` and `x · x = 18 : 0` gave `nonlinear`. The architecture's checker rule 1 lists division by zero among the `incomplete` cases of the parse step, before it says "A line that isn't linear is `nonlinear`", so story 1.3 needs division by zero to win.
+  - **Fix:** `toLinear` now works out both operands before it decides. Division by zero comes first: a divisor that is exactly 0 is division by zero whatever the dividend is (`x · x : 0`, `18 : x : 0`), and a division by zero in either operand wins. Only after that does a nonlinear operand make the side nonlinear. `solve` works out both sides, then applies the same order. The earlier Calls entry ("the first one from the left is reported") is corrected above.
+  - **Tests** (`src/math/linear.test.ts`): `toLinear` on `x · x + 18 : 0`, `18 : 0 + x · x`, `x · x : 0`, `18 : x : 0`, `x · x : (x − x)`, `(x · x) · (18 : 0)` and `18 : x + 2 : (5 − 5)`; `solve` on `x · x = 18 : 0`, `18 : 0 = x · x`, `x · x + 18 : 0 = 4` and `x · x : 0 = 4`. Two fast-check properties (500 random trees each) check that `e : 0`, `e + 18 : 0`, `18 : 0 + e`, and an equation with `18 : 0` on either side all give `division-by-zero`, whatever `e` is. All four new tests failed against the old `linear.ts` and pass now.
+
+### Minor notes (not fixed, for Luka)
+
+- `project-context.md` says every change to `math/` adds rows to `src/math/lines.table.ts`, but the file was not created. Both this story file and epics.md put it in story 1.3, so the documents disagree with each other; update the project-context wording or add the rows in 1.3.
+- In `src/math/expr.ts`, structural comparison flattens chains only along the left spine. So `2 · 3x` and `3x · 2` compare as different, and so do `(9 + 2) + 7` and `7 + (9 + 2)`, although each pair differs only in order. None of epic 1's check-line forms hit this.
+- `toText` in `src/math/rational.ts` writes `-7/2` with an ASCII minus and a slash, outside `format.ts`. That is fine for tests and the dev panel, but it must never reach the child (rule 7).
+- `12 : 3x` parses as 12 : (3x), and `format` writes it back without brackets. A 5th grader may read it as (12 : 3) · x. Writing `12 : (3x)` for a coefficient term on the right of `:` would still give back the same tree.
+- The reviewer ran the test suite once (vitest: 17 files, 254 tests, all passing) and did not re-run `npm run check` or `npm run build`. After the fix, all three were run; results below.
+
+### Checks after the review fixes
+
+- `npm run check`: 44 files, no errors.
+- `npm test`: 17 files, 258 tests passing (4 new in `src/math/linear.test.ts`).
+- `npm run build`: clean; 0.85 MB in 9 files, JavaScript 0.25 MB gzipped (unchanged).

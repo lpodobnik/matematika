@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { type BinaryKind, type Expr, maxNumber, substitute } from '@/math/expr';
+import { add, type BinaryKind, div, type Expr, maxNumber, num, substitute } from '@/math/expr';
 import { type LinearResult, type Solution, solve, toLinear, valueAt } from '@/math/linear';
 import { parse, parseExpr } from '@/math/parse';
 import * as q from '@/math/rational';
@@ -70,6 +70,32 @@ describe('toLinear', () => {
     }
   });
 
+  it('reports division by zero over nonlinear, wherever each one is', () => {
+    for (const text of [
+      'x · x + 18 : 0',
+      '18 : 0 + x · x',
+      'x · x : 0',
+      '18 : x : 0',
+      'x · x : (x − x)',
+      '(x · x) · (18 : 0)',
+      '18 : x + 2 : (5 − 5)',
+    ]) {
+      expect(toLinear(side(text)), text).toEqual({ kind: 'division-by-zero' });
+    }
+  });
+
+  it('lets division by zero win over any other side (fast-check)', () => {
+    const byZero = div(num(18), num(0));
+    fc.assert(
+      fc.property(exprArb, (expr) => {
+        for (const tree of [div(expr, num(0)), add(expr, byZero), add(byZero, expr)]) {
+          expect(toLinear(tree)).toEqual({ kind: 'division-by-zero' });
+        }
+      }),
+      { numRuns: 500 },
+    );
+  });
+
   it('keeps a chain of big products exact', () => {
     expect(toLinear(side('9 999 999 · 9 999 999 · 9 999 999'))).toEqual(
       linear(q.zero, q.rational(9_999_999n ** 3n)),
@@ -120,5 +146,27 @@ describe('solve', () => {
   it('passes on nonlinear sides and division by zero', () => {
     expect(solveText('x · x = 4')).toEqual({ kind: 'nonlinear' });
     expect(solveText('x = 18 : 0')).toEqual({ kind: 'division-by-zero' });
+  });
+
+  it('reports division by zero over a nonlinear side, on either side', () => {
+    for (const text of [
+      'x · x = 18 : 0',
+      '18 : 0 = x · x',
+      'x · x + 18 : 0 = 4',
+      'x · x : 0 = 4',
+    ]) {
+      expect(solveText(text), text).toEqual({ kind: 'division-by-zero' });
+    }
+  });
+
+  it('lets division by zero on one side win over any other side (fast-check)', () => {
+    const byZero = div(num(18), num(0));
+    fc.assert(
+      fc.property(exprArb, (expr) => {
+        expect(solve({ left: expr, right: byZero })).toEqual({ kind: 'division-by-zero' });
+        expect(solve({ left: byZero, right: expr })).toEqual({ kind: 'division-by-zero' });
+      }),
+      { numRuns: 500 },
+    );
   });
 });
