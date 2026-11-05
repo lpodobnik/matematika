@@ -45,7 +45,7 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   epic-1: in-progress
   1-1-set-up-the-project: done
-  1-2-read-solve-and-write-equations: backlog
+  1-2-read-solve-and-write-equations: review
   1-3-judge-a-written-line: backlog
   1-4-show-an-equation-on-the-scale: backlog
   1-5-drag-x: backlog
