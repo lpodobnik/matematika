@@ -1,6 +1,6 @@
 # Ahead of epic 3: Fight rules as pure logic
 
-Status: review
+Status: done
 
 ## Story
 
@@ -118,3 +118,25 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run, lane branch `lane/f
 - `src/economy/types.ts`, `src/economy/parts.ts`, `src/economy/parts.test.ts`, `src/economy/rewards.ts`, `src/economy/rewards.test.ts`, `src/economy/upgrades.ts`, `src/economy/upgrades.test.ts`
 - `src/content/lairs.ts`, `src/content/lairs.test.ts`
 - This story file
+
+## Review
+
+Reviewed once, with no second review. The fixes pass ran on branch `lane/fight-fix` (from `lane/fight`, with `epic-1` merged in).
+
+### Findings
+
+- None. The review raised no findings that had to be fixed, so no code changed in this pass.
+
+### Minor notes (not fixed, for Luka)
+
+- `C:\Users\lpodobnik\Claude\matematika\src\fight\settle.ts` line 101 (lane/fight): when a loss drops nothing, `parts: -dropped` sends `FightEnded` with parts −0, and `Intl.NumberFormat('hr-HR')` shows that as "−0". Use `0 - dropped` (gives +0) and add an events assertion to the 'fewer than 4 parts' test.
+- `C:\Users\lpodobnik\Claude\matematika\src\fight\fight.ts` `blowRange` (lane/fight): it returns a range whenever a die is on reach, so also in phase `place` and in `strike`/`won`/`lost`, where the slots still hold the last round, but `fight/blows` is ignored in all of those. The "For epic 3" note says to use `blowRange` as the dial's range. Return null unless `phase === 'set'`.
+- `C:\Users\lpodobnik\Claude\matematika\src\fight\settle.ts` `lairAwake` (lane/fight): it trusts any `rewindsAt` in the future, so if the tablet clock was ahead at the win and is later corrected, the lair stays locked for that whole gap. Treat a `rewindsAt` more than `tuning.fight.lairRewindMinutes` after now as already rewound.
+- `C:\Users\lpodobnik\Claude\matematika\src\fight\limits.ts` `fightLimits` (lane/fight): an upgrade id that is not in `tuning.upgrades` (for example from a damaged save) throws a TypeError on `upgrade.dice`. Skip ids it does not know.
+- AC1's "no pure folder calls `Math.random()`" holds today (checked with grep) but no test enforces it; a scan in `src/architecture.test.ts` would. The architecture also says ignored actions are logged at debug level, which `reduceFight` doesn't do; that can't be done yet, because lane/fight has no `src/lib/log.ts` (still true after merging `epic-1`).
+
+### Checks after merging epic-1
+
+- `npm run check`: 68 files, no errors.
+- `npm test`: 28 files, 398 passing, 2 skipped (the random player's parts at armour 60, as above).
+- `npm run build`: clean; 0.85 MB in 9 files, JavaScript 0.25 MB gzipped (unchanged).
