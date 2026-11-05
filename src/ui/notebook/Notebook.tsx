@@ -1,18 +1,25 @@
 import '@/ui/notebook/notebook.css';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { hr } from '@/content/text/hr';
-import { formatTokens } from '@/math/format';
-import type { Token } from '@/math/tokens';
-import { type LineDisplay, lineDisplays, type NotebookKey, notebookWrites } from '@/room/notebook';
+import type { LineSegment } from '@/math/format';
+import type { LineToken, Token } from '@/math/tokens';
+import {
+  draftDisplay,
+  type LineDisplay,
+  lineDisplays,
+  type NotebookKey,
+  notebookWrites,
+} from '@/room/notebook';
 import type { NotebookLine } from '@/room/types';
 import { useGame } from '@/store/store';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
-import { LineView } from '@/ui/notebook/LineView';
+import { LineView, textLine } from '@/ui/notebook/LineView';
 import { NumberPad } from '@/ui/notebook/NumberPad';
 import { keyAction, primaryPress } from '@/ui/notebook/pad-keys';
 
 const noLines: readonly NotebookLine[] = [];
-const noTokens: readonly Token[] = [];
+const noTokens: Token[] = [];
+const noTemplates: LineToken[][] = [];
 
 /**
  * The notebook beside the scale (FR15): the stage equation as line 0, the committed lines,
@@ -22,6 +29,7 @@ const noTokens: readonly Token[] = [];
 export function Notebook() {
   const lines = useGame((s) => s.room?.stage.lines ?? noLines);
   const draft = useGame((s) => s.room?.stage.draft ?? noTokens);
+  const templates = useGame((s) => s.room?.stage.templates ?? noTemplates);
   const wrong = useGame((s) => s.room?.stage.jam?.kind === 'line');
   const refused = useGame((s) => s.room?.stage.refused ?? 0);
   const writes = useGame((s) => (s.room ? notebookWrites(s.room.stage) : false));
@@ -29,7 +37,7 @@ export function Notebook() {
   const dispatch = useGame((s) => s.dispatch);
 
   const shown = useMemo(() => lineDisplays(lines), [lines]);
-  const draftText = useMemo(() => formatTokens(draft), [draft]);
+  const display = useMemo(() => draftDisplay({ draft, templates }), [draft, templates]);
   const send = useCallback((key: NotebookKey) => dispatch(keyAction(key)), [dispatch]);
   const slide = useCallback(
     (next: boolean) => dispatch({ type: 'notebook/slide', aside: next }),
@@ -41,7 +49,9 @@ export function Notebook() {
   return (
     <NotebookPage
       lines={shown}
-      draft={draftText}
+      draft={display.draft}
+      upcoming={display.upcoming}
+      blank={templates.length > 0}
       wrong={wrong}
       refused={refused}
       writes={writes}
@@ -54,8 +64,12 @@ export function Notebook() {
 
 export interface NotebookPageProps {
   lines: readonly LineDisplay[];
-  /** The draft in school notation. */
-  draft: string;
+  /** The draft in school notation: free text, or its template with the blank filled so far. */
+  draft: readonly LineSegment[];
+  /** Lines with blanks still to fill after the draft (Fading, `blanks`). */
+  upcoming: readonly (readonly LineSegment[])[];
+  /** He is filling a blank, so only digits, delete and enter work. */
+  blank: boolean;
   wrong: boolean;
   /** Counts refusals; each new one remounts the draft line, so it wiggles once. */
   refused: number;
@@ -74,6 +88,8 @@ export interface NotebookPageProps {
 export function NotebookPage({
   lines,
   draft,
+  upcoming,
+  blank,
   wrong,
   refused,
   writes,
@@ -109,20 +125,24 @@ export function NotebookPage({
           {lines.map((line) => (
             <LineView
               key={line.number}
-              text={line.text}
+              segments={textLine(line.text)}
               kind={line.source === 'given' ? 'given' : 'written'}
             />
           ))}
           <LineView
             key={`draft-${refused}`}
-            text={draft}
+            segments={draft}
             kind="draft"
             wrong={wrong}
             wiggle={refused > 0}
             caret={writes}
           />
+          {upcoming.map((segments, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: lines to fill only ever leave from the front
+            <LineView key={`upcoming-${i}`} segments={segments} kind="upcoming" />
+          ))}
         </ol>
-        <NumberPad writes={writes} onKey={onKey} />
+        <NumberPad writes={writes} blank={blank} onKey={onKey} />
       </div>
     </aside>
   );

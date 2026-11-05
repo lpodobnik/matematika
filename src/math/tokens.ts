@@ -27,6 +27,43 @@ export function isDigit(token: Token | undefined): token is Digit {
   return token !== undefined && (DIGITS as readonly string[]).includes(token);
 }
 
+/**
+ * A blank to fill in a notebook line (architecture Pattern 1, Fading: `blanks`). It is not
+ * a pad key: the notebook writes it, and pad input fills it.
+ */
+export const BLANK = '☐';
+export type Blank = typeof BLANK;
+/** A token of a notebook line that may have blanks in it. */
+export type LineToken = Token | Blank;
+
+/**
+ * A line with every x replaced by a blank: `x + 4 = 9` gives `☐ + 4 = 9`. A number written
+ * straight before x (`3x`) gets a `·` before its blank, so filled in it reads `3 · 4 = 12`,
+ * as the check line is written.
+ */
+export function blankOutX(tokens: readonly Token[]): LineToken[] {
+  const line: LineToken[] = [];
+  for (const [i, token] of tokens.entries()) {
+    if (token !== 'x') {
+      line.push(token);
+      continue;
+    }
+    const before = tokens[i - 1];
+    if (isDigit(before) || before === ')') line.push('·');
+    line.push(BLANK);
+  }
+  return line;
+}
+
+/** The line with every blank filled with `value` (an empty value leaves a gap). */
+export function fillBlanks(line: readonly LineToken[], value: readonly Token[]): Token[] {
+  return line.flatMap((token): Token[] => (token === BLANK ? [...value] : [token]));
+}
+
+export function hasBlank(line: readonly LineToken[]): boolean {
+  return line.includes(BLANK);
+}
+
 export type TokenizeResult =
   | { ok: true; tokens: Token[] }
   | { ok: false; reason: 'unknown-symbol' };

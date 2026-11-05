@@ -23,4 +23,8 @@ export type RoomEvent =
       progress: boolean;
     }
   /** Enter judged a line wrong; it stays in the draft (the play log keeps the text). */
-  | { type: 'LineWrong'; roomId: RoomSpec['id']; stage: number; line: string };
+  | { type: 'LineWrong'; roomId: RoomSpec['id']; stage: number; line: string }
+  /** The machine jammed: on a wrong line, or (story 1.11) a split that doesn't divide (audio: a hiss). */
+  | { type: 'MachineJammed'; roomId: RoomSpec['id']; kind: 'line' | 'split' }
+  /** The check line locked the stage's machine. */
+  | { type: 'StageLocked'; roomId: RoomSpec['id']; stage: number };

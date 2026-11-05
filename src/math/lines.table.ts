@@ -260,4 +260,25 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r11, line: `x = 5${nnbsp}589`, verdict: 'wrong', note: 'not divided' },
     { stage: r11, line: `5${nnbsp}905 − 27 · 207 = 316`, verdict: 'aside', note: 'before x = 207' },
   ],
+  // Story 1.7: Try values `blanks` (rooms 1–3). The notebook writes `x = ☐`, then the check
+  // line with x blanked (`blankOutX`: `3x` becomes `3 · ☐`), and he fills in a number. The
+  // right fills (`x = 5`, then `5 + 4 = 9`, and so on) are in each room's rows above; these
+  // are the other ways a fill can go.
+  'Try values blanks filled in (story 1.7)': [
+    { stage: r01, line: 'x = 6', verdict: 'wrong', note: 'x = ☐ with 6' },
+    { stage: r01, line: 'x = 05', verdict: 'answer', note: 'a leading zero in the blank' },
+    { stage: r01, line: 'x =', verdict: 'incomplete', note: 'x = ☐ left empty' },
+    { stage: r01, before: ['x = 5'], line: '+ 4 = 9', verdict: 'incomplete', note: 'left empty' },
+    { stage: r01, before: ['x = 5'], line: '05 + 4 = 9', verdict: 'check', note: 'leading zero' },
+    { stage: r02a, before: ['x = 4'], line: '3 · 5 = 12', verdict: 'wrong', note: '3 · ☐ = 12' },
+    { stage: r02a, before: ['x = 4'], line: '3 · = 12', verdict: 'incomplete', note: 'empty' },
+    { stage: r02b, before: ['x = 15'], line: '12 : 3 = 5', verdict: 'wrong', note: '☐ : 3 = 5' },
+    { stage: r03a, before: ['x = 14'], line: '15 − 6 = 8', verdict: 'wrong', note: '☐ − 6 = 8' },
+    { stage: r03b, before: ['x = 14'], line: '20 − 15 = 6', verdict: 'wrong', note: '20 − ☐' },
+    // Wrong lines that jam with no tilt of their own at the solution: they tip by
+    // tuning.jamMinTilt (room/tilt.ts, jamTilt).
+    { stage: r01, line: 'x = x', verdict: 'wrong', note: 'true for every x' },
+    { stage: r01, line: 'x + 4 = x + 4', verdict: 'wrong', note: 'true for every x' },
+    { stage: r01, line: 'x + 1 = x', verdict: 'wrong', note: 'no solution' },
+  ],
 };

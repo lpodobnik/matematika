@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import * as q from '@/math/rational';
+import { tokenize } from '@/math/tokens';
+import { setDial } from '@/room/dial';
+import { deleteToken, enterLine, typeToken } from '@/room/notebook';
 import { enterRoom } from '@/room/room';
-import { readoutLabel, scaleView, showsReadouts } from '@/room/scale';
+import { hiddenXLabel, readoutLabel, scaleView, showsReadouts, stageX } from '@/room/scale';
 import type { RoomSpec, RoomState } from '@/room/types';
 
 function roomWith(equation: string, extra: Partial<RoomSpec['stages'][number]> = {}): RoomState {
@@ -73,5 +77,102 @@ describe('scaleView', () => {
       });
       expect(readoutLabel(q.rational(5, 3))).toBe('5 : 3');
     });
+  });
+});
+
+/** Types a line on a blank page and presses enter. */
+function write(room: RoomState, text: string): RoomState {
+  const result = tokenize(text);
+  if (!result.ok) throw new Error(text);
+  const typed = result.tokens.reduce((current, token) => {
+    const next = typeToken(current, token);
+    if (!next) throw new Error(`"${token}" was ignored`);
+    return next.room;
+  }, room);
+  const entered = enterLine(typed);
+  if (!entered) throw new Error('enter was ignored');
+  return entered.room;
+}
+
+const blankPage = (equation: string, extra: Partial<RoomSpec['stages'][number]> = {}) =>
+  roomWith(equation, { fading: { try: 'blank' }, dial: { min: 0, max: 10, step: 1 }, ...extra });
+
+describe('acting out a written line (story 1.7)', () => {
+  it("weighs a committed line at the stage's solution, with ? on the gears and no readouts", () => {
+    const explored = setDial(blankPage('2x + 7 = 25'), 3)?.room as RoomState;
+    const view = scaleView(write(explored, '2x = 25 − 7'));
+    expect(view.actingOut).toBe(true);
+    expect(view.x).toBe(9);
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
+      ['gear', hiddenXLabel],
+      ['gear', hiddenXLabel],
+    ]);
+    expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([
+      ['weight', '25'],
+      ['float', '7'],
+    ]);
+    expect(view.readouts).toBeNull();
+    expect(view.tilt).toBe(0);
+    expect(view.level).toBe(true);
+  });
+
+  it('keeps the count on a large gear and the size on a divider: only x is hidden', () => {
+    const view = scaleView(write(blankPage('27x + 5 = 5 405'), '27x = 5 400'));
+    expect(view.left.pieces.map((p) => p.label)).toEqual(['27x']);
+    const divided = scaleView(
+      write(blankPage('x : 3 = 5', { dial: { min: 0, max: 30, step: 3 } }), 'x : 3 = 10 − 5'),
+    );
+    expect(divided.left.pieces.map((p) => [p.label, p.divisorLabel])).toEqual([['?', '3']]);
+  });
+
+  it("goes back to the dial's x, its label and the readouts on the dial's next notch", () => {
+    const acted = write(blankPage('x + 4 = 9'), 'x = 9 − 4');
+    const turned = setDial(acted, 2)?.room as RoomState;
+    const view = scaleView(turned);
+    expect(view.actingOut).toBe(false);
+    expect(view.x).toBe(2);
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', '2']]);
+    expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([
+      ['weight', '9'],
+      ['float', '4'],
+    ]);
+    expect(view.readouts).toEqual({ left: '2', right: '5' });
+  });
+
+  it('acts out the check line as weights of its numbers, level', () => {
+    const answered = write(blankPage('x + 4 = 9'), 'x = 5');
+    const view = scaleView(write(answered, '5 + 4 = 9'));
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
+      ['weight', '5'],
+      ['weight', '4'],
+    ]);
+    expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([['weight', '9']]);
+    expect(view.level).toBe(true);
+  });
+
+  it(`acts out a wrong line at the solution, tipped at least ${tuning.jamMinTilt}°`, () => {
+    const jammed = write(blankPage('x + 4 = 9'), 'x = 6');
+    const view = scaleView(jammed);
+    expect(view.actingOut).toBe(true);
+    expect(view.x).toBe(5);
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', '?']]);
+    expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([['weight', '6']]);
+    expect(view.tilt).toBe(-tuning.jamMinTilt);
+    expect(view.level).toBe(false);
+    expect(view.readouts).toBeNull();
+    const far = scaleView(write(blankPage('2x + 7 = 25'), '2x = 32'));
+    expect(far.tilt).toBe(-14);
+  });
+
+  it('returns to what the pans showed before, once the wrong line is edited', () => {
+    const explored = setDial(blankPage('x + 4 = 9'), 7)?.room as RoomState;
+    const jammed = write(explored, 'x = 7');
+    const edited = deleteToken(jammed)?.room as RoomState;
+    expect(scaleView(edited)).toEqual(scaleView(explored));
+  });
+
+  it("finds the stage's solution for acting out", () => {
+    expect(stageX(blankPage('2x + 7 = 25'))).toBe(9);
+    expect(stageX(enterRoom(r01).room)).toBe(5);
   });
 });

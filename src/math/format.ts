@@ -5,7 +5,7 @@
 
 import { assert } from '@/lib/assert';
 import type { Equation, Expr } from '@/math/expr';
-import { isDigit, type Token } from '@/math/tokens';
+import { BLANK, isDigit, type LineToken, type Token } from '@/math/tokens';
 
 export const thousandsSeparator = '\u202f';
 
@@ -63,26 +63,48 @@ export function formatEquation(equation: Equation): string {
 const operatorTokens: ReadonlySet<Token> = new Set<Token>(['+', '−', '·', ':', '=']);
 
 /**
- * A notebook line as he typed it, in school notation, whether or not it parses: digit runs
- * grouped by thousands (`5905` → `5 905`), a space either side of an operator that follows a
- * number, x or `)`, and none inside brackets or between a number and x (`2x`, `2 · (x + 3)`).
- * For any equation, the tokens of `formatEquation` come back as the same text.
+ * A notebook line as text, in pieces: the line's own text, and blanks to fill (Fading,
+ * `blanks`). A blank's text is what fills it so far, `''` while it is empty; the notebook
+ * draws the blank's box around it.
  */
-export function formatTokens(tokens: readonly Token[]): string {
+export type LineSegment = { kind: 'text'; text: string } | { kind: 'blank'; text: string };
+
+/**
+ * A notebook line in school notation, whether or not it parses, with each blank filled by
+ * `fill` (Fading, `blanks`): digit runs grouped by thousands (`5905` → `5 905`), a space
+ * either side of an operator that follows a number, x, a blank or `)`, and none inside
+ * brackets or between a number and x (`2x`, `2 · (x + 3)`). `x = ☐` gives the text `x = `
+ * and a blank; `☐ + 4 = 9` a blank and the text ` + 4 = 9`.
+ */
+export function formatLine(
+  tokens: readonly LineToken[],
+  fill: readonly Token[] = [],
+): LineSegment[] {
+  const segments: LineSegment[] = [];
   let text = '';
   let digits = '';
-  // Whether the last thing written was a number, x or `)`, so an operator is binary.
+  // Whether the last thing written was a number, x, a blank or `)`, so an operator is binary.
   let afterOperand = false;
+  const endNumber = () => {
+    if (digits === '') return;
+    text += groupDigits(digits);
+    digits = '';
+    afterOperand = true;
+  };
   for (const token of tokens) {
+    if (token === BLANK) {
+      endNumber();
+      if (text !== '') segments.push({ kind: 'text', text });
+      text = '';
+      segments.push({ kind: 'blank', text: formatTokens(fill) });
+      afterOperand = true;
+      continue;
+    }
     if (isDigit(token)) {
       digits += token;
       continue;
     }
-    if (digits !== '') {
-      text += groupDigits(digits);
-      digits = '';
-      afterOperand = true;
-    }
+    endNumber();
     if (operatorTokens.has(token)) {
       text += afterOperand ? ` ${token} ` : token;
       afterOperand = false;
@@ -94,5 +116,17 @@ export function formatTokens(tokens: readonly Token[]): string {
       afterOperand = token === 'x';
     }
   }
-  return (text + groupDigits(digits)).trimEnd();
+  text = (text + groupDigits(digits)).trimEnd();
+  if (text !== '') segments.push({ kind: 'text', text });
+  return segments;
+}
+
+/**
+ * A notebook line as he typed it, in school notation, whether or not it parses (see
+ * `formatLine`). For any equation, the tokens of `formatEquation` come back as the same text.
+ */
+export function formatTokens(tokens: readonly Token[]): string {
+  return formatLine(tokens)
+    .map((segment) => segment.text)
+    .join('');
 }

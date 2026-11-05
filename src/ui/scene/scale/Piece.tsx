@@ -13,6 +13,8 @@ interface Props {
   box: PieceBox;
   /** Scene units; at least 20 CSS px on screen (see labelFontSize). */
   fontSize: number;
+  /** The pan's tween places the piece (and fades it) through this ref; no position props. */
+  nodeRef: (node: Container | null) => void;
 }
 
 /**
@@ -20,7 +22,7 @@ interface Props {
  * Each dial notch gives new piece objects with new labels; the Graphics is redrawn only
  * when the piece's shape changes, never just because its label did.
  */
-export function Piece({ piece, box, fontSize }: Props) {
+export function Piece({ piece, box, fontSize, nodeRef }: Props) {
   const { kind } = piece;
   const large = (piece.kind === 'gear' || piece.kind === 'spring') && piece.count > 1n;
   const { width, height, dividerHeight } = box;
@@ -36,7 +38,7 @@ export function Piece({ piece, box, fontSize }: Props) {
   const label = scaleSkin.labelSpot(shape);
   const divider = scaleSkin.dividerSpot(shape);
   return (
-    <pixiContainer x={box.x} y={box.y}>
+    <pixiContainer ref={nodeRef}>
       <pixiGraphics draw={draw} />
       <pixiText text={piece.label} anchor={0.5} x={label.x} y={label.y} style={style} />
       {piece.divisorLabel !== null && (

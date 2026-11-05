@@ -76,10 +76,12 @@ export interface DialStep {
 
 /**
  * Turns the dial to x (`dial/set`): the pans are weighed at x, `DialNotch` fires, and
- * `PansLevel` too when the sides are equal there. Null, so the action is ignored, when x is
- * where the dial already is, isn't one of its reachable notches, the phase holds the dial
- * still, or the machine is jammed (Pattern 2: while jammed he can only edit the draft,
- * drag the splitter off, reset or leave). The store only changes when the notch does.
+ * `PansLevel` too when the sides are equal there. Turning the dial is exploring, so it ends
+ * acting out a written line: the pans go back to the dial's x, in the last committed
+ * line's layout (Pattern 1). Null, so the action is ignored, when x is where the dial
+ * already is, isn't one of its reachable notches, the phase holds the dial still, or the
+ * machine is jammed (Pattern 2: while jammed he can only edit the draft, drag the splitter
+ * off, reset or leave). The store only changes when the notch does.
  */
 export function setDial(room: RoomState, x: number): DialStep | null {
   const { dial } = currentStageSpec(room);
@@ -91,5 +93,5 @@ export function setDial(room: RoomState, x: number): DialStep | null {
   if (isLevel(sideValues(stage.pans, q.rational(x)))) {
     events.push({ type: 'PansLevel', roomId: room.spec.id, stage: room.stageIndex, x });
   }
-  return { room: { ...room, stage: { ...stage, dialX: x } }, events };
+  return { room: { ...room, stage: { ...stage, dialX: x, actingOut: false } }, events };
 }

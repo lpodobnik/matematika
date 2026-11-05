@@ -57,6 +57,35 @@
   text-underline-offset: 0.2em;
 }
 
+/* A blank to fill (Fading, `blanks`): a box around what he has typed into it, empty at
+   first. It is drawn, so it shows the same with any font. */
+.line__blank {
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: 1.6em;
+  height: 1.3em;
+  padding: 0 0.2em;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  line-height: calc(1.3em - 4px);
+  text-align: center;
+  vertical-align: -0.2em;
+}
+
+/* An underline doesn't reach inside a blank's box, so the box is marked too. */
+.line--wrong .line__blank {
+  border-color: var(--jam);
+  border-style: dashed;
+  text-decoration: underline wavy var(--jam);
+  text-decoration-thickness: 2px;
+}
+
+/* A line still to fill after the draft: printed lighter, with a dashed rule. */
+.line--upcoming {
+  opacity: 0.55;
+  border-bottom-style: dashed;
+}
+
 .line__caret {
   display: inline-block;
   width: 2px;

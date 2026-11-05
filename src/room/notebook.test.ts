@@ -2,26 +2,41 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import type { Equation } from '@/math/expr';
+import { parse } from '@/math/parse';
 import { TOKENS, type Token, tokenize } from '@/math/tokens';
 import { dialView, setDial } from '@/room/dial';
 import {
+  blankMaxDigits,
   committedEquations,
   deleteToken,
+  draftDisplay,
   enterLine,
+  fillsBlank,
   isCommitted,
   isRefused,
+  jammedLine,
+  keyWorks,
+  lastCommitted,
   lineDisplays,
+  lineTokens,
+  type NotebookKey,
   type NotebookStep,
   notebookWrites,
   typeToken,
 } from '@/room/notebook';
 import { enterRoom } from '@/room/room';
-import type { Phase, RoomState, StageSpec } from '@/room/types';
+import { scaleView } from '@/room/scale';
+import type { Phase, RoomSpec, RoomState, StageSpec } from '@/room/types';
 
-const roomOneStage = r01.stages[0] as StageSpec;
+// Room 1 fills blanks (Try values `blanks`); most tests write whole lines, so they use
+// room 1 with a blank page (`blank`), as room 4 has.
+const roomOneStage: StageSpec = { ...(r01.stages[0] as StageSpec), fading: { try: 'blank' } };
+const freeRoomOne: RoomSpec = { ...r01, stages: [roomOneStage] };
 
-function roomWith(equation: string): RoomState {
-  return enterRoom({ ...r01, stages: [{ ...roomOneStage, machines: [{ equation }] }] }).room;
+function roomWith(equation: string, extra: Partial<StageSpec> = {}): RoomState {
+  return enterRoom({ ...r01, stages: [{ ...roomOneStage, machines: [{ equation }], ...extra }] })
+    .room;
 }
 
 function tokens(text: string): Token[] {
@@ -49,7 +64,7 @@ function inPhase(room: RoomState, phase: Phase): RoomState {
   return { ...room, stage: { ...room.stage, phase } };
 }
 
-const roomOne = (): RoomState => enterRoom(r01).room;
+const roomOne = (): RoomState => enterRoom(freeRoomOne).room;
 
 describe('the notebook opens on the stage equation', () => {
   it('has line 0, read-only, and an empty draft', () => {
@@ -141,7 +156,10 @@ describe('enter judges the draft (story 1.3)', () => {
     expect(result.room.stage.lines).toEqual(room.stage.lines);
     expect(result.room.stage.jam).toEqual({ kind: 'line' });
     expect(result.room.stage.refused).toBe(0);
-    expect(result.events).toEqual([{ type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' }]);
+    expect(result.events).toEqual([
+      { type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' },
+      { type: 'MachineJammed', roomId: 'r01', kind: 'line' },
+    ]);
   });
 
   it('ignores enter again until the wrong line is edited', () => {
@@ -192,7 +210,10 @@ describe('enter judges the draft (story 1.3)', () => {
     expect(answered.events).toMatchObject([{ type: 'LineAccepted', progress: true }]);
     const checked = written(answered.room, '5 + 4 = 9');
     expect(checked.verdict.kind).toBe('check');
-    expect(checked.events).toMatchObject([{ type: 'LineAccepted', progress: true }]);
+    expect(checked.events).toMatchObject([
+      { type: 'LineAccepted', progress: true },
+      { type: 'StageLocked' },
+    ]);
     expect(lineDisplays(checked.room.stage.lines).map((line) => line.text)).toEqual([
       'x + 4 = 9',
       'x = 5',
@@ -290,5 +311,284 @@ describe('verdict groups', () => {
     expect(isCommitted({ kind: 'answer' })).toBe(true);
     expect(isCommitted({ kind: 'check' })).toBe(true);
     expect(isCommitted({ kind: 'valid', move: { kind: 'none' }, progress: false })).toBe(true);
+  });
+});
+
+function equation(text: string): Equation {
+  const result = parse(text);
+  if (!result.ok) throw new Error(`"${text}" did not parse: ${result.reason}`);
+  return result.equation;
+}
+
+/** Room 1 as authored: Try values fades to blanks. */
+const blanksRoomOne = (): RoomState => enterRoom(r01).room;
+
+describe('a committed line is acted out (story 1.7)', () => {
+  it("replaces the pans with the line's layout, leaving the dial where it is", () => {
+    const explored = step(setDial(roomWith('2x + 7 = 25'), 4)).room;
+    const result = written(explored, '2x = 25 − 7');
+    expect(result.room.stage.pans).toEqual(equation('2x = 25 − 7'));
+    expect(result.room.stage.actingOut).toBe(true);
+    expect(result.room.stage.dialX).toBe(4);
+  });
+
+  it('never fires PansLevel, even though every committed line hangs level', () => {
+    let room = roomWith('2x + 7 = 25');
+    for (const line of ['2x = 25 − 7', '2x = 18', 'x = 18 : 2', 'x = 9', '2 · 9 + 7 = 25']) {
+      const result = written(room, line);
+      expect(result.events.map((event) => event.type)).not.toContain('PansLevel');
+      expect(scaleView(result.room).level).toBe(true);
+      room = result.room;
+    }
+  });
+
+  it("ends on the dial's next notch: the pans go back to the dial's x, in the line's layout", () => {
+    const acted = written(roomOne(), 'x = 9 − 4').room;
+    const turned = step(setDial(acted, 3));
+    expect(turned.room.stage.actingOut).toBe(false);
+    expect(turned.room.stage.pans).toEqual(equation('x = 9 − 4'));
+    expect(turned.room.stage.dialX).toBe(3);
+    expect(scaleView(turned.room).x).toBe(3);
+  });
+
+  it('lets the dial level the committed layout, which fires PansLevel as usual', () => {
+    const acted = written(roomOne(), 'x = 9 − 4').room;
+    expect(step(setDial(acted, 5)).events).toEqual([
+      { type: 'DialNotch', x: 5 },
+      { type: 'PansLevel', roomId: 'r01', stage: 0, x: 5 },
+    ]);
+  });
+});
+
+describe('a committed line moves the machine (story 1.7)', () => {
+  it(`adds ${tuning.progressStep} per valid line with progress, up to ${tuning.progressCap}`, () => {
+    // Five lines, each with a smaller progress tuple than the one before.
+    let room = roomWith('2x + 1 + 2 + 4 = 25');
+    const seen: number[] = [];
+    for (const line of ['2x + 3 + 4 = 25', '2x + 7 = 25', '2x = 25 − 7', '2x = 18', 'x = 18 : 2']) {
+      const result = written(room, line);
+      expect(result.verdict, line).toMatchObject({ kind: 'valid', progress: true });
+      expect(result.events).toEqual([
+        { type: 'LineAccepted', roomId: 'r01', stage: 0, source: 'typed', progress: true },
+      ]);
+      room = result.room;
+      seen.push(room.stage.machineProgress[0] ?? Number.NaN);
+    }
+    expect(seen).toEqual([0.2, 0.4, 0.6, 0.8, 0.8]);
+  });
+
+  it('keeps the pans level while it moves: a committed line is acted out at the solution', () => {
+    const view = scaleView(written(roomWith('2x + 7 = 25'), '2x = 18').room);
+    expect(view.tilt).toBe(0);
+    expect(view.level).toBe(true);
+  });
+
+  it('accepts a valid line without progress and leaves the machine where it is', () => {
+    const moved = written(roomWith('2x + 7 = 25'), '2x = 18').room;
+    const result = written(moved, '2x + 8 = 26');
+    expect(result.verdict).toMatchObject({ kind: 'valid', progress: false });
+    expect(result.room.stage.lines).toHaveLength(3);
+    expect(result.room.stage.machineProgress).toEqual([0.2]);
+    const first = written(roomWith('2x + 7 = 25'), '2x + 8 = 26').room;
+    expect(first.stage.machineProgress).toEqual([0]);
+  });
+
+  it('sets 0.9 on the answer line, then 1 on the check line, which locks the stage', () => {
+    const answered = written(roomWith('2x + 7 = 25'), 'x = 9');
+    expect(answered.room.stage.machineProgress).toEqual([tuning.progressAnswer]);
+    expect(answered.room.stage.phase).toBe('arrive');
+    const checked = written(answered.room, '2 · 9 + 7 = 25');
+    expect(checked.room.stage.machineProgress).toEqual([1]);
+    expect(checked.room.stage.phase).toBe('locked');
+    expect(checked.events).toEqual([
+      { type: 'LineAccepted', roomId: 'r01', stage: 0, source: 'typed', progress: true },
+      { type: 'StageLocked', roomId: 'r01', stage: 0 },
+    ]);
+  });
+
+  it('goes from open to locked on the check line, and the notebook and dial stop', () => {
+    const open = inPhase(written(roomOne(), 'x = 5').room, 'open');
+    const locked = written(open, '5 + 4 = 9').room;
+    expect(locked.stage.phase).toBe('locked');
+    expect(notebookWrites(locked.stage)).toBe(false);
+    expect(dialView(locked)?.turns).toBe(false);
+  });
+
+  it('moves only the active machine', () => {
+    const room = roomOne();
+    const two: RoomState = { ...room, stage: { ...room.stage, machineProgress: [0, 0] } };
+    expect(written(two, 'x = 9 − 4').room.stage.machineProgress).toEqual([0.2, 0]);
+  });
+});
+
+describe('a wrong line jams the machine (story 1.7)', () => {
+  it('is acted out, stays in the draft, not in lines, and fires MachineJammed', () => {
+    const result = written(roomOne(), 'x = 6');
+    const { stage } = result.room;
+    expect(stage.jam).toEqual({ kind: 'line' });
+    expect(stage.lines).toHaveLength(1);
+    expect(stage.draft).toEqual(tokens('x = 6'));
+    expect(jammedLine(stage)).toEqual(equation('x = 6'));
+    expect(result.events).toContainEqual({ type: 'MachineJammed', roomId: 'r01', kind: 'line' });
+    expect(stage.machineProgress).toEqual([0]);
+  });
+
+  it(`tips the pans at least ${tuning.jamMinTilt}°, so a near miss still shows`, () => {
+    for (const line of ['x = 6', 'x = 4', 'x = 16', 'x + 4 = 10', 'x = x', 'x + 1 = x']) {
+      const view = scaleView(written(roomOne(), line).room);
+      expect(Math.abs(view.tilt), line).toBeGreaterThanOrEqual(tuning.jamMinTilt);
+      expect(view.level, line).toBe(false);
+    }
+    const answered = written(roomOne(), 'x = 5').room;
+    const falseCheck = scaleView(written(answered, '6 + 4 = 9').room);
+    expect(falseCheck.tilt).toBe(tuning.jamMinTilt);
+  });
+
+  it('counts jams in a row, and resets the count on a committed line', () => {
+    let room = written(roomOne(), 'x = 6').room;
+    expect(room.stage.jamsInARow).toBe(1);
+    room = written(step(deleteToken(room)).room, '7').room;
+    expect(room.stage.jamsInARow).toBe(2);
+    room = step(enterLine(step(deleteToken(room)).room)).room; // `x =` is refused, not a jam
+    expect(room.stage.jamsInARow).toBe(2);
+    room = written(room, '8').room;
+    expect(room.stage.jamsInARow).toBe(3);
+    room = written(step(deleteToken(room)).room, '5').room;
+    expect(room.stage.lines).toHaveLength(2);
+    expect(room.stage.jamsInARow).toBe(0);
+  });
+
+  it('returns the pans to the last committed line on any edit, and judges the edit again', () => {
+    const moved = written(roomWith('2x + 7 = 25'), '2x = 18').room;
+    const jammed = written(moved, 'x = 8').room;
+    expect(jammedLine(jammed.stage)).toEqual(equation('x = 8'));
+    const edited = step(deleteToken(jammed)).room;
+    expect(edited.stage.jam).toBeNull();
+    expect(jammedLine(edited.stage)).toBeNull();
+    expect(edited.stage.pans).toEqual(equation('2x = 18'));
+    expect(lastCommitted(edited.stage)).toEqual(equation('2x = 18'));
+    expect(step(enterLine(step(typeToken(edited, '9')).room)).verdict.kind).toBe('answer');
+  });
+
+  it('shows the pans as they were before the wrong line once it is edited', () => {
+    const explored = step(setDial(roomOne(), 6)).room;
+    const edited = step(deleteToken(written(explored, 'x = 6').room)).room;
+    expect(scaleView(edited)).toEqual(scaleView(explored));
+    const acted = written(roomOne(), 'x = 9 − 4').room;
+    const back = step(deleteToken(written(acted, 'x = 6').room)).room;
+    expect(scaleView(back)).toEqual(scaleView(acted));
+  });
+});
+
+describe('Try values blanks (story 1.7)', () => {
+  const emptyAnswer = [
+    { kind: 'text', text: 'x = ' },
+    { kind: 'blank', text: '' },
+  ];
+  const emptyCheck = [
+    { kind: 'blank', text: '' },
+    { kind: 'text', text: ' + 4 = 9' },
+  ];
+
+  it('opens room 1 with x = ☐ to fill and the check line with x blanked after it', () => {
+    const { stage } = blanksRoomOne();
+    expect(fillsBlank(stage)).toBe(true);
+    expect(draftDisplay(stage)).toEqual({ draft: emptyAnswer, upcoming: [emptyCheck] });
+  });
+
+  it('fills only the current blank: digits go in, other keys do nothing', () => {
+    const room = blanksRoomOne();
+    for (const token of TOKENS) {
+      const result = typeToken(room, token);
+      if ('0123456789'.includes(token)) expect(result?.room.stage.draft).toEqual([token]);
+      else expect(result, token).toBeNull();
+    }
+    const typedIn = typed(room, '15');
+    expect(lineTokens(typedIn.stage)).toEqual(tokens('x = 15'));
+    expect(draftDisplay(typedIn.stage).draft).toEqual([
+      { kind: 'text', text: 'x = ' },
+      { kind: 'blank', text: '15' },
+    ]);
+  });
+
+  it(`holds at most ${blankMaxDigits} digits in a blank`, () => {
+    const full = typed(blanksRoomOne(), '1'.repeat(blankMaxDigits));
+    expect(typeToken(full, '1')).toBeNull();
+  });
+
+  it("clears the blank on delete, never the template's own text", () => {
+    const cleared = step(deleteToken(typed(blanksRoomOne(), '15'))).room;
+    expect(cleared.stage.draft).toEqual([]);
+    expect(draftDisplay(cleared.stage).draft).toEqual(emptyAnswer);
+    expect(deleteToken(cleared)).toBeNull();
+  });
+
+  it('writes the answer line, then fills the check line, which locks the machine', () => {
+    const answered = written(blanksRoomOne(), '5');
+    expect(answered.verdict.kind).toBe('answer');
+    expect(answered.room.stage.lines[1]?.tokens).toEqual(tokens('x = 5'));
+    expect(answered.room.stage.machineProgress).toEqual([0.9]);
+    expect(draftDisplay(answered.room.stage)).toEqual({ draft: emptyCheck, upcoming: [] });
+    const checked = written(answered.room, '5');
+    expect(checked.verdict.kind).toBe('check');
+    expect(lineDisplays(checked.room.stage.lines).map((line) => line.text)).toEqual([
+      'x + 4 = 9',
+      'x = 5',
+      '5 + 4 = 9',
+    ]);
+    expect(checked.room.stage.phase).toBe('locked');
+    expect(checked.room.stage.machineProgress).toEqual([1]);
+    expect(checked.room.stage.templates).toEqual([]);
+    expect(checked.events).toContainEqual({ type: 'StageLocked', roomId: 'r01', stage: 0 });
+  });
+
+  it('jams on a wrong fill; delete clears the blank and the jam together', () => {
+    const jammed = written(blanksRoomOne(), '6');
+    expect(jammed.verdict.kind).toBe('wrong');
+    expect(jammed.events).toEqual([
+      { type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' },
+      { type: 'MachineJammed', roomId: 'r01', kind: 'line' },
+    ]);
+    expect(jammedLine(jammed.room.stage)).toEqual(equation('x = 6'));
+    const cleared = step(deleteToken(jammed.room)).room;
+    expect(cleared.stage.jam).toBeNull();
+    expect(cleared.stage.draft).toEqual([]);
+    const wrongCheck = written(written(cleared, '5').room, '4');
+    expect(wrongCheck.verdict.kind).toBe('wrong');
+    expect(wrongCheck.room.stage.lines).toHaveLength(2);
+    expect(jammedLine(wrongCheck.room.stage)).toEqual(equation('4 + 4 = 9'));
+  });
+
+  it('refuses an empty blank with a wiggle, not a jam', () => {
+    const result = step(enterLine(blanksRoomOne()));
+    expect(result.verdict.kind).toBe('incomplete');
+    expect(result.room.stage.refused).toBe(1);
+    expect(result.room.stage.jam).toBeNull();
+  });
+
+  it('shows an empty draft line in blank mode, with nothing to fill', () => {
+    const { stage } = roomOne();
+    expect(fillsBlank(stage)).toBe(false);
+    expect(draftDisplay(stage)).toEqual({ draft: [], upcoming: [] });
+  });
+});
+
+describe('which keys work (story 1.7)', () => {
+  const keys: NotebookKey[] = [...TOKENS, 'delete', 'enter'];
+
+  it('all of them while he writes freely, none while the notebook is off', () => {
+    for (const key of keys) {
+      expect(keyWorks(key, true, false)).toBe(true);
+      expect(keyWorks(key, false, false)).toBe(false);
+      expect(keyWorks(key, false, true)).toBe(false);
+    }
+  });
+
+  it('only digits, delete and enter while he fills a blank', () => {
+    expect(keys.filter((key) => keyWorks(key, true, true))).toEqual([
+      ...'0123456789',
+      'delete',
+      'enter',
+    ]);
   });
 });

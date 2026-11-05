@@ -1,17 +1,22 @@
-// The notebook (architecture Pattern 1, two layers; Pattern 2, jams). Pure: what the pad's
-// keys do to the draft line, and what enter does with it. `lines` holds committed lines
-// only, with the stage equation as line 0; a wrong line is never in `lines`. Its tokens stay
-// in the draft, marked as jammed, and any edit clears the jam. There is no caret: delete
-// takes the last token.
+// The notebook (architecture Pattern 1, two layers and fading; Pattern 2, jams). Pure: what
+// the pad's keys do to the draft line, and what enter does with it. `lines` holds committed
+// lines only, with the stage equation as line 0; a wrong line is never in `lines`. Its
+// tokens stay in the draft, marked as jammed, and any edit clears the jam. There is no
+// caret: delete takes the last token, or, while he fills a blank, clears the blank.
+//
+// Writing drives the machine (story 1.7): a committed line is acted out on the pans and
+// moves the machine; a wrong one is acted out, tips the pans and jams the machine; the
+// check line locks it.
 
 import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
 import { check, type Verdict } from '@/math/check';
-import type { Equation } from '@/math/expr';
-import { formatTokens } from '@/math/format';
+import { type Equation, maxNumber } from '@/math/expr';
+import { formatLine, formatTokens, type LineSegment } from '@/math/format';
 import { parse } from '@/math/parse';
-import type { Token } from '@/math/tokens';
+import { fillBlanks, isDigit, type Token } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
+import { progressAfter } from '@/room/machine';
 import type { NotebookLine, Phase, RoomState, StageState } from '@/room/types';
 
 /** A key on the number pad, or its stand-in on a computer keyboard. */
@@ -34,6 +39,24 @@ export function notebookWrites(stage: StageState): boolean {
   return writingPhases.has(stage.phase) && !endsWithCheck(stage);
 }
 
+/** Whether the draft fills a blank (Fading, `blanks`) rather than being written freely. */
+export function fillsBlank(stage: StageState): boolean {
+  return stage.templates.length > 0;
+}
+
+/** A blank holds a number, at most as many digits as the largest number literal. */
+export const blankMaxDigits = String(maxNumber).length;
+
+/**
+ * Whether a key does anything now: none while the notebook is off; while he fills a
+ * blank, only digits, delete and enter ("pad input fills only the current blank").
+ */
+export function keyWorks(key: NotebookKey, writes: boolean, blank: boolean): boolean {
+  if (!writes) return false;
+  if (!blank || key === 'delete' || key === 'enter') return true;
+  return isDigit(key);
+}
+
 /** Lines the checker refuses with a wiggle, not a jam: they stay in the draft unmarked. */
 export function isRefused(verdict: Verdict): boolean {
   return verdict.kind === 'incomplete' || verdict.kind === 'nonlinear' || verdict.kind === 'aside';
@@ -44,13 +67,37 @@ export function isCommitted(verdict: Verdict): boolean {
   return verdict.kind === 'valid' || verdict.kind === 'answer' || verdict.kind === 'check';
 }
 
+function equationOf(tokens: readonly Token[], what: string): Equation {
+  const parsed = parse(tokens);
+  assert(parsed.ok, `${what} doesn't parse: ${formatTokens(tokens)}`);
+  return parsed.equation;
+}
+
 /** The committed lines as equations, for the checker. Every one parsed when it was committed. */
 export function committedEquations(lines: readonly NotebookLine[]): Equation[] {
-  return lines.map((line) => {
-    const parsed = parse(line.tokens);
-    assert(parsed.ok, `a committed line doesn't parse: ${formatTokens(line.tokens)}`);
-    return parsed.equation;
-  });
+  return lines.map((line) => equationOf(line.tokens, 'a committed line'));
+}
+
+/** The last committed line (line 0, the stage equation, before he writes any). */
+export function lastCommitted(stage: StageState): Equation {
+  const line = stage.lines[stage.lines.length - 1];
+  assert(line, 'a stage always has line 0');
+  return equationOf(line.tokens, 'a committed line');
+}
+
+/** The whole line the draft stands for: its template with the blank filled, or the draft. */
+export function lineTokens(stage: StageState): Token[] {
+  const [template] = stage.templates;
+  return template ? fillBlanks(template, stage.draft) : [...stage.draft];
+}
+
+/**
+ * The wrong line the machine acts out while it is jammed on it, or null. The draft can't
+ * change without clearing the jam, so it is still the line that was judged wrong.
+ */
+export function jammedLine(stage: StageState): Equation | null {
+  if (stage.jam?.kind !== 'line') return null;
+  return equationOf(lineTokens(stage), 'a jammed line');
 }
 
 export interface NotebookStep {
@@ -67,51 +114,96 @@ function withStage(room: RoomState, stage: StageState): RoomState {
 }
 
 /**
- * Types one pad token at the end of the draft (`notebook/type`). Any edit clears a line
- * jam. Null, so the action is ignored, when the notebook is off or the draft is full.
+ * The stage after an edit to the draft: any edit clears a line jam and returns the pans to
+ * the last committed line (Pattern 1, two layers). A split jam stays.
  */
-export function typeToken(room: RoomState, token: Token): NotebookStep | null {
-  const { stage } = room;
-  if (!notebookWrites(stage) || stage.draft.length >= tuning.draftMaxTokens) return null;
-  const jam = stage.jam?.kind === 'line' ? null : stage.jam;
-  return { room: withStage(room, { ...stage, draft: [...stage.draft, token], jam }), events: [] };
+function edited(stage: StageState, draft: Token[]): StageState {
+  if (stage.jam?.kind !== 'line') return { ...stage, draft };
+  return { ...stage, draft, jam: null, pans: lastCommitted(stage) };
 }
 
 /**
- * Deletes the draft's last token (`notebook/delete`), never a committed line. Any edit
- * clears a line jam. Null when the notebook is off or the draft is empty.
+ * Types one pad token at the end of the draft (`notebook/type`). While he fills a blank,
+ * only digits go in, up to `blankMaxDigits`. Null, so the action is ignored, when the
+ * notebook is off, the key does nothing here, or the draft is full.
+ */
+export function typeToken(room: RoomState, token: Token): NotebookStep | null {
+  const { stage } = room;
+  const blank = fillsBlank(stage);
+  if (!keyWorks(token, notebookWrites(stage), blank)) return null;
+  const limit = blank ? blankMaxDigits : tuning.draftMaxTokens;
+  if (stage.draft.length >= limit) return null;
+  return { room: withStage(room, edited(stage, [...stage.draft, token])), events: [] };
+}
+
+/**
+ * Deletes the draft's last token (`notebook/delete`), never a committed line; while he
+ * fills a blank, it clears the blank, never the template's own text. Null when the
+ * notebook is off or there is nothing to delete.
  */
 export function deleteToken(room: RoomState): NotebookStep | null {
   const { stage } = room;
   if (!notebookWrites(stage) || stage.draft.length === 0) return null;
-  const jam = stage.jam?.kind === 'line' ? null : stage.jam;
-  return { room: withStage(room, { ...stage, draft: stage.draft.slice(0, -1), jam }), events: [] };
+  const draft = fillsBlank(stage) ? [] : stage.draft.slice(0, -1);
+  return { room: withStage(room, edited(stage, draft)), events: [] };
+}
+
+function progressFor(stage: StageState, verdict: Verdict): number[] {
+  return stage.machineProgress.map((progress, machine) =>
+    machine === stage.machine ? progressAfter(progress, verdict) : progress,
+  );
 }
 
 /**
- * Judges the draft (`notebook/enter`, story 1.3's checker):
+ * Judges the line the draft stands for (`notebook/enter`, story 1.3's checker):
  * - `incomplete`, `nonlinear`, `aside`: refused; the draft stays and `refused` counts up,
- *   so the notebook wiggles.
- * - `wrong`: the draft stays, marked as wrong by a line jam (story 1.7 acts it out).
- * - `valid`, `answer`, `check`: appended to `lines`, read-only, and the draft empties.
- * Null when the notebook is off, or while a line jam is set (only an edit clears it).
+ *   so the notebook wiggles. Nothing is acted out.
+ * - `wrong`: the draft stays, marked by a line jam. The machine acts it out at the stage's
+ *   solution and jams (`MachineJammed`); `jamsInARow` counts up.
+ * - `valid`, `answer`, `check`: appended to `lines`, read-only, and the draft empties (and,
+ *   when he fills blanks, the next template comes up). The pans take the line's layout and
+ *   act it out; the machine moves on; `jamsInARow` resets. The check line locks the stage
+ *   (`StageLocked`).
+ * Acting out never fires `PansLevel`: only the dial does. Null when the notebook is off,
+ * or while the machine is jammed (only an edit clears a line jam).
  */
 export function enterLine(room: RoomState): EnterStep | null {
   const { stage } = room;
   if (!notebookWrites(stage) || stage.jam !== null) return null;
-  const verdict = check(committedEquations(stage.lines), stage.draft);
+  const tokens = lineTokens(stage);
+  const verdict = check(committedEquations(stage.lines), tokens);
   const at = { roomId: room.spec.id, stage: room.stageIndex };
   if (isRefused(verdict)) {
     return { room: withStage(room, { ...stage, refused: stage.refused + 1 }), events: [], verdict };
   }
   if (verdict.kind === 'wrong') {
-    const events: RoomEvent[] = [{ type: 'LineWrong', ...at, line: formatTokens(stage.draft) }];
-    return { room: withStage(room, { ...stage, jam: { kind: 'line' } }), events, verdict };
+    const jammed: StageState = {
+      ...stage,
+      jam: { kind: 'line' },
+      jamsInARow: stage.jamsInARow + 1,
+    };
+    const events: RoomEvent[] = [
+      { type: 'LineWrong', ...at, line: formatTokens(tokens) },
+      { type: 'MachineJammed', roomId: room.spec.id, kind: 'line' },
+    ];
+    return { room: withStage(room, jammed), events, verdict };
   }
-  const line: NotebookLine = { tokens: stage.draft, source: 'typed', verdict };
+  const line: NotebookLine = { tokens, source: 'typed', verdict };
+  const locks = verdict.kind === 'check';
+  const next: StageState = {
+    ...stage,
+    phase: locks ? 'locked' : stage.phase,
+    lines: [...stage.lines, line],
+    draft: [],
+    templates: stage.templates.slice(1),
+    jamsInARow: 0,
+    machineProgress: progressFor(stage, verdict),
+    pans: equationOf(tokens, 'a committed line'),
+    actingOut: true,
+  };
   const progress = verdict.kind === 'valid' ? verdict.progress : true;
   const events: RoomEvent[] = [{ type: 'LineAccepted', ...at, source: 'typed', progress }];
-  const next = { ...stage, lines: [...stage.lines, line], draft: [] };
+  if (locks) events.push({ type: 'StageLocked', ...at });
   return { room: withStage(room, next), events, verdict };
 }
 
@@ -129,4 +221,20 @@ export function lineDisplays(lines: readonly NotebookLine[]): LineDisplay[] {
     text: formatTokens(line.tokens),
     source: line.source,
   }));
+}
+
+/** The draft line and the lines still to fill after it, ready to show. */
+export interface DraftDisplay {
+  /** The draft in school notation: free text, or its template with the blank filled so far. */
+  draft: LineSegment[];
+  /** Templates after the current one (the check line, while he fills `x = ☐`). */
+  upcoming: LineSegment[][];
+}
+
+export function draftDisplay(stage: Pick<StageState, 'draft' | 'templates'>): DraftDisplay {
+  const [template, ...rest] = stage.templates;
+  return {
+    draft: template ? formatLine(template, stage.draft) : formatLine(stage.draft),
+    upcoming: rest.map((line) => formatLine(line)),
+  };
 }

@@ -4,10 +4,13 @@
 
 import { describe, expect, it } from 'vitest';
 import { rooms } from '@/content/rooms';
+import { check, stageSolution } from '@/math/check';
 import { solve } from '@/math/linear';
 import { parse } from '@/math/parse';
 import * as q from '@/math/rational';
+import { fillBlanks, tokenize } from '@/math/tokens';
 import { dialValue, notchCount } from '@/room/dial';
+import { openingTemplates } from '@/room/fading';
 import { panPieces } from '@/room/pieces';
 import { sideValues } from '@/room/tilt';
 
@@ -72,6 +75,27 @@ describe('rooms', () => {
 
     it('tilts by more than 0° per unit when it sets its own tilt', () => {
       if (stage.tiltPerUnit !== undefined) expect(stage.tiltPerUnit).toBeGreaterThan(0);
+    });
+
+    it('can be finished by filling its blanks with x, when Try values fades to blanks', () => {
+      const templates = openingTemplates(stage, 0);
+      if (stage.fading.try !== 'blanks') {
+        expect(templates).toEqual([]);
+        return;
+      }
+      const parsed = parse(stage.machines[0]?.equation ?? '');
+      if (!parsed.ok) throw new Error('does not parse');
+      const answer = tokenize(String(stageSolution(parsed.equation)));
+      if (!answer.ok) throw new Error('no answer');
+      const lines = [parsed.equation];
+      const verdicts = templates.map((template) => {
+        const line = fillBlanks(template, answer.tokens);
+        const verdict = check(lines, line);
+        const filled = parse(line);
+        if (filled.ok) lines.push(filled.equation);
+        return verdict.kind;
+      });
+      expect(verdicts).toEqual(['answer', 'check']);
     });
   });
 

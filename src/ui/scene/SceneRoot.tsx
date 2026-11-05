@@ -4,6 +4,7 @@ import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { palette } from '@/art/palette';
 import { watchContextLoss } from '@/ui/scene/context-loss';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
+import { Machine } from '@/ui/scene/machine/Machine';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
 import { Dial } from '@/ui/scene/scale/Dial';
@@ -131,6 +132,7 @@ function SceneContent() {
   return (
     <pixiContainer ref={sceneRef}>
       <pixiGraphics draw={drawPaper} />
+      <Machine />
       <Scale sceneScale={sceneScale} />
       <Dial sceneScale={sceneScale} />
     </pixiContainer>

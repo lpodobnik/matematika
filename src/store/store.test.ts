@@ -3,7 +3,7 @@ import { r01 } from '@/content/rooms/r01-door-lift';
 import { tokenFromChar } from '@/math/tokens';
 import { panPieces } from '@/room/pieces';
 import { scaleView } from '@/room/scale';
-import type { RoomSpec } from '@/room/types';
+import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
 import { effects, runEffects } from '@/store/effects';
 import type { DomainEvent } from '@/store/events';
 import { createReducer, initialGameState, reduce } from '@/store/reducer';
@@ -145,9 +145,17 @@ describe('dial/set', () => {
   });
 });
 
+// Room 1 with a blank page, so he writes whole lines (room 1 itself fills blanks).
+const firstStage = r01.stages[0] as StageSpec;
+const freeRoomOne: RoomSpec = { ...r01, stages: [{ ...firstStage, fading: { try: 'blank' } }] };
+
 describe('notebook actions', () => {
-  function roomOneStore(seen: DomainEvent[] = []) {
-    const store = createGameStore({ makeCtx: () => fixedCtx, effects: [(e) => seen.push(e)] });
+  function roomOneStore(seen: DomainEvent[] = [], list: readonly RoomSpec[] = [freeRoomOne]) {
+    const store = createGameStore({
+      makeCtx: () => fixedCtx,
+      reduce: createReducer(list),
+      effects: [(e) => seen.push(e)],
+    });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
     seen.length = 0;
     return store;
@@ -189,7 +197,10 @@ describe('notebook actions', () => {
     typeLine(store, 'x=6');
     store.getState().dispatch({ type: 'notebook/enter' });
     expect(store.getState().room?.stage.jam).toEqual({ kind: 'line' });
-    expect(seen).toEqual([{ type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' }]);
+    expect(seen).toEqual([
+      { type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' },
+      { type: 'MachineJammed', roomId: 'r01', kind: 'line' },
+    ]);
     const jammed = store.getState().room;
     store.getState().dispatch({ type: 'dial/set', x: 1 });
     expect(store.getState().room).toBe(jammed);
@@ -217,6 +228,68 @@ describe('notebook actions', () => {
     store.getState().dispatch({ type: 'notebook/slide', aside: false });
     expect(store.getState().ui.notebookAside).toBe(false);
     expect(store.getState().room).toBe(room);
+  });
+});
+
+describe('written lines drive the machine (story 1.7)', () => {
+  function roomOne(seen: DomainEvent[]) {
+    const store = createGameStore({ makeCtx: () => fixedCtx, effects: [(e) => seen.push(e)] });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    seen.length = 0;
+    return store;
+  }
+
+  it('plays room 1 with its blanks: explore, jam, fix, then the answer and the check lock it', () => {
+    const seen: DomainEvent[] = [];
+    const store = roomOne(seen);
+    const { dispatch } = store.getState();
+    dispatch({ type: 'dial/set', x: 6 });
+    dispatch({ type: 'notebook/type', token: '+' }); // only digits fill the blank
+    dispatch({ type: 'notebook/type', token: '6' });
+    dispatch({ type: 'notebook/enter' });
+    expect(scaleView(store.getState().room as RoomState).readouts).toBeNull();
+    dispatch({ type: 'notebook/delete' });
+    dispatch({ type: 'dial/set', x: 5 });
+    dispatch({ type: 'notebook/type', token: '5' });
+    dispatch({ type: 'notebook/enter' });
+    dispatch({ type: 'notebook/type', token: '5' });
+    dispatch({ type: 'notebook/enter' });
+
+    expect(seen).toEqual([
+      { type: 'DialNotch', x: 6 },
+      { type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' },
+      { type: 'MachineJammed', roomId: 'r01', kind: 'line' },
+      { type: 'DialNotch', x: 5 },
+      { type: 'PansLevel', roomId: 'r01', stage: 0, x: 5 },
+      { type: 'LineAccepted', roomId: 'r01', stage: 0, source: 'typed', progress: true },
+      { type: 'LineAccepted', roomId: 'r01', stage: 0, source: 'typed', progress: true },
+      { type: 'StageLocked', roomId: 'r01', stage: 0 },
+    ]);
+    const room = store.getState().room as RoomState;
+    expect(room.stage.phase).toBe('locked');
+    expect(room.stage.machineProgress).toEqual([1]);
+    expect(room.stage.lines.map((line) => line.tokens.join(''))).toEqual(['x+4=9', 'x=5', '5+4=9']);
+    const view = scaleView(room);
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
+      ['weight', '5'],
+      ['weight', '4'],
+    ]);
+    expect(view.level).toBe(true);
+  });
+
+  it('ignores the dial and the notebook once the stage is locked', () => {
+    const seen: DomainEvent[] = [];
+    const store = roomOne(seen);
+    const { dispatch } = store.getState();
+    for (const token of ['5', '5'] as const) {
+      dispatch({ type: 'notebook/type', token });
+      dispatch({ type: 'notebook/enter' });
+    }
+    const locked = store.getState().room;
+    dispatch({ type: 'dial/set', x: 3 });
+    dispatch({ type: 'notebook/type', token: '1' });
+    dispatch({ type: 'notebook/enter' });
+    expect(store.getState().room).toBe(locked);
   });
 });
 

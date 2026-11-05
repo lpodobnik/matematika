@@ -7,6 +7,7 @@ import type { PanView } from '@/room/scale';
 import type { Side } from '@/room/types';
 import { layoutPan, readoutBox, scaleGeometry } from '@/ui/scene/scale/layout';
 import { Piece } from '@/ui/scene/scale/Piece';
+import { usePieceTween } from '@/ui/scene/scale/use-piece-tween';
 
 extend({ Container, Graphics, Text });
 
@@ -20,9 +21,13 @@ interface Props {
   containerRef: RefObject<Container | null>;
 }
 
-/** One pan, level at its beam end, with its pieces stacked on it and its readout under it. */
+/**
+ * One pan, level at its beam end, with its pieces stacked on it and its readout under it.
+ * When the pan takes a new layout, its pieces move and fade with one generic tween.
+ */
 export function Pan({ side, pan, readout, fontSize, containerRef }: Props) {
   const boxes = useMemo(() => layoutPan(pan.pieces, fontSize), [pan.pieces, fontSize]);
+  const { ghosts, refFor } = usePieceTween(pan.pieces, boxes);
   const drawPan = useCallback(
     (g: Graphics) => scaleSkin.pan(g, scaleGeometry.panWidth, scaleGeometry.postHeight),
     [],
@@ -32,8 +37,25 @@ export function Pan({ side, pan, readout, fontSize, containerRef }: Props) {
       <pixiGraphics draw={drawPan} />
       {pan.pieces.map((piece, i) => {
         const box = boxes[i];
-        return box ? <Piece key={piece.key} piece={piece} box={box} fontSize={fontSize} /> : null;
+        return box ? (
+          <Piece
+            key={piece.key}
+            piece={piece}
+            box={box}
+            fontSize={fontSize}
+            nodeRef={refFor(piece.key)}
+          />
+        ) : null;
       })}
+      {ghosts.map((ghost) => (
+        <Piece
+          key={ghost.key}
+          piece={ghost.piece}
+          box={ghost.box}
+          fontSize={fontSize}
+          nodeRef={refFor(ghost.key)}
+        />
+      ))}
       {readout !== null && <Readout side={side} label={readout} fontSize={fontSize} />}
     </pixiContainer>
   );

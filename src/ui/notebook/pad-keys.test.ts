@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { TOKENS } from '@/math/tokens';
 import { enterRoom } from '@/room/room';
+import type { RoomSpec, StageSpec } from '@/room/types';
 import { reduce } from '@/store/reducer';
 import type { GameState } from '@/store/types';
 import { keyFromKeyboard } from '@/ui/notebook/keyboard';
@@ -60,9 +61,13 @@ describe('primaryPress', () => {
 });
 
 describe('the pad and the keyboard write the same line', () => {
+  // Room 1 with a blank page, so he writes whole lines (room 1 itself fills blanks).
+  const firstStage = r01.stages[0] as StageSpec;
+  const freeRoom: RoomSpec = { ...r01, stages: [{ ...firstStage, fading: { try: 'blank' } }] };
+
   function play(keys: readonly Parameters<typeof keyAction>[0][]): GameState {
     let state: GameState = {
-      room: enterRoom(r01).room,
+      room: enterRoom(freeRoom).room,
       ui: { screen: 'room', notebookAside: false },
     };
     for (const key of keys) state = reduce(state, keyAction(key), ctx).state;

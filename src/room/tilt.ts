@@ -57,3 +57,21 @@ export function tiltFor(
   const tilt = approximately(difference) * tiltPerUnit;
   return Math.max(-tiltMax, Math.min(tiltMax, tilt));
 }
+
+/**
+ * The tilt of a wrong line acted out (architecture, Which x the pans show): as `tiltFor`,
+ * but at least `jamMinTilt` either way, so a near miss still shows. A line that holds for
+ * every x (`x = x`) is level at the solution too, and is wrong only because it doesn't
+ * pin x down; it tips toward the left pan.
+ */
+export function jamTilt(
+  values: SideValues,
+  tiltPerUnit: number = tuning.tiltPerUnit,
+  jamMinTilt: number = tuning.jamMinTilt,
+  tiltMax: number = tuning.tiltMax,
+): number {
+  assert(jamMinTilt > 0 && jamMinTilt <= tiltMax, 'the jam tilt must fit inside the clamp');
+  const tilt = tiltFor(values, tiltPerUnit, tiltMax);
+  if (Math.abs(tilt) >= jamMinTilt) return tilt;
+  return tilt < 0 ? -jamMinTilt : jamMinTilt;
+}

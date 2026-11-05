@@ -4,7 +4,7 @@ import { tuning } from '@/config/tuning';
 import type { Equation } from '@/math/expr';
 import { parse } from '@/math/parse';
 import * as q from '@/math/rational';
-import { isLevel, sideValues, tiltFor } from '@/room/tilt';
+import { isLevel, jamTilt, sideValues, tiltFor } from '@/room/tilt';
 
 function equation(text: string): Equation {
   const result = parse(text);
@@ -90,5 +90,44 @@ describe('tiltFor', () => {
     expect(tiltFor(huge)).toBeCloseTo(10);
     expect(tiltFor({ left: q.zero, right: q.rational(10n ** 400n) })).toBe(-15);
     expect(tiltFor({ left: q.rational(10n ** 400n * 3n, 10n ** 400n), right: q.zero })).toBe(3);
+  });
+});
+
+describe('jamTilt (story 1.7)', () => {
+  const sides = (left: number, right: number) => ({
+    left: q.rational(left),
+    right: q.rational(right),
+  });
+
+  it(`tips a near miss by at least ${tuning.jamMinTilt}°, toward the heavier side`, () => {
+    expect(tuning.jamMinTilt).toBe(4);
+    expect(jamTilt(sides(5, 6))).toBe(-4);
+    expect(jamTilt(sides(7, 6))).toBe(4);
+    expect(jamTilt(sides(10, 6), 0.75)).toBe(4);
+  });
+
+  it('keeps a bigger tilt as tiltFor gives it, clamped as usual', () => {
+    expect(jamTilt(sides(18, 32))).toBe(-14);
+    expect(jamTilt(sides(9, 16))).toBe(-7);
+    expect(jamTilt(sides(100, 0))).toBe(tuning.tiltMax);
+  });
+
+  it('tips toward the left pan when the sides are equal (a line true for every x)', () => {
+    expect(jamTilt(sides(5, 5))).toBe(tuning.jamMinTilt);
+  });
+
+  it('is never less than the minimum either way (fast-check)', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: -50, max: 50 }), fc.integer({ min: -50, max: 50 }), (l, r) => {
+        const tilt = jamTilt(sides(l, r));
+        expect(Math.abs(tilt)).toBeGreaterThanOrEqual(tuning.jamMinTilt);
+        expect(Math.abs(tilt)).toBeLessThanOrEqual(tuning.tiltMax);
+        if (l !== r) expect(Math.sign(tilt)).toBe(Math.sign(l - r));
+      }),
+    );
+  });
+
+  it('refuses a minimum that does not fit inside the clamp', () => {
+    expect(() => jamTilt(sides(1, 2), 1, 20)).toThrow(/inside the clamp/);
   });
 });

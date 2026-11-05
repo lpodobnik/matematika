@@ -3,14 +3,19 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { hr } from '@/content/text/hr';
-import { formatTokens } from '@/math/format';
 import { tokenize } from '@/math/tokens';
-import { enterLine, lineDisplays, typeToken } from '@/room/notebook';
+import { draftDisplay, enterLine, fillsBlank, lineDisplays, typeToken } from '@/room/notebook';
 import { enterRoom } from '@/room/room';
-import type { RoomState } from '@/room/types';
+import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
 import { Notebook, NotebookPage, type NotebookPageProps } from '@/ui/notebook/Notebook';
 
 const css = readFileSync(new URL('./notebook.css', import.meta.url), 'utf8');
+
+// Room 1 fills blanks (Try values `blanks`); tests that write whole lines use room 1 with a
+// blank page.
+const firstStage = r01.stages[0] as StageSpec;
+const freeRoomOne: RoomSpec = { ...r01, stages: [{ ...firstStage, fading: { try: 'blank' } }] };
+const freeRoom = (): RoomState => enterRoom(freeRoomOne).room;
 
 function typed(room: RoomState, text: string): RoomState {
   const result = tokenize(text);
@@ -21,9 +26,12 @@ function typed(room: RoomState, text: string): RoomState {
 /** The page's props for a room, as the Notebook container derives them from the store. */
 function propsFor(room: RoomState, extra: Partial<NotebookPageProps> = {}): NotebookPageProps {
   const { stage } = room;
+  const display = draftDisplay(stage);
   return {
     lines: lineDisplays(stage.lines),
-    draft: formatTokens(stage.draft),
+    draft: display.draft,
+    upcoming: display.upcoming,
+    blank: fillsBlank(stage),
     wrong: stage.jam?.kind === 'line',
     refused: stage.refused,
     writes: true,
@@ -63,7 +71,7 @@ function mediaBlock(query: string): string {
 
 describe('the notebook page', () => {
   it('opens with the stage equation as its first line, read-only, and an empty draft', () => {
-    const html = page(enterRoom(r01).room);
+    const html = page(freeRoom());
     expect(html).toMatch(
       /<li class="line line--given"><span class="line__text">x \+ 4 = 9<\/span><\/li>/,
     );
@@ -71,7 +79,7 @@ describe('the notebook page', () => {
   });
 
   it('is never an input: no <input>, <textarea> or editable text, so no OS keyboard', () => {
-    const html = page(typed(enterRoom(r01).room, 'x = 5'));
+    const html = page(typed(freeRoom(), 'x = 5'));
     expect(html).not.toMatch(/<input|<textarea|<select|contenteditable/i);
   });
 
@@ -90,19 +98,19 @@ describe('the notebook page', () => {
   });
 
   it('shows the draft in school notation as he types: 5905 shows as 5 905', () => {
-    const html = page(typed(enterRoom(r01).room, '5905-27x=316'));
+    const html = page(typed(freeRoom(), '5905-27x=316'));
     expect(html).toContain('<span class="line__text">5 905 − 27x = 316</span>');
   });
 
   it('marks a wrong line in the draft, and nothing else', () => {
-    const wrong = enterLine(typed(enterRoom(r01).room, 'x = 6'))?.room;
+    const wrong = enterLine(typed(freeRoom(), 'x = 6'))?.room;
     if (!wrong) throw new Error('enter was ignored');
     expect(page(wrong)).toContain('class="line line--draft line--wrong"');
-    expect(page(typed(enterRoom(r01).room, 'x = 6'))).not.toContain('line--wrong');
+    expect(page(typed(freeRoom(), 'x = 6'))).not.toContain('line--wrong');
   });
 
   it('wiggles the draft after a refusal, and not before', () => {
-    const room = typed(enterRoom(r01).room, 'x +');
+    const room = typed(freeRoom(), 'x +');
     expect(page(room)).not.toContain('line--wiggle');
     const refused = enterLine(room)?.room;
     if (!refused) throw new Error('enter was ignored');
@@ -110,7 +118,7 @@ describe('the notebook page', () => {
   });
 
   it('appends committed lines under line 0, read-only, and empties the draft', () => {
-    const room = enterLine(typed(enterRoom(r01).room, 'x=9-4'))?.room;
+    const room = enterLine(typed(freeRoom(), 'x=9-4'))?.room;
     if (!room) throw new Error('enter was ignored');
     const html = page(room);
     expect(html).toMatch(/line--given[\s\S]*x \+ 4 = 9[\s\S]*line--written[\s\S]*x = 9 − 4/);
@@ -132,6 +140,67 @@ describe('the notebook page', () => {
     const aside = page(room, { aside: true });
     expect(aside).toContain(`aria-label="${hr.notebook.bringBack}"`);
     expect(aside).toContain('data-aside="true"');
+  });
+
+  it('opens room 1 with x = ☐ to fill and the check line with x blanked under it', () => {
+    const html = page(enterRoom(r01).room);
+    expect(html).toContain(
+      '<li class="line line--draft"><span class="line__text">x = <span class="line__blank" data-empty="true"><span class="line__caret" aria-hidden="true"></span></span></span></li>',
+    );
+    expect(html).toContain(
+      '<li class="line line--upcoming"><span class="line__text"><span class="line__blank" data-empty="true"></span> + 4 = 9</span></li>',
+    );
+  });
+
+  it('shows what he types inside the blank, with the caret there', () => {
+    const html = page(typed(enterRoom(r01).room, '15'));
+    expect(html).toContain(
+      '<span class="line__blank" data-empty="false">15<span class="line__caret" aria-hidden="true"></span></span>',
+    );
+  });
+
+  it('turns off every key but the digits, delete and enter while he fills a blank', () => {
+    const html = page(enterRoom(r01).room);
+    const off = (html.match(/<button[^>]*disabled=""[^>]*>/g) ?? []).map(
+      (key) => key.match(/aria-label="([^"]*)"/)?.[1],
+    );
+    expect(off.sort()).toEqual(['(', ')', '+', ':', '=', 'x', '·', '−'].sort());
+    expect(page(freeRoom())).not.toContain('disabled=""');
+  });
+
+  it('marks a wrong fill in the draft', () => {
+    const wrong = enterLine(typed(enterRoom(r01).room, '6'))?.room;
+    if (!wrong) throw new Error('enter was ignored');
+    expect(page(wrong)).toContain('class="line line--draft line--wrong"');
+  });
+
+  it('shows no success marks once the machine locks: no stars, scores or "correct" screen', () => {
+    let room = enterRoom(r01).room;
+    for (const digits of ['5', '5']) {
+      const next = enterLine(typed(room, digits))?.room;
+      if (!next) throw new Error('enter was ignored');
+      room = next;
+    }
+    expect(room.stage.phase).toBe('locked');
+    const html = page(room, { writes: false });
+    // The lines look as they did while he wrote them: nothing marks them right or done.
+    const classes = [...html.matchAll(/class="([^"]*)"/g)].flatMap((m) => m[1]?.split(' ') ?? []);
+    const lineClasses = new Set(classes.filter((name) => !name.startsWith('pad')));
+    expect(lineClasses).toEqual(
+      new Set([
+        'notebook-area',
+        'notebook__handle',
+        'notebook__chevron',
+        'notebook',
+        'notebook__lines',
+        'line',
+        'line--given',
+        'line__text',
+        'line--written',
+        'line--draft',
+      ]),
+    );
+    expect(html).not.toMatch(/★|☆|✓|✔|%/);
   });
 
   it('renders from the store with no room yet, with the keys off', () => {

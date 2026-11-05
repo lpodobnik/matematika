@@ -1,18 +1,26 @@
 // What the scale shows for the stage in play: the pieces on each pan with their labels,
 // both sides' values and the tilt. The scene draws this and decides nothing itself.
 //
-// Which x the pans show (architecture, Pattern 1): while exploring, the dial's x, which the
-// gears show too, with both sides' values on readouts unless the stage hides them. Acting
-// out a written line (story 1.7) will use the stage's solution, show `?` on the gears and
-// hide the readouts.
+// Which x the pans show (architecture, Pattern 1):
+//   exploring (dial, tray, splitter)   the dial's x, shown on the gears too, with both
+//                                      sides' values on readouts unless the stage hides them
+//   acting out a written line          the stage's solution, `?` on the gears, no readouts
+// A committed line acted out is level. A wrong line is acted out while the machine is
+// jammed on it, and tips by at least `tuning.jamMinTilt`. Acting out never moves the dial.
 
 import { tuning } from '@/config/tuning';
+import { stageSolution } from '@/math/check';
+import type { Equation } from '@/math/expr';
 import { formatNumber } from '@/math/format';
 import * as q from '@/math/rational';
+import { jammedLine } from '@/room/notebook';
 import { countLabel, isNumberPiece, numberLabel, type Piece, panPieces } from '@/room/pieces';
-import { currentStageSpec } from '@/room/room';
-import { isLevel, sideValues, tiltFor } from '@/room/tilt';
+import { currentStageSpec, machineEquation } from '@/room/room';
+import { isLevel, jamTilt, sideValues, tiltFor } from '@/room/tilt';
 import type { RoomState, StageSpec } from '@/room/types';
+
+/** What a small gear shows while a line is acted out, so a written line can't reveal x. */
+export const hiddenXLabel = '?';
 
 export type PieceView = Piece & {
   /** The number on the piece: a weight's value, or the x a small gear stands for. */
@@ -35,12 +43,15 @@ export interface Readouts {
 export interface ScaleView {
   /** The x the pans are weighed at. */
   x: number;
+  /** A written line is acted out: at the stage's solution, with `?` on the gears. */
+  actingOut: boolean;
   left: PanView;
   right: PanView;
   /** Degrees, positive when the left pan is lower (see tiltFor). */
   tilt: number;
+  /** The pans hang level: the sides are equal, and the machine isn't jammed on a line. */
   level: boolean;
-  /** Null when the stage hides them (`readouts: false`, or the readouts blind). */
+  /** Null when the stage hides them (`readouts: false`, or the readouts blind), or while acting out. */
   readouts: Readouts | null;
 }
 
@@ -67,20 +78,46 @@ export function showsReadouts(stage: StageSpec): boolean {
   return stage.readouts && !stage.blinds?.readouts;
 }
 
+/** The solution of the stage's active machine. */
+export function stageX(room: RoomState): number {
+  return stageSolution(machineEquation(currentStageSpec(room), room.stage.machine));
+}
+
+/** What is on the pans and at which x, before it is drawn (Pattern 1's table). */
+interface Weighing {
+  equation: Equation;
+  x: number;
+  actingOut: boolean;
+  jammed: boolean;
+}
+
+function weighing(room: RoomState): Weighing {
+  const { stage } = room;
+  const jammed = jammedLine(stage);
+  if (jammed) return { equation: jammed, x: stageX(room), actingOut: true, jammed: true };
+  if (stage.actingOut)
+    return { equation: stage.pans, x: stageX(room), actingOut: true, jammed: false };
+  return { equation: stage.pans, x: stage.dialX, actingOut: false, jammed: false };
+}
+
 export function scaleView(room: RoomState): ScaleView {
-  const { pans, dialX } = room.stage;
   const spec = currentStageSpec(room);
-  const values = sideValues(pans, q.rational(dialX));
-  const pieces = panPieces(pans);
-  const xLabel = formatNumber(dialX);
+  const { equation, x, actingOut, jammed } = weighing(room);
+  const values = sideValues(equation, q.rational(x));
+  const pieces = panPieces(equation);
+  const xLabel = actingOut ? hiddenXLabel : formatNumber(x);
+  const tiltPerUnit = spec.tiltPerUnit ?? tuning.tiltPerUnit;
   return {
-    x: dialX,
+    x,
+    actingOut,
     left: { pieces: pieces.left.map((p) => pieceView(p, xLabel)), value: values.left },
     right: { pieces: pieces.right.map((p) => pieceView(p, xLabel)), value: values.right },
-    tilt: tiltFor(values, spec.tiltPerUnit ?? tuning.tiltPerUnit),
-    level: isLevel(values),
-    readouts: showsReadouts(spec)
-      ? { left: readoutLabel(values.left), right: readoutLabel(values.right) }
-      : null,
+    tilt: jammed ? jamTilt(values, tiltPerUnit) : tiltFor(values, tiltPerUnit),
+    // A jammed line always tips, even one that holds for every x.
+    level: !jammed && isLevel(values),
+    readouts:
+      !actingOut && showsReadouts(spec)
+        ? { left: readoutLabel(values.left), right: readoutLabel(values.right) }
+        : null,
   };
 }

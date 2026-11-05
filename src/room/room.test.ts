@@ -42,9 +42,16 @@ describe('enterRoom', () => {
         },
       ],
       draft: [],
+      templates: [
+        ['x', '=', '☐'],
+        ['☐', '+', '4', '=', '9'],
+      ],
       jam: null,
       refused: 0,
+      jamsInARow: 0,
+      machineProgress: [0],
       pans: equation('x + 4 = 9'),
+      actingOut: false,
       dialX: 0,
       dialOpen: { min: 0, max: 10 },
     });
@@ -66,6 +73,27 @@ describe('arriveAtStage', () => {
   it('starts a locked dial at 0, with nothing open', () => {
     expect(arriveAtStage({ ...stage, dial: 'locked' }).dialX).toBe(0);
     expect(arriveAtStage({ ...stage, dial: 'locked' }).dialOpen).toEqual({ min: 0, max: 0 });
+  });
+
+  it('starts every machine stopped, exploring, with no jams counted (story 1.7)', () => {
+    const arrived = arriveAtStage(stage);
+    expect(arrived.machineProgress).toEqual([0]);
+    expect(arrived.actingOut).toBe(false);
+    expect(arrived.jamsInARow).toBe(0);
+    const linked = {
+      ...stage,
+      machines: [{ equation: '2x + 3 = 11' }, { equation: '3x + 4 = 19' }],
+    };
+    expect(arriveAtStage(linked).machineProgress).toEqual([0, 0]);
+  });
+
+  it('opens with the Try values lines to fill only when Try values fades to blanks', () => {
+    expect(arriveAtStage(stage).templates).toEqual([]);
+    expect(arriveAtStage({ ...stage, fading: { try: 'blank' } }).templates).toEqual([]);
+    expect(arriveAtStage({ ...stage, fading: { try: 'blanks' } }).templates).toEqual([
+      ['x', '=', '☐'],
+      ['2', '·', '☐', '+', '5', '=', '2', '3'],
+    ]);
   });
 });
 

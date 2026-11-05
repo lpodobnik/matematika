@@ -4,7 +4,7 @@
 
 import type { Verdict } from '@/math/check';
 import type { Equation } from '@/math/expr';
-import type { Token } from '@/math/tokens';
+import type { LineToken, Token } from '@/math/tokens';
 
 export type RoomId =
   | 'r01'
@@ -112,8 +112,8 @@ export interface NotebookLine {
 export type Jam = { kind: 'line' } | { kind: 'split'; parts: number };
 
 /**
- * The stage in play: the part of Pattern 2's `StageState` that the scale, the dial and the
- * notebook need so far. Later stories add machine progress, acting out, the pin and hints.
+ * The stage in play: the part of Pattern 2's `StageState` that the scale, the dial, the
+ * notebook and the machine need so far. Later stories add the pin and hints.
  */
 export interface StageState {
   phase: Phase;
@@ -121,13 +121,33 @@ export interface StageState {
   machine: number;
   /** Committed lines only; [0] is the stage equation, read-only. A wrong line is never here. */
   lines: NotebookLine[];
-  /** The line he is writing; a wrong line's tokens stay here, marked by `jam`. */
+  /**
+   * The line he is writing; a wrong line's tokens stay here, marked by `jam`. While
+   * `templates` has a line, the draft is what fills that line's blank.
+   */
   draft: Token[];
+  /**
+   * Lines with a blank still to fill (Fading, `blanks`), the current one first: Try values
+   * gives `x = ☐` and the check line with x blanked. Empty when he writes freely.
+   */
+  templates: LineToken[][];
   jam: Jam | null;
   /** How many times enter has refused a line in this stage; the notebook wiggles each time. */
   refused: number;
-  /** The last committed line plus exploratory moves; the scale draws it. */
+  /** Jams since the last committed line (hints from epic 2). */
+  jamsInARow: number;
+  /** 0–1 per machine: 0 is stopped, 1 is running; the skin shows it. */
+  machineProgress: number[];
+  /**
+   * The last committed line plus exploratory moves. Writing a line replaces it with the
+   * line's layout. While a line jam is set the scale acts out the jammed draft instead.
+   */
   pans: Equation;
+  /**
+   * True from a committed line until the next exploring action (dial, tray, splitter):
+   * the pans are weighed at the stage's solution, with `?` on the gears and no readouts.
+   */
+  actingOut: boolean;
   dialX: number;
   /** The part of the dial he can reach: the poke window (story 1.9), then the full range. */
   dialOpen: { min: number; max: number };

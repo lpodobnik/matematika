@@ -6,6 +6,7 @@ import type { Equation } from '@/math/expr';
 import { parse } from '@/math/parse';
 import { tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
+import { openingTemplates } from '@/room/fading';
 import type { NotebookLine, RoomSpec, RoomState, StageSpec, StageState } from '@/room/types';
 
 export interface RoomStep {
@@ -44,7 +45,8 @@ export function givenLine(stage: StageSpec, machine: number): NotebookLine {
 
 /**
  * A stage as it arrives: the first machine's equation on the pans and as the notebook's
- * line 0, an empty draft, and the dial at its minimum.
+ * line 0, an empty draft (or, with Try values `blanks`, the lines to fill), every machine
+ * stopped, and the dial at its minimum, exploring.
  */
 export function arriveAtStage(stage: StageSpec): StageState {
   // A locked dial (room 7) never moves; its x is decided with the find-the-mistake rules.
@@ -55,9 +57,13 @@ export function arriveAtStage(stage: StageSpec): StageState {
     machine: 0,
     lines: [givenLine(stage, 0)],
     draft: [],
+    templates: openingTemplates(stage, 0),
     jam: null,
     refused: 0,
+    jamsInARow: 0,
+    machineProgress: stage.machines.map(() => 0),
     pans: machineEquation(stage, 0),
+    actingOut: false,
     dialX,
     // The whole range for now; story 1.9 narrows it to the poke window.
     dialOpen: dial === 'locked' ? { min: dialX, max: dialX } : { min: dial.min, max: dial.max },

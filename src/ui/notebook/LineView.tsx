@@ -1,27 +1,54 @@
-// One notebook line: the stage equation (line 0), a committed line, or the draft he is
-// writing. Committed lines are read-only text; only the draft changes, from its end.
+// One notebook line: the stage equation (line 0), a committed line, the draft he is
+// writing, or a line still to fill. Committed lines are read-only text; only the draft
+// changes, from its end, or, while he fills a blank, inside the blank.
 
-export type LineKind = 'given' | 'written' | 'draft';
+import { Fragment } from 'react';
+import type { LineSegment } from '@/math/format';
+
+export type LineKind = 'given' | 'written' | 'draft' | 'upcoming';
 
 interface Props {
-  text: string;
+  segments: readonly LineSegment[];
   kind: LineKind;
   /** A wrong line in the draft, marked (by shape as well as colour) until he edits it. */
   wrong?: boolean;
   /** Enter refused the draft: it wiggles once as it mounts. */
   wiggle?: boolean;
-  /** Where the next key goes: the end of the draft, while the notebook takes keys. */
+  /** Where the next key goes, while the notebook takes keys: the blank, or the line's end. */
   caret?: boolean;
 }
 
-export function LineView({ text, kind, wrong = false, wiggle = false, caret = false }: Props) {
+/** A line of plain text, as committed lines are. */
+export function textLine(text: string): LineSegment[] {
+  return [{ kind: 'text', text }];
+}
+
+function Caret() {
+  return <span className="line__caret" aria-hidden="true" />;
+}
+
+export function LineView({ segments, kind, wrong = false, wiggle = false, caret = false }: Props) {
   const className = ['line', `line--${kind}`, wrong && 'line--wrong', wiggle && 'line--wiggle']
     .filter(Boolean)
     .join(' ');
+  const blankAt = segments.findIndex((segment) => segment.kind === 'blank');
   return (
     <li className={className}>
-      <span className="line__text">{text}</span>
-      {caret && <span className="line__caret" aria-hidden="true" />}
+      <span className="line__text">
+        {segments.map((segment, i) =>
+          segment.kind === 'text' ? (
+            // biome-ignore lint/suspicious/noArrayIndexKey: a line's segments never reorder
+            <Fragment key={i}>{segment.text}</Fragment>
+          ) : (
+            // biome-ignore lint/suspicious/noArrayIndexKey: a line's segments never reorder
+            <span key={i} className="line__blank" data-empty={segment.text === ''}>
+              {segment.text}
+              {caret && i === blankAt && <Caret />}
+            </span>
+          ),
+        )}
+      </span>
+      {caret && blankAt < 0 && <Caret />}
     </li>
   );
 }

@@ -16,6 +16,7 @@ import {
 import {
   formatEquation,
   formatExpr,
+  formatLine,
   formatNumber,
   formatTokens,
   thousandsSeparator,
@@ -23,7 +24,7 @@ import {
 import { solve } from '@/math/linear';
 import { parse } from '@/math/parse';
 import * as q from '@/math/rational';
-import { TOKENS, tokenize } from '@/math/tokens';
+import { BLANK, blankOutX, fillBlanks, type LineToken, TOKENS, tokenize } from '@/math/tokens';
 
 const x = xVar();
 
@@ -218,6 +219,80 @@ describe('formatTokens', () => {
     fc.assert(
       fc.property(fc.array(fc.constantFrom(...TOKENS), { maxLength: 40 }), (tokens) => {
         expect(tokenize(formatTokens(tokens))).toEqual({ ok: true, tokens });
+      }),
+      { numRuns: 1000 },
+    );
+  });
+});
+
+describe('formatLine (story 1.7)', () => {
+  const line = (text: string): LineToken[] => {
+    const result = tokenize(text);
+    if (!result.ok) throw new Error(text);
+    return blankOutX(result.tokens);
+  };
+
+  it('writes x = ☐ as its text and a blank, with the blank filled so far', () => {
+    const answer: LineToken[] = ['x', '=', BLANK];
+    expect(formatLine(answer)).toEqual([
+      { kind: 'text', text: 'x = ' },
+      { kind: 'blank', text: '' },
+    ]);
+    expect(formatLine(answer, ['5', '9', '0', '5'])).toEqual([
+      { kind: 'text', text: 'x = ' },
+      { kind: 'blank', text: '5 905' },
+    ]);
+  });
+
+  it('writes the check line with x blanked in school notation', () => {
+    expect(formatLine(line('x + 4 = 9'))).toEqual([
+      { kind: 'blank', text: '' },
+      { kind: 'text', text: ' + 4 = 9' },
+    ]);
+    expect(formatLine(line('3x = 12'))).toEqual([
+      { kind: 'text', text: '3 · ' },
+      { kind: 'blank', text: '' },
+      { kind: 'text', text: ' = 12' },
+    ]);
+    expect(formatLine(line('5905 − 27x = 316'), ['2', '0', '7'])).toEqual([
+      { kind: 'text', text: '5 905 − 27 · ' },
+      { kind: 'blank', text: '207' },
+      { kind: 'text', text: ' = 316' },
+    ]);
+    expect(formatLine(line('2(x + 1) = 8'))).toEqual([
+      { kind: 'text', text: '2(' },
+      { kind: 'blank', text: '' },
+      { kind: 'text', text: ' + 1) = 8' },
+    ]);
+  });
+
+  it('is one text segment, the same as formatTokens, for a line with no blank', () => {
+    expect(formatLine([])).toEqual([]);
+    expect(formatLine(['2', 'x', '+', '7', '=', '2', '5'])).toEqual([
+      { kind: 'text', text: '2x + 7 = 25' },
+    ]);
+  });
+
+  it('shows a filled line as the line itself would show (fast-check)', () => {
+    // As blankOutX writes them: a blank never touches a digit or another blank, so the
+    // filled number is grouped on its own.
+    const touchesDigit = (line: readonly LineToken[]) =>
+      line.some(
+        (token, i) =>
+          token === BLANK &&
+          [line[i - 1], line[i + 1]].some((t) => t !== undefined && /\d|☐/.test(t)),
+      );
+    const lineArb = fc
+      .array(fc.constantFrom<LineToken>(...TOKENS, BLANK), { maxLength: 20 })
+      .filter((line) => !touchesDigit(line));
+    const fillArb = fc.array(fc.constantFrom(...'0123456789'), { minLength: 1, maxLength: 7 });
+    fc.assert(
+      fc.property(lineArb, fillArb, (template, digits) => {
+        const fill = digits as (typeof TOKENS)[number][];
+        const text = formatLine(template, fill)
+          .map((segment) => segment.text)
+          .join('');
+        expect(text).toBe(formatTokens(fillBlanks(template, fill)));
       }),
       { numRuns: 1000 },
     );

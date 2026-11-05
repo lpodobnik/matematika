@@ -1,10 +1,12 @@
 import { hr } from '@/content/text/hr';
-import type { NotebookKey } from '@/room/notebook';
+import { keyWorks, type NotebookKey } from '@/room/notebook';
 import { keyKind, PAD_ROWS, primaryPress, tokenLabel } from '@/ui/notebook/pad-keys';
 
 interface Props {
   /** Whether the notebook takes keys now; otherwise the keys show as off. */
   writes: boolean;
+  /** He is filling a blank: only digits, delete and enter work, and the rest show as off. */
+  blank: boolean;
   onKey(key: NotebookKey): void;
 }
 
@@ -13,7 +15,7 @@ interface Props {
  * (rule 8). Each key acts on `pointerdown` and is at least 48 CSS px (notebook.css). The
  * keys are never focused, so a computer's Enter goes only to the notebook's keyboard watch.
  */
-export function NumberPad({ writes, onKey }: Props) {
+export function NumberPad({ writes, blank, onKey }: Props) {
   return (
     <div className="pad">
       {PAD_ROWS.flat().map((key) => (
@@ -22,7 +24,7 @@ export function NumberPad({ writes, onKey }: Props) {
           type="button"
           tabIndex={-1}
           className={`pad__key pad__key--${keyKind(key)}`}
-          disabled={!writes}
+          disabled={!keyWorks(key, writes, blank)}
           aria-label={keyName(key)}
           onPointerDown={(event) => primaryPress(event, () => onKey(key))}
         >
