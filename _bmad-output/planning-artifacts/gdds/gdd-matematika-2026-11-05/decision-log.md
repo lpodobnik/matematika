@@ -66,3 +66,6 @@ Every decision, change and version transition for this GDD.
   - The Croatian text gets one read-through by Luka, in epic 6.
 
   Estimates are unchanged. The GDD stays final.
+- **From Luka, during architecture: graphics matter more than load time.** The 5 MB download and 3 s first-load limits were Claude's numbers, not the brief's, and are dropped. First load now gets a loading screen and about 15 seconds on home Wi-Fi, with a soft budget of 30 MB; later launches load from the device.
+- **Decided by Luka: AI-generated or bought images are allowed,** alongside art drawn in code and shaders. Replaces "achievable by drawing in code".
+- **Claude's calls, open to veto: the split.** Anything that moves or shows a number stays drawn in code; images carry the map, backdrops, housings, automatons and character looks. Images are made in restored colours, and a shader makes the grey state.

@@ -424,7 +424,8 @@ Room order, gates and return trips are under Level Structure. Each room's restar
 
 - Mechanisms are exposed, so cause and effect can be read at a glance. Machinarium is the reference for the mood, not the pixel hunting.
 - Numbers on weights are at least 20 px on a tablet, and colour is never the only signal.
-- The look must be achievable by drawing in code, because the team has no artist.
+- With no artist, art is drawn in code and shaders, plus AI-generated or bought images where they look better. Anything that moves or shows a number (pans, pieces, gears, dial, chain, drum) is drawn in code, so its states stay exact. Images carry the map, room backdrops, machine housings, automatons and character looks.
+- Each image is made in its restored colours; the grey state comes from a shader, so the two always match.
 
 ### Audio and Music
 
@@ -441,8 +442,8 @@ Room order, gates and return trips are under Level Structure. Each room's restar
 | Target | Value | Measured by |
 |---|---|---|
 | Frame rate | 60 FPS while dragging the dial | On his tablet, in a three-machine room |
-| First load | Under 3 seconds | On home Wi-Fi, with an empty cache |
-| Download size | Under 5 MB | Total on first load |
+| First load | A loading screen shows progress; under about 15 seconds | On home Wi-Fi, with an empty cache; later launches load from the device |
+| Download size | No hard cap, because graphics come first; soft budget 30 MB | Total on first load |
 | Touch response | Dial and pans follow the finger within one frame | On his tablet |
 
 ### Platform-Specific Details
@@ -551,7 +552,8 @@ Measured over 2 weeks from the play log and the paper test. Thresholds are worki
 
 **Dependencies:**
 
-- Luka with Claude Code, with no artist or composer, so art and audio must be achievable in code or from openly licensed sources.
+- Luka with Claude Code, with no artist or composer. Art is drawn in code or comes from AI-generated or bought images; audio is synthesised or openly licensed.
+- An image generator or bought asset packs for the images. Claude writes the style guide and the prompts; producing the images needs one of these.
 - Free static hosting for the link.
 - Messaging apps preserving links of up to 2,000 characters.
 - `sources/` in the brief folder, for curriculum and textbook reference.

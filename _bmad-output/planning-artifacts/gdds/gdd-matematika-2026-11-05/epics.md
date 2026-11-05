@@ -54,6 +54,7 @@ Each epic ends in something playable. Estimates are hours with Claude Code and a
 - Hint ladder and explanation cards
 - Rooms 5–7, including the compare, predict and find-the-mistake types
 - Play log and Luka's view
+- Art style guide (`_bmad-output/art-bible.md`): palette, line weight, lighting and a prompt template for the images
 
 **Out:** fights, gear chain, workshop.
 
