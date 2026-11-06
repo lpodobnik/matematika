@@ -125,6 +125,7 @@ function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): v
     <button
       type="button"
       className="map__node"
+      data-node={node.id}
       data-kind={node.kind}
       data-state={node.state}
       data-next={node.next}

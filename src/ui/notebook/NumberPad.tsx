@@ -26,6 +26,7 @@ export function NumberPad({ writes, blank, pulse = null, onKey }: Props) {
           type="button"
           tabIndex={-1}
           className={`pad__key pad__key--${keyKind(key)}`}
+          data-key={key}
           disabled={!keyWorks(key, writes, blank)}
           data-pulse={key === pulse || undefined}
           aria-label={keyName(key)}
