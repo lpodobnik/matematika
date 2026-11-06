@@ -2,6 +2,7 @@
    right: gauges, dice, the three slots, a · x + b and the blows dial. Grey ink on paper
    (NFR12); every control is a real button, at least 48 CSS px, acting on release. */
 .fight {
+  position: relative;
   display: flex;
   flex: 1 1 auto;
   gap: 16px;
@@ -275,6 +276,11 @@
   opacity: 1;
 }
 
+/* After a strike the slots show the round's dice, off until the next roll. */
+.fight__slot[data-off] {
+  opacity: 0.5;
+}
+
 .fight__slot-name {
   font-size: 18px;
   font-weight: 700;
@@ -348,6 +354,157 @@
 
 .fight__notch[data-unaffordable] {
   border-style: dashed;
+}
+
+/* Story 3.2: the strike, its banner, the dent, the fight's end and the leave question. */
+.fight__strike {
+  align-self: flex-start;
+  min-width: 160px;
+  min-height: 60px;
+  padding: 0 28px;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.fight__strike:disabled {
+  border-style: dashed;
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 0.45;
+}
+
+.fight__banner {
+  padding: 10px 16px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--sheet);
+  animation: fight-banner 300ms ease-out;
+}
+
+.fight__banner[data-clean] {
+  border-width: 4px;
+}
+
+.fight__sum {
+  margin: 0;
+  font-size: 40px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.fight__effect,
+.fight__dent {
+  margin: 4px 0 0;
+  font-size: 20px;
+}
+
+.fight__clean {
+  font-weight: 700;
+}
+
+.fight__gauges[data-hit] {
+  animation: fight-hit 360ms ease-out;
+}
+
+.fight__automaton--down {
+  transform: rotate(-8deg) translateY(4%);
+  opacity: 0.55;
+  transition:
+    transform 900ms ease-in,
+    opacity 900ms ease-in;
+}
+
+.fight__end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fight__end-title {
+  margin: 0;
+  font-size: 30px;
+}
+
+.fight__end-reason {
+  margin: 0;
+  font-size: 20px;
+}
+
+.fight__close,
+.fight__go,
+.fight__stay {
+  min-height: 56px;
+  padding: 0 24px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  font-size: 20px;
+}
+
+.fight__close,
+.fight__stay {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.fight__go {
+  background: var(--paper);
+}
+
+/* The leave question is a dialog: the fight behind it waits, dimmed, until he answers. It
+   sits at the bottom, so his hull, steam and the last sum stay readable while he decides. */
+.fight__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+  justify-content: center;
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+}
+
+.fight__confirm {
+  box-sizing: border-box;
+  max-width: min(480px, 90vw);
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--sheet);
+  font-size: 20px;
+}
+
+.fight__confirm p {
+  margin: 0 0 12px;
+}
+
+.fight__confirm-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@keyframes fight-banner {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes fight-hit {
+  25% {
+    transform: translateX(-6px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
 }
 
 /* A phone in landscape: the same two columns, tighter. */
@@ -450,6 +607,41 @@
     height: 48px;
     font-size: 18px;
   }
+
+  .fight__strike {
+    min-height: 48px;
+    font-size: 18px;
+  }
+
+  .fight__banner {
+    padding: 4px 10px;
+  }
+
+  .fight__sum {
+    font-size: 26px;
+  }
+
+  .fight__effect,
+  .fight__dent,
+  .fight__end-reason {
+    font-size: 15px;
+  }
+
+  .fight__end-title {
+    font-size: 20px;
+  }
+
+  .fight__close,
+  .fight__go,
+  .fight__stay {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .fight__confirm {
+    padding: 10px;
+    font-size: 15px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -459,5 +651,14 @@
 
   .fight__die[data-held] {
     transform: none;
+  }
+
+  .fight__banner,
+  .fight__gauges[data-hit] {
+    animation: none;
+  }
+
+  .fight__automaton--down {
+    transition: none;
   }
 }

@@ -2,7 +2,7 @@
 // put it there. Tapping the held die again puts it down; tapping a filled slot with nothing
 // held takes its die back. Pure, so the screen's glue is tested without a browser.
 
-import type { FightAction, Slot } from '@/fight/types';
+import type { FightAction, FightState, Slot } from '@/fight/types';
 
 export interface Tap {
   /** The die held after the tap, or null. */
@@ -25,4 +25,12 @@ export function tapSlot(
   if (held !== null) return { held: null, action: { type: 'fight/place', die: held, slot } };
   if (slots[slot] !== null) return { held: null, action: { type: 'fight/unplace', slot } };
   return { held: null, action: null };
+}
+
+/**
+ * A tap on "Odlazak" (stories 3.1, 3.2): before his first strike he just leaves, which is
+ * free; after it, leaving loses the fight, so he is asked first.
+ */
+export function tapLeave(fight: Pick<FightState, 'strikes'>): 'leave' | 'ask' {
+  return fight.strikes > 0 ? 'ask' : 'leave';
 }

@@ -5,6 +5,7 @@ import { lairs } from '@/content/lairs';
 import { hr } from '@/content/text/hr';
 import { reduceFight, startFight } from '@/fight/fight';
 import type { FightAction, FightState } from '@/fight/types';
+import { LeaveConfirm } from '@/ui/fight/FightEnd';
 import { FightBoard } from '@/ui/fight/FightScreen';
 
 const css = readFileSync(new URL('./fight.css', import.meta.url), 'utf8');
@@ -77,5 +78,105 @@ describe('the fight screen (story 3.1)', () => {
     expect(css).toMatch(/\.fight__notch \{[^}]*width: 52px/);
     expect(css).toMatch(/\.fight__die \{[^}]*width: 76px/);
     expect(css).toMatch(/@media \(max-height: 499\.98px\)[\s\S]*\.fight__notch \{[^}]*width: 48px/);
+  });
+});
+
+const struck = act(set, { type: 'fight/strike' });
+
+describe('the strike and the end (story 3.2)', () => {
+  it('offers the strike only once the dial is open', () => {
+    expect(board(set)).toMatch(/<button type="button" class="fight__strike">/);
+    expect(board(rolled)).toMatch(/<button type="button" class="fight__strike" disabled="">/);
+  });
+
+  it('shows the sum with its total in the banner after a strike, and the dent', () => {
+    const s = struck.lastStrike;
+    if (!s) throw new Error('no strike');
+    const html = text(board(struck));
+    expect(html).toContain(`${s.blade} · ${s.blows} + ${s.charge} = ${s.damage}`);
+    expect(html).toContain(hr.fight.armourFell(s.armourBefore, s.armourAfter));
+    expect(struck.phase).toBe('strike');
+    expect(html).toContain(hr.fight.dented);
+    // The next round starts with a roll; the dial and the strike wait for it.
+    expect(html).toContain(hr.fight.roll);
+    expect(board(struck)).not.toContain('class="fight__strike"');
+  });
+
+  it('shows a clean cut', () => {
+    const clean = {
+      ...struck,
+      phase: 'won' as const,
+      armour: 0,
+      lastStrike: {
+        ...(struck.lastStrike as NonNullable<FightState['lastStrike']>),
+        armourAfter: 0,
+        clean: true,
+        dented: false,
+      },
+      outcome: { won: true as const, clean: true, reward: 20 },
+    };
+    expect(text(board(clean))).toContain(hr.fight.clean);
+  });
+
+  it('ends with how it ended and the way back to the map', () => {
+    const won = {
+      ...struck,
+      phase: 'won' as const,
+      outcome: { won: true as const, clean: false, reward: 5 },
+    };
+    const html = board(won);
+    expect(text(html)).toContain(hr.fight.won);
+    expect(html).toContain(`>${hr.fight.back}<`);
+    expect(html).not.toContain('class="fight__leave"');
+    const left = {
+      ...struck,
+      phase: 'lost' as const,
+      outcome: { won: false as const, reason: 'left' as const },
+    };
+    const lost = text(board(left));
+    expect(lost).toContain(hr.fight.lost);
+    expect(lost).toContain(hr.fight.reasons.left);
+    // Leaving isn't a strike: no banner for it.
+    expect(lost).not.toContain(' = ');
+  });
+
+  it('asks before leaving with the two answers, staying first', () => {
+    const html = renderToString(
+      <LeaveConfirm onLeave={() => undefined} onStay={() => undefined} />,
+    );
+    expect(html).toContain('role="alertdialog"');
+    expect(text(html)).toContain(hr.fight.leaveLoses);
+    expect(html.indexOf(hr.fight.stay)).toBeLessThan(html.indexOf(hr.fight.leaveConfirm));
+  });
+
+  it('says why he lost: hull or steam', () => {
+    for (const reason of ['hull', 'steam'] as const) {
+      const lost = { ...struck, phase: 'lost' as const, outcome: { won: false as const, reason } };
+      const html = text(board(lost));
+      expect(html).toContain(hr.fight.reasons[reason]);
+      // A strike ended it, so its banner shows.
+      expect(html).toContain(' = ');
+    }
+  });
+
+  it('wins below 0 without a clean cut, and the win shows no dent', () => {
+    const s = struck.lastStrike as NonNullable<FightState['lastStrike']>;
+    const over = {
+      ...struck,
+      phase: 'won' as const,
+      armour: 0,
+      lastStrike: { ...s, armourBefore: s.damage - 1, armourAfter: 0, clean: false, dented: false },
+      outcome: { won: true as const, clean: false, reward: 7 },
+    };
+    const html = text(board(over));
+    expect(html).toContain(hr.fight.won);
+    expect(html).not.toContain(hr.fight.clean);
+    expect(html).not.toContain(hr.fight.dented);
+  });
+
+  it('shows the round’s dice off in their slots after a strike', () => {
+    const html = board(struck);
+    expect([...html.matchAll(/class="fight__slot"[^>]*data-off="true"/g)]).toHaveLength(3);
+    expect(board(set)).not.toContain('data-off');
   });
 });

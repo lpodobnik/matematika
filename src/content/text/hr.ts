@@ -382,6 +382,21 @@ export const hr = {
     stay: 'Ostajem',
     /** The round in play. */
     round: (n: number) => `Krug ${n}`,
+    /** Story 3.2: under the strike's sum, what it did to the armour. */
+    armourFell: (before: number, after: number) => `Oklop ${before} → ${after}`,
+    /** Armour landed on exactly 0. */
+    clean: 'Čisti rez!',
+    /** Armour was left, so the automaton struck back. */
+    dented: 'Automat uzvraća: udubljenje u trupu.',
+    /** How the fight ended. */
+    won: 'Automat staje i odmotava se.',
+    lost: 'Automat je ovaj put jači.',
+    reasons: {
+      hull: 'Trup ne može podnijeti još jedno udubljenje.',
+      steam: 'Nestalo je pare za udarce.',
+      left: 'Borba je napuštena prije kraja.',
+    },
+    back: 'Natrag na kartu',
   },
   parts: {
     /** The parts counter in the scene's corner, read out with its number. */

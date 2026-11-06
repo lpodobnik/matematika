@@ -5,9 +5,11 @@ import { hr } from '@/content/text/hr';
 import { blowRange, blowsAffordable, placedValues, SLOTS } from '@/fight/fight';
 import type { FightAction, FightState, Slot } from '@/fight/types';
 import { formatNumber } from '@/math/format';
+import type { FightEnd } from '@/store/fight-end';
 import { useGame } from '@/store/store';
+import { FightEndPanel, LeaveConfirm, StrikeBanner } from '@/ui/fight/FightEnd';
 import { Automaton, DieFace } from '@/ui/fight/fight-art';
-import { type Tap, tapDie, tapSlot } from '@/ui/fight/taps';
+import { type Tap, tapDie, tapLeave, tapSlot } from '@/ui/fight/taps';
 
 /**
  * The fight screen (story 3.1; GDD, Automaton fights): the automaton and its armour on the
@@ -18,26 +20,44 @@ import { type Tap, tapDie, tapSlot } from '@/ui/fight/taps';
  */
 export function FightScreen() {
   const fight = useGame((s) => s.fight);
+  const end = useGame((s) => s.ui.fightEnd);
   const dispatch = useGame((s) => s.dispatch);
   if (!fight) return null;
-  return <FightBoard fight={fight} onAction={dispatch} />;
+  return <FightBoard fight={fight} end={end} onAction={dispatch} />;
 }
 
 interface BoardProps {
   fight: FightState;
-  onAction(action: FightAction): void;
+  /** How the fight ended, once it has (store/fight-end.ts). */
+  end?: FightEnd | null;
+  onAction(action: FightAction | { type: 'fight/close' }): void;
 }
 
 /** The fight from props only. */
-export function FightBoard({ fight, onAction }: BoardProps) {
+export function FightBoard({ fight, end = null, onAction }: BoardProps) {
   const lair = lairs[fight.lairId];
+  // Leaving after a strike loses the fight, so he is asked first (story 3.2).
+  const [askLeave, setAskLeave] = useState(false);
+  // The question goes with the moment it was asked in: a new round or the end closes it.
+  const moment = `${fight.round}:${fight.phase}`;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new round or phase closes it
+  useEffect(() => setAskLeave(false), [moment]);
   // The die he has picked up, waiting for a slot. A new roll puts it down.
-  const [held, setHeld] = useState<number | null>(null);
+  const [heldDie, setHeld] = useState<number | null>(null);
   const rollKey = `${fight.round}:${fight.dice.join(',')}`;
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new roll puts the held die down
   useEffect(() => setHeld(null), [rollKey]);
 
   const placing = fight.phase === 'place' || fight.phase === 'set';
+  // A die is held only while placing: a strike or a new roll puts it down at once.
+  const held = placing ? heldDie : null;
+  const over = fight.phase === 'won' || fight.phase === 'lost';
+  // Leaving after a strike ends the fight without one: its banner is the last round's.
+  const leftEarly = fight.outcome?.won === false && fight.outcome.reason === 'left';
+  const leave = () => {
+    if (tapLeave(fight) === 'ask') setAskLeave(true);
+    else onAction({ type: 'fight/leave' });
+  };
   const slotOf = (die: number): Slot | null => SLOTS.find((s) => fight.slots[s] === die) ?? null;
 
   const apply = ({ held: next, action }: Tap) => {
@@ -50,22 +70,53 @@ export function FightBoard({ fight, onAction }: BoardProps) {
   return (
     <main className="fight" aria-label={hr.fight.title(lair.armour)}>
       <section className="fight__foe">
-        <button
-          type="button"
-          className="fight__leave"
-          onClick={() => onAction({ type: 'fight/leave' })}
-        >
-          <svg viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M20 6 L10 16 L20 26" />
-          </svg>
-          {hr.fight.leave}
-        </button>
+        {!over && (
+          <button type="button" className="fight__leave" onClick={leave}>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M20 6 L10 16 L20 26" />
+            </svg>
+            {hr.fight.leave}
+          </button>
+        )}
         {fight.round > 0 && <p className="fight__round">{hr.fight.round(fight.round)}</p>}
-        <Automaton className="fight__automaton" />
+        <Automaton
+          className={
+            fight.phase === 'won' ? 'fight__automaton fight__automaton--down' : 'fight__automaton'
+          }
+        />
         <Armour armour={fight.armour} full={lair.armour} />
       </section>
       <section className="fight__bench">
-        <Gauges fight={fight} />
+        <Gauges key={`hull-${fight.hull}`} fight={fight} />
+        {fight.lastStrike && (fight.phase === 'strike' || (over && !leftEarly)) && (
+          <StrikeBanner key={fight.strikes} strike={fight.lastStrike} />
+        )}
+        {over ? (
+          <FightEndPanel
+            fight={fight}
+            end={end}
+            onClose={() => onAction({ type: 'fight/close' })}
+          />
+        ) : (
+          bench()
+        )}
+      </section>
+      {askLeave && !over && (
+        <LeaveConfirm
+          onStay={() => setAskLeave(false)}
+          onLeave={() => {
+            setAskLeave(false);
+            onAction({ type: 'fight/leave' });
+          }}
+        />
+      )}
+    </main>
+  );
+
+  /** The dice, the slots, a · x + b, the blows dial and the strike, while the fight is on. */
+  function bench() {
+    return (
+      <>
         <div className="fight__dice">
           {fight.phase === 'roll' || fight.phase === 'strike' ? (
             <button
@@ -114,6 +165,7 @@ export function FightBoard({ fight, onAction }: BoardProps) {
                 data-slot={slot}
                 data-filled={value !== null || undefined}
                 data-ready={held !== null || undefined}
+                data-off={!placing || undefined}
                 disabled={!placing || (held === null && value === null)}
                 aria-label={`${hr.fight.slots[slot]}: ${value === null ? hr.fight.emptySlot : value}`}
                 onClick={() => onSlot(slot)}
@@ -131,11 +183,26 @@ export function FightBoard({ fight, onAction }: BoardProps) {
             );
           })}
         </div>
-        <Formula fight={fight} />
-        <Blows fight={fight} onBlows={(x) => onAction({ type: 'fight/blows', x })} />
-      </section>
-    </main>
-  );
+        {fight.phase !== 'strike' && (
+          <>
+            <Formula fight={fight} />
+            <Blows fight={fight} onBlows={(x) => onAction({ type: 'fight/blows', x })} />
+            <button
+              type="button"
+              className="fight__strike"
+              disabled={fight.phase !== 'set'}
+              onClick={() => {
+                setHeld(null);
+                onAction({ type: 'fight/strike' });
+              }}
+            >
+              {hr.fight.strike}
+            </button>
+          </>
+        )}
+      </>
+    );
+  }
 }
 
 /** The automaton's armour: what is left, as a number and a bar. */
@@ -154,8 +221,9 @@ function Armour({ armour, full }: { armour: number; full: number }) {
 /** His hull (a plate for each dent he can take) and steam (a pip for each blow). */
 function Gauges({ fight }: { fight: FightState }) {
   const { limits } = fight;
+  const hit = fight.phase === 'strike' && fight.lastStrike?.dented === true;
   return (
-    <div className="fight__gauges">
+    <div className="fight__gauges" data-hit={hit || undefined}>
       <div
         className="fight__gauge"
         role="img"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tapDie, tapSlot } from './taps';
+import { tapDie, tapLeave, tapSlot } from './taps';
 
 const empty = { blade: null, charge: null, reach: null };
 
@@ -29,5 +29,11 @@ describe('fight taps (story 3.1)', () => {
       action: { type: 'fight/unplace', slot: 'blade' },
     });
     expect(tapSlot(null, 'charge', empty)).toEqual({ held: null, action: null });
+  });
+
+  it('leaves at once before the first strike, and asks after it (story 3.2)', () => {
+    expect(tapLeave({ strikes: 0 })).toBe('leave');
+    expect(tapLeave({ strikes: 1 })).toBe('ask');
+    expect(tapLeave({ strikes: 4 })).toBe('ask');
   });
 });
