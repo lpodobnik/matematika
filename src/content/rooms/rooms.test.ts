@@ -78,7 +78,7 @@ const gddRooms: readonly {
   answers: number[];
   types: StageSpec['type'][];
   dials: DialSpec[];
-  pokeNotches: (number | undefined)[];
+  pokeNotches: (number | 'all' | undefined)[];
   pins: (PinSpec | undefined)[];
   ways: WayId[];
   earns: RoomSpec['earns'];
@@ -174,6 +174,20 @@ const gddRooms: readonly {
     pins: [{ kind: 'level-x' }],
     ways: ['try', 'balance'],
     earns: 'workshop',
+  },
+  {
+    id: 'r07',
+    machine: 'old-logbook',
+    xIs: 'Teeth per gear',
+    equations: ['3x − 1 = 17'],
+    answers: [6],
+    types: ['mistake'],
+    // Story 2.10: from 1, so 3x − 1 never weighs below 0.
+    dials: [{ min: 1, max: 10, step: 1 }],
+    pokeNotches: ['all'],
+    pins: [{ kind: 'wrong-line' }],
+    ways: ['balance'],
+    earns: 'chain',
   },
 ];
 
@@ -291,8 +305,8 @@ describe('rooms', () => {
     expect(rooms[0]?.stages[0]?.readouts).toBe(true);
   });
 
-  it('lists the rooms in play order: rooms 1–6', () => {
-    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']);
+  it('lists the rooms in play order: rooms 1–7', () => {
+    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07']);
   });
 
   describe("room 4, the water wheel (GDD's Puzzle Progression tables)", () => {
@@ -429,9 +443,10 @@ describe('rooms', () => {
       return {
         try: number <= 3 ? 'blanks' : 'blank',
         // Balance is earned at the end of room 3, so rooms 1–3 have no Balance mode.
-        // Room 6 keeps `auto` (story 2.9's call): filling in each move's numbers would be
-        // doing the sums the room is about not doing.
-        balance: number <= 3 ? undefined : number <= 6 ? 'auto' : number <= 7 ? 'blanks' : 'blank',
+        // Rooms 6 and 7 keep `auto` (stories 2.9 and 2.10): Balance `blanks` isn't built,
+        // filling in each move's numbers would be doing the sums room 6 is about not doing,
+        // and room 7's rewrite needs no Balance move.
+        balance: number <= 3 ? undefined : number <= 7 ? 'auto' : 'blank',
       };
     };
     rooms.forEach((room, index) => {
@@ -585,8 +600,11 @@ describe('rooms', () => {
       if (track.kind === 'x') {
         const answer = stageSolution(stageEquation(stage));
         expect(values).toContainEqual({ kind: 'x', x: answer });
-      } else {
+      } else if (track.kind === 'choice') {
         expect(track.options).toContain(tiltAsXGrows(stageEquation(stage)));
+      } else {
+        // A line pin (room 7): the planted line is one of its places.
+        expect(values.length).toBeGreaterThan(0);
       }
     });
 
@@ -618,7 +636,11 @@ describe('rooms', () => {
     it("never levels the pans or hits the tilt clamp inside the poke window, so it can't give the answer away", () => {
       if (stage.pokeNotches === undefined) return;
       const equation = stageEquation(stage);
+      // A mistake pin is about a line, not x: the slider is open from the start, and levelling
+      // at the answer is how he checks the lines (room 7, story 2.10).
+      const pinsX = stage.pin?.kind !== 'wrong-line';
       for (const x of pokeValues(stage)) {
+        if (!pinsX) break;
         const values = sideValues(equation, q.rational(x));
         expect(isLevel(values), `x = ${x}`).toBe(false);
         const tilt = tiltFor(values, stage.tiltPerUnit ?? tuning.tiltPerUnit);

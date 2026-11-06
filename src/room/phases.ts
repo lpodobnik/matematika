@@ -19,6 +19,7 @@
 
 import { tuning } from '@/config/tuning';
 import type { RoomEvent } from '@/room/events';
+import { foundMistake } from '@/room/logbook';
 import {
   arriveAtStage,
   currentStageSpec,
@@ -211,9 +212,13 @@ export function resetStage(room: RoomState): RoomStep | null {
     tray: stage.tray,
     splitter: stage.splitter,
     balance: stage.balance,
+    linesTapped: stage.linesTapped,
   };
+  // Room 7 (story 2.10): with the mistake pin tested, the mistake stays found, for him to
+  // rewrite again.
+  const restored = pin && fresh.planted ? foundMistake(fresh, spec) : fresh;
   const events: RoomEvent[] = [
     { type: 'StageReset', roomId: room.spec.id, stage: room.stageIndex },
   ];
-  return { room: withStage(room, fresh), events };
+  return { room: withStage(room, restored), events };
 }

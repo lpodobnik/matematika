@@ -16,6 +16,7 @@ import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } fro
 import { withHelp } from '@/room/help';
 import { type HintAction, hintAfter, hintWorks } from '@/room/hint';
 import { newIdeas } from '@/room/ideas';
+import { showLine } from '@/room/logbook';
 import { deleteToken, enterLine, typeToken, withoutRefusal } from '@/room/notebook';
 import {
   finishPresentation,
@@ -233,20 +234,26 @@ function roomStep(
       return confirmPin(room);
     case 'tray/step':
       return stepTray(room, tools, action.kind, action.by);
+    // A move on the pans acts on the pans, so a tapped line comes off the scale first (story
+    // 2.10 review: the scale showed it while the tray worked on the pans underneath).
     case 'tray/drop':
-      return dropOnScale(room, tools, action.kind);
+      return dropOnScale(unshown(room), tools, action.kind);
     case 'tray/take':
-      return takeOffPan(room, tools, action.side, action.key);
+      return takeOffPan(unshown(room), tools, action.side, action.key);
     case 'splitter/step':
       return stepSplitter(room, tools, action.by);
     case 'splitter/split':
-      return splitBothPans(room, tools);
+      return splitBothPans(unshown(room), tools);
     case 'notebook/type':
       return typeToken(room, action.token);
     case 'notebook/delete':
       return deleteToken(room);
     case 'notebook/enter':
       return enterLine(room, now);
+    case 'notebook/show-line': {
+      const shown = showLine(room, action.line);
+      return shown ? { room: shown, events: [] } : null;
+    }
     case 'boot/progress':
     case 'map/open':
     case 'notebook/slide':
@@ -260,6 +267,13 @@ function roomStep(
       // first use runs.
       return { room, events: [] };
   }
+}
+
+/** The room with no tapped line on the scale (story 2.10). */
+function unshown(room: RoomState): RoomState {
+  return room.stage.shownLine === null
+    ? room
+    : { ...room, stage: { ...room.stage, shownLine: null } };
 }
 
 /**

@@ -157,6 +157,7 @@ export interface PinState {
  */
 export const handoverIds = [
   'dial',
+  'rewrite',
   'write',
   'answer',
   'check',
@@ -193,7 +194,8 @@ export type Phase = 'arrive' | 'poke' | 'pin' | 'open' | 'locked' | 'restart' | 
 /** A committed notebook line (Data Architecture). Line 0, the stage equation, is `given`. */
 export interface NotebookLine {
   tokens: Token[];
-  source: 'given' | 'typed' | WayId;
+  /** `logbook`: someone else's line the stage opens with (room 7, story 2.10). */
+  source: 'given' | 'typed' | 'logbook' | WayId;
   verdict: Verdict;
 }
 
@@ -318,6 +320,24 @@ export interface StageState {
    * the UI never reports done (Pattern 2, Restart).
    */
   presentedAt: number | null;
+  /**
+   * Find the mistake (story 2.10, room/logbook.ts): the logbook's wrong line, shown after
+   * the committed lines but never committed, until found; null in any other stage.
+   */
+  planted: PlantedLine | null;
+  /** The written line he tapped onto the scale, by its number, or null for the pans' own. */
+  shownLine: number | null;
+  /** He has tapped a line onto the scale in this stage (the tap's tag goes). */
+  linesTapped: boolean;
+}
+
+/** The logbook's wrong line in a find-the-mistake stage (room/logbook.ts). */
+export interface PlantedLine {
+  tokens: Token[];
+  /** Its number in the notebook: after the committed lines it comes after. */
+  line: number;
+  /** He has found it (the mistake pin is tested): it is struck through, and he rewrites it. */
+  found: boolean;
 }
 
 export interface RoomState {

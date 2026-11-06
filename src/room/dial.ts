@@ -136,7 +136,8 @@ export function setDial(room: RoomState, x: number): DialStep | null {
   }
   const touched = touchMachine(room)?.room.stage ?? stage;
   const balance = dialMaxedAt(touched, dial, x);
-  return { room: { ...room, stage: { ...touched, dialX: x, balance } }, events };
+  // The dial moving takes a tapped line off the scale (story 2.10).
+  return { room: { ...room, stage: { ...touched, dialX: x, balance, shownLine: null } }, events };
 }
 
 /**

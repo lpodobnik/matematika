@@ -29,6 +29,11 @@ export type Action =
    * the naming screen; the next room follows.
    */
   | { type: 'character/set'; name: string; look: LookId }
+  /**
+   * He taps a written line (room 7, story 2.10): the pans show it at the slider's x, until
+   * the dial moves, another line is tapped, or a line is written. By its notebook number.
+   */
+  | { type: 'notebook/show-line'; line: number }
   /** The story card's "Dalje" (story 2.5): the room's lines are told; on to what comes next. */
   | { type: 'story/next' }
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */

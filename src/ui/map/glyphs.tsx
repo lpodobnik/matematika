@@ -7,7 +7,7 @@ import type { LockKind, NodeId, NodeKind } from '@/city/types';
  * carried by shape as well as colour (NFR4, NFR12): the door stands raised, the lamps have
  * rays, the gate is up with water running under it, the wheel's spokes turn. Grey ink and
  * still until then. Rooms whose stories come later, the lairs, the workshop and the gate
- * get a plain sign of their kind. Story 2.8 adds the bridge, 2.9 the weighing yard.
+ * get a plain sign of their kind. Story 2.8 adds the bridge, 2.9 the weighing yard, 2.10 the old logbook.
  */
 export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; state: NodeState }) {
   const restored = state === 'restored';
@@ -24,6 +24,8 @@ export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; sta
       return <Bridge restored={restored} />;
     case 'r06':
       return <WeighingYard restored={restored} />;
+    case 'r07':
+      return <OldLogbook restored={restored} />;
     default:
       return <KindSign kind={kind} />;
   }
@@ -181,6 +183,25 @@ function WeighingYard({ restored }: { restored: boolean }) {
       <path d={`M-34 ${leftY} V${leftY + 18} M-44 ${leftY + 18} H-24`} />
       <path d={`M34 ${rightY} V${rightY + 18} M24 ${rightY + 18} H44`} />
       {restored && <rect x="-42" y="-12" width="16" height="12" className="glyph__lit" />}
+    </g>
+  );
+}
+
+/**
+ * Room 7: the old logbook; restored, it lies open with a lit page and its lines written
+ * (story 2.10). Until then it stays shut, a clasp across its cover.
+ */
+function OldLogbook({ restored }: { restored: boolean }) {
+  return restored ? (
+    <g>
+      <path d="M0 -24 Q-18 -32 -38 -26 V28 Q-18 22 0 30 Q18 22 38 28 V-26 Q18 -32 0 -24 Z M0 -24 V30" />
+      <path d="M6 -20 Q20 -26 34 -21 V24 Q20 18 6 25 Z" className="glyph__lit" />
+      <path d="M-32 -14 H-8 M-32 -4 H-8 M-32 6 H-14 M12 -12 H28 M12 -2 H28 M12 8 H22" />
+    </g>
+  ) : (
+    <g>
+      <rect x="-28" y="-32" width="56" height="62" rx="4" />
+      <path d="M-22 -32 V30 M20 -6 H34 V8 H20" />
     </g>
   );
 }

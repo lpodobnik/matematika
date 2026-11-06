@@ -93,6 +93,9 @@ function situations(): { name: string; id: SceneHandover; room: RoomState; tools
   for (const spec of rooms) {
     spec.stages.forEach((stageSpec, index) => {
       if (stageSpec.dial === 'locked') return;
+      // Room 7 (story 2.10): the mistake pin is offered throughout, then the rewrite's tag
+      // takes over, so the dial's tag never shows there.
+      if (stageSpec.pin?.kind === 'wrong-line') return;
       const open = openStage(spec, index);
       for (const x of reachable(open)) {
         list.push({

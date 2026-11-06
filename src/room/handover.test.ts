@@ -225,6 +225,7 @@ describe('which handover applies (story 1.15)', () => {
   it('has the answer step in its place, after write and before check (story 1.16)', () => {
     expect(handoverOrder).toEqual([
       'dial',
+      'rewrite',
       'write',
       'answer',
       'check',

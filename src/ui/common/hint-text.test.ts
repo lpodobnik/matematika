@@ -5,7 +5,7 @@ import type { HintView } from '@/room/hint';
 import type { Action } from '@/store/actions';
 import { initialGameState } from '@/store/reducer';
 import { createGameStore } from '@/store/store';
-import { hintSpot, notebookRefusal, sceneTag } from '@/ui/common/hint-text';
+import { hintSpot, notebookHint, notebookRefusal, sceneTag } from '@/ui/common/hint-text';
 
 function view(partial: Partial<HintView>): HintView {
   return { level: 2, step: 'dial', move: null, presses: 2, example: null, ...partial };
@@ -137,5 +137,15 @@ describe('one tag at a time with the refusal’s (story 1.16 review)', () => {
     act({ type: 'dial/set', x: 5 });
     expect(notebookRefusal(store.getState())).toBeNull();
     expect(sceneTag(store.getState())).toBe('handover');
+  });
+});
+
+describe('the hint at room 7’s line pin (story 2.10 review)', () => {
+  it('hangs the pin’s question at the notebook, where the line pin is', () => {
+    const store = createGameStore({ effects: [] });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r07' });
+    store.getState().dispatch({ type: 'machine/touch' });
+    store.getState().dispatch({ type: 'hint/press' });
+    expect(notebookHint(store.getState())).toBe(hr.pin.questions['wrong-line']);
   });
 });

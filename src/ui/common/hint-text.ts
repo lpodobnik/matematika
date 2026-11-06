@@ -70,6 +70,16 @@ export function hintSpot(view: HintView): HintSpot {
     : { place: 'notebook', text };
 }
 
+/**
+ * Where the hint shows in the game as it is: as `hintSpot` says, except that a line pin's
+ * question (room 7) hangs at the notebook, where the pin is, not in the scene.
+ */
+function spotIn(state: Pick<GameState, 'room' | 'save' | 'ui'>, view: HintView): HintSpot {
+  const spot = hintSpot(view);
+  if (spot.place !== 'pin' || !state.room?.stage.planted) return spot;
+  return { place: 'notebook', text: hr.pin.questions['wrong-line'] };
+}
+
 /** What the hint shows in the game as it is now, or null. */
 export function hintOf(state: Pick<GameState, 'room' | 'save' | 'ui'>): HintView | null {
   return hintView(state.room, state.save.progress.tools, state.ui.hint);
@@ -80,14 +90,14 @@ export function hintPlace(
   state: Pick<GameState, 'room' | 'save' | 'ui'>,
 ): HintSpot['place'] | null {
   const view = hintOf(state);
-  return view ? hintSpot(view).place : null;
+  return view ? spotIn(state, view).place : null;
 }
 
 /** The hint's text at the notebook now, or null: a primitive, for a selector. */
 export function notebookHint(state: Pick<GameState, 'room' | 'save' | 'ui'>): string | null {
   const view = hintOf(state);
   if (!view) return null;
-  const spot = hintSpot(view);
+  const spot = spotIn(state, view);
   return spot.place === 'notebook' ? spot.text : null;
 }
 
@@ -95,7 +105,7 @@ export function notebookHint(state: Pick<GameState, 'room' | 'save' | 'ui'>): st
 export function hintKey(state: Pick<GameState, 'room' | 'save' | 'ui'>): 'delete' | null {
   const view = hintOf(state);
   if (!view) return null;
-  const spot = hintSpot(view);
+  const spot = spotIn(state, view);
   return spot.place === 'notebook' ? (spot.key ?? null) : null;
 }
 

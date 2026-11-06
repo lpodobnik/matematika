@@ -68,6 +68,7 @@ describe('jumpTargets', () => {
       { roomId: 'r05', stage: 0, label: 'r05 · 1' },
       { roomId: 'r05', stage: 1, label: 'r05 · 2' },
       { roomId: 'r06', stage: 0, label: 'r06 · 1' },
+      { roomId: 'r07', stage: 0, label: 'r07 · 1' },
     ]);
   });
 

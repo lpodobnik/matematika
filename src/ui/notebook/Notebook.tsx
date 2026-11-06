@@ -1,9 +1,19 @@
 import '@/ui/notebook/notebook.css';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { hr } from '@/content/text/hr';
 import type { LineSegment } from '@/math/format';
 import type { LineToken, Token } from '@/math/tokens';
 import { handoverView } from '@/room/handover';
+import { type LogbookView, logbookView } from '@/room/logbook';
 import {
   draftDisplay,
   type LineDisplay,
@@ -33,6 +43,7 @@ import { HelpNote } from '@/ui/notebook/HelpNote';
 import { HintNote } from '@/ui/notebook/HintNote';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
 import { LineView, textLine } from '@/ui/notebook/LineView';
+import { LogbookLine } from '@/ui/notebook/LogbookLine';
 import { NumberPad } from '@/ui/notebook/NumberPad';
 import { pressHandle, shownAside } from '@/ui/notebook/notebook-aside';
 import { keyAction, primaryPress } from '@/ui/notebook/pad-keys';
@@ -71,7 +82,10 @@ export function Notebook() {
     handoverView(s.room, s.save.progress.firstUse, s.save.progress.tools),
   );
   const stageAt = useGame((s) => (s.room ? `${s.room.spec.id}.${s.room.stageIndex}` : null));
-  const pinWaits = useGame((s) => (s.room ? pinOffered(s.room) : false));
+  const pinWaits = useGame((s) =>
+    // A line pin (room 7) waits in the notebook itself, so it keeps the notebook out.
+    s.room ? pinOffered(s.room) && s.room.stage.planted === null : false,
+  );
   const hinting = useGame((s) => hintOf(s) !== null);
   const hintNote = useGame(notebookHint);
   const structure = useGame(helpStructure);
@@ -79,6 +93,8 @@ export function Notebook() {
   const hintPadKey = useGame(hintKey);
   const hintOnScene = useGame((s) => hintPlace(s) === 'scene');
   const presses = useGame((s) => s.ui.hint?.presses ?? 0);
+  // Story 2.10: room 7's logbook, its lines to tap and its mistake pin, in the notebook.
+  const logbook = useGame(useShallow((s) => logbookView(s.room)));
   const onScene = hinting ? hintOnScene : step !== null && !isNotebookHandover(step);
   const shownStep = hinting ? `hint-${presses}` : step;
   const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${shownStep}` : null;
@@ -113,6 +129,10 @@ export function Notebook() {
       hint={hintNote === null ? null : { text: hintNote, presses, key: hintPadKey }}
       refusal={refusal}
       help={structure || example ? { structure, example } : null}
+      logbook={logbook}
+      onShowLine={(line) => dispatch({ type: 'notebook/show-line', line })}
+      onPinLine={(index) => dispatch({ type: 'pin/set', value: { kind: 'line', index } })}
+      onConfirmPin={() => dispatch({ type: 'pin/confirm' })}
       onKey={send}
       onSlide={slide}
     />
@@ -120,6 +140,11 @@ export function Notebook() {
 }
 
 export interface NotebookPageProps {
+  /** Story 2.10: room 7's logbook, or null in any other stage. */
+  logbook?: LogbookView | null;
+  onShowLine?(line: number): void;
+  onPinLine?(line: number): void;
+  onConfirmPin?(): void;
   /** Story 2.7: the help ladder's levels 3 and 4, a card under the tag. */
   help?: { structure: string | null; example: string | null } | null;
   lines: readonly LineDisplay[];
@@ -174,9 +199,36 @@ export function NotebookPage({
   hint = null,
   refusal = null,
   help = null,
+  logbook = null,
+  onShowLine = () => {},
+  onPinLine = () => {},
+  onConfirmPin = () => {},
   onKey,
   onSlide,
 }: NotebookPageProps) {
+  // A logbook line, written (by its number) or planted, tappable and flaggable (story 2.10).
+  const logbookLine = (number: number, text: string, struck = false) =>
+    logbook ? (
+      <LogbookLine
+        key={struck || number === logbook.plantedLine ? 'planted' : `logbook-${number}`}
+        number={number}
+        text={text}
+        shown={logbook.shown === number}
+        struck={struck}
+        flag={!logbook.pinAsks ? 'none' : logbook.pinAt === number ? 'here' : 'offered'}
+        confirmable={logbook.pinConfirmable}
+        onShow={onShowLine}
+        onFlag={onPinLine}
+        onConfirm={onConfirmPin}
+      />
+    ) : null;
+  // While the mistake pin is offered, its tag: first how to put a line on the scale, then
+  // the pin's question.
+  const logbookTag = logbook?.pinAsks
+    ? logbook.tapped
+      ? hr.pin.questions['wrong-line']
+      : hr.logbook.tap
+    : null;
   const listRef = useRef<HTMLOListElement>(null);
   // A tag hangs under the lines: the refusal's, else the hint's, else the handover's. Only a
   // handover's or a hint's makes the line to write pulse; a refusal's doesn't.
@@ -213,13 +265,25 @@ export function NotebookPage({
       </button>
       <div className="notebook" data-handover={tagged}>
         <ol className="notebook__lines" ref={listRef}>
-          {lines.map((line) => (
-            <LineView
-              key={line.number}
-              segments={textLine(line.text)}
-              kind={line.source === 'given' ? 'given' : 'written'}
-            />
-          ))}
+          {lines.map((line) =>
+            logbook && line.source === 'logbook' ? (
+              logbookLine(line.number, line.text)
+            ) : (
+              <Fragment key={line.number}>
+                {/* The planted line, right after the logbook's own (story 2.10 review). */}
+                {logbook &&
+                  line.number === logbook.plantedLine &&
+                  logbookLine(logbook.plantedLine, logbook.plantedText, logbook.found)}
+                <LineView
+                  segments={textLine(line.text)}
+                  kind={line.source === 'given' ? 'given' : 'written'}
+                />
+              </Fragment>
+            ),
+          )}
+          {logbook &&
+            lines.length <= logbook.plantedLine &&
+            logbookLine(logbook.plantedLine, logbook.plantedText, logbook.found)}
           <LineView
             key={`draft-${refused}`}
             segments={draft}
@@ -236,6 +300,8 @@ export function NotebookPage({
         </ol>
         {refusal ? (
           <RefusalNote refusal={refusal} />
+        ) : logbookTag && !hint ? (
+          <HintNote text={logbookTag} />
         ) : hint ? (
           <HintNote key={hint.presses} text={hint.text} />
         ) : (

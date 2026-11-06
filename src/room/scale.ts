@@ -20,6 +20,7 @@ import { stageSolution } from '@/math/check';
 import { type Equation, type Expr, equationHasX, xVar } from '@/math/expr';
 import { formatExpr, formatNumber } from '@/math/format';
 import * as q from '@/math/rational';
+import { shownPans } from '@/room/logbook';
 import { jammedLine } from '@/room/notebook';
 import {
   countLabel,
@@ -123,7 +124,7 @@ interface Weighing {
 function weighing(room: RoomState): Weighing {
   const { stage } = room;
   const jammed = jammedLine(stage);
-  return { equation: jammed ?? stage.pans, x: stage.dialX, jammed: jammed !== null };
+  return { equation: jammed ?? shownPans(stage), x: stage.dialX, jammed: jammed !== null };
 }
 
 function viewOf(room: RoomState, { equation, x, jammed }: Weighing): ScaleView {
@@ -154,7 +155,7 @@ export function scaleView(room: RoomState): ScaleView {
  * the store already has the dial at the end of the turn.
  */
 export function scaleViewAt(room: RoomState, x: number): ScaleView {
-  return viewOf(room, { equation: room.stage.pans, x, jammed: false });
+  return viewOf(room, { equation: shownPans(room.stage), x, jammed: false });
 }
 
 /**

@@ -221,6 +221,8 @@ export function commitLine(
     jamsInARow: 0,
     machineProgress: progressFor(stage, verdict),
     pans: equationOf(tokens, 'a committed line'),
+    // A written line takes a tapped line off the scale (story 2.10).
+    shownLine: null,
   };
 }
 

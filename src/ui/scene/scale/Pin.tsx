@@ -59,7 +59,13 @@ const wrongAlpha = 0.45;
  * wrong one dims. What it shows comes from `pinView`; the drag moves it through a ref, and
  * the store hears only a new place.
  */
-export function Pin({ sceneScale, question }: Props) {
+export function Pin(props: Props) {
+  // A line pin (room 7, story 2.10) lives in the notebook, on the lines: nothing in the scene.
+  const onLine = useGame((s) => pinView(s.room)?.kind === 'line');
+  return onLine ? null : <PinOnScale {...props} />;
+}
+
+function PinOnScale({ sceneScale, question }: Props) {
   const view = useGame(useShallow((s) => pinView(s.room)));
   const test = usePinTest();
   const roomSpec = useGame((s) => s.room?.spec ?? null);

@@ -63,6 +63,9 @@ describe('enterRoom', () => {
       hintLevel: 0,
       help: 0,
       helpAt: null,
+      planted: null,
+      shownLine: null,
+      linesTapped: false,
       // Story 1.15: the root reducer starts the idle clock as the stage arrives.
       lastActionAt: null,
       idle: false,

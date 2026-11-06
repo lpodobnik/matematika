@@ -24,7 +24,8 @@ export function PinConfirm({ area }: Props) {
   const pin = useGame(
     useShallow((s) => {
       const view = pinView(s.room);
-      return view?.confirmable && view.slot !== null
+      // A line pin (room 7) is confirmed at the notebook, beside its line (story 2.10).
+      return view?.confirmable && view.slot !== null && view.kind !== 'line'
         ? { kind: view.kind, slots: view.slots, slot: view.slot, option: view.option }
         : null;
     }),

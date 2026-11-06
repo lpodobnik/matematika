@@ -31,6 +31,7 @@ const r04 = '2x + 5 = 23';
 const r05a = '3x + 4 = 22';
 const r05b = '3x + 4 = 25';
 const r06 = 'x + 56 = 58 + 27';
+const r07 = '3x − 1 = 17';
 /** U+202F, the thousands separator the notebook writes. */
 const nnbsp = ' ';
 const r11 = `5${nnbsp}905 − 27x = 316`;
@@ -275,6 +276,18 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r06, line: 'x = 85', verdict: 'wrong', note: 'the right side added up, not compared' },
     { stage: r06, line: 'x = 27', verdict: 'wrong', note: 'the 2 left out' },
     { stage: r06, line: 'x = 31', verdict: 'wrong', note: 'the 2 the wrong way' },
+  ],
+  'r07 old logbook (3x − 1 = 17)': [
+    // Story 2.10: the logbook's lines 3x = 18 (right) and x = 15 (wrong, 3x read as 3 + x),
+    // then his rewrite, judged against the lines before it, and the check line.
+    { stage: r07, line: '3x = 18', verdict: 'valid', progress: true },
+    { stage: r07, before: ['3x = 18'], line: 'x = 6', verdict: 'answer' },
+    { stage: r07, before: ['3x = 18', 'x = 6'], line: '3 · 6 − 1 = 17', verdict: 'check' },
+    { stage: r07, line: 'x = 6', verdict: 'answer', note: 'a skipped step' },
+    { stage: r07, before: ['x = 6'], line: '3 · 6 − 1 = 17', verdict: 'check' },
+    { stage: r07, before: ['3x = 18'], line: 'x = 15', verdict: 'wrong', note: '3x read as 3 + x' },
+    { stage: r07, line: '3x = 16', verdict: 'wrong', note: '17 − 1' },
+    { stage: r07, before: ['3x = 18'], line: 'x = 54', verdict: 'wrong', note: 'multiplied' },
   ],
   // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,
   // copied as a line, is valid without progress (stories 1.2, 1.4 and 1.8–1.11 name them);

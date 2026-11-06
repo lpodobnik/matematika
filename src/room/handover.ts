@@ -37,6 +37,7 @@ import type { FirstUseId, HandoverId, Phase, RoomState, ToolId } from '@/room/ty
 /** The handover steps in the order he meets them; the earliest that applies comes first. */
 export const handoverOrder: readonly HandoverId[] = [
   'dial',
+  'rewrite',
   'write',
   'answer',
   'check',
@@ -131,6 +132,8 @@ interface Situation {
   writes: boolean;
   tray: boolean;
   splitter: boolean;
+  /** Story 2.10: the logbook's wrong line is found, for him to rewrite. */
+  rewrites: boolean;
 }
 
 function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
@@ -151,6 +154,7 @@ function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
     writes: notebookWrites(stage),
     tray: trayOffered(room, tools),
     splitter: splitterOffered(room, tools),
+    rewrites: stage.planted?.found === true,
   };
 }
 
@@ -158,7 +162,17 @@ function applies(id: HandoverId, s: Situation): boolean {
   if (!s.on) return false;
   switch (id) {
     case 'dial':
-      return s.dialTurns && !s.answered && !s.balanced && !s.tray && !s.wrote && !s.levelAtDial;
+      return (
+        s.dialTurns &&
+        !s.answered &&
+        !s.balanced &&
+        !s.tray &&
+        !s.wrote &&
+        !s.levelAtDial &&
+        !s.rewrites
+      );
+    case 'rewrite':
+      return s.rewrites && s.writes && !s.answered;
     case 'write':
       return s.writes && !s.answered && s.levelAtDial && s.answerAllowed;
     case 'answer':

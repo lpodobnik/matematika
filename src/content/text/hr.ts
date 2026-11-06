@@ -154,6 +154,13 @@ export const hr = {
       },
     },
   },
+  /** Story 2.10: room 7, the old logbook's lines. */
+  logbook: {
+    /** The tag before he has tapped a line: tapping puts it on the scale. */
+    tap: 'Dodirni redak – vaga će ga pokazati.',
+    /** For screen readers: the flag beside a line, "this line is wrong". */
+    flag: 'Pogrešan redak',
+  },
   /** Story 2.2: the city map. Place names are placeholders until the final text (epic 6). */
   map: {
     title: 'Donji Kotač',
@@ -202,6 +209,8 @@ export const hr = {
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
       /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
       change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
+      /** Story 2.10: room 7's mistake pin, at the notebook: which written line is wrong. */
+      'wrong-line': 'Koji je redak pogrešan? Stavi zastavicu na njega.',
       /** Story 2.9: room 6, the readouts hidden: compare the pieces, don't add them up. */
       hidden: 'Vaga ne pokazuje zbrojeve. Usporedi utege: gdje će vaga biti u ravnoteži?',
     },
@@ -218,6 +227,8 @@ export const hr = {
   handover: {
     /** By the knob, until he first turns a dial. */
     dial: 'Pomiči klizač – tako mijenjaš x.',
+    /** Story 2.10: at the notebook, once the logbook's wrong line is found: write it again. */
+    rewrite: 'Prekriženi redak nije točan. Napiši ga ispravno.',
     /** At the notebook, when his dial first levels the pans. */
     write: 'Vaga je u ravnoteži. Upiši x u bilježnicu.',
     /** Story 1.16: at the notebook, when x is alone on the pans and no answer is written. */

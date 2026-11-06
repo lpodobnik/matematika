@@ -10,6 +10,7 @@ import { parse } from '@/math/parse';
 import { tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
 import { openingTemplates } from '@/room/fading';
+import { logbookOpening } from '@/room/logbook';
 import type {
   DialSpec,
   NotebookLine,
@@ -117,10 +118,14 @@ function startingDial(stage: StageSpec): number {
  */
 export function arriveAtStage(stage: StageSpec): StageState {
   const dialX = startingDial(stage);
+  const logbook = logbookOpening(stage, givenLine(stage, 0));
   return {
     phase: 'arrive',
     machine: 0,
-    lines: [givenLine(stage, 0)],
+    lines: logbook.lines,
+    planted: logbook.planted,
+    shownLine: null,
+    linesTapped: false,
     draft: [],
     templates: openingTemplates(stage, 0),
     jam: null,

@@ -47,7 +47,10 @@ const pinnedWheel: RoomSpec = {
 function stagesWithPins(): { spec: RoomSpec; stage: number }[] {
   return [
     ...rooms.flatMap((spec) =>
-      spec.stages.flatMap((stage, index) => (stage.pin ? [{ spec, stage: index }] : [])),
+      // A line pin (room 7, story 2.10) asks its question at the notebook, not in the scene.
+      spec.stages.flatMap((stage, index) =>
+        stage.pin && stage.pin.kind !== 'wrong-line' ? [{ spec, stage: index }] : [],
+      ),
     ),
     { spec: pinnedWheel, stage: 0 },
   ];

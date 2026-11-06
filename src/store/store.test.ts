@@ -1206,3 +1206,26 @@ describe('effects', () => {
     expect(calls).toEqual(['a0', 'b0', 'a1', 'b1']);
   });
 });
+
+describe('a tapped line and the tray (room 7, story 2.10 review)', () => {
+  it('takes the tapped line off the scale before a move on the pans', () => {
+    const store = createGameStore({
+      effects: [],
+      initialState: {
+        ...initialGameState(),
+        save: {
+          ...initialGameState().save,
+          progress: { ...initialGameState().save.progress, tools: ['balance'] },
+        },
+      },
+    });
+    const act = (action: Action) => store.getState().dispatch(action);
+    act({ type: 'room/enter', roomId: 'r07' });
+    act({ type: 'machine/touch' });
+    act({ type: 'pin/set', value: { kind: 'line', index: 2 } });
+    act({ type: 'pin/confirm' });
+    expect(store.getState().room?.stage.shownLine).toBe(2);
+    act({ type: 'tray/drop', kind: 'weight' });
+    expect(store.getState().room?.stage.shownLine).toBeNull();
+  });
+});

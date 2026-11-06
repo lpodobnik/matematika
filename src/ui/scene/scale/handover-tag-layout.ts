@@ -45,10 +45,10 @@ import { splitterLayout } from '@/ui/scene/scale/splitter-layout';
 import { trayLayout } from '@/ui/scene/scale/tray-layout';
 
 /** The handovers whose tags hang in the scene. */
-export type SceneHandover = Exclude<HandoverId, 'write' | 'answer' | 'check'>;
+export type SceneHandover = Exclude<HandoverId, 'write' | 'answer' | 'check' | 'rewrite'>;
 
 export function isSceneHandover(id: HandoverId | null): id is SceneHandover {
-  return id !== null && id !== 'write' && id !== 'answer' && id !== 'check';
+  return id !== null && id !== 'write' && id !== 'answer' && id !== 'check' && id !== 'rewrite';
 }
 
 export const handoverTagGeometry = {

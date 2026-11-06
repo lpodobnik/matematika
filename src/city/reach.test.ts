@@ -166,7 +166,7 @@ describe('where he can go (city/reach.ts, stories 2.2 and 2.3)', () => {
 
   it('never opens a room whose story hasn’t been built, a lair or the workshop', () => {
     const done = ['r01', 'r02', 'r03', 'r04'];
-    for (const id of ['r07', 'r09', 'lair-20', 'workshop', 'foundry']) {
+    for (const id of ['r08', 'r09', 'lair-20', 'workshop', 'foundry']) {
       expect(roomOpen(districtMap, id, reach(done, ['balance'], authored)), id).toBe(false);
     }
   });
@@ -180,8 +180,12 @@ describe('where he can go (city/reach.ts, stories 2.2 and 2.3)', () => {
     // Then room 6 (story 2.9), which earns the workshop; then nothing yet.
     const toFive = [...done, 'r05'];
     expect(nextRoomOnMap(districtMap, reach(toFive, ['balance'], authored))).toBe('r06');
+    // Then room 7, once rooms 5 and 6 are both done (story 2.10); then nothing yet.
     const toSix = [...toFive, 'r06'];
-    expect(nextRoomOnMap(districtMap, reach(toSix, ['balance', 'workshop'], authored))).toBeNull();
+    expect(nextRoomOnMap(districtMap, reach(toSix, ['balance', 'workshop'], authored))).toBe('r07');
+    const toSeven = [...toSix, 'r07'];
+    const chained = ['balance', 'workshop', 'chain'];
+    expect(nextRoomOnMap(districtMap, reach(toSeven, chained, authored))).toBeNull();
   });
 });
 
@@ -257,7 +261,8 @@ describe('what the map shows (mapView)', () => {
     expect(view(['r01', 'r02', 'r03']).allDone).toBe(false);
     expect(view(['r01', 'r02', 'r03', 'r04']).allDone).toBe(false);
     expect(view(['r01', 'r02', 'r03', 'r04', 'r05']).allDone).toBe(false);
-    expect(view(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']).allDone).toBe(true);
+    expect(view(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']).allDone).toBe(false);
+    expect(view(['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07']).allDone).toBe(true);
   });
 });
 

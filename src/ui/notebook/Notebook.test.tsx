@@ -2,10 +2,13 @@ import { readFileSync } from 'node:fs';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { r07 } from '@/content/rooms/r07-old-logbook';
 import { hr } from '@/content/text/hr';
 import { tokenize } from '@/math/tokens';
+import { logbookView } from '@/room/logbook';
 import { draftDisplay, enterLine, fillsBlank, lineDisplays, typeToken } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
+import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom } from '@/room/room';
 import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
 import { Notebook, NotebookPage, type NotebookPageProps } from '@/ui/notebook/Notebook';
@@ -355,5 +358,59 @@ describe('the help ladder at the notebook (story 2.7)', () => {
     expect(html).toContain('2x + 5 − □ = 23 − □');
     expect(html).toContain('x = 3');
     expect(html).toMatch(/class="notebook__handle"[^>]*data-pulse="true"/);
+  });
+});
+
+describe('the old logbook in the notebook (room 7, story 2.10)', () => {
+  const logbook = {
+    shown: null,
+    plantedLine: 2,
+    plantedText: 'x = 15',
+    found: false,
+    tapped: false,
+    pinAsks: true,
+    pinAt: null,
+    pinConfirmable: false,
+  };
+
+  it('shows the logbook’s lines to tap, each with a flag while the pin is offered, and the tap’s tag', () => {
+    const html = page(enterRoom(r01).room, { logbook });
+    expect(html).toContain('x = 15');
+    expect(html.match(/class="line__flag"/g)).toHaveLength(1);
+    expect(html).toContain(hr.logbook.tap);
+  });
+
+  it('asks which line is wrong once he has tapped one, and confirms a flagged line', () => {
+    const html = page(enterRoom(r01).room, {
+      logbook: { ...logbook, tapped: true, pinAt: 2, pinConfirmable: true, shown: 2 },
+    });
+    expect(html).toContain(hr.pin.questions['wrong-line']);
+    expect(html).toMatch(/class="line__flag"[^>]*aria-pressed="true"/);
+    expect(html).toContain('class="line__confirm"');
+    expect(html).toMatch(/class="line__tap"[^>]*aria-pressed="true"/);
+  });
+
+  it('strikes the found line through, with no flag', () => {
+    const html = page(enterRoom(r01).room, {
+      logbook: { ...logbook, found: true, pinAsks: false },
+    });
+    expect(html).toContain('line--struck');
+    expect(html).not.toContain('line__flag');
+  });
+});
+
+describe('the logbook after the rewrite (room 7, story 2.10 review)', () => {
+  it('keeps the order: the logbook’s line, the struck line, then his own, each drawn as such', () => {
+    const touched = touchMachine(enterRoom(r07).room)?.room as RoomState;
+    const placed = setPin(touched, { kind: 'line', index: 2 })?.room as RoomState;
+    const found = confirmPin(placed)?.room as RoomState;
+    const answered = enterLine(typed(found, '6'), 0)?.room as RoomState;
+    expect(answered.stage.lines.map((line) => line.source)).toEqual(['given', 'logbook', 'typed']);
+    const html = page(answered, { logbook: logbookView(answered) });
+    const at = (text: string) => html.indexOf(text);
+    expect(at('3x = 18')).toBeLessThan(at('x = 15'));
+    expect(at('x = 15')).toBeLessThan(at('x = 6'));
+    expect(html.match(/class="line__tap"/g)).toHaveLength(2);
+    expect(html).toContain('line--struck');
   });
 });

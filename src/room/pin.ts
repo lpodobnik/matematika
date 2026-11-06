@@ -33,7 +33,8 @@ import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
 import { dialMaxedAt, isOnDial } from '@/room/dial';
 import type { RoomEvent } from '@/room/events';
-import { currentStageSpec, fullDial, machineEquation, type RoomStep } from '@/room/room';
+import { foundMistake, plantedLineOf, writtenLineCount } from '@/room/logbook';
+import { currentStageSpec, fullDial, givenLine, machineEquation, type RoomStep } from '@/room/room';
 import type {
   EffectOption,
   PinSpec,
@@ -57,7 +58,9 @@ export type PinTrack =
       /** The dial's maximum: places past it lie beyond the dial. */
       reach: number;
     }
-  | { kind: 'choice'; options: readonly EffectOption[] };
+  | { kind: 'choice'; options: readonly EffectOption[] }
+  /** A `wrong-line` pin (room 7, story 2.10): its places are the written lines, 1 to `lines`. */
+  | { kind: 'line'; lines: number };
 
 /**
  * The stage's pin track, or null with no pin, or a pin kind that arrives with its rooms
@@ -73,23 +76,26 @@ export function pinTrack(stage: StageSpec): PinTrack | null {
     return { kind: 'x', min: dial.min, max, step: dial.step, reach: dial.max };
   }
   if (pin.kind === 'effect') return { kind: 'choice', options: pin.options };
+  if (pin.kind === 'wrong-line') return { kind: 'line', lines: writtenLineCount(stage) };
   return null;
 }
 
 /** Pin kinds the engine can place and resolve so far. */
 export function pinSupported(pin: PinSpec): boolean {
-  return pin.kind === 'level-x' || pin.kind === 'effect';
+  return pin.kind === 'level-x' || pin.kind === 'effect' || pin.kind === 'wrong-line';
 }
 
 /** How many places the track has: room 3's first stage, 6–20, has 15. */
 export function slotCount(track: PinTrack): number {
   if (track.kind === 'choice') return track.options.length;
+  if (track.kind === 'line') return track.lines;
   return Math.floor((track.max - track.min) / track.step) + 1;
 }
 
 /** How many of the places the dial reaches: all but those beyond the dial. */
 export function slotsInReach(track: PinTrack): number {
   if (track.kind === 'choice') return track.options.length;
+  if (track.kind === 'line') return track.lines;
   return Math.floor((track.reach - track.min) / track.step) + 1;
 }
 
@@ -97,11 +103,13 @@ export function slotsInReach(track: PinTrack): number {
 export function slotValue(track: PinTrack, slot: number): PinValue {
   assert(Number.isInteger(slot) && slot >= 0 && slot < slotCount(track), `no pin place ${slot}`);
   if (track.kind === 'choice') return { kind: 'choice', index: slot };
+  if (track.kind === 'line') return { kind: 'line', index: slot + 1 };
   return { kind: 'x', x: track.min + slot * track.step };
 }
 
 function rawSlot(track: PinTrack, value: PinValue): number | null {
   if (track.kind === 'x') return value.kind === 'x' ? (value.x - track.min) / track.step : null;
+  if (track.kind === 'line') return value.kind === 'line' ? value.index - 1 : null;
   return value.kind === 'choice' ? value.index : null;
 }
 
@@ -163,6 +171,10 @@ export function machineTestX(stage: StageSpec, dialX: number, value: PinValue): 
     return isOnDial(dial, value.x) ? value.x : dialX;
   }
   if (pin?.kind === 'effect') return dial.max;
+  if (pin?.kind === 'wrong-line') {
+    const x = stageSolution(machineEquation(stage, 0));
+    return isOnDial(dial, x) ? x : dialX;
+  }
   return dialX;
 }
 
@@ -189,7 +201,13 @@ export function confirmPin(room: RoomState): RoomStep | null {
     dialX,
     balance: spec.dial === 'locked' ? stage.balance : dialMaxedAt(stage, spec.dial, dialX),
   };
-  const confirmed = withStage(room, opened);
+  // A mistake pin (room 7): the machine puts the pinned line on the scale where the stage
+  // equation levels, and the planted line is found, right pin or not, for him to rewrite.
+  const tested =
+    spec.pin?.kind === 'wrong-line' && stage.pin.value.kind === 'line'
+      ? foundMistake({ ...opened, shownLine: stage.pin.value.index }, spec)
+      : opened;
+  const confirmed = withStage(room, tested);
   return resolvePin(confirmed) ?? { room: confirmed, events: [] };
 }
 
@@ -217,6 +235,9 @@ export function pinRight(stage: StageSpec, machine: number, value: PinValue): bo
   if (pin?.kind === 'level-x') return value.kind === 'x' && value.x === stageSolution(equation);
   if (pin?.kind === 'effect') {
     return value.kind === 'choice' && pin.options[value.index] === tiltAsXGrows(equation);
+  }
+  if (pin?.kind === 'wrong-line') {
+    return value.kind === 'line' && value.index === plantedLineOf(stage, givenLine(stage, 0));
   }
   return false;
 }
@@ -261,7 +282,10 @@ function resultOf(right: boolean): 'right' | 'wrong' {
  * story 2.9), each with its own question. They are also the keys of
  * their questions in `hr.pin.questions`.
  */
-export type PinQuestion = Extract<PinSpec['kind'], 'level-x' | 'effect'> | 'change' | 'hidden';
+export type PinQuestion =
+  | Extract<PinSpec['kind'], 'level-x' | 'effect' | 'wrong-line'>
+  | 'change'
+  | 'hidden';
 
 /** What the pin shows. Flat, for selectors. */
 export interface PinView {
@@ -301,7 +325,7 @@ export function pinView(room: RoomState | null): PinView | null {
   const spec = currentStageSpec(room);
   const track = pinTrack(spec);
   const kind = spec.pin?.kind;
-  if (!track || (kind !== 'level-x' && kind !== 'effect')) return null;
+  if (!track || (kind !== 'level-x' && kind !== 'effect' && kind !== 'wrong-line')) return null;
   const question: PinQuestion =
     kind !== 'level-x'
       ? kind

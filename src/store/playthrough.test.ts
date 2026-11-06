@@ -67,7 +67,7 @@ function freshGame() {
 type Game = ReturnType<typeof freshGame>;
 
 /** From the map, a tap on a room (story 2.2); in a room already (a test that went there), nothing. */
-function travel(game: Game, node: 'r02' | 'r03' | 'r04' | 'r05' | 'r06') {
+function travel(game: Game, node: 'r02' | 'r03' | 'r04' | 'r05' | 'r06' | 'r07') {
   if (game.store.getState().ui.screen === 'map') game.act({ type: 'map/travel', node });
 }
 
@@ -204,8 +204,28 @@ function playRoomSix(game: Game) {
   game.act({ type: 'story/next' });
 }
 
+/**
+ * Room 7, the old logbook (story 2.10): he slides to 6, taps the logbook's lines onto the
+ * scale (3x = 18 stays level, x = 15 tips), pins x = 15 as the mistake, and rewrites it: 6
+ * into x = ☐, then into the check line.
+ */
+function playRoomSeven(game: Game) {
+  travel(game, 'r07');
+  game.act({ type: 'machine/touch' });
+  for (const x of [2, 3, 4, 5, 6]) game.act({ type: 'dial/set', x });
+  game.act({ type: 'notebook/show-line', line: 1 });
+  game.act({ type: 'notebook/show-line', line: 2 });
+  game.act({ type: 'pin/set', value: { kind: 'line', index: 2 } });
+  game.act({ type: 'pin/confirm' });
+  game.write('6');
+  game.write('6');
+  game.presented();
+  game.presented();
+  game.act({ type: 'story/next' });
+}
+
 describe('rooms 1–4 back to back (story 1.13)', () => {
-  it('runs rooms 1–6 in order, each from arrival to restart', () => {
+  it('runs rooms 1–7 in order, each from arrival to restart', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
@@ -213,6 +233,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFour(game);
     playRoomFive(game);
     playRoomSix(game);
+    playRoomSeven(game);
     expect(game.phases).toEqual([
       'r01.0:arrive',
       'r01.0:open',
@@ -265,6 +286,14 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r06.0:open',
       'r06.0:locked',
       'r06.0:restart',
+      'none',
+      // Story 2.10: room 7, the slider open from the start, the mistake pin, the rewrite.
+      'r07.0:arrive',
+      'r07.0:poke',
+      'r07.0:pin',
+      'r07.0:open',
+      'r07.0:locked',
+      'r07.0:restart',
       // No room left to play: the story card, then the map.
       'none',
     ]);
@@ -278,6 +307,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFour(game);
     playRoomFive(game);
     playRoomSix(game);
+    playRoomSeven(game);
     const milestones = game.seen.flatMap((event) => {
       if (event.type === 'StageArrived') return [`arrive ${event.roomId}.${event.stage}`];
       if (event.type === 'StageLocked') return [`lock ${event.roomId}.${event.stage}`];
@@ -309,6 +339,9 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'arrive r06.0',
       'lock r06.0',
       'restart r06',
+      'arrive r07.0',
+      'lock r07.0',
+      'restart r07',
     ]);
   });
 
@@ -561,6 +594,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFour(game);
     playRoomFive(game);
     playRoomSix(game);
+    playRoomSeven(game);
     unsubscribe();
     expect(screens).toEqual([
       'room',
@@ -576,12 +610,24 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'story',
       'room',
       'story',
+      'room',
+      'story',
       'map',
     ]);
     const state = game.store.getState();
-    expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r06' });
+    expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r07' });
     expect(state.room).toBeNull();
-    expect(state.save.progress.roomsDone).toEqual(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']);
+    expect(state.save.progress.roomsDone).toEqual([
+      'r01',
+      'r02',
+      'r03',
+      'r04',
+      'r05',
+      'r06',
+      'r07',
+    ]);
+    // Room 7 earns the gear chain (story 2.3's gates).
+    expect(state.save.progress.tools).toContain('chain');
   });
 
   it('keeps the map on the clock, and a dev jump leaves it for a room', () => {
@@ -592,6 +638,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFour(game);
     playRoomFive(game);
     playRoomSix(game);
+    playRoomSeven(game);
     const done = game.store.getState();
     game.act({ type: 'clock/tick' });
     game.act({ type: 'machine/touch' });

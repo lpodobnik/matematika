@@ -72,7 +72,8 @@ export function isRoomId(id: string): id is RoomId {
 const finishedPhases: ReadonlySet<Phase> = new Set<Phase>(['restart', 'done']);
 
 function savedLine(line: NotebookLine): SavedLine | null {
-  if (line.source === 'given') return null;
+  // The stage equation and the logbook's lines come back with the stage itself.
+  if (line.source === 'given' || line.source === 'logbook') return null;
   return { text: line.tokens.join(''), source: line.source, progress: lineProgress(line.verdict) };
 }
 

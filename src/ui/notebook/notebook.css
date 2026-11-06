@@ -401,3 +401,68 @@
     box-shadow: inset 0 0 0 3px rgb(61 75 92 / 0.45);
   }
 }
+
+/* Story 2.10: the old logbook's lines (room 7): in the Clockmaker's hand, tappable onto the
+   scale, with a flag for the mistake pin; the planted line struck through once found. */
+.line--logbook {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.line__tap {
+  flex: 1 1 auto;
+  min-height: 48px;
+  padding: 0 6px;
+  border: 1.5px dashed transparent;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+.line__tap[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--paper);
+}
+
+.line--struck .line__tap {
+  text-decoration: line-through 2px;
+  opacity: 0.6;
+}
+
+.line__flag,
+.line__confirm {
+  flex: 0 0 auto;
+  min-width: 48px;
+  min-height: 48px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  touch-action: manipulation;
+}
+
+.line__flag svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.line__flag[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.line__confirm {
+  padding: 0 12px;
+  background: var(--ink);
+  color: var(--paper);
+}
