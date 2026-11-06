@@ -5,6 +5,7 @@ import {
   Graphics,
   type Application as PixiApplication,
   type PointData,
+  RenderLayer,
 } from 'pixi.js';
 import {
   type RefObject,
@@ -40,7 +41,7 @@ import { createSplitterDrag } from '@/ui/scene/scale/splitter-drag';
 import { Tray } from '@/ui/scene/scale/Tray';
 import type { Point } from '@/ui/scene/scale/tray-layout';
 
-extend({ Container, Graphics });
+extend({ Container, Graphics, RenderLayer });
 
 const gridStep = 100;
 
@@ -263,15 +264,20 @@ function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps
   const copyScale = sceneScale * placement.scale;
   const tag = useGame(sceneTag);
   const dialScroll = useRef<DialScroll>({ current: 0 }).current;
+  // The slider's `x = …` plate draws above the pin (Luka: a flag placed on the track hid the
+  // slider's number as the knob passed behind it); it stays the dial's child for its
+  // place and its touches.
+  const plateLayer = useRef<RenderLayer>(null);
   return (
     <pixiContainer ref={copyRef} x={placement.x} y={placement.y} scale={placement.scale}>
       <pixiGraphics draw={drawPaper} />
       <Machine />
       <Scale sceneScale={copyScale} drag={drag} toScene={toScene} splitShow={splitShow} />
-      <Dial sceneScale={copyScale} scroll={dialScroll} />
+      <Dial sceneScale={copyScale} scroll={dialScroll} plateLayer={plateLayer} />
       {/* The pin's question tag keeps 20 CSS px text, so like the tools it is drawn only
           when the copy is the only one. */}
       <Pin sceneScale={copyScale} question={tools ? sceneOrigin : null} />
+      <pixiRenderLayer ref={plateLayer} />
       {/* Story 1.16: the goal card, under the tools, so what he carries passes over it. */}
       {tools && <GoalCard sceneScale={copyScale} origin={sceneOrigin} />}
       {tools && <Tray sceneScale={copyScale} drag={drag} toScene={toScene} />}

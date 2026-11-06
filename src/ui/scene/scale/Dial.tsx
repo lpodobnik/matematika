@@ -1,7 +1,22 @@
 import { extend } from '@pixi/react';
 import { type AnimationPlaybackControls, animate } from 'motion';
-import { Container, Graphics, Rectangle, Text, type TextStyleOptions } from 'pixi.js';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  Container,
+  Graphics,
+  Rectangle,
+  type RenderLayer,
+  Text,
+  type TextStyleOptions,
+} from 'pixi.js';
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { palette } from '@/art/palette';
 import { dialSkin } from '@/art/skins/dial';
@@ -43,6 +58,12 @@ interface Props {
    * the dial keeps its own when none is given.
    */
   scroll?: DialScroll;
+  /**
+   * A layer drawn above the pin, which the plate over the knob renders in, so a flag on the
+   * track never hides the slider's x (Luka, after story 1.16). None: the plate draws with
+   * the dial.
+   */
+  plateLayer?: RefObject<RenderLayer | null>;
 }
 
 /** How long the poke window's clamp takes to lift away when the pin is confirmed. */
@@ -70,7 +91,7 @@ const clampWidth = 0.6;
  * its plate nudge one notch over and back by themselves every `tuning.dialNudgeMs`, with no
  * store change; under reduced motion the knob blinks instead.
  */
-export function Dial({ sceneScale, scroll }: Props) {
+export function Dial({ sceneScale, scroll, plateLayer }: Props) {
   const dial = useGame(useShallow((s) => dialView(s.room)));
   const dispatch = useGame((s) => s.dispatch);
   const test = usePinTest();
@@ -251,6 +272,19 @@ export function Dial({ sceneScale, scroll }: Props) {
     },
     [label, layout],
   );
+
+  // The plate renders in the layer above the pin, so a flag on the track can't hide it;
+  // it stays here in the scene graph, placed with the knob and grabbed with the dial.
+  const plateShown = label !== null;
+  useLayoutEffect(() => {
+    const layer = plateLayer?.current;
+    const plate = labelRef.current;
+    if (!plateShown || !layer || !plate) return;
+    layer.attach(plate);
+    return () => {
+      if (!layer.destroyed) layer.detach(plate);
+    };
+  }, [plateShown, plateLayer]);
 
   // A drag can start anywhere on the window, and on the plate above the knob too.
   const hitArea = useMemo(() => {
