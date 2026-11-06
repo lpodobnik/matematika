@@ -664,6 +664,29 @@ So that the design's biggest bet, writing as the final move, can be tried for re
 **When** tests run
 **Then** it contains, with expected verdicts, every line in epic 1's acceptance criteria and, for each stage of rooms 1–4, the canonical solution of every finishing way (from `steps.ts`), one skipped-step solution and at least two wrong lines
 
+### Story 1.14: Fix what the first playtest found
+
+As Luka,
+I want rooms 1–4 to make sense to someone who has never seen them,
+So that the machine can teach without me standing next to it.
+
+**Covers:** Luka's first playtest (2026-11-06), the Prediction, Pieces and Write rows of the GDD, NFR4, NFR13. Full criteria are in `_bmad-output/implementation-artifacts/1-14-fix-what-the-first-playtest-found.md`.
+
+**Acceptance Criteria:**
+
+**Given** a stage that isn't locked
+**When** lines move the machine
+**Then** the door lifts only a little against a visible latch, and the check line releases the latch and opens it fully
+
+**Given** `x : n` or a float on a pan
+**Then** `x : n` is one slice of a ghost x-gear cut into n, tagged `: n`, and a float is a balloon labelled `−6` pulling up
+
+**Given** a pin on offer
+**Then** a tag asks its question, a clamp marks the end of the poke window, the dial keeps turning inside the window, and confirm sits beside the pin
+
+**Given** he confirms a pin
+**Then** the machine tests it at once (turns the dial to it, weighs its x beyond the dial, or turns 3 notches for a direction pin), and a right pin pays 2 parts once per stage into a counter, with no praise text
+
 ## Epic 2: The city
 
 Turn separate rooms into a world he wants to return to. **Stories are detailed with this workflow before the epic starts.** From the GDD:
@@ -738,7 +761,7 @@ Make it hold up against Zelda on first contact. **Stories are detailed before th
 ## Calls Open to Veto
 
 - **Only epic 1 is broken down now.** Epics 2–6 are detailed before each one starts, because playing epic 1 may change them.
-- **Epic 1 has 13 stories**, splitting the GDD's 8, so each fits one developer session.
+- **Epic 1 has 14 stories**: 13 splitting the GDD's 8, so each fits one developer session, plus 1.14 from the first playtest.
 - **Acting out shows `?` on the gears** and never moves the dial, so a written line can't reveal x.
 - **The tray holds weights and floats only**, numbered 1–99, and numbers on a pan combine after each drop, so `2x + 5 = 23` becomes `2x = 18` in two drops.
 - **Reset restarts the current stage**, not the whole room (GDD updated).

@@ -286,7 +286,7 @@ export type Verdict =
 
 - Acting out never changes the dial's value. Any exploring action (dial, tray or splitter) ends acting out and returns the pans to the dial's x, in the last committed line's layout.
 - A correct line acted out stays level. A wrong one tips, by at least `tuning.jamMinTilt` (4°), so a near miss still shows, and the machine jams. The child sees exactly what his line claimed.
-- `PansLevel` fires only when the dial levels the pans. Pins resolve then, or when the stage locks, and never from acting out.
+- `PansLevel` fires only when he levels the pans with the dial; a dial turned by the machine fires no `DialNotch`, `PansLevel` or `WayUsed`. Pins resolve on confirm (see Pattern 2), never from acting out.
 - Pieces move from the old layout to the new one with **one generic tween**: pieces matched by kind and number move, and the rest fade out or in. `Move` feeds the play log and later flourishes; epic 1 needs nothing per move kind.
 
 **Balance moves**
@@ -368,8 +368,8 @@ interface StageState {
 |---|---|
 | Arrive | Ends on his first touch anywhere on the machine |
 | Poke | The dial moves only over the positions min, min + step, …, min + (pokeNotches − 1)·step; the tray, splitter and notebook are off |
-| Pin | Starts when he first drags the pin, which freezes the dial; a second drag moves it; confirming locks it and opens the stage. The pin track runs over the dial's range, or to twice the dial's maximum when the pin spec says `beyondDial` |
-| Resolution | A `level-x` pin resolves when the dial levels the pans or the stage locks; an `effect` pin about direction resolves on the first dial notch after it is confirmed. A right pin emits `PredictionMade` with `right: true` (parts from epic 3, once per stage, recorded in `save.economy.paidPredictions` as `"r05:1"`). A wrong pin briefly shows its own value's tilt on the pans |
+| Pin | Starts when he first drags the pin; a second drag moves it. The dial keeps turning inside the poke window (a stage with no poke window can't turn it before confirming). While the pin is offered, a tag on its holder asks its question (`hr.ts`), and a clamp drawn across the track marks the window's end. Confirm (an HTML button beside the pin's head) locks it and opens the stage. The pin track runs over the dial's range, or to twice the dial's maximum when the pin spec says `beyondDial` (story 1.14) |
+| Resolution | Every pin resolves on confirm, and the machine tests it: a `level-x` pin the dial can reach turns the dial itself to the pin's value, notch by notch (`tuning.pinTestNotchMs`); one beyond the dial has the pans weigh the pin's x for `tuning.pinRevealMs`; an `effect` pin turns the dial up `tuning.pinEffectTestNotches` notches. A right pin lights, a wrong one dims; no praise text (NFR13). `PredictionMade` carries `right`; the root reducer pays `tuning.predictionParts` (2) into `save.economy` for a right one, once per stage, recorded in `paidPredictions` as `"r05:1"`, from epic 1 on. Lock stays a safety trigger. If he grabs the knob during a test, his drag takes over (story 1.14) |
 | Jams | While `jam` is set, he can only edit the draft (which clears a line jam), drag the splitter off (which clears a split jam), reset or leave |
 | Room types | `type` selects a small strategy module (`room/types/compare.ts` and so on) that hooks into the common phases. There is no per-room code |
 | First use | The first time the pin, tray or splitter is available, it wiggles once (hint level 1) |

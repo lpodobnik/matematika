@@ -84,7 +84,7 @@ Two nested loops: a room loop lasting minutes and a city loop lasting days.
 | 2. Poke | Drags x and tips the pans | The machine's behaviour, with nothing at stake | Machine |
 | 3. Predict | Commits to what will happen before it runs | A right call earns bonus parts; a wrong one shows what his idea caused | Machine |
 | 4. Set | Finds where it balances | The pans level, but the machine still won't run | Machine |
-| 5. Write | Writes the solution one line at a time | Each correct line moves the machine; the last line locks it | Paper |
+| 5. Write | Writes the solution one line at a time | Each correct line moves the machine a little against its latch; the check line releases the latch and locks it | Paper |
 | 6. Restart | Watches | Part of the city starts moving, and the next room or an upgrade opens | City |
 
 Writing is the final move that starts the machine, not a chore after winning. `2x = 18` lifts 7 off both pans, so the scale shows why the written rule works.
@@ -120,7 +120,7 @@ All tuning numbers are provisional until playtesting. Examples here use equation
 | Tilt | 1° per unit of difference between the sides, clamped at ±15°; big-number rooms scale this per room. Each notch tips the pans by the same amount, and more gears tip them faster. |
 | Readouts | Both sides' values show while dragging, except in rooms about judging without calculating. |
 | Poke window | At first the dial moves only 3 or 4 notches. In `3x + 2 = 20` he sees 2, 5, 8, 11, then predicts where it levels. |
-| Prediction | He places a pin on the machine, then the full dial range opens. A right call earns 2 bonus parts, paid when the result is known and once per stage, so resetting earns nothing. A wrong one loses nothing. |
+| Prediction | A tag on the pin's holder asks the question. He can still turn the dial inside the poke window, places the pin, and confirms beside it. The machine then tests the pin itself: it turns the dial to the pin (or weighs the pin's x where the dial can't reach), and the pans show whether he was right. A right call earns 2 bonus parts at once, from room 3 on, and once per stage, so resetting earns nothing. A wrong one loses nothing. Only then does the full dial range open. |
 | Too far to drag | The dial stops short of the answer. In `5 905 − 27x = 316`, x = 207 but the dial reaches 30, so he sees the rate and needs another way. |
 
 **Piece kit**
@@ -129,9 +129,9 @@ All tuning numbers are provisional until playtesting. Examples here use equation
 |---|---|---|
 | Number weight | `+ 7` | Pushes the pan down by its number |
 | x-gear | `+ x`; `3x` is 3 gears | Pushes the pan down by x. Above 12, one large gear shows the count |
-| Float | `− 6` | Lifts the pan by its number |
+| Float | `− 6` | A balloon labelled `−6`, floating above the pan on a string; it lifts the pan by its number |
 | Spring | `− x`; `5x` is 5 springs | Lifts the pan by x |
-| Reducer | `x : 3` | A 3-to-1 gear under an x-gear, so it counts for a third of x |
+| Reducer | `x : 3` | One slice of an x-gear cut into 3, tagged `: 3`, with the rest of the gear as a faint outline; it counts for a third of x |
 
 A weight and a float of the same number cancel out, as do a gear and a spring.
 
@@ -323,7 +323,7 @@ Room types carry the four understanding tasks from the brief:
 
 ### Player Assistance
 
-No instructions appear before a room. Help arrives when he goes 60 seconds without acting or jams the machine 3 times in a row. It is free and never recorded.
+No instructions appear before a room. The one exception is during a room: a prediction pin's question shows on a tag on its holder, because without it the pin reads as a meaningless circle (first playtest, 2026-11-06). Help arrives when he goes 60 seconds without acting or jams the machine 3 times in a row. It is free and never recorded.
 
 | Level | Help |
 |---|---|

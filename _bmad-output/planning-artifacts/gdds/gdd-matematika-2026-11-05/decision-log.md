@@ -73,3 +73,10 @@ Every decision, change and version transition for this GDD.
   - The paper-test rule compares whole equations, not single numbers; small numbers such as 2, 3 and 20 recur everywhere.
   - Room 3's second stage, `20 − x = 6`, gets its own pin: which way the pan moves as x grows, pinned before the dial moves. Both stages solve to 14, so a second "where it levels" pin would be a free guess; the direction is the stage's real prediction.
 - **Claude's calls, open to veto: the split.** Anything that moves or shows a number stays drawn in code; images carry the map, backdrops, housings, automatons and character looks. Images are made in restored colours, and a shader makes the grey state.
+- **From Luka's first playtest, 2026-11-06 (story 1.14), agreed by Luka:** he gave up in room 3. The answer line opened the door 90%, so the check line felt like nothing. The reducer's two cogs meant nothing. The pin was an unexplained circle that froze the dial, with Potvrdi in a far corner. And he could drag to the answer anyway, so predicting had no point. Changes:
+  - The door is latched until the check line: correct lines lift it only a little, and the check line releases the latch.
+  - `x : n` is one slice of an x-gear cut into n. The float is a balloon labelled `−6`.
+  - The pin's question shows on a tag. This is an exception to "no instructions", kept to the machine and the room.
+  - The dial still turns inside the poke window while he pins, and confirm sits beside the pin.
+  - The machine tests the pin on confirm, and a right pin pays 2 parts from epic 1 on.
+  - "Pogodio" text was dropped, because it would break NFR13; the lit pin and the parts are the signal.
