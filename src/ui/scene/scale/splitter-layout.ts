@@ -4,7 +4,9 @@
 // comes from room/splitter.ts.
 //
 // The splitter waits in a holder in the scene's top-left corner, left of the machine and
-// above the left pan, mirroring the tray: its blade, then + above − beside it. After a
+// above the left pan, mirroring the tray: its blade, then + above − beside it. The HTML
+// reset control sits over the scene area's top-left corner, so the holder starts right of
+// it on any screen (at 640 × 360 the scene fills the area and is not letterboxed). After a
 // split that jams, it lies across both pans, from one pan's centre to the other's, just
 // under the machine, until he drags it off. The buttons and grab areas are at least 48 CSS
 // px, so on a small screen they grow in scene units.
@@ -25,6 +27,11 @@ export const splitterGeometry = {
   /** The holder's left edge and top, in scene units. */
   left: 20,
   top: 20,
+  /**
+   * The holder's left edge is at least this many CSS px from the scene area's left, clear of
+   * the reset control (ui/common/common.css: 8 px in, 56 px wide) with an 8 px gap.
+   */
+  resetClearPx: 72,
   /** Inside the holder's frame, and between the blade and its buttons. */
   padding: 16,
   gap: 12,
@@ -94,7 +101,7 @@ export function splitterLayout(
   const height = bladeHeight(fontSize);
   const cellHeight = Math.max(height, 2 * button + geometry.gap);
   const box: Box = {
-    x: geometry.left,
+    x: Math.max(geometry.left, geometry.resetClearPx * unitsPerPx),
     y: geometry.top,
     width: 2 * geometry.padding + geometry.bladeWidth + geometry.gap + button,
     height: 2 * geometry.padding + cellHeight,

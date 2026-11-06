@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { fitScene } from '@/ui/scene/fit-scene';
 import { machineBounds } from '@/ui/scene/machine/layout';
 import { type Box, minHitCssPx } from '@/ui/scene/scale/dial-layout';
 import { beamPose, labelFontSize, scaleGeometry } from '@/ui/scene/scale/layout';
@@ -13,6 +15,25 @@ import { trayLayout } from '@/ui/scene/scale/tray-layout';
 
 const tablet = 0.54;
 const phone = 360 / 1000; // 640 × 360: the scene's height sets its scale
+
+/** The reset control's box in CSS px from the scene area's top-left corner, read from its CSS. */
+function resetBox(): Box {
+  const css = readFileSync(new URL('../../common/common.css', import.meta.url), 'utf8');
+  const declarations = css.match(/(?:^|\n)\.reset\s*\{([^}]*)\}/)?.[1] ?? '';
+  const px = (property: string) =>
+    Number(declarations.match(new RegExp(`(?:^|[\\s;])${property}:\\s*(\\d+)px;`))?.[1]);
+  return { x: px('left'), y: px('top'), width: px('width'), height: px('height') };
+}
+
+/** A box in scene units, in CSS px from the scene area's top-left corner, for a scene fitted at `fit`. */
+function onScreen(box: Box, fit: { scale: number; x: number; y: number }): Box {
+  return {
+    x: fit.x + box.x * fit.scale,
+    y: fit.y + box.y * fit.scale,
+    width: box.width * fit.scale,
+    height: box.height * fit.scale,
+  };
+}
 
 function overlaps(a: Box, b: Box): boolean {
   return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
@@ -30,8 +51,9 @@ function within(inner: Box, outer: Box): boolean {
 describe('splitterLayout', () => {
   it('puts the holder in the top-left corner: the blade, then + above − beside it', () => {
     const layout = splitterLayout(tablet, labelFontSize(tablet));
-    expect(layout.box.x).toBe(20);
+    expect(layout.box.x).toBeCloseTo(splitterGeometry.resetClearPx / tablet);
     expect(layout.box.y).toBe(20);
+    expect(splitterLayout(4, labelFontSize(4)).box.x).toBe(splitterGeometry.left);
     expect(within(layout.blade, layout.box)).toBe(true);
     expect(layout.up.x).toBeGreaterThan(layout.blade.x + layout.blade.width);
     expect(layout.up.y).toBeLessThan(layout.down.y);
@@ -47,6 +69,21 @@ describe('splitterLayout', () => {
     const machine = machineBounds();
     expect(box.x + box.width).toBeLessThan(machine.left);
     expect(overlaps(box, trayLayout(scale, fontSize).box)).toBe(false);
+  });
+
+  it.each([
+    ['a phone at 640 × 360, the notebook over the scene', fitScene(640, 360)],
+    ['an exact 16:10 area of 576 × 360, not letterboxed', fitScene(576, 360)],
+    ['the tablet, the notebook beside the scene', fitScene(1280 - 0.32 * 1280, 800)],
+    ['an exact 1600 × 1000 area', fitScene(1600, 1000)],
+  ])('keeps the holder and its grab areas clear of the reset control on %s', (_, fit) => {
+    const reset = resetBox();
+    expect(reset.width).toBeGreaterThanOrEqual(48);
+    expect(reset.x + reset.width + 8).toBeLessThanOrEqual(splitterGeometry.resetClearPx);
+    const layout = splitterLayout(fit.scale, labelFontSize(fit.scale));
+    for (const box of [layout.box, layout.grab, layout.up, layout.down]) {
+      expect(overlaps(onScreen(box, fit), reset)).toBe(false);
+    }
   });
 
   it('keeps the holder above the left pan with a row of pieces on the tablet', () => {

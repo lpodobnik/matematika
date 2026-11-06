@@ -1,6 +1,6 @@
 # Story 1.11: Split both pans
 
-Status: review
+Status: done
 
 ## Story
 
@@ -84,3 +84,27 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/ui/scene/SceneRoot.tsx`, `scale/Tray.tsx`, `scale/piece-drag.test.ts` (modified)
 - `src/dev/DevPanel.tsx`, `dev-view.ts`, `dev-view.test.ts` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fix was applied in one pass with no second review.
+
+### Findings
+
+- **Bug, fixed: at 640 × 360 the splitter's holder sat under the HTML reset control.** On the phone layout the notebook overlays the scene, so the scene fills the 640 × 360 area at scale 0.36 with no letterbox at the top. The holder at scene (20, 20) landed at about CSS (39, 7), and the reset disc (`.reset` in `C:\Users\lpodobnik\Claude\matematika\src\ui\common\common.css`: 8 px in, 56 px, above the canvas) covered its corner and the left end of the blade. A touch there reset the stage instead of picking up the splitter. The tablet was not affected (the scene is letterboxed 128 px down).
+  - `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\splitter-layout.ts`: a new `splitterGeometry.resetClearPx` (72 CSS px: the reset's 8 px inset, its 56 px and an 8 px gap), and the holder's x is now `Math.max(geometry.left, geometry.resetClearPx * unitsPerPx)`. The blade, its grab area and the + and − buttons follow from the holder's x. That is 200 units at 640 × 360, where the holder (417 units wide) ends at 617, still left of the machine at 641; about 132 units on the tablet; and 72 units on an exact 1600 × 1000 area. The header comment says why.
+  - `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\splitter-layout.test.ts`: a new test reads the reset's box from `common.css` and checks that the holder, the blade's grab area and both buttons, mapped to CSS px through `fitScene`, never intersect it for 640 × 360, an exact 16:10 area of 576 × 360 (offset 0), the tablet (870 × 800) and an exact 1600 × 1000 area. Three of these failed on the old layout (the tablet passed, as the review said). The corner test now expects the holder at `resetClearPx / scale`, and at `left` (20) on a screen large enough that 72 CSS px is less.
+
+### Minor notes (not fixed, for Luka)
+
+- **`liftSplitter` ignores the tools and whether the splitter is offered** (`C:\Users\lpodobnik\Claude\matematika\src\room\splitter.ts`). If Balance is switched off in the dev panel during a split jam, the blade disappears but the jam stays until reset. Dev only.
+- **The first-use wiggle is recorded in a component ref** (`C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\Splitter.tsx`), and `view.wiggle` is just `hintLevel >= 1`. A remount within the same stage, such as a scene remount after a WebGL context restore, replays the wiggle. `Tray.tsx` has the same pattern.
+- **`splitOutcome` tests divisibility on the reduced coefficient (`a.n`).** A typed side like `x : 2 + x : 2`, which the scale draws as two gears on dividers of 2, can't be split by 2. Only unusual typed lines reach this.
+- **During a split jam the pans are weighed at the dial's x without the jam's minimum tilt.** With the dial on the solution they can hang level while the machine shows a jam. The architecture says nothing on this; it is a call for you to confirm or veto.
+- **Test coverage of the holder above the pan:** the suite was run once (63 files, 1,255 tests passing). The holder-above-the-pan test runs only on the tablet at tilt 0. At 640 × 360 the holder's bottom (about 331 units) is inside the pan band (from 240) and stays clear only because room 4's left pan holds one row.
+
+### Checks after the review
+
+- `npm run check`: 165 files, no errors.
+- `npm test`: 63 files, 1,259 tests passing (4 new).
+- `npm run build`: `tsc --noEmit` clean; 1.04 MB in 9 files, JavaScript 0.31 MB gzipped (unchanged).
