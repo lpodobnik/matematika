@@ -1,6 +1,6 @@
 // What the dev panel shows and offers (architecture, Debug Tools): a jump to any room and
 // stage, the tools he has earned (Balance can be switched on to try room 4 by a jump), the
-// pans and the tray, and the checker's verdict and progress tuple for the last committed
+// pans, the tray and the splitter, and the checker's verdict and progress tuple for the last committed
 // line and for the draft as enter would judge it now. Development builds only; the panel's
 // text is for Luka, in English, and never reaches the game's Croatian text.
 
@@ -10,6 +10,7 @@ import { complexity, type ProgressTuple } from '@/math/moves';
 import { parse } from '@/math/parse';
 import type { Token } from '@/math/tokens';
 import { committedEquations, lineTokens } from '@/room/notebook';
+import { splitterView } from '@/room/splitter';
 import { trayView } from '@/room/tray';
 import type { PinState, RoomId, RoomSpec, RoomState, ToolId } from '@/room/types';
 
@@ -70,6 +71,8 @@ export interface DevReadout {
   pans: string;
   /** The tray's numbers, or `off` when the game doesn't offer it: `weight 1, float 5`. */
   tray: string;
+  /** The splitter's parts, or `off` when the game doesn't offer it: `2 parts`. */
+  splitter: string;
   /** The last committed line, with the verdict it was committed with (line 0 is given). */
   last: LineReadout;
   /**
@@ -95,6 +98,15 @@ export function trayText(room: RoomState, tools: readonly ToolId[]): string {
   return view.works ? numbers : `${numbers}, jammed`;
 }
 
+/** The splitter as the panel shows it; `on the pans` while a split jams the machine. */
+export function splitterText(room: RoomState, tools: readonly ToolId[]): string {
+  const view = splitterView(room, tools);
+  if (!view) return 'off';
+  const parts = `${view.parts} parts`;
+  if (view.onPans) return `${parts}, on the pans`;
+  return view.works ? parts : `${parts}, jammed`;
+}
+
 export function devReadout(room: RoomState, tools: readonly ToolId[] = []): DevReadout {
   const { stage } = room;
   const lastLine = stage.lines[stage.lines.length - 1];
@@ -106,6 +118,7 @@ export function devReadout(room: RoomState, tools: readonly ToolId[] = []): DevR
     pin: pinText(stage.pin),
     pans: formatEquation(stage.pans),
     tray: trayText(room, tools),
+    splitter: splitterText(room, tools),
     last: lastLine
       ? lineReadout(lastLine.tokens, lastLine.verdict)
       : { text: '', verdict: 'none', tuple: null },

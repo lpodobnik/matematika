@@ -27,6 +27,12 @@ export type Action =
   | { type: 'tray/drop'; side: Side; kind: TrayKind }
   /** He dragged a weight or float off a pan into the tray; `key` is its key on the scale. */
   | { type: 'tray/take'; side: Side; key: string }
+  /** The splitter's − or +: fewer or more parts; the UI repeats it while the button is held. */
+  | { type: 'splitter/step'; by: 1 | -1 }
+  /** He dragged the splitter, at the parts it is set to, across both pans. */
+  | { type: 'splitter/split' }
+  /** He dragged the splitter off the pans, after a split that jammed the machine. */
+  | { type: 'splitter/lift' }
   /** A pad key (or its keyboard stand-in) typed at the end of the draft line. */
   | { type: 'notebook/type'; token: Token }
   /** Delete: the draft's last token. */

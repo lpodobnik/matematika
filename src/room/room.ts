@@ -2,6 +2,7 @@
 // the RoomSpec up in content and hands it in. What happens after a stage arrives (his first
 // touch, the lock, the restart and reset) is in room/phases.ts.
 
+import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
 import type { Equation } from '@/math/expr';
 import { parse } from '@/math/parse';
@@ -94,9 +95,9 @@ export const trayStart: Readonly<TrayNumbers> = { weight: 1, float: 1 };
 /**
  * A stage as it arrives: the first machine's equation on the pans and as the notebook's
  * line 0, an empty draft (or, with Try values `blanks`, the lines to fill), every machine
- * stopped, no pin placed, the tray at 1 and 1, and the dial at its minimum, exploring, with
- * its poke window open if it has one. It waits in `arrive` for his first touch on the
- * machine (room/phases.ts).
+ * stopped, no pin placed, the tray at 1 and 1, the splitter at 2 parts, and the dial at its
+ * minimum, exploring, with its poke window open if it has one. It waits in `arrive` for
+ * his first touch on the machine (room/phases.ts).
  */
 export function arriveAtStage(stage: StageSpec): StageState {
   const dialX = fullDial(stage).min;
@@ -112,6 +113,7 @@ export function arriveAtStage(stage: StageSpec): StageState {
     machineProgress: stage.machines.map(() => 0),
     pans: machineEquation(stage, 0),
     tray: { ...trayStart },
+    splitter: tuning.splitterMinParts,
     actingOut: false,
     dialX,
     dialOpen: openingDial(stage),

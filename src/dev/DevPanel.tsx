@@ -98,6 +98,8 @@ export function DevPanelView({
           </dd>
           <dt>tray</dt>
           <dd>{readout.tray}</dd>
+          <dt>splitter</dt>
+          <dd>{readout.splitter}</dd>
           <dt>last line</dt>
           <dd>
             <Line line={readout.last} />

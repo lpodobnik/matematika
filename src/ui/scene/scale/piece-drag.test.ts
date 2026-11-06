@@ -312,6 +312,8 @@ describe('the piece drag, wired to the store', () => {
 describe('Tray.tsx and the pans', () => {
   const tray = readFileSync(new URL('./Tray.tsx', import.meta.url), 'utf8');
   const piece = readFileSync(new URL('./Piece.tsx', import.meta.url), 'utf8');
+  // The tray's − and + (and the splitter's) are StepButtons.
+  const stepper = readFileSync(new URL('./StepButton.tsx', import.meta.url), 'utf8');
 
   it('follows a carry on the stage: every move, up and up outside, and cancel, blur or a hidden page', () => {
     for (const event of ["'globalpointermove'", "'pointerup'", "'pointerupoutside'"]) {
@@ -328,13 +330,14 @@ describe('Tray.tsx and the pans', () => {
       'onPointerUpOutside={release}',
       'onPointerCancel={release}',
     ]) {
-      expect(tray).toContain(prop);
+      expect(stepper).toContain(prop);
     }
-    expect(tray).toContain('watchDragCancel(window, document, {');
+    expect(stepper).toContain('watchDragCancel(window, document, {');
+    expect(tray).toContain('<StepButton');
   });
 
   it('has no hover states: no over, enter, leave or out handlers, and no cursor', () => {
-    for (const source of [tray, piece]) {
+    for (const source of [tray, piece, stepper]) {
       expect(source).not.toMatch(/on(Pointer|Mouse)(Over|Enter|Leave|Out)\b|cursor/);
     }
   });

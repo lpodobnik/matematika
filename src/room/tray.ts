@@ -18,7 +18,8 @@
 //              `x = n`, which he writes himself. Balance `blanks` arrives in epic 2.
 //
 // Every tray move is exploring, so it ends acting out a written line: the pans are weighed
-// at the dial's x again (Pattern 1). The moves are free and reversible: a pan that gets
+// at the dial's x again (Pattern 1). The splitter (room/splitter.ts) completes its moves
+// the same way (`balanceMove`). The moves are free and reversible: a pan that gets
 // back to the last committed line's pieces shows that line's side again. A reset, or any
 // line written, replaces them with that line's layout.
 
@@ -138,12 +139,13 @@ export function sideExpr(a: q.Rational, b: q.Rational): Expr | null {
   return ns !== null && !positive ? sub(lifted, ns) : lifted;
 }
 
-interface Linear {
+/** A pan's side as a·x + b: its gear count over its divider, and its number. */
+export interface Linear {
   a: q.Rational;
   b: q.Rational;
 }
 
-function linearSide(expr: Expr): Linear {
+export function linearSide(expr: Expr): Linear {
   const linear = toLinear(expr);
   assert(linear.kind === 'linear', 'the pans hold only linear equations');
   return { a: linear.a, b: linear.b };
@@ -183,13 +185,13 @@ function holdsSolution(equation: Equation, n: number): boolean {
 }
 
 /**
- * The stage after a tray move put `pans` on the scale: exploring, at the dial's x. When the
- * pans' equation has the stage's solution again and isn't the last committed line's, the
- * move is complete (`WayUsed`); with Balance `auto` its line is written, unless it is the
- * answer line. The line goes through the checker like any line, so a line it would refuse
- * is never written.
+ * The stage after a balance move (a tray drop or take, or a split: room/splitter.ts) put
+ * `pans` on the scale: exploring, at the dial's x. When the pans' equation has the stage's
+ * solution again and isn't the last committed line's, the move is complete (`WayUsed`);
+ * with Balance `auto` its line is written, unless it is the answer line. The line goes
+ * through the checker like any line, so a line it would refuse is never written.
  */
-function explored(room: RoomState, pans: Equation): RoomStep {
+export function balanceMove(room: RoomState, pans: Equation): RoomStep {
   const { stage } = room;
   const spec = currentStageSpec(room);
   const moved: StageState = { ...stage, pans, actingOut: false };
@@ -224,7 +226,7 @@ export function dropOnPan(
   if (!trayWorks(room, tools)) return null;
   const value = q.rational(room.stage.tray[kind]);
   const pans = changedPans(room.stage, side, kind === 'weight' ? value : q.neg(value));
-  return pans ? explored(room, pans) : null;
+  return pans ? balanceMove(room, pans) : null;
 }
 
 /**
@@ -244,7 +246,7 @@ export function takeOffPan(
   if (!piece || !isNumberPiece(piece)) return null;
   const delta = piece.kind === 'weight' ? q.neg(piece.value) : piece.value;
   const pans = changedPans(room.stage, side, delta);
-  return pans ? explored(room, pans) : null;
+  return pans ? balanceMove(room, pans) : null;
 }
 
 /** A piece on the tray as the scale draws pieces: the weight or float with its number. */

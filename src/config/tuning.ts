@@ -33,6 +33,11 @@ export const tuning = {
   trayMaxNumber: 99,
   /** The tray's − and + repeat when held: the first repeat after this long… */
   trayRepeatDelayMs: 450,
-  /** …then one step this often, until he lets go. */
+  /** …then one step this often, until he lets go. The splitter's − and + repeat the same way. */
   trayRepeatMs: 110,
+  /** Architecture, Balance moves: the splitter is set to this many parts at the fewest (a
+   * stage arrives with it)… */
+  splitterMinParts: 2,
+  /** …and this many at the most. */
+  splitterMaxParts: 9,
 } as const;

@@ -8,6 +8,7 @@ import {
   jumpTargets,
   opensOnLoad,
   pinText,
+  splitterText,
   toggledBalance,
   trayText,
   tupleText,
@@ -71,6 +72,7 @@ describe('devReadout', () => {
     expect(readout.pin).toBe('none');
     expect(readout.pans).toBe('x : 3 = 5');
     expect(readout.tray).toBe('off');
+    expect(readout.splitter).toBe('off');
     expect(readout.draft).toBeNull();
   });
 
@@ -84,6 +86,18 @@ describe('devReadout', () => {
     expect(devReadout(room, ['balance']).tray).toBe('weight 1, float 1');
     expect(toggledBalance([])).toEqual(['balance']);
     expect(toggledBalance(['balance', 'chain'])).toEqual(['chain']);
+  });
+
+  it('shows the splitter in an open stage once Balance is earned, and when it lies on the pans', () => {
+    const room = opened(freeRoomOne);
+    expect(splitterText(room, [])).toBe('off');
+    expect(splitterText(room, ['balance'])).toBe('2 parts');
+    expect(devReadout(room, ['balance']).splitter).toBe('2 parts');
+    const jammed = enterLine(typed(room, 'x = 6'), 0)?.room;
+    if (!jammed) throw new Error('enter was ignored');
+    expect(splitterText(jammed, ['balance'])).toBe('2 parts, jammed');
+    const onPans = { ...room, stage: { ...room.stage, jam: { kind: 'split', parts: 3 } as const } };
+    expect(splitterText(onPans, ['balance'])).toBe('3 parts, on the pans');
   });
 
   it('shows the prediction pin: where it is, and whether it is locked and resolved', () => {

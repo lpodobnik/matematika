@@ -18,6 +18,9 @@ import { Dial } from '@/ui/scene/scale/Dial';
 import { Pin } from '@/ui/scene/scale/Pin';
 import { createPieceDrag } from '@/ui/scene/scale/piece-drag';
 import { Scale } from '@/ui/scene/scale/Scale';
+import { Splitter } from '@/ui/scene/scale/Splitter';
+import { createSplitterDrag } from '@/ui/scene/scale/splitter-drag';
+import { panUnder } from '@/ui/scene/scale/splitter-layout';
 import { Tray } from '@/ui/scene/scale/Tray';
 import type { Point } from '@/ui/scene/scale/tray-layout';
 
@@ -123,8 +126,9 @@ function drawPaper(g: Graphics): void {
  * is a touch like any other.
  *
  * The scale and the tray share one piece drag (story 1.10): a weight or float can be carried
- * from the tray to a pan, or off a pan into the tray. The tray, drawn last, draws the piece
- * he carries above everything else.
+ * from the tray to a pan, or off a pan into the tray. The splitter (story 1.11) has a drag of
+ * its own, across both pans or off them. The tray and the splitter, drawn last, draw what he
+ * carries above everything else.
  */
 function SceneContent() {
   const { app, isInitialised } = useApplication();
@@ -132,6 +136,7 @@ function SceneContent() {
   const [sceneScale, setSceneScale] = useState(0);
   const dispatch = useGame((s) => s.dispatch);
   const drag = useMemo(() => createPieceDrag(), []);
+  const splitterDrag = useMemo(() => createSplitterDrag(panUnder), []);
   const toScene = useCallback((point: PointData): Point => {
     const scene = sceneRef.current;
     if (!scene) return { x: point.x, y: point.y };
@@ -180,6 +185,7 @@ function SceneContent() {
       <Dial sceneScale={sceneScale} />
       <Pin sceneScale={sceneScale} />
       <Tray sceneScale={sceneScale} drag={drag} toScene={toScene} />
+      <Splitter sceneScale={sceneScale} drag={splitterDrag} toScene={toScene} />
     </pixiContainer>
   );
 }

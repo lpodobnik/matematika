@@ -21,8 +21,9 @@ import { openingTemplates } from '@/room/fading';
 import { panPieces } from '@/room/pieces';
 import { pinSupported, pinTrack, slotCount, slotValue, xPanMotion } from '@/room/pin';
 import { openingDial } from '@/room/room';
+import { splitOutcome } from '@/room/splitter';
 import { isLevel, sideValues, tiltFor } from '@/room/tilt';
-import { trayMinNumber } from '@/room/tray';
+import { sameLayout, trayMinNumber } from '@/room/tray';
 import type { DialSpec, FadingMode, StageSpec, WayId } from '@/room/types';
 
 function stageEquation(stage: StageSpec | undefined) {
@@ -337,8 +338,12 @@ describe('rooms', () => {
               }
             }
             if (move.kind === 'split-both') {
-              expect(move.parts).toBeGreaterThanOrEqual(2);
-              expect(move.parts).toBeLessThanOrEqual(9);
+              expect(move.parts).toBeGreaterThanOrEqual(tuning.splitterMinParts);
+              expect(move.parts).toBeLessThanOrEqual(tuning.splitterMaxParts);
+              // The splitter itself gets there: an even split of the line before.
+              const outcome = splitOutcome(previous, move.parts);
+              expect(outcome?.kind).toBe('even');
+              if (outcome?.kind === 'even') expect(sameLayout(outcome.pans, line)).toBe(true);
             }
             previous = line;
           }

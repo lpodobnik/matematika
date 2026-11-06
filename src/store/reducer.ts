@@ -18,6 +18,7 @@ import {
 } from '@/room/phases';
 import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
+import { liftSplitter, splitBothPans, stepSplitter } from '@/room/splitter';
 import { dropOnPan, stepTray, takeOffPan } from '@/room/tray';
 import type { RoomSpec, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
@@ -53,7 +54,7 @@ function moveOn(step: RoomStep | null, roomList: readonly RoomSpec[]): RoomStep 
 /**
  * What an action does to the room in play, or null when it leaves the room alone: with no
  * room, in a phase where the action does nothing, or for an action outside the room. The
- * tray takes the tools he has earned, since it needs Balance.
+ * tray and the splitter take the tools he has earned, since they need Balance.
  */
 function roomStep(
   state: GameState,
@@ -88,6 +89,12 @@ function roomStep(
       return dropOnPan(room, tools, action.side, action.kind);
     case 'tray/take':
       return takeOffPan(room, tools, action.side, action.key);
+    case 'splitter/step':
+      return stepSplitter(room, tools, action.by);
+    case 'splitter/split':
+      return splitBothPans(room, tools);
+    case 'splitter/lift':
+      return liftSplitter(room);
     case 'notebook/type':
       return typeToken(room, action.token);
     case 'notebook/delete':
@@ -97,7 +104,8 @@ function roomStep(
     case 'notebook/slide':
       return null;
     case 'dev/set-tools':
-      // The room is unchanged, but what it offers may not be (the tray), so first use runs.
+      // The room is unchanged, but what it offers may not be (the tray and the splitter), so
+      // first use runs.
       return { room, events: [] };
   }
 }

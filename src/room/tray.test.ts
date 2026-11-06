@@ -131,12 +131,13 @@ describe('when the tray is offered', () => {
 
   it('wiggles once on first use: the first offer raises the hint level to 1, and never again', () => {
     const room = waterWheel();
-    expect(offeredControls(room, balance)).toEqual(['tray']);
+    // The splitter (story 1.11) is offered with the tray.
+    expect(offeredControls(room, balance)).toEqual(['tray', 'splitter']);
     expect(offeredControls(room, [])).toEqual([]);
     const met = meetControls(room, ['pin'], balance);
-    expect(met?.met).toEqual(['pin', 'tray']);
+    expect(met?.met).toEqual(['pin', 'tray', 'splitter']);
     expect(trayView(met?.room ?? null, balance)?.wiggle).toBe(true);
-    expect(meetControls(room, ['pin', 'tray'], balance)).toBeNull();
+    expect(meetControls(room, ['pin', 'tray', 'splitter'], balance)).toBeNull();
   });
 
   it('holds weights and floats only: its pieces are drawn as the scale draws them', () => {

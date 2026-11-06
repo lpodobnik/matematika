@@ -689,10 +689,10 @@ describe('balance with the tray (story 1.10)', () => {
   it('offers the tray once the stage opens, and wiggles it on first use', () => {
     const game = inRoomFour();
     expect(game.stage()?.phase).toBe('open');
-    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray']);
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray', 'splitter']);
     expect(game.stage()?.hintLevel).toBe(1);
     game.act({ type: 'stage/reset' });
-    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray']);
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray', 'splitter']);
   });
 
   it('plays room 4: a float of 5 on the left writes nothing, and on the right writes 2x = 18', () => {
@@ -761,7 +761,10 @@ describe('balance with the tray (story 1.10)', () => {
     act({ type: 'room/enter', roomId: 'r01' });
     act({ type: 'machine/touch' });
     act({ type: 'dev/set-tools', tools: ['balance'] });
-    expect(store.getState().save.progress).toEqual({ tools: ['balance'], firstUse: ['tray'] });
+    expect(store.getState().save.progress).toEqual({
+      tools: ['balance'],
+      firstUse: ['tray', 'splitter'],
+    });
     expect(store.getState().room?.stage.hintLevel).toBe(1);
     const empty = reduce(
       initialGameState(),
@@ -770,6 +773,108 @@ describe('balance with the tray (story 1.10)', () => {
     );
     expect(empty.state.save.progress.tools).toEqual(['balance']);
     expect(empty.state.room).toBeNull();
+  });
+});
+
+describe('split both pans (story 1.11)', () => {
+  /** Room 4 with Balance earned and the pin and tray met, open; the splitter is new. */
+  function inRoomFour() {
+    const seen: DomainEvent[] = [];
+    const initial = initialGameState();
+    const store = createGameStore({
+      makeCtx: () => fixedCtx,
+      effects: [(event) => seen.push(event)],
+      initialState: {
+        ...initial,
+        save: { progress: { tools: ['balance'], firstUse: ['pin', 'tray'] } },
+      },
+    });
+    const act = (action: Action) => store.getState().dispatch(action);
+    const stage = () => store.getState().room?.stage;
+    const lines = () => stage()?.lines.map((line) => line.tokens.join('')) ?? [];
+    const type = (text: string) => {
+      for (const char of text) {
+        const token = tokenFromChar(char);
+        if (token) act({ type: 'notebook/type', token });
+      }
+      act({ type: 'notebook/enter' });
+    };
+    act({ type: 'room/enter', roomId: 'r04' });
+    act({ type: 'machine/touch' });
+    act({ type: 'pin/set', value: { kind: 'x', x: 9 } });
+    act({ type: 'pin/confirm' });
+    return { store, seen, act, stage, lines, type };
+  }
+
+  /** A float of 5 on each pan: `2x = 18` is written. */
+  function toTwoXEighteen(game: ReturnType<typeof inRoomFour>) {
+    for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
+    game.act({ type: 'tray/drop', side: 'left', kind: 'float' });
+    game.act({ type: 'tray/drop', side: 'right', kind: 'float' });
+    expect(game.lines()).toEqual(['2x+5=23', '2x=18']);
+  }
+
+  it('wiggles the splitter the first time it is available, and records it as met', () => {
+    const game = inRoomFour();
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray', 'splitter']);
+    expect(game.stage()?.hintLevel).toBe(1);
+  });
+
+  it('sets 2–9 parts with its stepper', () => {
+    const game = inRoomFour();
+    for (let i = 0; i < 10; i += 1) game.act({ type: 'splitter/step', by: 1 });
+    expect(game.stage()?.splitter).toBe(9);
+    for (let i = 0; i < 10; i += 1) game.act({ type: 'splitter/step', by: -1 });
+    expect(game.stage()?.splitter).toBe(2);
+  });
+
+  it('plays room 4: split by 2 at 2x = 18 shows x = 9, nothing is written, and he locks it', () => {
+    const game = inRoomFour();
+    toTwoXEighteen(game);
+    game.seen.length = 0;
+    game.act({ type: 'splitter/split' });
+    expect(game.lines()).toEqual(['2x+5=23', '2x=18']);
+    expect(game.seen).toEqual([{ type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' }]);
+    const room = game.store.getState().room as RoomState;
+    expect(panPieces(room.stage.pans).left.map((piece) => piece.kind)).toEqual(['gear']);
+    expect(panPieces(room.stage.pans).right).toEqual([
+      { key: 'right-weight-0', kind: 'weight', value: { n: 9n, d: 1n } },
+    ]);
+    game.type('x=9');
+    game.type('2·9+5=23');
+    expect(game.stage()?.phase).toBe('locked');
+  });
+
+  it('jams on an uneven split until he drags the splitter off', () => {
+    const game = inRoomFour();
+    toTwoXEighteen(game);
+    game.act({ type: 'splitter/step', by: 1 });
+    game.act({ type: 'splitter/step', by: 1 });
+    game.seen.length = 0;
+    game.act({ type: 'splitter/split' });
+    expect(game.stage()?.jam).toEqual({ kind: 'split', parts: 4 });
+    expect(game.seen).toEqual([{ type: 'MachineJammed', roomId: 'r04', kind: 'split' }]);
+    const jammed = game.store.getState().room;
+    game.act({ type: 'dial/set', x: 1 });
+    game.act({ type: 'tray/drop', side: 'left', kind: 'weight' });
+    game.act({ type: 'splitter/step', by: -1 });
+    game.act({ type: 'splitter/split' });
+    expect(game.store.getState().room).toBe(jammed);
+    game.act({ type: 'splitter/lift' });
+    expect(game.stage()?.jam).toBeNull();
+    expect(game.stage()?.pans).toBe(jammed?.stage.pans);
+    const lifted = game.store.getState().room;
+    game.act({ type: 'splitter/lift' });
+    expect(game.store.getState().room).toBe(lifted);
+  });
+
+  it('keeps the splitter away without Balance', () => {
+    const game = inRoomFour();
+    game.act({ type: 'dev/set-tools', tools: [] });
+    const before = game.store.getState().room;
+    game.act({ type: 'splitter/step', by: 1 });
+    game.act({ type: 'splitter/split' });
+    expect(game.store.getState().room).toBe(before);
   });
 });
 

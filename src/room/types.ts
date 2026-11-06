@@ -175,13 +175,19 @@ export interface StageState {
   /** 0–1 per machine: 0 is stopped, 1 is running; the skin shows it. */
   machineProgress: number[];
   /**
-   * The last committed line plus exploratory moves (the tray, from story 1.10). Writing a
+   * The last committed line plus exploratory moves (the tray and the splitter). Writing a
    * line replaces it with the line's layout. While a line jam is set the scale acts out the
    * jammed draft instead.
    */
   pans: Equation;
   /** The numbers on the tray's weight and float (room/tray.ts); kept by reset. */
   tray: TrayNumbers;
+  /**
+   * The parts the splitter is set to, `tuning.splitterMinParts`–`splitterMaxParts`
+   * (room/splitter.ts); kept by reset. While a split jam is set, the splitter lies across
+   * the pans, split into the jam's parts.
+   */
+  splitter: number;
   /**
    * True from a committed line until the next exploring action (dial, tray, splitter):
    * the pans are weighed at the stage's solution, with `?` on the gears and no readouts.
