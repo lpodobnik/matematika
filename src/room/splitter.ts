@@ -1,44 +1,55 @@
-// The splitter (architecture Pattern 1, Balance moves; Pattern 2, Jams; GDD, Three ways to
-// solve: Balance). Pure: when the splitter is offered, what its stepper does, and what
-// dragging it across both pans, or off them, does to the stage.
+// The splitter (architecture Pattern 1, Balance moves; GDD, Three ways to solve: Balance;
+// story 1.15). Pure: when the splitter is offered, what its stepper does, and what
+// dropping it over the scale does to the stage.
 //
-//   offered    with the tray: once Balance is earned, whenever a stage is open; it does
-//              nothing while the machine is jammed, except to be dragged off the pans
+//   offered    in an open stage once Balance is earned, from the moment one side holds only
+//              x pieces, more than one x (`2x = 18`), then for the rest of the stage. It
+//              does nothing while the machine is jammed
 //   parts      2–9 (`tuning.splitterMinParts`–`splitterMaxParts`), set by a stepper (−
 //              and +); a stage arrives with 2, and reset keeps what he set
-//   a split    dragged across both pans: each pan's number pieces first combine into one,
-//              as after a drop (`2x = 23 − 5` becomes `2x = 18`), then each pan's gear
-//              count and number is divided by the parts (`2x = 18` by 2 gives `x = 9`). The
-//              move completes like any balance move (room/tray.ts, `balanceMove`): the pans
-//              are weighed at the dial's x; once their equation has the stage's solution
-//              again, `WayUsed` fires, and with Balance `auto` its line is written, unless
-//              it is `x = n`, which he writes himself
-//   uneven     a gear count or number that the parts don't divide jams the machine
-//              (`jam.kind = 'split'`, `MachineJammed`). The splitter stays across the pans,
-//              and the pans keep their pieces, until he drags it off (`liftSplitter`),
-//              which clears the jam
+//   a split    dropped anywhere over the scale: each side's pieces separate into n equal
+//              groups, and every group but one fades away, on both sides (`splitGroups`
+//              says what the groups hold). Each side's gear count and number are divided by
+//              the parts (`2x = 18` by 2 gives `x = 9`). It is a Balance move like a tray
+//              move (room/tray.ts, `balanceMove`): the scale acts out at the stage's
+//              solution, `WayUsed` fires, and with Balance `auto` the move is written as
+//              done, `2x : 2 = 18 : 2`, then its result, unless that is `x = n`, which he
+//              writes himself
+//   uneven     a gear count or number the parts don't divide is refused, never a jam: the
+//              pieces start to separate, show what is left over (`splitGroups`), and slide
+//              back together. Nothing changes and nothing is written
 //
-// A pan's gear count is how many x-gears (or springs) stand on it, over the divider they
+// A side's gear count is how many x-gears (or springs) stand on it, over the divider they
 // share: `2x : 3` is two gears on a divider of 3, so it splits by 2 into `x : 3`, while
-// `x : 3` can't be split at all.
+// `x : 3` can't be split at all. A side's number is its number pieces combined.
 
 import { tuning } from '@/config/tuning';
-import type { Equation } from '@/math/expr';
+import { div, type Equation, type Expr, num } from '@/math/expr';
 import * as q from '@/math/rational';
-import type { RoomEvent } from '@/room/events';
+import { committedEquations } from '@/room/notebook';
 import type { RoomStep } from '@/room/room';
-import { balanceMove, type Linear, linearSide, sideExpr } from '@/room/tray';
-import type { RoomState, StageState, ToolId } from '@/room/types';
+import { type PieceView, sideViews } from '@/room/scale';
+import { balanceMove, type Linear, linearSide, readyToSplit, sideExpr } from '@/room/tray';
+import type { RoomState, Side, ToolId } from '@/room/types';
 
-/** Whether the game offers the splitter now: Balance is earned and the stage is open. */
+/**
+ * Whether the game offers the splitter now: Balance is earned, the stage is open, and one
+ * side has held only x pieces, more than one x, at some point this stage: on the pans, in a
+ * committed line, or after a Balance move (story 1.15). Lane C's handovers read this too.
+ */
 export function splitterOffered(room: RoomState, tools: readonly ToolId[]): boolean {
-  return tools.includes('balance') && room.stage.phase === 'open';
+  const { stage } = room;
+  if (!tools.includes('balance') || stage.phase !== 'open') return false;
+  return (
+    stage.balance.splitterSeen ||
+    readyToSplit(stage.pans) ||
+    committedEquations(stage.lines).some(readyToSplit)
+  );
 }
 
 /**
- * Whether the splitter can be set or dragged across the pans now: it is offered, and the
- * machine isn't jammed (while jammed he can only edit the draft, drag the splitter off,
- * reset or leave).
+ * Whether the splitter can be set or dropped over the scale now: it is offered, and the
+ * machine isn't jammed (while jammed he can only edit the draft, reset or leave).
  */
 export function splitterWorks(room: RoomState, tools: readonly ToolId[]): boolean {
   return splitterOffered(room, tools) && room.stage.jam === null;
@@ -65,18 +76,21 @@ export function stepSplitter(
   return { room: { ...room, stage: { ...stage, splitter: stage.splitter + by } }, events: [] };
 }
 
-/** What a split does to the pans: divides them evenly, or not. */
-export type SplitOutcome = { kind: 'even'; pans: Equation } | { kind: 'uneven' };
+/**
+ * What a split does to the pans: divides them evenly, with the move as done (`2x : 2 =
+ * 18 : 2`) and its result (`x = 9`), or not.
+ */
+export type SplitOutcome = { kind: 'even'; line: Equation; pans: Equation } | { kind: 'uneven' };
 
 function divides(side: Linear, parts: bigint): boolean {
   return side.a.n % parts === 0n && side.b.n % parts === 0n;
 }
 
 /**
- * The pans split into `parts`: each pan's numbers combined into one, then its gear count
- * and number divided by the parts. Uneven when any of them doesn't divide; null when a
- * pan's combined number would be too long for a line (only a line with two numbers near
- * 9 999 999 could do that), so the split is refused.
+ * The pans split into `parts`: each side's gear count and number divided by the parts, the
+ * move written as each side as the pans show it, divided (`(2x + 4) : 2` where a side has
+ * more than one term). Uneven when any of them doesn't divide; null when a side's number
+ * would be too long for a line (only a line with two numbers near 9 999 999 could do that).
  */
 export function splitOutcome(pans: Equation, parts: number): SplitOutcome | null {
   const by = BigInt(parts);
@@ -85,52 +99,87 @@ export function splitOutcome(pans: Equation, parts: number): SplitOutcome | null
   const share = q.rational(parts);
   const [left, right] = sides.map(({ a, b }) => sideExpr(q.div(a, share), q.div(b, share)));
   if (!left || !right) return null;
-  return { kind: 'even', pans: { left, right } };
+  const divided = (side: Expr) => div(side, num(parts));
+  return {
+    kind: 'even',
+    line: { left: divided(pans.left), right: divided(pans.right) },
+    pans: { left, right },
+  };
 }
 
 /**
- * The splitter dragged across both pans (`splitter/split`), at the parts it is set to. An
- * even split is exploring, like a tray move: it ends acting out and completes as any
- * balance move does. An uneven one jams the machine (`MachineJammed`, kind `split`): the
- * pans keep their pieces and are weighed at the dial's x, the splitter stays across them,
- * and `jamsInARow` counts it as a jam. Null, so the action is ignored and the splitter
- * slides back, when it doesn't work now or the split is refused.
+ * The splitter dropped over the scale (`splitter/split`), at the parts it is set to: an
+ * even split is a Balance move (room/tray.ts). Null, so the action is ignored and the
+ * splitter goes back to its place, when it doesn't work now, or the split is uneven or
+ * refused; the scene shows an uneven one separating and sliding back (`splitGroups`).
  */
 export function splitBothPans(room: RoomState, tools: readonly ToolId[]): RoomStep | null {
   if (!splitterWorks(room, tools)) return null;
-  const { stage } = room;
-  const outcome = splitOutcome(stage.pans, stage.splitter);
-  if (!outcome) return null;
-  if (outcome.kind === 'even') return balanceMove(room, outcome.pans);
-  const events: RoomEvent[] = [{ type: 'MachineJammed', roomId: room.spec.id, kind: 'split' }];
-  const jammed: StageState = {
-    ...stage,
-    jam: { kind: 'split', parts: stage.splitter },
-    jamsInARow: stage.jamsInARow + 1,
-    actingOut: false,
+  const outcome = splitOutcome(room.stage.pans, room.stage.splitter);
+  return outcome?.kind === 'even' ? balanceMove(room, outcome) : null;
+}
+
+/** One side's pieces as a split separates them: n equal groups, and what is left over. */
+export interface SideGroups {
+  /** One list of pieces per part, all alike: a share of the gears and of the number. */
+  groups: PieceView[][];
+  /** What doesn't make equal groups (`23` by 2 leaves a weight of 1); empty when even. */
+  leftover: PieceView[];
+}
+
+/** Both sides separated by a split, for the scene to show (story 1.15). */
+export interface SplitGroups {
+  parts: number;
+  even: boolean;
+  left: SideGroups;
+  right: SideGroups;
+}
+
+/** The whole share of `value` per part, and what is left over, keeping the sign and divider. */
+function shareOf(value: q.Rational, parts: bigint): { share: q.Rational; rest: q.Rational } {
+  const negative = value.n < 0n;
+  const size = negative ? -value.n : value.n;
+  const signed = (n: bigint) => q.rational(negative ? -n : n, value.d);
+  return { share: signed(size / parts), rest: signed(size % parts) };
+}
+
+function views(a: q.Rational, b: q.Rational, side: Side, tag: string): PieceView[] {
+  const expr = sideExpr(a, b);
+  if (!expr) return [];
+  return sideViews(expr, side).map((piece) => ({ ...piece, key: `${piece.key}@${tag}` }));
+}
+
+function sideGroups(expr: Expr, side: Side, parts: number): SideGroups {
+  const by = BigInt(parts);
+  const { a, b } = linearSide(expr);
+  const xs = shareOf(a, by);
+  const ns = shareOf(b, by);
+  return {
+    groups: Array.from({ length: parts }, (_, i) => views(xs.share, ns.share, side, `${i}`)),
+    leftover: views(xs.rest, ns.rest, side, 'rest'),
   };
-  return { room: { ...room, stage: jammed }, events };
 }
 
 /**
- * The splitter dragged off the pans (`splitter/lift`): it clears a split jam, and the pans
- * are as they were before the split. Null, so the action is ignored, when the machine isn't
- * jammed on a split.
+ * What a split at `parts` shows on each side before it lands or slides back: each side's
+ * pieces separated into `parts` equal groups, with what is left over. For an even split
+ * nothing is left over, and one group is the side's result.
  */
-export function liftSplitter(room: RoomState): RoomStep | null {
-  const { stage } = room;
-  if (stage.jam?.kind !== 'split') return null;
-  return { room: { ...room, stage: { ...stage, jam: null } }, events: [] };
+export function splitGroups(pans: Equation, parts: number): SplitGroups {
+  return {
+    parts,
+    even: splitOutcome(pans, parts)?.kind === 'even',
+    left: sideGroups(pans.left, 'left', parts),
+    right: sideGroups(pans.right, 'right', parts),
+  };
 }
 
 /** What the splitter shows. Flat, for selectors. */
 export interface SplitterView {
-  /** The parts it is set to, or, while it lies across the pans, the parts it jammed on. */
+  /** The parts it is set to. */
   parts: number;
-  /** Whether the stepper and a drag across the pans do anything now (not while jammed). */
+  /** Whether the stepper and a drop over the scale do anything now (not while jammed). */
   works: boolean;
-  /** A split jammed the machine: the splitter lies across the pans until he drags it off. */
-  onPans: boolean;
   /** It wiggles once (hint level 1): the game offers it for the first time. */
   wiggle: boolean;
 }
@@ -142,11 +191,9 @@ export function splitterView(
 ): SplitterView | null {
   if (!room || !splitterOffered(room, tools)) return null;
   const { stage } = room;
-  const onPans = stage.jam?.kind === 'split';
   return {
-    parts: stage.jam?.kind === 'split' ? stage.jam.parts : stage.splitter,
+    parts: stage.splitter,
     works: splitterWorks(room, tools),
-    onPans,
     wiggle: stage.hintLevel >= 1,
   };
 }

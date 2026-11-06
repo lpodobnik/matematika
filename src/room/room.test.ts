@@ -54,6 +54,7 @@ describe('enterRoom', () => {
       pans: equation('x + 4 = 9'),
       tray: { weight: 1, float: 1 },
       splitter: 2,
+      balance: { moves: 0, dialMaxed: false, trayMet: false, splitterSeen: false },
       actingOut: false,
       dialX: 0,
       dialOpen: { min: 0, max: 10 },

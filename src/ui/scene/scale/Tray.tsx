@@ -16,7 +16,7 @@ import type { TrayKind } from '@/room/types';
 import { useGame } from '@/store/store';
 import { watchDragCancel } from '@/ui/scene/scale/dial-drag';
 import { minHitCssPx } from '@/ui/scene/scale/dial-layout';
-import { labelFontSize, type PieceBox, pieceSize } from '@/ui/scene/scale/layout';
+import { beamPose, labelFontSize, type PieceBox, pieceSize } from '@/ui/scene/scale/layout';
 import { Piece } from '@/ui/scene/scale/Piece';
 import {
   type Carry,
@@ -28,6 +28,7 @@ import {
 import { pinWiggle } from '@/ui/scene/scale/pin-layout';
 import { StepButton } from '@/ui/scene/scale/StepButton';
 import {
+  copyMs,
   dropTarget,
   landMs,
   type Point,
@@ -60,11 +61,12 @@ function boxFor(piece: Carry['piece'], fontSize: number): PieceBox {
 }
 
 /**
- * The tray of spare pieces (Pattern 1, Balance moves): once Balance is earned, an open
- * stage shows a weight and a float, each numbered by its − and + (which repeat when held).
- * He drags either onto a pan, or drags a weight or float off a pan into the tray; the
- * store decides what the drop does (room/tray.ts), and a drop it refuses slides back. The
- * first time it is offered it wiggles once. It also draws the piece he carries, above
+ * The tray of spare pieces (Pattern 1, Balance moves; story 1.15): once Balance is earned
+ * and the stage offers it (room/tray.ts), it shows a weight and a float, each with its + above
+ * and its − below its number (which repeat when held). He drags either anywhere over the
+ * scale, and a copy goes to each side; or drags a weight or float off a pan, and it comes
+ * off both sides. The store decides what the move does, and a move it refuses slides back.
+ * The first time it is offered it wiggles once. It also draws the piece he carries, above
  * everything, moved through a ref as his finger moves.
  */
 export function Tray({ sceneScale, drag, toScene }: Props) {
@@ -268,14 +270,23 @@ interface CarriedProps {
   fontSize: number;
 }
 
+/** Where the copies of a dropped piece go: onto each pan as it hangs level (story 1.15). */
+const copyTargets: readonly Point[] = (() => {
+  const level = beamPose(0);
+  return [level.left, level.right];
+})();
+
 /**
- * The piece he carries, under his finger. Let go where the store takes it, it fades where
- * it is as the pan's (or the tray's) pieces change; refused, it slides back to where he
- * picked it up. Either way the carry then settles.
+ * The piece he carries, under his finger. Let go over the scale, a piece from the tray
+ * splits into two copies that fly to the two pans as the pans' pieces change (story 1.15:
+ * one copy to each side); a piece taken off a pan fades where it is. Refused, it slides
+ * back to where he picked it up. Either way the carry then settles.
  */
 function Carried({ carry, drag, fontSize }: CarriedProps) {
   const ref = useRef<Container>(null);
+  const copies = useRef<(Container | null)[]>([]);
   const box = useMemo(() => boxFor(carry.piece, fontSize), [carry.piece, fontSize]);
+  const sendsCopies = carry.phase === 'landing' && carry.source.from === 'tray';
 
   useLayoutEffect(() => {
     const place = (at: Point) => ref.current?.position.set(at.x, at.y);
@@ -295,8 +306,23 @@ function Carried({ carry, drag, fontSize }: CarriedProps) {
     }
     const from = drag.position() ?? carry.home;
     const to = carry.home;
-    const controls =
-      carry.phase === 'landing'
+    const flyCopies = (t: number) => {
+      node.alpha = Math.max(0, 1 - 3 * t);
+      copies.current.forEach((copy, i) => {
+        const target = copyTargets[i];
+        if (!copy || copy.destroyed || !target) return;
+        copy.position.set(from.x + (target.x - from.x) * t, from.y + (target.y - from.y) * t);
+        copy.alpha = t < 0.7 ? 1 : (1 - t) / 0.3;
+      });
+    };
+    const controls = sendsCopies
+      ? animate(0, 1, {
+          duration: copyMs / 1000,
+          ease: 'easeOut',
+          onUpdate: flyCopies,
+          onComplete: () => drag.settle(),
+        })
+      : carry.phase === 'landing'
         ? animate(0, 1, {
             duration: landMs / 1000,
             ease: 'easeOut',
@@ -318,11 +344,28 @@ function Carried({ carry, drag, fontSize }: CarriedProps) {
       // Unmounted mid-animation, the carry still ends (a new drag has already replaced it otherwise).
       drag.settle();
     };
-  }, [carry, drag]);
+  }, [carry, drag, sendsCopies]);
 
   return (
-    <pixiContainer ref={ref} eventMode="none">
-      <Piece piece={carry.piece} box={box} fontSize={fontSize} nodeRef={noPlace} />
-    </pixiContainer>
+    <>
+      <pixiContainer ref={ref} eventMode="none">
+        <Piece piece={carry.piece} box={box} fontSize={fontSize} nodeRef={noPlace} />
+      </pixiContainer>
+      {sendsCopies &&
+        copyTargets.map((target, i) => (
+          <pixiContainer
+            // biome-ignore lint/suspicious/noArrayIndexKey: a copy is the side it goes to
+            key={`copy-${i}`}
+            ref={(node: Container | null) => {
+              copies.current[i] = node;
+            }}
+            eventMode="none"
+            x={target.x}
+            y={target.y}
+          >
+            <Piece piece={carry.piece} box={box} fontSize={fontSize} nodeRef={noPlace} />
+          </pixiContainer>
+        ))}
+    </>
   );
 }

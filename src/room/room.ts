@@ -95,7 +95,8 @@ export const trayStart: Readonly<TrayNumbers> = { weight: 1, float: 1 };
 /**
  * A stage as it arrives: the first machine's equation on the pans and as the notebook's
  * line 0, an empty draft (or, with Try values `blanks`, the lines to fill), every machine
- * stopped, no pin placed, the tray at 1 and 1, the splitter at 2 parts, and the dial at its
+ * stopped, no pin placed, the tray at 1 and 1, the splitter at 2 parts, no Balance move
+ * made nor tool offered yet (room/tray.ts), and the dial at its
  * minimum, exploring, with its poke window open if it has one. It waits in `arrive` for
  * his first touch on the machine (room/phases.ts).
  */
@@ -114,6 +115,7 @@ export function arriveAtStage(stage: StageSpec): StageState {
     pans: machineEquation(stage, 0),
     tray: { ...trayStart },
     splitter: tuning.splitterMinParts,
+    balance: { moves: 0, dialMaxed: false, trayMet: false, splitterSeen: false },
     actingOut: false,
     dialX,
     dialOpen: openingDial(stage),

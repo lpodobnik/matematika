@@ -1,13 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { formatEquation } from '@/math/format';
-import type { RoomState, Side } from '@/room/types';
+import { formatEquation, formatTokens } from '@/math/format';
+import { splitGroups, splitterWorks } from '@/room/splitter';
+import type { RoomState } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import { initialGameState } from '@/store/reducer';
 import { createGameStore } from '@/store/store';
 import { watchDragCancel } from '@/ui/scene/scale/dial-drag';
 import { labelFontSize } from '@/ui/scene/scale/layout';
+import { createSplitShow } from '@/ui/scene/scale/split-show';
 import {
   createSplitterDrag,
   type SplitterCarry,
@@ -15,70 +17,53 @@ import {
   splitterCancelWatch,
   splitterTakes,
 } from '@/ui/scene/scale/splitter-drag';
-import { panUnder, splitterGeometry, splitterLayout } from '@/ui/scene/scale/splitter-layout';
+import { splitterLayout } from '@/ui/scene/scale/splitter-layout';
 
 const layout = splitterLayout(0.54, labelFontSize(0.54));
-const home = layout.blade;
+const home = layout.frame;
 const grabAt = { x: home.x + 40, y: home.y + 20 };
-/** Over each pan, and a point between them, under the machine. */
+/** Over each pan, over the beam between them, and below the stand (over the dial). */
 const overLeft = { x: 300, y: 500 };
 const overRight = { x: 1300, y: 500 };
-const between = { x: 800, y: 700 };
+const between = { x: 800, y: 600 };
+const overDial = { x: 800, y: 930 };
 
 describe('createSplitterDrag', () => {
-  it('carries the blade from where it stood, keeping where he grabbed it', () => {
-    const drag = createSplitterDrag(panUnder);
+  it('carries the frame from where it stood, keeping where he grabbed it', () => {
+    const drag = createSplitterDrag();
     const moves: { x: number; y: number }[] = [];
     drag.setMoveListener((at) => moves.push(at));
-    expect(drag.start(1, 'holder', home, 2, grabAt)).toBe(true);
-    expect(drag.carry()).toEqual({
-      from: 'holder',
-      home,
-      grabbedAt: grabAt,
-      parts: 2,
-      phase: 'held',
-    });
+    expect(drag.start(1, home, 2, grabAt)).toBe(true);
+    expect(drag.carry()).toEqual({ home, grabbedAt: grabAt, parts: 2, phase: 'held' });
     drag.move(1, { x: grabAt.x + 100, y: grabAt.y + 50 });
     expect(moves.at(-1)).toEqual({ x: home.x + 100, y: home.y + 50 });
     expect(drag.position()).toEqual({ x: home.x + 100, y: home.y + 50 });
     // Another finger is ignored, and can't start a second carry.
     drag.move(2, { x: 0, y: 0 });
     expect(drag.position()).toEqual({ x: home.x + 100, y: home.y + 50 });
-    expect(drag.start(2, 'holder', home, 2, grabAt)).toBe(false);
+    expect(drag.start(2, home, 2, grabAt)).toBe(false);
   });
 
-  it('notes the pans the finger passes over, and hands them to the release', () => {
-    const drag = createSplitterDrag(panUnder);
+  it('hands the release where he let go, and lands when it is taken', () => {
+    const drag = createSplitterDrag();
     const release = vi.fn(() => true);
     drag.setReleaseHandler(release);
-    drag.start(1, 'holder', home, 3, grabAt);
-    expect(drag.crossed()).toEqual([]);
+    drag.start(1, home, 3, grabAt);
     drag.move(1, overRight);
-    expect(drag.crossed()).toEqual(['right']);
     drag.move(1, between);
-    drag.move(1, overLeft);
-    expect(drag.crossed()).toEqual(['left', 'right']);
     drag.end(2);
     expect(release).not.toHaveBeenCalled();
     drag.end(1);
-    expect(release).toHaveBeenCalledWith(
-      expect.objectContaining({ from: 'holder', phase: 'held' }),
-      overLeft,
-      ['left', 'right'],
-    );
+    expect(release).toHaveBeenCalledWith(expect.objectContaining({ phase: 'held' }), between);
     expect(drag.carry()?.phase).toBe('landing');
-    // A new drag starts with no pans crossed.
-    drag.settle();
-    drag.start(1, 'holder', home, 3, grabAt);
-    expect(drag.crossed()).toEqual([]);
   });
 
-  it('slides back when the release handler refuses, and settles after', () => {
-    const drag = createSplitterDrag(panUnder);
+  it('goes back when the release handler refuses, and settles after', () => {
+    const drag = createSplitterDrag();
     const seen: (SplitterCarry | null)[] = [];
     drag.subscribe(() => seen.push(drag.carry()));
     drag.setReleaseHandler(() => false);
-    drag.start(1, 'holder', home, 2, grabAt);
+    drag.start(1, home, 2, grabAt);
     drag.move(1, overLeft);
     drag.move(1, overLeft);
     drag.end(1);
@@ -90,71 +75,42 @@ describe('createSplitterDrag', () => {
     expect(seen.map((carry) => carry?.phase ?? null)).toEqual(['held', 'returning', null]);
   });
 
-  it('slides back without asking on abort (its own pointer only) and cancel', () => {
-    const drag = createSplitterDrag(panUnder);
+  it('goes back without asking on abort (its own pointer only) and cancel', () => {
+    const drag = createSplitterDrag();
     const release = vi.fn(() => true);
     drag.setReleaseHandler(release);
-    drag.start(4, 'holder', home, 2, grabAt);
+    drag.start(4, home, 2, grabAt);
     drag.abort(5);
     expect(drag.carry()?.phase).toBe('held');
     drag.abort(4);
     expect(drag.carry()?.phase).toBe('returning');
     drag.settle();
-    drag.start(4, 'pans', layout.onPans, 4, overLeft);
+    drag.start(4, home, 4, grabAt);
     drag.cancel();
     expect(drag.carry()?.phase).toBe('returning');
     expect(release).not.toHaveBeenCalled();
-    // settle does nothing while a blade is held.
-    drag.start(6, 'holder', home, 2, grabAt);
+    // settle does nothing while a frame is held.
+    drag.start(6, home, 2, grabAt);
     drag.settle();
     expect(drag.carry()?.phase).toBe('held');
   });
 });
 
-describe('splitterAction', () => {
-  const fromHolder = { from: 'holder' as const, grabbedAt: grabAt };
-  const crossedBoth: Side[] = ['left', 'right'];
-
-  it('splits once the finger has passed over both pans, let go anywhere but the holder', () => {
-    expect(splitterAction(fromHolder, overRight, crossedBoth, layout)).toEqual({
-      type: 'splitter/split',
-    });
-    expect(splitterAction(fromHolder, between, crossedBoth, layout)).toEqual({
-      type: 'splitter/split',
-    });
-    expect(splitterAction(fromHolder, grabAt, crossedBoth, layout)).toBeNull();
-    expect(splitterAction(fromHolder, overRight, ['right'], layout)).toBeNull();
-    expect(splitterAction(fromHolder, overLeft, ['left'], layout)).toBeNull();
-    expect(splitterAction(fromHolder, between, [], layout)).toBeNull();
+describe('splitterAction (story 1.15: anywhere over the scale)', () => {
+  it('splits when let go anywhere over the scale: either pan, or the beam between', () => {
+    for (const at of [overLeft, overRight, between]) {
+      expect(splitterAction(at, layout)).toEqual({ type: 'splitter/split' });
+    }
   });
 
-  it('takes it off the pans when let go over the holder, or far enough from where he grabbed it', () => {
-    const grabbed = { x: 800, y: splitterGeometry.onPansY };
-    const fromPans = { from: 'pans' as const, grabbedAt: grabbed };
-    const lift = { type: 'splitter/lift' };
-    expect(splitterAction(fromPans, { x: 800, y: 200 }, [], layout)).toEqual(lift);
-    expect(splitterAction(fromPans, grabAt, [], layout)).toEqual(lift);
-    const near = { x: grabbed.x + splitterGeometry.liftDistance - 1, y: grabbed.y };
-    expect(splitterAction(fromPans, near, [], layout)).toBeNull();
-    expect(splitterAction(fromPans, grabbed, crossedBoth, layout)).toBeNull();
+  it('asks for nothing let go back over the holder, or off the scale', () => {
+    expect(splitterAction(grabAt, layout)).toBeNull();
+    expect(splitterAction(overDial, layout)).toBeNull();
+    expect(splitterAction({ x: 800, y: 100 }, layout)).toBeNull();
   });
 });
 
-describe('panUnder', () => {
-  it('finds each pan, with its pieces at any tilt, and nothing between them or above them', () => {
-    expect(panUnder(overLeft)).toBe('left');
-    expect(panUnder(overRight)).toBe('right');
-    expect(panUnder({ x: 300, y: 300 })).toBe('left');
-    expect(panUnder({ x: 1300, y: 760 })).toBe('right');
-    expect(panUnder(between)).toBeNull();
-    expect(panUnder({ x: 300, y: 100 })).toBeNull();
-    expect(panUnder({ x: 300, y: 900 })).toBeNull();
-    // The holder's blade is above the left pan's area.
-    expect(panUnder(grabAt)).toBeNull();
-  });
-});
-
-/** Room 4, open, with Balance: the drag wired to the store as Splitter.tsx wires it. */
+/** Room 4, open, with Balance, at `2x = 18`: the drag wired to the store as Splitter.tsx wires it. */
 function wiredSplitter() {
   const events: DomainEvent[] = [];
   const store = createGameStore({
@@ -169,118 +125,112 @@ function wiredSplitter() {
   act({ type: 'machine/touch' });
   act({ type: 'pin/set', value: { kind: 'x', x: 9 } });
   act({ type: 'pin/confirm' });
+  act({ type: 'dial/set', x: 6 });
   for (let i = 0; i < 4; i += 1) act({ type: 'tray/step', kind: 'float', by: 1 });
-  act({ type: 'tray/drop', side: 'left', kind: 'float' });
-  act({ type: 'tray/drop', side: 'right', kind: 'float' });
-  const drag = createSplitterDrag(panUnder);
-  const release = vi.fn(
-    (held: SplitterCarry, at: { x: number; y: number }, crossed: readonly Side[]) => {
-      const { room, save } = store.getState();
-      const action = splitterAction(held, at, crossed, layout);
-      if (!action || !splitterTakes(room, save.progress.tools, action)) return false;
-      act(action);
-      return true;
-    },
-  );
+  act({ type: 'tray/drop', kind: 'float' });
+  const drag = createSplitterDrag();
+  const show = createSplitShow();
+  const release = vi.fn((_held: SplitterCarry, at: { x: number; y: number }) => {
+    const { room, save } = store.getState();
+    const action = splitterAction(at, layout);
+    if (!action || !room || !splitterWorks(room, save.progress.tools)) return false;
+    const groups = splitGroups(room.stage.pans, room.stage.splitter);
+    const takes = groups.even && splitterTakes(room, save.progress.tools, action);
+    if (takes || !groups.even) show.play(groups);
+    if (!takes) return false;
+    act(action);
+    return true;
+  });
   drag.setReleaseHandler(release);
   const room = () => store.getState().room as RoomState;
-  return { store, events, act, drag, room, release };
+  return { store, events, act, drag, show, room, release };
 }
 
 describe('the splitter drag, wired to the store', () => {
-  it('room 4: dragged across both pans at 2 parts, 2x = 18 shows x = 9 and nothing is written', () => {
-    const { drag, room, events } = wiredSplitter();
+  it('room 4: let go over the beam at 2 parts, it writes 2x : 2 = 18 : 2 and shows the groups', () => {
+    const { drag, room, events, show } = wiredSplitter();
     expect(formatEquation(room().stage.pans)).toBe('2x = 18');
     events.length = 0;
-    drag.start(1, 'holder', home, 2, grabAt);
-    drag.move(1, overLeft);
+    drag.start(1, home, 2, grabAt);
     drag.move(1, between);
-    drag.move(1, overRight);
     drag.end(1);
     expect(drag.carry()?.phase).toBe('landing');
     expect(formatEquation(room().stage.pans)).toBe('x = 9');
-    expect(room().stage.lines).toHaveLength(2);
-    expect(events).toEqual([{ type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' }]);
+    expect(
+      room()
+        .stage.lines.map((line) => formatTokens(line.tokens))
+        .at(-1),
+    ).toBe('2x : 2 = 18 : 2');
+    expect(events.map((event) => event.type)).toEqual(['WayUsed', 'LineAccepted']);
+    // The pans show the split from 2x = 18: two groups of x against two groups of 9.
+    expect(show.current()?.groups).toMatchObject({ parts: 2, even: true });
+    expect(show.current()?.groups.right.groups.map((group) => group.map((p) => p.label))).toEqual([
+      ['9'],
+      ['9'],
+    ]);
   });
 
-  it('slides back from one pan only, and the store is untouched', () => {
-    const { drag, room } = wiredSplitter();
+  it('refuses an uneven split: the frame goes back, the pans show it sliding back, nothing changes', () => {
+    const { drag, room, events, act, show } = wiredSplitter();
+    act({ type: 'splitter/step', by: 1 });
+    act({ type: 'splitter/step', by: 1 });
     const before = room();
-    drag.start(1, 'holder', home, 2, grabAt);
+    events.length = 0;
+    drag.start(1, home, 4, grabAt);
     drag.move(1, overLeft);
     drag.end(1);
     expect(drag.carry()?.phase).toBe('returning');
     expect(room()).toBe(before);
+    expect(events).toEqual([]);
+    const shown = show.current();
+    expect(shown?.groups.even).toBe(false);
+    // 2x by 4 and 18 by 4: no gear in a group, two left over; 4 in each, 2 left over.
+    expect(shown?.groups.left.leftover.map((p) => p.label)).toEqual(['x', 'x']);
+    expect(shown?.groups.right.leftover.map((p) => p.label)).toEqual(['2']);
+    if (shown) show.end(shown.id);
+    expect(show.current()).toBeNull();
   });
 
-  it('jams on an uneven split, stays on the pans, and comes off when dragged off', () => {
-    const { drag, room, events, act } = wiredSplitter();
-    act({ type: 'splitter/step', by: 1 });
-    act({ type: 'splitter/step', by: 1 });
-    events.length = 0;
-    drag.start(1, 'holder', home, 4, grabAt);
-    drag.move(1, overRight);
-    drag.move(1, overLeft);
-    drag.end(1);
-    expect(drag.carry()?.phase).toBe('landing');
-    expect(room().stage.jam).toEqual({ kind: 'split', parts: 4 });
-    expect(events).toEqual([{ type: 'MachineJammed', roomId: 'r04', kind: 'split' }]);
-    drag.settle();
-    // A drag from the holder does nothing now: the splitter is on the pans.
-    drag.start(1, 'holder', home, 4, grabAt);
-    drag.move(1, overRight);
-    drag.move(1, overLeft);
+  it('goes back from off the scale, and the store is untouched and nothing shows', () => {
+    const { drag, room, show } = wiredSplitter();
+    const before = room();
+    drag.start(1, home, 2, grabAt);
+    drag.move(1, overDial);
     drag.end(1);
     expect(drag.carry()?.phase).toBe('returning');
-    drag.settle();
-    // Nudged, it slides back onto the pans; dragged off, it clears the jam.
-    const grabbed = { x: 800, y: splitterGeometry.onPansY };
-    drag.start(1, 'pans', layout.onPans, 4, grabbed);
-    drag.move(1, { x: grabbed.x + 20, y: grabbed.y });
-    drag.end(1);
-    expect(drag.carry()?.phase).toBe('returning');
-    expect(room().stage.jam).toEqual({ kind: 'split', parts: 4 });
-    drag.settle();
-    drag.start(1, 'pans', layout.onPans, 4, grabbed);
-    drag.move(1, { x: 800, y: 200 });
-    drag.end(1);
-    expect(drag.carry()?.phase).toBe('landing');
-    expect(room().stage.jam).toBeNull();
-    expect(formatEquation(room().stage.pans)).toBe('2x = 18');
+    expect(room()).toBe(before);
+    expect(show.current()).toBeNull();
   });
 
-  it('slides back a blade held across both pans when the DOM cancels its pointer: no split', () => {
+  it('goes back when the DOM cancels its pointer or the window loses focus: no split', () => {
     const { drag, room, release } = wiredSplitter();
     const win = new EventTarget();
     const doc = Object.assign(new EventTarget(), { visibilityState: 'visible' });
     const stop = watchDragCancel(win, doc, splitterCancelWatch(drag));
     const before = room();
-    drag.start(7, 'holder', home, 2, grabAt);
-    drag.move(7, overLeft);
-    drag.move(7, overRight);
+    drag.start(7, home, 2, grabAt);
+    drag.move(7, between);
     win.dispatchEvent(Object.assign(new Event('pointercancel'), { pointerId: 8 }));
     expect(drag.carry()?.phase).toBe('held');
     win.dispatchEvent(Object.assign(new Event('pointercancel'), { pointerId: 7 }));
     expect(release).not.toHaveBeenCalled();
     expect(drag.carry()?.phase).toBe('returning');
     drag.settle();
-    drag.start(7, 'holder', home, 2, grabAt);
-    drag.move(7, overLeft);
-    drag.move(7, overRight);
+    drag.start(7, home, 2, grabAt);
+    drag.move(7, between);
     win.dispatchEvent(new Event('blur'));
     expect(drag.carry()?.phase).toBe('returning');
     expect(room()).toBe(before);
     stop();
   });
 
-  it('asks the store only about splitter actions, and nothing without a room', () => {
+  it('asks the store only about a split, and nothing without a room', () => {
     const { room } = wiredSplitter();
     expect(splitterTakes(null, ['balance'], { type: 'splitter/split' })).toBe(false);
     expect(splitterTakes(room(), ['balance'], null)).toBe(false);
     expect(splitterTakes(room(), ['balance'], { type: 'machine/touch' })).toBe(false);
     expect(splitterTakes(room(), [], { type: 'splitter/split' })).toBe(false);
     expect(splitterTakes(room(), ['balance'], { type: 'splitter/split' })).toBe(true);
-    expect(splitterTakes(room(), ['balance'], { type: 'splitter/lift' })).toBe(false);
   });
 });
 
@@ -288,9 +238,11 @@ describe('Splitter.tsx', () => {
   const splitter = readFileSync(new URL('./Splitter.tsx', import.meta.url), 'utf8');
   const scene = readFileSync(new URL('../SceneRoot.tsx', import.meta.url), 'utf8');
 
-  it('is in the scene, with its own drag that knows the pans', () => {
-    expect(scene).toContain('createSplitterDrag(panUnder)');
-    expect(scene).toContain('<Splitter ');
+  it('is in the scene, with its own drag, and shows its splits through the scale', () => {
+    expect(scene).toContain('createSplitterDrag()');
+    expect(scene).toContain('<Splitter');
+    expect(scene).toContain('splitShow={splitShow}');
+    expect(scene).toContain('show={splitShow}');
   });
 
   it('follows a drag on the stage: every move, up and up outside, and cancel, blur or a hidden page', () => {
@@ -314,13 +266,14 @@ describe('Splitter.tsx', () => {
     expect(splitter).not.toMatch(/node\.x = (pinWiggle|0)/);
   });
 
-  it('hides a carried or returning blade where it was without unmounting it, so it can be grabbed again', () => {
-    expect(splitter).toContain("hidden={carriedFrom(carry, 'holder')}");
-    expect(splitter).toContain("hidden={carriedFrom(carry, 'pans')}");
+  it('hides a carried or returning frame where it was without unmounting it, so it can be grabbed again', () => {
+    expect(splitter).toContain('hidden={carried(carry)}');
     expect(splitter).toContain('<pixiContainer visible={!hidden}>');
   });
 
-  it('shows the number of parts in school notation', () => {
-    expect(splitter).toContain('formatNumber(parts)');
+  it('shows its number as `: n` in school notation, and never a jam (story 1.15)', () => {
+    expect(splitter).toContain('divisorLabel(BigInt(parts))');
+    expect(splitter).not.toContain('palette.jam');
+    expect(splitter).not.toContain('splitter/lift');
   });
 });

@@ -7,7 +7,7 @@ import { setDial } from '@/room/dial';
 import { deleteToken, enterLine, typeToken } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
-import { hiddenXLabel, readoutLabel, scaleView, showsReadouts, stageX } from '@/room/scale';
+import { readoutLabel, scaleView, showsReadouts, stageX, xLabel } from '@/room/scale';
 import type { RoomSpec, RoomState } from '@/room/types';
 
 function roomWith(equation: string, extra: Partial<RoomSpec['stages'][number]> = {}): RoomState {
@@ -25,8 +25,9 @@ describe('scaleView', () => {
   it('shows room 1 at the dial x: a gear and a 4 against a 9, tipped 5° to the right', () => {
     const view = scaleView(enterRoom(r01).room);
     expect(view.x).toBe(0);
+    // Story 1.15: the gear shows the letter x, never the dial's number.
     expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
-      ['gear', '0'],
+      ['gear', 'x'],
       ['weight', '4'],
     ]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([['weight', '9']]);
@@ -36,12 +37,25 @@ describe('scaleView', () => {
     expect(view.level).toBe(false);
   });
 
-  it("weighs the pans at the dial's x and shows it on the small gears", () => {
+  it("weighs the pans at the dial's x, and the small gears still show x (story 1.15)", () => {
     const room = enterRoom(r01).room;
     const at5 = scaleView({ ...room, stage: { ...room.stage, dialX: 5 } });
-    expect(at5.left.pieces[0]?.label).toBe('5');
+    expect(at5.x).toBe(5);
+    expect(at5.left.pieces[0]?.label).toBe('x');
     expect(at5.tilt).toBe(0);
     expect(at5.level).toBe(true);
+  });
+
+  it('labels every x piece with the letter x: a gear x or 27x, a spring −x or −27x', () => {
+    expect(xLabel('gear', 1n)).toBe('x');
+    expect(xLabel('gear', 27n)).toBe('27x');
+    expect(xLabel('spring', 1n)).toBe('\u2212x');
+    expect(xLabel('spring', 27n)).toBe('\u221227x');
+    const view = scaleView(roomWith('20 \u2212 x = 6'));
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
+      ['weight', '20'],
+      ['spring', '\u2212x'],
+    ]);
   });
 
   it('labels large gears with their count and a divided gear\u2019s slice with its division', () => {
@@ -49,7 +63,7 @@ describe('scaleView', () => {
     // Story 1.14: the slice's tag reads `: 3` with the school sign, not a bare 3.
     expect(view.left.pieces.map((p) => [p.kind, p.label, p.divisorLabel])).toEqual([
       ['gear', '27x', null],
-      ['gear', '0', ': 3'],
+      ['gear', 'x', ': 3'],
     ]);
     expect(view.right.pieces[0]?.label).toBe('5\u202f905');
   });
@@ -57,7 +71,7 @@ describe('scaleView', () => {
   it('labels a float with the school minus: room 3\u2019s x \u2212 6 shows \u22126 (story 1.14)', () => {
     const view = scaleView(roomWith('x \u2212 6 = 8'));
     expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
-      ['gear', '0'],
+      ['gear', 'x'],
       ['float', '\u22126'],
     ]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([['weight', '8']]);
@@ -114,14 +128,14 @@ const blankPage = (equation: string, extra: Partial<RoomSpec['stages'][number]> 
   roomWith(equation, { fading: { try: 'blank' }, dial: { min: 0, max: 10, step: 1 }, ...extra });
 
 describe('acting out a written line (story 1.7)', () => {
-  it("weighs a committed line at the stage's solution, with ? on the gears and no readouts", () => {
+  it("weighs a committed line at the stage's solution, with x on the gears and no readouts", () => {
     const explored = setDial(blankPage('2x + 7 = 25'), 3)?.room as RoomState;
     const view = scaleView(write(explored, '2x = 25 − 7'));
     expect(view.actingOut).toBe(true);
     expect(view.x).toBe(9);
     expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
-      ['gear', hiddenXLabel],
-      ['gear', hiddenXLabel],
+      ['gear', 'x'],
+      ['gear', 'x'],
     ]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([
       ['weight', '25'],
@@ -132,22 +146,22 @@ describe('acting out a written line (story 1.7)', () => {
     expect(view.level).toBe(true);
   });
 
-  it('keeps the count on a large gear and the division on a slice: only x is hidden', () => {
+  it('keeps the count on a large gear and the division on a slice: x, never ? (story 1.15)', () => {
     const view = scaleView(write(blankPage('27x + 5 = 5 405'), '27x = 5 400'));
     expect(view.left.pieces.map((p) => p.label)).toEqual(['27x']);
     const divided = scaleView(
       write(blankPage('x : 3 = 5', { dial: { min: 0, max: 30, step: 3 } }), 'x : 3 = 10 − 5'),
     );
-    expect(divided.left.pieces.map((p) => [p.label, p.divisorLabel])).toEqual([['?', ': 3']]);
+    expect(divided.left.pieces.map((p) => [p.label, p.divisorLabel])).toEqual([['x', ': 3']]);
   });
 
-  it("goes back to the dial's x, its label and the readouts on the dial's next notch", () => {
+  it("goes back to the dial's x and the readouts on the dial's next notch", () => {
     const acted = write(blankPage('x + 4 = 9'), 'x = 9 − 4');
     const turned = setDial(acted, 2)?.room as RoomState;
     const view = scaleView(turned);
     expect(view.actingOut).toBe(false);
     expect(view.x).toBe(2);
-    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', '2']]);
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', 'x']]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([
       ['weight', '9'],
       ['float', '−4'],
@@ -171,7 +185,7 @@ describe('acting out a written line (story 1.7)', () => {
     const view = scaleView(jammed);
     expect(view.actingOut).toBe(true);
     expect(view.x).toBe(5);
-    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', '?']]);
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', 'x']]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([['weight', '6']]);
     expect(view.tilt).toBe(-tuning.jamMinTilt);
     expect(view.level).toBe(false);

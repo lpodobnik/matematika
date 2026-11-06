@@ -3,10 +3,16 @@
 // placeholder "to be continued" screen. He plays as he would on the tablet: he touches the
 // machine, pokes the dial, pins, writes his lines and, in room 4, moves weights and splits.
 // Story 1.14's pin flow: the dial keeps turning in its poke window while he pins, the
-// machine tests each pin as he confirms it, and each right pin pays 2 parts.
+// machine tests each pin as he confirms it, and each right pin pays 2 parts. Story 1.15's
+// Balance: in room 4 the tray appears once his dial reaches 6 without levelling the pans,
+// every move acts on both sides and writes its lines straight away, and the splitter
+// appears once a side holds only x pieces.
 
 import { describe, expect, it } from 'vitest';
+import { formatTokens } from '@/math/format';
 import { tokenFromChar } from '@/math/tokens';
+import { splitterOffered } from '@/room/splitter';
+import { trayOffered } from '@/room/tray';
 import type { RoomState } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
@@ -103,8 +109,10 @@ function playRoomThree(game: Game) {
 
 /**
  * Room 4, the water wheel: the dial stops at 6, so he pins beyond it (the pans weigh 9 for
- * a moment, and the dial stays where it is), takes 5 off both pans with floats (2x = 18 is
- * written for him), splits by 2 and writes the last two lines.
+ * a moment, and the dial stays where it is), turns the dial to 6, which can't level it, so
+ * the tray appears. A float of 5 over the scale takes 5 off both sides (`2x + 5 − 5 = 23 −
+ * 5`, then `2x = 18`, written for him); the splitter appears, splits by 2 (`2x : 2 = 18 :
+ * 2`), and he writes `x = 9` and the check line.
  */
 function playRoomFour(game: Game) {
   game.act({ type: 'machine/touch' });
@@ -114,8 +122,7 @@ function playRoomFour(game: Game) {
   game.act({ type: 'pin/confirm' });
   for (const x of [4, 5, 6]) game.act({ type: 'dial/set', x });
   for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
-  game.act({ type: 'tray/drop', side: 'left', kind: 'float' });
-  game.act({ type: 'tray/drop', side: 'right', kind: 'float' });
+  game.act({ type: 'tray/drop', kind: 'float' });
   game.act({ type: 'splitter/split' });
   game.write('x=9');
   game.write('2·9+5=23');
@@ -194,7 +201,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     ]);
   });
 
-  it('pays off his pins, writes 2x = 18 for him in room 4, and never jams on the way', () => {
+  it('pays off his pins, writes the Balance lines for him in room 4, and never jams on the way', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
@@ -212,12 +219,56 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     ]);
     const accepted = of('LineAccepted');
     expect(accepted.filter((event) => 'roomId' in event && event.roomId === 'r04')).toEqual([
+      { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: false },
+      { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: true },
       { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: true },
       { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'typed', progress: true },
       { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'typed', progress: true },
     ]);
     expect(of('MachineJammed')).toEqual([]);
     expect(of('LineWrong')).toEqual([]);
+  });
+
+  it('writes room 4 the Balance way: the move, its result, the split, then his two lines', () => {
+    const game = freshGame();
+    playRoomOne(game);
+    playRoomTwo(game);
+    playRoomThree(game);
+    playRoomFour(game);
+    expect(game.stage().lines.map((line) => [formatTokens(line.tokens), line.source])).toEqual([
+      ['2x + 5 = 23', 'given'],
+      ['2x + 5 − 5 = 23 − 5', 'balance'],
+      ['2x = 18', 'balance'],
+      ['2x : 2 = 18 : 2', 'balance'],
+      ['x = 9', 'typed'],
+      ['2 · 9 + 5 = 23', 'typed'],
+    ]);
+  });
+
+  it('offers room 4’s tools one at a time: the tray at the dial’s end, then the splitter', () => {
+    const game = freshGame();
+    playRoomOne(game);
+    playRoomTwo(game);
+    playRoomThree(game);
+    const offered: string[] = [];
+    const act = game.act;
+    game.act = (action) => {
+      act(action);
+      const state = game.store.getState();
+      const room = state.room as RoomState;
+      const tools = [
+        trayOffered(room, state.save.progress.tools) ? 'tray' : null,
+        splitterOffered(room, state.save.progress.tools) ? 'splitter' : null,
+      ].filter((tool) => tool !== null);
+      const now = `${action.type}${action.type === 'dial/set' ? ` ${action.x}` : ''}: ${tools.join(' ')}`;
+      if (offered.at(-1)?.split(': ')[1] !== now.split(': ')[1]) offered.push(now);
+    };
+    playRoomFour(game);
+    game.act = act;
+    // Typing and the presentations go round `game.act`, so only his moves on the machine show.
+    expect(offered).toEqual(['machine/touch: ', 'dial/set 6: tray', 'tray/drop: tray splitter']);
+    const done = game.store.getState();
+    expect(trayOffered(done.room as RoomState, done.save.progress.tools)).toBe(false);
   });
 
   it('tests each pin as he confirms it: the machine turns the dial, firing no dial events', () => {

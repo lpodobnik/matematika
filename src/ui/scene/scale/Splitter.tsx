@@ -19,19 +19,25 @@ import {
 } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { palette } from '@/art/palette';
-import { type BladeShape, bladeTag, splitterSkin } from '@/art/skins/splitter';
-import { formatNumber } from '@/math/format';
-import { canStepParts, splitterView, stepSplitter } from '@/room/splitter';
+import { type FrameShape, frameTag, splitterSkin } from '@/art/skins/splitter';
+import { divisorLabel } from '@/room/pieces';
+import {
+  canStepParts,
+  splitGroups,
+  splitterView,
+  splitterWorks,
+  stepSplitter,
+} from '@/room/splitter';
 import { gameStore, useGame } from '@/store/store';
 import { watchDragCancel } from '@/ui/scene/scale/dial-drag';
 import type { Box } from '@/ui/scene/scale/dial-layout';
 import { labelFontSize } from '@/ui/scene/scale/layout';
 import { pinWiggle } from '@/ui/scene/scale/pin-layout';
 import { StepButton } from '@/ui/scene/scale/StepButton';
+import type { SplitShowChannel } from '@/ui/scene/scale/split-show';
 import {
   type SplitterCarry,
   type SplitterDrag,
-  type SplitterGrab,
   splitterAction,
   splitterCancelWatch,
   splitterTakes,
@@ -48,10 +54,12 @@ extend({ Container, Graphics, Text });
 interface Props {
   /** CSS px per scene unit: buttons and grab areas are sized in CSS px. */
   sceneScale: number;
-  /** Carries the splitter across the pans, or off them. */
+  /** Carries the divider frame over the scale. */
   drag: SplitterDrag;
   /** A point on the canvas in scene units. */
   toScene(point: PointData): Point;
+  /** Where a split it is let go for shows on the pans (Scale.tsx draws it). */
+  show: SplitShowChannel;
 }
 
 /** A splitter that does nothing now (a wrong line jams the machine) is drawn faint. */
@@ -62,26 +70,27 @@ function useSplitterCarry(drag: SplitterDrag): SplitterCarry | null {
 }
 
 /**
- * Whether the blade where he grabbed it is hidden: while he carries it, and while it slides
- * back. Once the store has taken the drag it shows where the store puts it (back in the
- * holder, or across the pans), while the carried one fades. A hidden blade can still be
- * grabbed, so a drag during the slide back starts at once, and a slide back that never
- * plays (a page in the background has no animation frames) never leaves it out of reach.
+ * Whether the frame in its holder is hidden: while he carries it, and while it goes back.
+ * Once the store has taken the drag it shows in its holder again, while the carried one
+ * fades. A hidden frame can still be grabbed, so a drag during the way back starts at once,
+ * and a way back that never plays (a page in the background has no animation frames) never
+ * leaves it out of reach.
  */
-function carriedFrom(carry: SplitterCarry | null, from: SplitterGrab): boolean {
-  return carry !== null && carry.from === from && carry.phase !== 'landing';
+function carried(carry: SplitterCarry | null): boolean {
+  return carry !== null && carry.phase !== 'landing';
 }
 
 /**
- * The splitter (Pattern 1, Balance moves): once Balance is earned, an open stage shows it in
- * its holder in the top-left corner, set to 2–9 parts by its − and + (which repeat when
- * held). He drags it across both pans to split them; the store decides what that does
- * (room/splitter.ts), and a drag it doesn't take slides back. A split that doesn't divide
- * evenly jams the machine, and the splitter lies across the pans until he drags it off.
- * The first time it is offered it wiggles once. It draws the blade he carries above
- * everything, moved through a ref as his finger moves.
+ * The splitter (Pattern 1, Balance moves; story 1.15): a divider frame of 2–9 equal
+ * compartments with its number `: n` on its tag, offered in its holder in the top-left
+ * corner once a side holds only x pieces, and set by its − and + (which repeat when held).
+ * He drags it anywhere over the scale. Before the store hears of it, the pans show what it
+ * does (split-show.ts): each side's pieces separate into equal groups; an even split is
+ * then a Balance move (room/splitter.ts), and an uneven one slides back together while the
+ * frame goes home. The first time it is offered it wiggles once. It draws the frame he
+ * carries above everything, moved through a ref as his finger moves.
  */
-export function Splitter({ sceneScale, drag, toScene }: Props) {
+export function Splitter({ sceneScale, drag, toScene, show }: Props) {
   const { app, isInitialised } = useApplication();
   const view = useGame(useShallow((s) => splitterView(s.room, s.save.progress.tools)));
   const stageKey = useGame((s) => (s.room ? `${s.room.spec.id}.${s.room.stageIndex}` : null));
@@ -94,27 +103,32 @@ export function Splitter({ sceneScale, drag, toScene }: Props) {
   const carry = useSplitterCarry(drag);
 
   // The release handler reads the latest layout without re-registering, and asks the live
-  // store whether it takes the drag, since that is the store the dispatch reaches.
+  // store what the split does, since that is the store the dispatch reaches.
   const latestLayout = useRef(layout);
   useLayoutEffect(() => {
     latestLayout.current = layout;
   });
 
   useEffect(() => {
-    drag.setReleaseHandler((held, at, crossed) => {
+    drag.setReleaseHandler((_held, at) => {
       const current = latestLayout.current;
       if (!current) return false;
-      const action = splitterAction(held, at, crossed, current);
+      const action = splitterAction(at, current);
       const { room: live, save } = gameStore.getState();
-      if (!action || !splitterTakes(live, save.progress.tools, action)) return false;
+      if (!action || !live || !splitterWorks(live, save.progress.tools)) return false;
+      const groups = splitGroups(live.stage.pans, live.stage.splitter);
+      const takes = groups.even && splitterTakes(live, save.progress.tools, action);
+      // Story 1.15: an uneven split is shown separating and sliding back, never a jam.
+      if (takes || !groups.even) show.play(groups);
+      if (!takes) return false;
       dispatch(action);
       return true;
     });
     return () => drag.setReleaseHandler(null);
-  }, [drag, dispatch]);
+  }, [drag, dispatch, show]);
 
   // A drag is followed on the stage: every move, and up or up outside wherever the finger
-  // was let go. A cancelled pointer, blur or a hidden page is not a release: it slides back.
+  // was let go. A cancelled pointer, blur or a hidden page is not a release: it goes back.
   useEffect(() => {
     if (!isInitialised) return;
     const { stage } = app;
@@ -148,9 +162,9 @@ export function Splitter({ sceneScale, drag, toScene }: Props) {
   const stepDown = useMemo(() => step(-1), [step]);
 
   const grab = useCallback(
-    (from: SplitterGrab, home: Box, parts: number) => (event: FederatedPointerEvent) => {
+    (home: Box, parts: number) => (event: FederatedPointerEvent) => {
       if (event.button !== 0) return;
-      drag.start(event.pointerId, from, home, parts, toScene(event.global));
+      drag.start(event.pointerId, home, parts, toScene(event.global));
     },
     [drag, toScene],
   );
@@ -184,21 +198,17 @@ export function Splitter({ sceneScale, drag, toScene }: Props) {
   return (
     <pixiContainer>
       {view && (
-        <pixiContainer ref={holderRef} alpha={view.works || view.onPans ? 1 : idleAlpha}>
+        <pixiContainer ref={holderRef} alpha={view.works ? 1 : idleAlpha}>
           <Holder layout={layout} />
-          {!view.onPans && (
-            <Blade
-              hidden={carriedFrom(carry, 'holder')}
-              box={layout.blade}
-              grabBox={layout.grab}
-              parts={view.parts}
-              halves={false}
-              jammed={false}
-              fontSize={fontSize}
-              lineWidth={layout.lineWidth}
-              onGrab={view.works ? grab('holder', layout.blade, view.parts) : null}
-            />
-          )}
+          <Frame
+            hidden={carried(carry)}
+            box={layout.frame}
+            grabBox={layout.grab}
+            parts={view.parts}
+            fontSize={fontSize}
+            lineWidth={layout.lineWidth}
+            onGrab={view.works ? grab(layout.frame, view.parts) : null}
+          />
           <StepButton
             box={layout.up}
             by={1}
@@ -214,19 +224,6 @@ export function Splitter({ sceneScale, drag, toScene }: Props) {
             onStep={stepDown}
           />
         </pixiContainer>
-      )}
-      {view?.onPans && (
-        <Blade
-          hidden={carriedFrom(carry, 'pans')}
-          box={layout.onPans}
-          grabBox={layout.onPansGrab}
-          parts={view.parts}
-          halves
-          jammed
-          fontSize={fontSize}
-          lineWidth={layout.lineWidth}
-          onGrab={grab('pans', layout.onPans, view.parts)}
-        />
       )}
       {carry && (
         <Carried carry={carry} drag={drag} fontSize={fontSize} lineWidth={layout.lineWidth} />
@@ -244,48 +241,31 @@ function Holder({ layout }: { layout: SplitterLayout }) {
   return <pixiGraphics draw={draw} />;
 }
 
-interface BladeProps {
-  /** Where the blade is drawn: its top-left corner and size, in scene units. */
+interface FrameProps {
+  /** Where the frame is drawn: its top-left corner and size, in scene units. */
   box: Box;
-  /** Where a drag of it can start, in scene units; null for a carried blade. */
+  /** Where a drag of it can start, in scene units; null for a carried frame. */
   grabBox: Box | null;
   parts: number;
-  halves: boolean;
-  jammed: boolean;
   fontSize: number;
   lineWidth: number;
   onGrab: ((event: FederatedPointerEvent) => void) | null;
-  /** Carried away, or sliding back: not drawn here, though it can still be grabbed. */
+  /** Carried away, or going back: not drawn here, though it can still be grabbed. */
   hidden?: boolean;
 }
 
-/** The blade, marked into its parts, with the number of parts on its tag. */
-function Blade({
-  box,
-  grabBox,
-  parts,
-  halves,
-  jammed,
-  fontSize,
-  lineWidth,
-  onGrab,
-  hidden = false,
-}: BladeProps) {
+/** The divider frame, walled into its compartments, with `: n` on its tag. */
+function Frame({ box, grabBox, parts, fontSize, lineWidth, onGrab, hidden = false }: FrameProps) {
   const { width, height } = box;
-  const shape: BladeShape = useMemo(
-    () => ({ width, height, parts, halves, jammed, lineWidth }),
-    [width, height, parts, halves, jammed, lineWidth],
+  const shape: FrameShape = useMemo(
+    () => ({ width, height, parts, lineWidth }),
+    [width, height, parts, lineWidth],
   );
-  const draw = useCallback((g: Graphics) => splitterSkin.blade(g, shape), [shape]);
-  const tag = bladeTag(shape);
+  const draw = useCallback((g: Graphics) => splitterSkin.frame(g, shape), [shape]);
+  const tag = frameTag(shape);
   const style: TextStyleOptions = useMemo(
-    () => ({
-      fontFamily: 'system-ui, sans-serif',
-      fontSize,
-      fontWeight: '700',
-      fill: jammed ? palette.jam : palette.ink,
-    }),
-    [fontSize, jammed],
+    () => ({ fontFamily: 'system-ui, sans-serif', fontSize, fontWeight: '700', fill: palette.ink }),
+    [fontSize],
   );
   const hitArea = useMemo(
     () =>
@@ -307,7 +287,7 @@ function Blade({
       <pixiContainer visible={!hidden}>
         <pixiGraphics draw={draw} />
         <pixiText
-          text={formatNumber(parts)}
+          text={divisorLabel(BigInt(parts))}
           anchor={0.5}
           x={tag.x + tag.width / 2}
           y={tag.y + tag.height / 2}
@@ -326,9 +306,9 @@ interface CarriedProps {
 }
 
 /**
- * The blade he carries, under his finger. When the store takes the drag it fades where it
- * is (the splitter shows back in its holder, or across the pans); otherwise it slides back
- * to where he grabbed it. Either way the carry then settles.
+ * The frame he carries, under his finger. When the store takes the drag it fades where it
+ * is (the splitter shows back in its holder); otherwise it goes back to where he grabbed it.
+ * Either way the carry then settles.
  */
 function Carried({ carry, drag, fontSize, lineWidth }: CarriedProps) {
   const ref = useRef<Container>(null);
@@ -378,12 +358,10 @@ function Carried({ carry, drag, fontSize, lineWidth }: CarriedProps) {
 
   return (
     <pixiContainer ref={ref} eventMode="none">
-      <Blade
+      <Frame
         box={box}
         grabBox={null}
         parts={carry.parts}
-        halves={carry.from === 'pans'}
-        jammed={carry.from === 'pans'}
         fontSize={fontSize}
         lineWidth={lineWidth}
         onGrab={null}

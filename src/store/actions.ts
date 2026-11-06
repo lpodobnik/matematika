@@ -25,16 +25,20 @@ export type Action =
   | { type: 'pin/confirm' }
   /** The tray's − or + for its weight or float; the UI repeats it while the button is held. */
   | { type: 'tray/step'; kind: TrayKind; by: 1 | -1 }
-  /** He dropped the tray's weight or float, with its number, on a pan. */
-  | { type: 'tray/drop'; side: Side; kind: TrayKind }
-  /** He dragged a weight or float off a pan into the tray; `key` is its key on the scale. */
+  /**
+   * He dropped the tray's weight or float, with its number, anywhere over the scale: one
+   * copy goes to each side (story 1.15).
+   */
+  | { type: 'tray/drop'; kind: TrayKind }
+  /**
+   * He dragged a weight or float off a side, anywhere off the scale; `key` is its key on the
+   * scale. The same number comes off both sides (story 1.15).
+   */
   | { type: 'tray/take'; side: Side; key: string }
   /** The splitter's − or +: fewer or more parts; the UI repeats it while the button is held. */
   | { type: 'splitter/step'; by: 1 | -1 }
-  /** He dragged the splitter, at the parts it is set to, across both pans. */
+  /** He dropped the splitter, at the parts it is set to, anywhere over the scale. */
   | { type: 'splitter/split' }
-  /** He dragged the splitter off the pans, after a split that jammed the machine. */
-  | { type: 'splitter/lift' }
   /** A pad key (or its keyboard stand-in) typed at the end of the draft line. */
   | { type: 'notebook/type'; token: Token }
   /** Delete: the draft's last token. */

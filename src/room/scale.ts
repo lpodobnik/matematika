@@ -1,19 +1,22 @@
 // What the scale shows for the stage in play: the pieces on each pan with their labels,
 // both sides' values and the tilt. The scene draws this and decides nothing itself.
 //
-// Which x the pans show (architecture, Pattern 1):
-//   exploring (dial, tray, splitter)   the dial's x, shown on the gears too, with both
-//                                      sides' values on readouts unless the stage hides them
-//   acting out a written line          the stage's solution, `?` on the gears, no readouts
-// A committed line acted out is level. A wrong line is acted out while the machine is
-// jammed on it, and tips by at least `tuning.jamMinTilt`. Acting out never moves the dial.
-// When an x pin beyond the dial resolves, the pans briefly weigh its x (`pinRevealView`):
-// the scene decides how long, and nothing here changes.
+// Which x the pans show (architecture, Pattern 1; story 1.15):
+//   exploring with the dial            the dial's x, with both sides' values on readouts
+//                                      unless the stage hides them
+//   acting out a written line, or      the stage's solution, no readouts. Balance moves act
+//   from a Balance move                on both sides at once, so the pans stay level
+// Every x-gear shows the letter `x` (a large one `27x`), and every x-balloon (spring) `−x`,
+// never the dial's number: the dial's value shows on the slider. A committed line acted out
+// is level. A wrong line is acted out while the machine is jammed on it, and tips by at
+// least `tuning.jamMinTilt`. Acting out never moves the dial. When an x pin beyond the dial
+// resolves, the pans briefly weigh its x (`pinRevealView`): the scene decides how long, and
+// nothing here changes.
 
 import { tuning } from '@/config/tuning';
 import { stageSolution } from '@/math/check';
-import { type Equation, equationHasX } from '@/math/expr';
-import { formatNumber } from '@/math/format';
+import { type Equation, type Expr, equationHasX, xVar } from '@/math/expr';
+import { formatExpr, formatNumber } from '@/math/format';
 import * as q from '@/math/rational';
 import { jammedLine } from '@/room/notebook';
 import {
@@ -24,19 +27,18 @@ import {
   numberPieceLabel,
   type Piece,
   panPieces,
+  sidePieces,
 } from '@/room/pieces';
 import { pinRevealX } from '@/room/pin';
 import { currentStageSpec, machineEquation } from '@/room/room';
 import { isLevel, jamTilt, sideValues, tiltFor } from '@/room/tilt';
-import type { RoomState, StageSpec } from '@/room/types';
-
-/** What a small gear shows while a line is acted out, so a written line can't reveal x. */
-export const hiddenXLabel = '?';
+import type { RoomState, Side, StageSpec } from '@/room/types';
 
 export type PieceView = Piece & {
   /**
-   * The number on the piece: a weight's value, a float's with the school minus (`−6`), or
-   * the x a small gear stands for.
+   * The number on the piece: a weight's value, a float's with the school minus (`−6`); on
+   * a gear the letter `x` (a large one `27x`), and on a spring the same with the minus
+   * (`−x`, `−27x`). Never the dial's number (story 1.15).
    */
   label: string;
   /** The tag on a divided gear's or spring's slice, `: 3`, or null for none. */
@@ -57,7 +59,7 @@ export interface Readouts {
 export interface ScaleView {
   /** The x the pans are weighed at. */
   x: number;
-  /** A written line is acted out: at the stage's solution, with `?` on the gears. */
+  /** The scale acts out a written line or Balance moves: weighed at the stage's solution. */
   actingOut: boolean;
   left: PanView;
   right: PanView;
@@ -69,13 +71,27 @@ export interface ScaleView {
   readouts: Readouts | null;
 }
 
-function pieceView(piece: Piece, xLabel: string): PieceView {
+/** The school minus, as format.ts writes it before a negative number. */
+const minus = formatNumber(-1).replace(formatNumber(1), '');
+
+/** What an x piece shows: `x` or `27x` on a gear, `−x` or `−27x` on a spring. */
+export function xLabel(kind: 'gear' | 'spring', count: bigint): string {
+  const xs = count === 1n ? formatExpr(xVar()) : countLabel(count);
+  return kind === 'spring' ? `${minus}${xs}` : xs;
+}
+
+function pieceView(piece: Piece): PieceView {
   if (isNumberPiece(piece)) return { ...piece, label: numberPieceLabel(piece), divisorLabel: null };
   return {
     ...piece,
-    label: piece.count === 1n ? xLabel : countLabel(piece.count),
+    label: xLabel(piece.kind, piece.count),
     divisorLabel: piece.divisor === null ? null : divisorLabel(piece.divisor),
   };
+}
+
+/** One side's pieces as the scale draws them, with their labels (the splitter's groups use it). */
+export function sideViews(expr: Expr, side: Side): PieceView[] {
+  return sidePieces(expr, side).map(pieceView);
 }
 
 /**
@@ -117,13 +133,12 @@ function viewOf(room: RoomState, { equation, x, actingOut, jammed }: Weighing): 
   const spec = currentStageSpec(room);
   const values = sideValues(equation, q.rational(x));
   const pieces = panPieces(equation);
-  const xLabel = actingOut ? hiddenXLabel : formatNumber(x);
   const tiltPerUnit = spec.tiltPerUnit ?? tuning.tiltPerUnit;
   return {
     x,
     actingOut,
-    left: { pieces: pieces.left.map((p) => pieceView(p, xLabel)), value: values.left },
-    right: { pieces: pieces.right.map((p) => pieceView(p, xLabel)), value: values.right },
+    left: { pieces: pieces.left.map(pieceView), value: values.left },
+    right: { pieces: pieces.right.map(pieceView), value: values.right },
     tilt: jammed ? jamTilt(values, tiltPerUnit) : tiltFor(values, tiltPerUnit),
     // A jammed line always tips, even one that holds for every x.
     level: !jammed && isLevel(values),

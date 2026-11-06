@@ -145,8 +145,27 @@ export interface NotebookLine {
   verdict: Verdict;
 }
 
-/** Pattern 2: a wrong line jams the machine until he edits it; a split jams until he drags the splitter off. */
-export type Jam = { kind: 'line' } | { kind: 'split'; parts: number };
+/**
+ * Pattern 2: a wrong line jams the machine until he edits it. A split that doesn't divide
+ * evenly is refused, never jammed (story 1.15).
+ */
+export type Jam = { kind: 'line' };
+
+/**
+ * What the stage remembers about Balance, so the tray and the splitter appear one at a
+ * time (story 1.15; room/tray.ts, room/splitter.ts). Kept by reset: a tool once offered
+ * in a stage stays.
+ */
+export interface BalanceMemory {
+  /** Balance moves made this stage: tray drops, drag-offs and even splits. */
+  moves: number;
+  /** His dial has stood at its maximum this stage with the pans not level. */
+  dialMaxed: boolean;
+  /** He had met the tray before this stage (`save.progress.firstUse`; the root reducer). */
+  trayMet: boolean;
+  /** A Balance move left one side holding only x pieces, more than one x. */
+  splitterSeen: boolean;
+}
 
 /**
  * The stage in play: the part of Pattern 2's `StageState` that the scale, the dial, the
@@ -178,22 +197,24 @@ export interface StageState {
   /** 0–1 per machine: 0 is stopped, 1 is running; the skin shows it. */
   machineProgress: number[];
   /**
-   * The last committed line plus exploratory moves (the tray and the splitter). Writing a
-   * line replaces it with the line's layout. While a line jam is set the scale acts out the
-   * jammed draft instead.
+   * The last committed line, or where Balance moves left it (the tray and the splitter act
+   * on both sides at once). Writing a line replaces it with the line's layout. While a line
+   * jam is set the scale acts out the jammed draft instead.
    */
   pans: Equation;
   /** The numbers on the tray's weight and float (room/tray.ts); kept by reset. */
   tray: TrayNumbers;
   /**
    * The parts the splitter is set to, `tuning.splitterMinParts`–`splitterMaxParts`
-   * (room/splitter.ts); kept by reset. While a split jam is set, the splitter lies across
-   * the pans, split into the jam's parts.
+   * (room/splitter.ts); kept by reset.
    */
   splitter: number;
+  /** What the stage remembers about Balance, for offering its tools (story 1.15). */
+  balance: BalanceMemory;
   /**
-   * True from a committed line until the next exploring action (dial, tray, splitter):
-   * the pans are weighed at the stage's solution, with `?` on the gears and no readouts.
+   * The scale acts out: from a committed line or a Balance move (story 1.15) until he turns
+   * the dial. The pans are weighed at the stage's solution, so they hang level, with no
+   * readouts; the gears show `x` either way.
    */
   actingOut: boolean;
   dialX: number;

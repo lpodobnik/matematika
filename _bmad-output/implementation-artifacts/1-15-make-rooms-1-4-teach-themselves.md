@@ -142,3 +142,34 @@ And Luka in room 4:
 ## Dev Agent Record
 
 (Each lane adds its own section: Calls, files, checks.)
+
+### Lane B: Balance (AC 5–11), branch `lane/1-15-balance`
+
+**Calls** (flag for veto):
+- "First use already met" comes from `save.progress.firstUse`; since `trayOffered(room, tools)` keeps its signature, the root reducer stamps it into the stage (`rememberTray`, `stage.balance.trayMet`) after each room step.
+- New `StageState.balance` (`moves`, `dialMaxed`, `trayMet`, `splitterSeen`) remembers why a tool is offered; reset keeps it, so a tool once offered stays for the stage.
+- "Dial at its maximum" is the spec's `dial.max` reached by his own dial (`setDial`) with the pans not level there; the machine's pin test doesn't count.
+- The splitter's moment is a side whose linear form is b = 0 and |numerator of a| ≥ 2 (`2x`, `27x`, `2x : 3`, `0 − 5x`), on the pans, in any committed line, or after a Balance move.
+- The move line appends to each side as the pans show it (`2x + 5 = 23 − 5 + 5`); the split line divides each side as shown, with brackets (`(4x + 8) : 4 = 20 : 4`).
+- Both Balance lines are judged against the lines before the move, so the move and its result are one step: `2x = 18` makes progress, `2x + 8 = 26` doesn't. Room 4's machine goes 0 → 0.2 → 0.4 → 0.9 → 1.
+- An uneven split is ignored by the store (no change, no event). The scene shows the refusal from the pure `splitGroups` through a small `split-show` channel shared by the splitter and the scale.
+- A tray piece lands anywhere in one scale zone (x 25–1575, y 200–840 in scene units). A pan piece comes off when let go anywhere off that zone, the tray included; over the zone it slides back.
+- Springs are labelled `−x` / `−27x` (school minus, like floats `−6`), gears `x` / `27x`. The wider spring labels raise the tablet sweep's top from 243 to 221 (still inside the pan zones). `scene-zones.test.ts` is updated; the art bible's quote is the main session's.
+- Tray: one column per piece, + directly above and − directly below its number. On the balloon the buttons cover the arrow and the string. At 640 × 360 the 48 px buttons make the shelf about 464 scene units tall, so it can cover the top ~16 units (the ring) of a weight on the right pan at rest.
+- Splitter: a divider frame of n compartments with `: n` on its tag (`divisorLabel`), and + over − on the holder at the frame's end. The holder stays.
+- A tray drop sends two copies flying to the level pans. An even split shows the groups separating, all but one fading, and the last sliding to the middle; the store's result then shows.
+- After Balance, the dial can show a side with x below 0 (readout `−6`), as one-sided moves could before.
+- `Pan.tsx` (no lane owns it) gained `piecesHidden` and `children` for the split groups.
+- `MachineJammed.kind` is now only `'line'`. The dev panel's splitter text loses "on the pans".
+
+**Files:** `src/room/{tray,splitter,scale,notebook,types,events,room,phases,dial}.ts` and their tests (`tray`, `splitter`, `scale`, `notebook`, `machine`, `room`, `dial`); `src/store/{actions,reducer}.ts`, `store.test.ts`, `playthrough.test.ts`; `src/art/skins/splitter.ts` and its test; `src/art/scene-zones.test.ts`; `src/dev/dev-view.ts` and its test; `src/ui/scene/SceneRoot.tsx`; `src/ui/scene/scale/{Scale,Pan,Tray,Splitter}.tsx`, `{piece-drag,splitter-drag,splitter-layout,tray-layout}.ts` and their tests; new `split-show.ts`, `split-show.test.ts` and `SplitGroups.tsx`.
+
+**Checks:** `npm run check` clean; `npm test` 91 files, 1709 passed, 2 skipped; `npm run build` passes (JS 0.33 MB gzipped). Browser, port 5305, room 4 via `?dev`:
+- 1280 × 800: the tray appears only at dial 6, and the splitter only after the first move.
+- A −5 balloon dropped on the beam writes `2x + 5 − 5 = 23 − 5` and `2x = 18`, and the scale stays level with no readouts.
+- Split by 3 separates and slides back; nothing is written.
+- Split by 2 writes `2x : 2 = 18 : 2` and shows `x = 9`.
+- Dragging the 9 off takes 9 off both sides.
+- A dial notch returns to exploring.
+- Gears show `x`. No console errors.
+- 640 × 360 checked with the notebook aside. Server stopped.

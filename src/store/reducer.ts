@@ -21,8 +21,8 @@ import {
 } from '@/room/phases';
 import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
-import { liftSplitter, splitBothPans, stepSplitter } from '@/room/splitter';
-import { dropOnPan, stepTray, takeOffPan } from '@/room/tray';
+import { splitBothPans, stepSplitter } from '@/room/splitter';
+import { dropOnScale, rememberTray, stepTray, takeOffPan } from '@/room/tray';
 import type { RoomSpec, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
@@ -91,15 +91,13 @@ function roomStep(
     case 'tray/step':
       return stepTray(room, tools, action.kind, action.by);
     case 'tray/drop':
-      return dropOnPan(room, tools, action.side, action.kind);
+      return dropOnScale(room, tools, action.kind);
     case 'tray/take':
       return takeOffPan(room, tools, action.side, action.key);
     case 'splitter/step':
       return stepSplitter(room, tools, action.by);
     case 'splitter/split':
       return splitBothPans(room, tools);
-    case 'splitter/lift':
-      return liftSplitter(room);
     case 'notebook/type':
       return typeToken(room, action.token);
     case 'notebook/delete':
@@ -116,6 +114,16 @@ function roomStep(
       // first use runs.
       return { room, events: [] };
   }
+}
+
+/**
+ * Story 1.15: a stage knows he met the tray in an earlier stage, so it offers the tray at
+ * once (room/tray.ts). The same step when nothing changes.
+ */
+function withTrayMemory(step: RoomStep | null, save: SaveState): RoomStep | null {
+  if (!step) return step;
+  const room = rememberTray(step.room, save.progress.firstUse);
+  return room === step.room ? step : { ...step, room };
 }
 
 /** A room step, then what it means for his progress (held in `save`). */
@@ -170,7 +178,10 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
     const before =
       action.type === 'dev/set-tools' ? withTools(state.save, action.tools) : state.save;
-    const change = roomStep(state, action, ctx.now, roomList, before.progress.tools);
+    const change = withTrayMemory(
+      roomStep(state, action, ctx.now, roomList, before.progress.tools),
+      before,
+    );
     const progressed = progress(change, before);
     const { step } = progressed;
     const events: DomainEvent[] = step ? [...step.events] : [];

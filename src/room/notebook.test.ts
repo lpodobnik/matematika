@@ -296,15 +296,12 @@ describe('a wrong line jams the machine (Pattern 2)', () => {
     expect(setDial(edited, 1)?.room.stage.dialX).toBe(1);
   });
 
-  it('keeps a split jam on an edit; only a line jam clears', () => {
-    const room = typed(roomOne(), 'x = 5');
-    const split: RoomState = {
-      ...room,
-      stage: { ...room.stage, jam: { kind: 'split', parts: 2 } },
-    };
-    expect(step(typeToken(split, '1')).room.stage.jam).toEqual({ kind: 'split', parts: 2 });
-    expect(step(deleteToken(split)).room.stage.jam).toEqual({ kind: 'split', parts: 2 });
-    expect(enterLine(split, 0)).toBeNull();
+  it('clears the line jam on any edit, the only jam there is (story 1.15 refuses uneven splits)', () => {
+    const jammed = written(roomOne(), 'x = 6').room;
+    expect(jammed.stage.jam).toEqual({ kind: 'line' });
+    expect(enterLine(jammed, 0)).toBeNull();
+    expect(step(typeToken(jammed, '1')).room.stage.jam).toBeNull();
+    expect(step(deleteToken(jammed)).room.stage.jam).toBeNull();
   });
 });
 

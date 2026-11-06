@@ -105,7 +105,10 @@ describe('sceneZones', () => {
     }
   });
 
-  it('match the sweep the art bible quotes: x 65–1535 and y 243–739 on the tablet', () => {
+  // Story 1.15: springs show `−x` rather than one digit, so a row of five (135 − 5x) wraps
+  // and the sweep's top rises from 243 to 221, still inside the pan zones; the art bible's
+  // quote is the main session's to update.
+  it('match the sweep the art bible quotes: x 65–1535 and y 221–739 on the tablet', () => {
     const sweep = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
     const grow = (box: Rect) => {
       sweep.x0 = Math.min(sweep.x0, box.x0);
@@ -127,7 +130,7 @@ describe('sceneZones', () => {
     }
     expect(Math.round(sweep.x0)).toBe(65);
     expect(Math.round(sweep.x1)).toBe(1535);
-    expect(Math.round(sweep.y0)).toBe(243);
+    expect(Math.round(sweep.y0)).toBe(221);
     expect(Math.round(sweep.y1)).toBe(739);
   });
 

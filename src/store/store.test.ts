@@ -8,7 +8,7 @@ import { machineView } from '@/room/machine';
 import { panPieces } from '@/room/pieces';
 import { pinView } from '@/room/pin';
 import { scaleView } from '@/room/scale';
-import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
+import type { FirstUseId, RoomSpec, RoomState, StageSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
 import { effects, runEffects } from '@/store/effects';
 import type { DomainEvent } from '@/store/events';
@@ -122,13 +122,15 @@ describe('dial/set', () => {
     return { store, seen };
   }
 
-  it('turns the dial a notch, fires DialNotch, and the x-gear shows the new x', () => {
+  it('turns the dial a notch, fires DialNotch, and weighs the pans there; the gear shows x', () => {
     const { store, seen } = storeInRoomOne();
     store.getState().dispatch({ type: 'dial/set', x: 3 });
     expect(store.getState().room?.stage.dialX).toBe(3);
     expect(seen).toEqual([{ type: 'DialNotch', x: 3 }]);
     const room = store.getState().room;
-    if (room) expect(scaleView(room).left.pieces[0]?.label).toBe('3');
+    // Story 1.15: the dial's value shows on the slider, never on the gears.
+    if (room)
+      expect(scaleView(room)).toMatchObject({ x: 3, left: { pieces: [{ label: 'x' }, {}] } });
   });
 
   it('fires PansLevel when the notch levels the pans', () => {
@@ -711,9 +713,9 @@ describe('predict before the dial opens (story 1.9)', () => {
   });
 });
 
-describe('balance with the tray (story 1.10)', () => {
+describe('balance with the tray (story 1.10; both sides at once, story 1.15)', () => {
   /** Room 4 with Balance earned (as room 3 earns it), the pin locked at 9, so it is open. */
-  function inRoomFour() {
+  function inRoomFour(firstUse: FirstUseId[] = ['pin']) {
     const seen: DomainEvent[] = [];
     const initial = initialGameState();
     const store = createGameStore({
@@ -721,7 +723,7 @@ describe('balance with the tray (story 1.10)', () => {
       effects: [(event) => seen.push(event)],
       initialState: {
         ...initial,
-        save: { ...initialGameState().save, progress: { tools: ['balance'], firstUse: ['pin'] } },
+        save: { ...initialGameState().save, progress: { tools: ['balance'], firstUse } },
       },
     });
     const act = (action: Action) => store.getState().dispatch(action);
@@ -741,31 +743,43 @@ describe('balance with the tray (story 1.10)', () => {
     return { store, seen, act, stage, lines, type };
   }
 
-  it('offers the tray once the stage opens, and wiggles it on first use', () => {
+  it('offers the tray once his dial reaches 6 without levelling the pans, and wiggles it then', () => {
     const game = inRoomFour();
     expect(game.stage()?.phase).toBe('open');
-    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray', 'splitter']);
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin']);
+    for (const x of [4, 5]) game.act({ type: 'dial/set', x });
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin']);
+    game.act({ type: 'dial/set', x: 6 });
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray']);
     expect(game.stage()?.hintLevel).toBe(1);
     game.act({ type: 'stage/reset' });
-    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray', 'splitter']);
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray']);
   });
 
-  it('plays room 4: a float of 5 on the left writes nothing, and on the right writes 2x = 18', () => {
+  it('offers it at once in a stage after the one where he met it', () => {
+    const game = inRoomFour(['pin', 'tray']);
+    expect(game.stage()?.balance.trayMet).toBe(true);
+    const before = game.store.getState().room;
+    game.act({ type: 'tray/step', kind: 'float', by: 1 });
+    expect(game.store.getState().room).not.toBe(before);
+  });
+
+  it('plays room 4: a float of 5 writes the move, then 2x = 18, and the scale stays level', () => {
     const game = inRoomFour();
+    game.act({ type: 'dial/set', x: 6 });
     for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
     expect(game.stage()?.tray).toEqual({ weight: 1, float: 5 });
     game.seen.length = 0;
-    game.act({ type: 'tray/drop', side: 'left', kind: 'float' });
-    expect(game.lines()).toEqual(['2x+5=23']);
-    expect(game.seen).toEqual([]);
-    const tipped = game.store.getState().room as RoomState;
-    expect(scaleView(tipped)).toMatchObject({ x: 0, actingOut: false, tilt: -15 });
-    game.act({ type: 'tray/drop', side: 'right', kind: 'float' });
-    expect(game.lines()).toEqual(['2x+5=23', '2x=18']);
+    game.act({ type: 'tray/drop', kind: 'float' });
+    expect(game.lines()).toEqual(['2x+5=23', '2x+5−5=23−5', '2x=18']);
     expect(game.seen).toEqual([
       { type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' },
+      { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: false },
       { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: true },
     ]);
+    const room = game.store.getState().room as RoomState;
+    expect(scaleView(room)).toMatchObject({ x: 9, actingOut: true, tilt: 0, readouts: null });
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray', 'splitter']);
     game.type('x=9');
     game.type('2·9+5=23');
     expect(game.stage()?.phase).toBe('locked');
@@ -781,45 +795,45 @@ describe('balance with the tray (story 1.10)', () => {
     expect(game.stage()?.phase).toBe('locked');
   });
 
-  it('takes a piece off a pan, and slides back (ignores) a drop it refuses', () => {
+  it('takes a piece off both sides, and slides back (ignores) a move it refuses', () => {
     const game = inRoomFour();
+    game.act({ type: 'dial/set', x: 6 });
     game.act({ type: 'tray/take', side: 'left', key: 'left-weight-0' });
-    expect(
-      scaleView(game.store.getState().room as RoomState).left.pieces.map((p) => p.kind),
-    ).toEqual(['gear', 'gear']);
+    expect(game.lines()).toEqual(['2x+5=23', '2x+5−5=23−5', '2x=18']);
     const before = game.store.getState().room;
     game.act({ type: 'tray/take', side: 'left', key: 'left-gear-0' });
     for (let i = 0; i < 30; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
     const stepped = game.store.getState().room;
     expect(stepped?.stage.tray.float).toBe(31);
-    game.act({ type: 'tray/drop', side: 'right', kind: 'float' });
+    game.act({ type: 'tray/drop', kind: 'float' });
     expect(game.store.getState().room).toBe(stepped);
     expect(before?.stage.pans).toBe(stepped?.stage.pans);
   });
 
   it('keeps the tray away without Balance, and the dev panel can grant it', () => {
     const game = inRoomFour();
+    game.act({ type: 'dial/set', x: 6 });
     game.act({ type: 'dev/set-tools', tools: [] });
     expect(game.store.getState().save.progress.tools).toEqual([]);
     const before = game.store.getState().room;
-    game.act({ type: 'tray/drop', side: 'left', kind: 'weight' });
+    game.act({ type: 'tray/drop', kind: 'weight' });
     expect(game.store.getState().room).toBe(before);
     game.act({ type: 'dev/set-tools', tools: ['balance', 'balance'] });
     expect(game.store.getState().save.progress.tools).toEqual(['balance']);
-    game.act({ type: 'tray/drop', side: 'left', kind: 'weight' });
+    game.act({ type: 'tray/drop', kind: 'weight' });
     expect(game.store.getState().room?.stage.pans).not.toBe(before?.stage.pans);
   });
 
-  it('wiggles the tray when the dev panel grants Balance in an open stage he has not met it in', () => {
+  it('wiggles the tray when the dev panel grants Balance in a stage that offers it', () => {
     const store = createGameStore({ makeCtx: () => fixedCtx });
     const act = (action: Action) => store.getState().dispatch(action);
     act({ type: 'room/enter', roomId: 'r01' });
     act({ type: 'machine/touch' });
     act({ type: 'dev/set-tools', tools: ['balance'] });
-    expect(store.getState().save.progress).toEqual({
-      tools: ['balance'],
-      firstUse: ['tray', 'splitter'],
-    });
+    // Room 1 offers neither yet: x stands alone, and the dial hasn't been to 10.
+    expect(store.getState().save.progress).toEqual({ tools: ['balance'], firstUse: [] });
+    act({ type: 'dial/set', x: 10 });
+    expect(store.getState().save.progress).toEqual({ tools: ['balance'], firstUse: ['tray'] });
     expect(store.getState().room?.stage.hintLevel).toBe(1);
     const empty = reduce(
       initialGameState(),
@@ -831,7 +845,7 @@ describe('balance with the tray (story 1.10)', () => {
   });
 });
 
-describe('split both pans (story 1.11)', () => {
+describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => {
   /** Room 4 with Balance earned and the pin and tray met, open; the splitter is new. */
   function inRoomFour() {
     const seen: DomainEvent[] = [];
@@ -864,35 +878,40 @@ describe('split both pans (story 1.11)', () => {
     return { store, seen, act, stage, lines, type };
   }
 
-  /** A float of 5 on each pan: `2x = 18` is written. */
+  /** A float of 5 over the scale: the move and `2x = 18` are written. */
   function toTwoXEighteen(game: ReturnType<typeof inRoomFour>) {
     for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
-    game.act({ type: 'tray/drop', side: 'left', kind: 'float' });
-    game.act({ type: 'tray/drop', side: 'right', kind: 'float' });
-    expect(game.lines()).toEqual(['2x+5=23', '2x=18']);
+    game.act({ type: 'tray/drop', kind: 'float' });
+    expect(game.lines()).toEqual(['2x+5=23', '2x+5−5=23−5', '2x=18']);
   }
 
-  it('wiggles the splitter the first time it is available, and records it as met', () => {
+  it('wiggles the splitter the first time it is offered, after the tray, and records it as met', () => {
     const game = inRoomFour();
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray']);
+    toTwoXEighteen(game);
     expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray', 'splitter']);
     expect(game.stage()?.hintLevel).toBe(1);
   });
 
   it('sets 2–9 parts with its stepper', () => {
     const game = inRoomFour();
+    toTwoXEighteen(game);
     for (let i = 0; i < 10; i += 1) game.act({ type: 'splitter/step', by: 1 });
     expect(game.stage()?.splitter).toBe(9);
     for (let i = 0; i < 10; i += 1) game.act({ type: 'splitter/step', by: -1 });
     expect(game.stage()?.splitter).toBe(2);
   });
 
-  it('plays room 4: split by 2 at 2x = 18 shows x = 9, nothing is written, and he locks it', () => {
+  it('plays room 4: split by 2 at 2x = 18 writes 2x : 2 = 18 : 2, shows x = 9, and he locks it', () => {
     const game = inRoomFour();
     toTwoXEighteen(game);
     game.seen.length = 0;
     game.act({ type: 'splitter/split' });
-    expect(game.lines()).toEqual(['2x+5=23', '2x=18']);
-    expect(game.seen).toEqual([{ type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' }]);
+    expect(game.lines()).toEqual(['2x+5=23', '2x+5−5=23−5', '2x=18', '2x:2=18:2']);
+    expect(game.seen).toEqual([
+      { type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' },
+      { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: true },
+    ]);
     const room = game.store.getState().room as RoomState;
     expect(panPieces(room.stage.pans).left.map((piece) => piece.kind)).toEqual(['gear']);
     expect(panPieces(room.stage.pans).right).toEqual([
@@ -903,31 +922,26 @@ describe('split both pans (story 1.11)', () => {
     expect(game.stage()?.phase).toBe('locked');
   });
 
-  it('jams on an uneven split until he drags the splitter off', () => {
+  it('refuses an uneven split: nothing changes, nothing fires, and he can go on', () => {
     const game = inRoomFour();
     toTwoXEighteen(game);
     game.act({ type: 'splitter/step', by: 1 });
     game.act({ type: 'splitter/step', by: 1 });
+    const before = game.store.getState().room;
     game.seen.length = 0;
     game.act({ type: 'splitter/split' });
-    expect(game.stage()?.jam).toEqual({ kind: 'split', parts: 4 });
-    expect(game.seen).toEqual([{ type: 'MachineJammed', roomId: 'r04', kind: 'split' }]);
-    const jammed = game.store.getState().room;
-    game.act({ type: 'dial/set', x: 1 });
-    game.act({ type: 'tray/drop', side: 'left', kind: 'weight' });
+    expect(game.store.getState().room).toBe(before);
+    expect(game.seen).toEqual([]);
+    expect(game.stage()?.jam).toBeNull();
+    game.act({ type: 'splitter/step', by: -1 });
     game.act({ type: 'splitter/step', by: -1 });
     game.act({ type: 'splitter/split' });
-    expect(game.store.getState().room).toBe(jammed);
-    game.act({ type: 'splitter/lift' });
-    expect(game.stage()?.jam).toBeNull();
-    expect(game.stage()?.pans).toBe(jammed?.stage.pans);
-    const lifted = game.store.getState().room;
-    game.act({ type: 'splitter/lift' });
-    expect(game.store.getState().room).toBe(lifted);
+    expect(game.lines().at(-1)).toBe('2x:2=18:2');
   });
 
   it('keeps the splitter away without Balance', () => {
     const game = inRoomFour();
+    toTwoXEighteen(game);
     game.act({ type: 'dev/set-tools', tools: [] });
     const before = game.store.getState().room;
     game.act({ type: 'splitter/step', by: 1 });

@@ -148,10 +148,21 @@ describe('setDial', () => {
     expect(step?.events).toEqual([{ type: 'DialNotch', x: 1 }]);
   });
 
-  it('shows the new x on the x-gear', () => {
+  it('weighs the pans at the new x, while the x-gear shows the letter x (story 1.15)', () => {
     const step = setDial(enterRoom(r01).room, 7);
     if (!step) throw new Error('ignored');
-    expect(scaleView(step.room).left.pieces[0]).toMatchObject({ kind: 'gear', label: '7' });
+    expect(scaleView(step.room).x).toBe(7);
+    expect(scaleView(step.room).left.pieces[0]).toMatchObject({ kind: 'gear', label: 'x' });
+  });
+
+  it('remembers his dial at its maximum with the pans tipped, which offers the tray (story 1.15)', () => {
+    const room = enterRoom(r01).room;
+    expect(room.stage.balance.dialMaxed).toBe(false);
+    expect(setDial(room, 9)?.room.stage.balance.dialMaxed).toBe(false);
+    const maxed = setDial(room, 10)?.room;
+    expect(maxed?.stage.balance.dialMaxed).toBe(true);
+    // Turned back down, it stays remembered.
+    expect(maxed && setDial(maxed, 3)?.room.stage.balance.dialMaxed).toBe(true);
   });
 
   it('levels the pans where the sides are equal, and fires PansLevel', () => {
@@ -243,7 +254,7 @@ describe('setDial', () => {
       if (!step) return;
       expect(scaleView(step.room).left.pieces[0]).toMatchObject({
         kind: 'gear',
-        label: '15',
+        label: 'x',
         divisorLabel: ': 3',
       });
     });

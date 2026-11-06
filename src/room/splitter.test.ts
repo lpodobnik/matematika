@@ -17,15 +17,15 @@ import { enterRoom, type RoomStep } from '@/room/room';
 import { scaleView } from '@/room/scale';
 import {
   canStepParts,
-  liftSplitter,
   splitBothPans,
+  splitGroups,
   splitOutcome,
   splitterOffered,
   splitterView,
   splitterWorks,
   stepSplitter,
 } from '@/room/splitter';
-import { dropOnPan, stepTray } from '@/room/tray';
+import { dropOnScale, rememberTray, stepTray } from '@/room/tray';
 import type { FadingMode, RoomSpec, RoomState, ToolId, TrayKind } from '@/room/types';
 
 const balance: ToolId[] = ['balance'];
@@ -41,13 +41,17 @@ function equation(text: string): Equation {
   return result.equation;
 }
 
-/** Room 4 with its pin locked at 9, so the stage is open. */
+/** Room 4 with its pin locked at 9 and the dial pushed to 6, so the tray is offered. */
 function waterWheel(): RoomState {
   const poking = step(touchMachine(enterRoom(r04).room)).room;
-  return step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
+  const open = step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
+  return step(setDial(open, 6)).room;
 }
 
-/** A one-stage room with no pin, open after his first touch. */
+/**
+ * A one-stage room with no pin, open after his first touch, with the tray offered as in a
+ * stage after the one where he met it.
+ */
 function openRoom(text: string, fading: FadingMode = 'auto'): RoomState {
   const spec: RoomSpec = {
     ...r01,
@@ -62,14 +66,22 @@ function openRoom(text: string, fading: FadingMode = 'auto'): RoomState {
       },
     ],
   };
-  return step(touchMachine(enterRoom(spec).room)).room;
+  return rememberTray(step(touchMachine(enterRoom(spec).room)).room, ['tray']);
 }
 
-/** Drops the tray's weight or float, numbered `value`, on a pan. */
-function drop(room: RoomState, side: 'left' | 'right', kind: TrayKind, value: number): RoomStep {
+/** The stage as if a side had held only x pieces earlier in it, so the splitter stays offered. */
+function seen(room: RoomState): RoomState {
+  return {
+    ...room,
+    stage: { ...room.stage, balance: { ...room.stage.balance, splitterSeen: true } },
+  };
+}
+
+/** Drops the tray's weight or float, numbered `value`, over the scale. */
+function drop(room: RoomState, kind: TrayKind, value: number): RoomStep {
   let current = room;
   while (current.stage.tray[kind] < value) current = step(stepTray(current, balance, kind, 1)).room;
-  return step(dropOnPan(current, balance, side, kind));
+  return step(dropOnScale(current, balance, kind));
 }
 
 /** Sets the splitter's parts, through the stepper. */
@@ -98,14 +110,14 @@ function write(room: RoomState, text: string): RoomStep {
 
 const shown = (room: RoomState) => formatEquation(room.stage.pans);
 const written = (room: RoomState) => room.stage.lines.map((line) => formatTokens(line.tokens));
+const labels = (pieces: readonly { label: string }[]) => pieces.map((piece) => piece.label);
 
-/** Room 4 after a float of 5 on each pan: `2x = 18` is written. */
+/** Room 4 after a float of 5 over the scale: `2x + 5 − 5 = 23 − 5` and `2x = 18` are written. */
 function atTwoXEighteen(): RoomState {
-  const left = drop(waterWheel(), 'left', 'float', 5).room;
-  return drop(left, 'right', 'float', 5).room;
+  return drop(waterWheel(), 'float', 5).room;
 }
 
-describe('when the splitter is offered', () => {
+describe('when the splitter is offered (story 1.15: one tool at a time)', () => {
   it('needs Balance and an open stage: not in arrive, poke or pin, nor once the stage locks', () => {
     const arriving = enterRoom(r04).room;
     const poking = step(touchMachine(arriving)).room;
@@ -114,50 +126,69 @@ describe('when the splitter is offered', () => {
       expect(splitterOffered(room, balance)).toBe(false);
       expect(splitterView(room, balance)).toBeNull();
     }
-    expect(splitterOffered(waterWheel(), balance)).toBe(true);
-    expect(splitterOffered(waterWheel(), [])).toBe(false);
-    expect(splitBothPans(waterWheel(), [])).toBeNull();
-    const answered = write(waterWheel(), 'x = 9').room;
+    expect(splitterOffered(atTwoXEighteen(), balance)).toBe(true);
+    expect(splitterOffered(atTwoXEighteen(), [])).toBe(false);
+    expect(splitBothPans(atTwoXEighteen(), [])).toBeNull();
+    const answered = write(atTwoXEighteen(), 'x = 9').room;
     const locked = write(answered, '2 · 9 + 5 = 23').room;
     expect(locked.stage.phase).toBe('locked');
     expect(splitterOffered(locked, balance)).toBe(false);
   });
 
-  it('shows 2 parts as the stage arrives, in its holder, and nothing with no room', () => {
+  it('waits until one side holds only x pieces, more than one x', () => {
+    expect(splitterOffered(waterWheel(), balance)).toBe(false);
+    expect(splitterView(waterWheel(), balance)).toBeNull();
+    expect(splitBothPans(waterWheel(), balance)).toBeNull();
+    // A stage that starts that way offers it at once; x alone doesn't.
+    expect(splitterOffered(openRoom('3x = 12'), balance)).toBe(true);
+    expect(splitterOffered(openRoom('x + 4 = 9'), balance)).toBe(false);
+    expect(splitterOffered(openRoom('x : 3 = 5'), balance)).toBe(false);
+    // A line he writes counts too.
+    expect(splitterOffered(write(waterWheel(), '2x = 18').room, balance)).toBe(true);
+  });
+
+  it('stays for the rest of the stage: after x = 9 is written, after more moves, after a reset', () => {
+    const room = atTwoXEighteen();
+    expect(splitterOffered(write(room, 'x = 9').room, balance)).toBe(true);
+    const plusTwo = drop(room, 'weight', 2).room;
+    expect(shown(plusTwo)).toBe('2x + 2 = 20');
+    expect(splitterOffered(plusTwo, balance)).toBe(true);
+    expect(splitterOffered(step(resetStage(plusTwo)).room, balance)).toBe(true);
+    // With Balance blank nothing is written, so the stage remembers it.
+    const blank = drop(openRoom('2x + 5 = 23', 'blank'), 'float', 5).room;
+    expect(blank.stage.balance.splitterSeen).toBe(true);
+    const moved = drop(blank, 'weight', 1).room;
+    expect(shown(moved)).toBe('2x + 1 = 19');
+    expect(splitterOffered(moved, balance)).toBe(true);
+  });
+
+  it('shows 2 parts as it appears, and nothing with no room', () => {
     expect(splitterView(null, balance)).toBeNull();
-    expect(splitterView(waterWheel(), [])).toBeNull();
-    expect(splitterView(waterWheel(), balance)).toEqual({
+    expect(splitterView(atTwoXEighteen(), [])).toBeNull();
+    expect(splitterView(atTwoXEighteen(), balance)).toEqual({
       parts: 2,
       works: true,
-      onPans: false,
       wiggle: false,
     });
   });
 
   it('is offered but does nothing while a wrong line jams the machine', () => {
-    const jammed = write(waterWheel(), 'x = 8').room;
+    const jammed = write(atTwoXEighteen(), 'x = 8').room;
     expect(jammed.stage.jam).toEqual({ kind: 'line' });
     expect(splitterOffered(jammed, balance)).toBe(true);
     expect(splitterWorks(jammed, balance)).toBe(false);
-    expect(splitterView(jammed, balance)).toMatchObject({ works: false, onPans: false });
+    expect(splitterView(jammed, balance)).toMatchObject({ works: false });
     expect(stepSplitter(jammed, balance, 1)).toBeNull();
     expect(splitBothPans(jammed, balance)).toBeNull();
-    // Only an edit clears a line jam: dragging the splitter off is for a split jam.
-    expect(liftSplitter(jammed)).toBeNull();
   });
 
-  it('wiggles once when it is first available (hint level 1), with the tray, and never again', () => {
-    const room = waterWheel();
+  it('wiggles once when it is first offered (hint level 1), after the tray, and never again', () => {
+    const room = atTwoXEighteen();
     expect(offeredControls(room, balance)).toEqual(['tray', 'splitter']);
-    const met = meetControls(room, ['pin'], balance);
-    expect(met?.met).toEqual(['pin', 'tray', 'splitter']);
-    expect(splitterView(met?.room ?? null, balance)?.wiggle).toBe(true);
-    // Met already, it doesn't raise the hint level again…
-    expect(meetControls(room, ['pin', 'tray', 'splitter'], balance)).toBeNull();
-    // …and met alone, after the tray, it still wiggles the first time.
     const alone = meetControls(room, ['pin', 'tray'], balance);
     expect(alone?.met).toEqual(['pin', 'tray', 'splitter']);
     expect(splitterView(alone?.room ?? null, balance)?.wiggle).toBe(true);
+    expect(meetControls(room, ['pin', 'tray', 'splitter'], balance)).toBeNull();
   });
 });
 
@@ -165,7 +196,7 @@ describe('setting the parts', () => {
   it('sets 2–9 parts, one step at a time, and stops at either end', () => {
     expect(tuning.splitterMinParts).toBe(2);
     expect(tuning.splitterMaxParts).toBe(9);
-    let room = waterWheel();
+    let room = atTwoXEighteen();
     expect(stepSplitter(room, balance, -1)).toBeNull();
     const seen: number[] = [room.stage.splitter];
     for (let i = 0; i < 7; i += 1) {
@@ -184,13 +215,13 @@ describe('setting the parts', () => {
   });
 
   it("doesn't touch the pans, and is ignored without Balance", () => {
-    const room = waterWheel();
+    const room = atTwoXEighteen();
     expect(step(stepSplitter(room, balance, 1)).room.stage.pans).toBe(room.stage.pans);
     expect(stepSplitter(room, [], 1)).toBeNull();
   });
 
   it('keeps its parts when the stage is reset; the next stage arrives with 2', () => {
-    const set = parts(waterWheel(), 6);
+    const set = parts(atTwoXEighteen(), 6);
     const reset = step(resetStage(set)).room;
     expect(reset.stage.splitter).toBe(6);
     expect(splitterView(reset, balance)?.parts).toBe(6);
@@ -198,15 +229,21 @@ describe('setting the parts', () => {
   });
 });
 
-describe('a split across both pans', () => {
-  it('room 4: 2x = 18 split by 2 shows x = 9 on the pans, and nothing is written', () => {
+describe('a split over the scale (story 1.15)', () => {
+  it('room 4: 2x = 18 split by 2 writes 2x : 2 = 18 : 2, shows x = 9, and leaves x = 9 to him', () => {
     const room = atTwoXEighteen();
-    expect(written(room)).toEqual(['2x + 5 = 23', '2x = 18']);
     const result = split(room, 2);
     expect(shown(result.room)).toBe('x = 9');
-    expect(written(result.room)).toEqual(['2x + 5 = 23', '2x = 18']);
-    // The move completes like any balance move; the answer line is his to write.
-    expect(result.events).toEqual([{ type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' }]);
+    expect(written(result.room).slice(3)).toEqual(['2x : 2 = 18 : 2']);
+    expect(result.events).toEqual([
+      { type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' },
+      { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: true },
+    ]);
+    expect(result.room.stage.lines.at(-1)).toMatchObject({
+      source: 'balance',
+      verdict: { kind: 'valid', move: { kind: 'split-both', parts: 2 } },
+    });
+    expect(result.room.stage.machineProgress).toEqual([0.4]);
     expect(result.room.stage.jam).toBeNull();
     expect(panPieces(result.room.stage.pans).left.map((piece) => piece.kind)).toEqual(['gear']);
   });
@@ -220,146 +257,117 @@ describe('a split across both pans', () => {
     expect(locked.events.map((event) => event.type)).toContain('StageLocked');
   });
 
-  it('combines each pan’s numbers first: after a typed 2x = 23 − 5, a split by 2 gives x = 9', () => {
+  it('divides a written-out side as it shows: after a typed 2x = 23 − 5, it writes (23 − 5) : 2', () => {
     const typedLine = write(waterWheel(), '2x = 23 − 5').room;
     expect(panPieces(typedLine.stage.pans).right.map((piece) => piece.kind)).toEqual([
       'weight',
       'float',
     ]);
     const result = split(typedLine, 2);
-    expect(result.room.stage.jam).toBeNull();
     expect(shown(result.room)).toBe('x = 9');
-    expect(result.events).toEqual([{ type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' }]);
+    expect(written(result.room).at(-1)).toBe('2x : 2 = (23 − 5) : 2');
   });
 
-  it('is exploring: it ends acting out, and the pans are weighed at the dial’s x', () => {
-    const typedLine = write(waterWheel(), '2x = 23 − 5').room;
-    expect(typedLine.stage.actingOut).toBe(true);
-    const turned = step(setDial(typedLine, 3)).room;
-    const actedOut = write(turned, '2x = 18').room;
-    expect(actedOut.stage.actingOut).toBe(true);
-    const halved = split(actedOut, 2).room;
-    expect(halved.stage.actingOut).toBe(false);
+  it('acts out at the true x, like any Balance move; the dial stays where it was', () => {
+    const turned = step(setDial(write(waterWheel(), '2x = 18').room, 3)).room;
+    expect(turned.stage.actingOut).toBe(false);
+    const halved = split(turned, 2).room;
+    expect(halved.stage.actingOut).toBe(true);
     expect(halved.stage.dialX).toBe(3);
-    expect(scaleView(halved)).toMatchObject({ x: 3, actingOut: false });
-    expect(scaleView(halved).left.value).toEqual({ n: 3n, d: 1n });
-    expect(scaleView(halved).right.value).toEqual({ n: 9n, d: 1n });
+    expect(scaleView(halved)).toMatchObject({ x: 9, actingOut: true, level: true, readouts: null });
   });
 
-  it('divides gear counts and numbers, and with Balance auto writes a line that isn’t x = n', () => {
-    const room = openRoom('4x + 8 = 20');
-    const result = split(room, 4);
+  it('writes the result too when it isn’t x = n: 4x + 8 = 20 by 4 is x + 2 = 5', () => {
+    // 4x = 12 offers the splitter; a weight of 8 gives 4x + 8 = 20, and it stays offered.
+    const eight = drop(openRoom('4x = 12'), 'weight', 8).room;
+    expect(shown(eight)).toBe('4x + 8 = 20');
+    const result = split(eight, 4);
     expect(shown(result.room)).toBe('x + 2 = 5');
-    expect(written(result.room)).toEqual(['4x + 8 = 20', 'x + 2 = 5']);
-    expect(result.room.stage.lines.at(-1)?.source).toBe('balance');
-    expect(result.events).toEqual([
-      { type: 'WayUsed', roomId: 'r01', stage: 0, way: 'balance' },
-      { type: 'LineAccepted', roomId: 'r01', stage: 0, source: 'balance', progress: true },
+    expect(written(result.room).slice(3)).toEqual(['(4x + 8) : 4 = 20 : 4', 'x + 2 = 5']);
+    expect(result.room.stage.lines.slice(3).map((line) => line.source)).toEqual([
+      'balance',
+      'balance',
+    ]);
+    expect(result.events.map((event) => event.type)).toEqual([
+      'WayUsed',
+      'LineAccepted',
+      'LineAccepted',
     ]);
   });
 
-  it('writes nothing with Balance blank, though the move completes', () => {
-    const result = split(openRoom('4x + 8 = 20', 'blank'), 2);
+  it('writes nothing with Balance blank, though the pans split and WayUsed fires', () => {
+    const result = split(seen(openRoom('4x + 8 = 20', 'blank')), 2);
     expect(shown(result.room)).toBe('2x + 4 = 10');
     expect(written(result.room)).toEqual(['4x + 8 = 20']);
     expect(result.events).toEqual([{ type: 'WayUsed', roomId: 'r01', stage: 0, way: 'balance' }]);
   });
 
   it('splits springs and the number they lift: 20 − 2x = 6 by 2 is 10 − x = 3', () => {
-    expect(shown(split(openRoom('20 − 2x = 6'), 2).room)).toBe('10 − x = 3');
+    expect(shown(split(seen(openRoom('20 − 2x = 6')), 2).room)).toBe('10 − x = 3');
   });
 
   it('splits gears on a divider by their count: 2x : 3 = 4 by 2 is x : 3 = 2', () => {
-    expect(shown(split(openRoom('2x : 3 = 4'), 2).room)).toBe('x : 3 = 2');
+    const result = split(openRoom('2x : 3 = 4'), 2);
+    expect(shown(result.room)).toBe('x : 3 = 2');
+    expect(written(result.room).slice(1)).toEqual(['2x : 3 : 2 = 4 : 2', 'x : 3 = 2']);
   });
 
-  it('after a change to one pan only, tips at the dial’s x and writes nothing', () => {
-    // 2x + 4 = 20 (x = 8) with a float of 4 on the left only: 2x = 20, then split by 2.
-    const changed = drop(openRoom('2x + 4 = 20'), 'left', 'float', 4).room;
-    expect(shown(changed)).toBe('2x = 20');
-    const result = split(changed, 2);
-    expect(shown(result.room)).toBe('x = 10');
-    expect(result.events).toEqual([]);
-    expect(written(result.room)).toEqual(['2x + 4 = 20']);
-    expect(scaleView(result.room)).toMatchObject({ x: 0, actingOut: false, level: false });
+  it('separates each side into equal groups, one of which is the result', () => {
+    const groups = splitGroups(equation('2x = 18'), 2);
+    expect(groups.even).toBe(true);
+    expect(groups.left.groups.map(labels)).toEqual([['x'], ['x']]);
+    expect(groups.right.groups.map(labels)).toEqual([['9'], ['9']]);
+    expect(groups.left.leftover).toEqual([]);
+    expect(groups.right.leftover).toEqual([]);
+    const keys = groups.left.groups.flat().map((piece) => piece.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });
 
-describe('a split that doesn’t divide evenly', () => {
-  it('jams the machine (kind split) and keeps the pans as they were', () => {
+describe('a split that doesn’t divide evenly is refused (story 1.15)', () => {
+  it('changes nothing and writes nothing: the splitter goes back to its place', () => {
     const room = atTwoXEighteen();
-    const result = split(room, 4);
-    expect(result.events).toEqual([{ type: 'MachineJammed', roomId: 'r04', kind: 'split' }]);
-    expect(result.room.stage.jam).toEqual({ kind: 'split', parts: 4 });
-    expect(result.room.stage.pans).toBe(room.stage.pans);
-    expect(written(result.room)).toEqual(written(room));
-    expect(result.room.stage.jamsInARow).toBe(room.stage.jamsInARow + 1);
-    expect(machineView(result.room)?.jammed).toBe(true);
-    expect(scaleView(result.room)).toMatchObject({ x: 0, actingOut: false });
-    expect(splitterView(result.room, balance)).toEqual({
-      parts: 4,
-      works: false,
-      onPans: true,
-      wiggle: false,
-    });
+    expect(splitBothPans(parts(room, 4), balance)).toBeNull();
+    const four = parts(room, 4);
+    expect(four.stage.jam).toBeNull();
+    expect(machineView(four)?.jammed).toBe(false);
+    expect(splitterView(four, balance)).toEqual({ parts: 4, works: true, wiggle: false });
+    // He can split again at once.
+    expect(shown(split(four, 2).room)).toBe('x = 9');
   });
 
-  it('jams when a gear count doesn’t divide (2x + 6 = 24 by 3), or a number (2x = 23 by 2)', () => {
+  it('is uneven when a gear count doesn’t divide (2x + 6 = 24 by 3), or a number (2x = 23 by 2)', () => {
     expect(splitOutcome(equation('2x + 6 = 24'), 3)).toEqual({ kind: 'uneven' });
     expect(splitOutcome(equation('2x = 23'), 2)).toEqual({ kind: 'uneven' });
     expect(splitOutcome(equation('x : 3 = 5'), 2)).toEqual({ kind: 'uneven' });
     expect(splitOutcome(equation('2x = 18'), 2)).toEqual({
       kind: 'even',
+      line: equation('2x : 2 = 18 : 2'),
       pans: equation('x = 9'),
     });
-    const tipped = drop(waterWheel(), 'left', 'float', 5).room;
-    expect(shown(tipped)).toBe('2x = 23');
-    const jammed = split(tipped, 2);
-    expect(jammed.room.stage.jam).toEqual({ kind: 'split', parts: 2 });
   });
 
-  it('lets him do nothing but edit the draft, drag the splitter off or reset while jammed', () => {
-    const jammed = split(atTwoXEighteen(), 4).room;
-    expect(setDial(jammed, 1)).toBeNull();
-    expect(dropOnPan(jammed, balance, 'left', 'weight')).toBeNull();
-    expect(stepTray(jammed, balance, 'weight', 1)).toBeNull();
-    expect(stepSplitter(jammed, balance, 1)).toBeNull();
-    expect(splitBothPans(jammed, balance)).toBeNull();
-    const edited = step(typeToken(jammed, 'x')).room;
-    expect(edited.stage.jam).toEqual({ kind: 'split', parts: 4 });
-    expect(enterLine(typed(jammed, 'x = 9'), 0)).toBeNull();
+  it('shows what is left over: 2x = 23 by 2 leaves a weight of 1, 3x = 18 by 2 a gear', () => {
+    const odd = splitGroups(equation('2x = 23'), 2);
+    expect(odd.even).toBe(false);
+    expect(odd.right.groups.map(labels)).toEqual([['11'], ['11']]);
+    expect(labels(odd.right.leftover)).toEqual(['1']);
+    expect(odd.left.leftover).toEqual([]);
+    const gears = splitGroups(equation('3x = 18'), 2);
+    expect(gears.left.groups.map(labels)).toEqual([['x'], ['x']]);
+    expect(labels(gears.left.leftover)).toEqual(['x']);
+    const springs = splitGroups(equation('20 − 3x = 2'), 2);
+    expect(springs.left.groups.map(labels)).toEqual([
+      ['10', '−x'],
+      ['10', '−x'],
+    ]);
+    expect(labels(springs.left.leftover)).toEqual(['−x']);
   });
 
-  it('clears when he drags the splitter off: the pans are as before, and it works again', () => {
-    const room = atTwoXEighteen();
-    const jammed = split(room, 4).room;
-    const lifted = step(liftSplitter(jammed));
-    expect(lifted.events).toEqual([]);
-    expect(lifted.room.stage.jam).toBeNull();
-    expect(lifted.room.stage.pans).toBe(room.stage.pans);
-    expect(splitterView(lifted.room, balance)).toMatchObject({
-      parts: 4,
-      works: true,
-      onPans: false,
-    });
-    expect(machineView(lifted.room)?.jammed).toBe(false);
-    const halved = split(lifted.room, 2);
-    expect(shown(halved.room)).toBe('x = 9');
-    expect(liftSplitter(waterWheel())).toBeNull();
-  });
-
-  it('clears on reset too, which keeps the parts', () => {
-    const jammed = split(atTwoXEighteen(), 4).room;
-    const reset = step(resetStage(jammed)).room;
-    expect(reset.stage.jam).toBeNull();
-    expect(reset.stage.splitter).toBe(4);
-    expect(shown(reset)).toBe('2x + 5 = 23');
-  });
-
-  it('counts as a jam until a line is committed', () => {
-    const twice = split(step(liftSplitter(split(atTwoXEighteen(), 4).room)).room, 5).room;
-    expect(twice.stage.jamsInARow).toBe(2);
-    const lifted = step(liftSplitter(twice)).room;
-    expect(write(lifted, 'x = 9').room.stage.jamsInARow).toBe(0);
+  it('never jams: no jam kind is left for a split, and the dial and tray still work', () => {
+    const four = parts(atTwoXEighteen(), 4);
+    expect(splitBothPans(four, balance)).toBeNull();
+    expect(setDial(four, 1)).not.toBeNull();
+    expect(dropOnScale(four, balance, 'weight')).not.toBeNull();
   });
 });
