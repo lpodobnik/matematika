@@ -72,7 +72,7 @@
 
 .goal-banner[data-matched="true"] {
   border-width: 6px;
-  background: #f3dfb4;
+  background: var(--lamp-wash);
   animation: goal-banner-bump 420ms ease-out;
 }
 

@@ -1,4 +1,4 @@
-/* Placeholder blueprint colours; keep in step with src/art/palette.ts. */
+/* The palette tokens the UI uses, from src/art/palette.ts (palette.test.ts keeps them in step). */
 :root {
   --table: #d9d2c1;
   --paper: #f4efe3;
@@ -6,7 +6,11 @@
   --jam: #a8432f;
   /* A lit lamp: colour comes only with a restarted machine (NFR12); palette.ts `lamp`. */
   --lamp: #e0a33a;
-  --rule: rgb(61 75 92 / 0.18);
+  /* A lit lamp's light on paper: a goal met. palette.ts `lampWash`. */
+  --lamp-wash: #f3dfb4;
+  /* A sheet laid on the page: speech, cards, an input. palette.ts `sheet`. */
+  --sheet: #ffffff;
+  --rule: color-mix(in srgb, var(--ink) 18%, transparent);
   color-scheme: light;
 }
 

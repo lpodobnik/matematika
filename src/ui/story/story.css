@@ -64,7 +64,7 @@
   padding: 8px 14px;
   border: 2px solid var(--ink);
   border-radius: 14px 14px 14px 4px;
-  background: #fff;
+  background: var(--sheet);
   font-size: clamp(16px, 2.2vw, 24px);
 }
 
@@ -196,7 +196,7 @@
   border: 2px solid var(--ink);
   border-left-width: 8px;
   border-radius: 6px;
-  background: #fff;
+  background: var(--sheet);
 }
 
 .story__term {

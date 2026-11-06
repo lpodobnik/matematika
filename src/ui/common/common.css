@@ -1,4 +1,4 @@
-/* Controls shared across screens. Placeholder blueprint colours from app.css. Touch
+/* Controls shared across screens. Colours are the palette tokens in app.css. Touch
    first: at least 48 CSS px, no hover states. */
 
 /* The reset control, in the scene area's top-left corner, above the canvas. On a phone the

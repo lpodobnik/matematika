@@ -55,7 +55,7 @@
   padding: 0 12px;
   border: 2px solid var(--ink);
   border-radius: 8px;
-  background: #fff;
+  background: var(--sheet);
   color: var(--ink);
   font: inherit;
   font-size: clamp(18px, 2.4vw, 26px);

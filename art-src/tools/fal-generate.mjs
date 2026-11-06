@@ -224,7 +224,11 @@ async function main() {
   );
   const image = result.images?.[0];
   if (!image?.url) throw new Error(`no image in result: ${JSON.stringify(result).slice(0, 300)}`);
-  const png = Buffer.from(await (await fetch(image.url)).arrayBuffer());
+  const download = await fetch(image.url);
+  if (!download.ok) throw new Error(
+      `image download ${download.status} from ${image.url} (the image is counted; fetch it by hand)`,
+    );
+  const png = Buffer.from(await download.arrayBuffer());
 
   mkdirSync(originalsDir, { recursive: true });
   const original = join(originalsDir, `${job.name}.t${nn}.png`);

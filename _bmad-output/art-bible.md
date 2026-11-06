@@ -1,8 +1,8 @@
 ---
 title: 'Art Bible'
 project: 'matematika (working title)'
-date: '2026-11-05'
-status: 'draft for the epic 2 style-guide story, reviewed once (see Review); every call is open to Luka''s veto'
+date: '2026-11-06'
+status: 'settled in story 2.12 (see Decided in story 2.12); reviewed once (see Review); every call is open to Luka''s veto'
 sources: 'GDD Art and Audio Direction, World and Story; narrative-design.md; architecture Asset Management; src/ui/scene/scale/layout.ts'
 ---
 
@@ -18,18 +18,21 @@ An inventor's ink drawing come to life: fine blue-grey pen lines on warm cream p
 
 ## Palette
 
-`paper`, `table` and `ink` keep the placeholder values in `src/art/palette.ts` and `app.css`.
+The tokens live in `src/art/palette.ts`, under these names; the ones the UI uses are also custom properties in `src/app/app.css`. `src/art/palette.test.ts` keeps the two in step, checks that every token's colour is in this table, and checks the ink's contrast.
 
 | Token | Hex | Use |
 |---|---|---|
 | `paper` / `paperShade` / `table` | `#F4EFE3` / `#E8E0CE` / `#D9D2C1` | Image ground and grey-state lights / aged edges / the desk round the page |
-| `ink` | `#3D4B5C` | Every outline, the grey-state darks, numbers on weights (7.8 : 1 on `paper`) |
+| `ink` | `#3D4B5C` | Every outline, the grey-state darks, numbers on weights (7.8 : 1 on `paper`, 6.8 : 1 on `paperShade`) |
 | `inkSoft` / `inkFaint` / `inkDeep` | `#6B7A8C` / `#A7B2BE` / `#26303B` | Interior lines and hatching / construction lines and unreached things / small darkest accents |
-| `brass` (light, dark) | `#B8893A` (`#E2C07A`, `#7A5A22`) | Restored machine metal: highlight streak, shade side |
-| `copper` (dark) / `verdigris` | `#B5603A` (`#7A3A22`) / `#5E9C8F` | Pipes and valves / patina, lens tint |
+| `brass` (`brassLight`, `brassDark`) | `#B8893A` (`#E2C07A`, `#7A5A22`) | Restored machine metal: highlight streak, shade side |
+| `copper` (`copperDark`) / `verdigris` | `#B5603A` (`#7A3A22`) / `#5E9C8F` | Pipes and valves / patina, lens tint |
 | `iron` / `wood` / `stone` | `#59616B` / `#8A6A4A` / `#D8CFBF` | Frames and automatons / doors and buckets / walls, very light |
 | `roof` / `water` | `#B9654A` / `#7FA7B5` | Terracotta roofs, muted / still water, pale |
-| `lamp` / `mark` | `#F2B544` / `#A8343A` | Code only: lamp light and restart glow / the First Automaton's marks, its only red, never the only signal |
+| `lamp` / `jam` | `#E0A33A` / `#A8432F` | Code only: lamp light and restart glow / the game's one red: a jammed machine, a wrong line and the First Automaton's marks, never the only signal (NFR4) |
+| `sheet` / `lampWash` | `#FFFFFF` / `#F3DFB4` | UI only, never in an image: a sheet laid on the page (speech, explanation cards, an input) / a lit lamp's light on paper (the goal banner once the goal is met) |
+
+The UI's CSS writes every colour through these tokens: a translucent ink is `color-mix(in srgb, var(--ink) 18%, transparent)`, never a typed-out `rgb()`.
 
 Buildings, stone and water stay muted; full-strength brass and copper belong to machines, so the eye goes to the mechanism.
 
@@ -41,7 +44,7 @@ Buildings, stone and water stay muted; full-strength brass and copper belong to 
 
 ## Camera and perspective
 
-- **Map:** axonometric bird's-eye view, parallel projection, about 50° down from the south, north up. Machines are two or three times house size. The 19 nodes each sit on their own open plot, at least 160 scene units apart, so a soft round mask about 70 units across restores one node and nothing else. Bare paper runs at least 60 units round the edges. Node markers and routes are drawn in code.
+- **Map:** axonometric bird's-eye view, parallel projection, about 50° down from the south, north up. Machines are two or three times house size and at most 120 units across. The 19 nodes each sit on their own open plot, at least 160 scene units apart, so a soft round mask centred on the node, fully on out to 120 units across and fading out by 160, restores one machine; a neighbour's mask stops at least 20 units short of it. Bare paper runs at least 60 units round the edges. Node markers and routes are drawn in code.
 - **Backdrop:** frontal elevation at standing eye level with very weak perspective, like a flat theatre backdrop. The scale in code spans almost the whole width, so a backdrop is a plain wall between a top band and the ground, with the room's opening in the middle (Scene zones).
 - **Housing:** frontal, symmetrical, no perspective, on the full 1600 × 1000 canvas at the backdrop's scale, so it lines up with no offset.
 - **Automatons and looks:** full figure, three-quarter view at mid-height, little perspective. Facing is set in code by mirroring (the apprentice faces right, automatons left), so prompts leave it out.
@@ -79,7 +82,7 @@ The grey state is a shader: each pixel's luminance is mapped onto the `ink` → 
 | Apprentice and townspeople | Grey (1), always | Never: they are not machines, and NFR12 keeps colour for restarted machines |
 | Effects: lamp light, restart glow, water, steam | Code | Only on a restarted machine or part |
 
-**For Luka's veto:** a grey apprentice keeps NFR12 to the letter, but the look picker then reads by shape and value only. If the apprentice (and townspeople) should be in colour, that is an exception to NFR12 to write into the GDD. The looks below carry no brass or copper, so the exception needs no new images.
+**Decided (story 2.12, for Luka's veto): the apprentice stays grey,** as NFR12 says and the naming screen shows (story 2.4), so the look picker reads by shape and value. If the apprentice (and townspeople) should be in colour, that is an exception to NFR12 to write into the GDD. The looks below carry no brass or copper, so the exception would need no new images.
 
 ## Materials
 
@@ -100,7 +103,7 @@ The grey state is a shader: each pixel's luminance is mapped onto the `ink` → 
 
 ## Automatons: one family in four sizes
 
-Kristijan's helpers under the First Automaton's orders: curious, literal and a little absurd, never scary, and redeemable. **They share:** a dark cast-iron body with riveted brass bands and copper pipes; one round glass lens in a brass bezel as the whole face, with no mouth or teeth; a big brass wind-up key on the back (they wind down and rewind); a chest slot with blank punched tape (their notices); tools, never weapons. **Armour shows as brass bands and plates,** so toughness reads in grey too, which is how automatons are always shown (Display state). The First Automaton's mark is drawn in code. Each image fills its frame, and the code sets the size.
+Kristijan's helpers under the First Automaton's orders: curious, literal and a little absurd, never scary, and redeemable. **They share:** a cast-iron body, dark iron in a mid-value wash and never a solid dark mass, with riveted brass bands and copper pipes; one round glass lens in a brass bezel as the whole face, with no mouth or teeth; a big brass wind-up key on the back (they wind down and rewind); a chest slot with blank punched tape (their notices); tools, never weapons. **Armour shows as brass bands and plates,** so toughness reads in grey too, which is how automatons are always shown (Display state). The First Automaton's mark is drawn in code. Each image fills its frame, and the code sets the size.
 
 | Armour | Height vs the apprentice | Body | Legs | Arms | Plates |
 |---|---|---|---|---|---|
@@ -126,7 +129,7 @@ Townspeople, if they get images, use the same template; Penkala keeps a pencil b
 
 ## Never in an image
 
-Text, letters, numbers or digits (numbers are drawn in code), including clock faces, marked dials, signs, plaques and map labels. Signatures, initials, dates, watermarks, logos and real flags. Wires, bulbs, antennas, cars. People or animals in backdrops and on the map. Flames, light, flowing water, steam, smoke. Anything the code draws, including each room's moving part (door, gate, wheel). Weapons, scary faces, and anything from Luka and his son's table game. Borders, margin lines, paper grain, and shadows on cut-outs.
+Text, letters, numbers or digits (numbers are drawn in code), including clock faces, marked dials, signs, plaques and map labels. Signatures, initials, dates, watermarks, logos and real flags. Wires, bulbs, antennas, cars. People or animals in backdrops and on the map. Flames, light, flowing water, steam, smoke. Anything the code draws, including each room's moving part (door, gate, wheel). Weapons, scary faces, and anything from Luka and his son's table game. Borders, margin lines, paper grain, and shadows on cut-outs. (The template backdrop's faint paper fibres, from t22, are a known miss: epic 6 cleans the paper of every image it ships.)
 
 ## Image sizes and file names
 
@@ -158,7 +161,7 @@ Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch
 
 | Asset | Camera and composition | State |
 |---|---|---|
-| Backdrop | Frontal elevation, flat theatre backdrop. The wall runs straight across; its top is "a simple stone coping a sixth of the way down", with roofs "and plain chimneys" only above it. "The foot of the wall is four fifths of the way down: the … ground is a strip along the bottom fifth only, with large plain flagstones in the middle." The room's opening is centred, a third of the width, empty. "To the left and to the right of the gateway, from the gateway out to both edges of the picture … completely plain … nothing standing in front of it, because the game draws its moving machine parts there later." Sky bare paper | The room's moving part is left out: "Its door has been taken out … through it the passage is plain pale paper." No people, animals, vehicles, flames, flowing water, water above the ground line, smoke or steam |
+| Backdrop | Frontal elevation, flat theatre backdrop. The wall runs straight across; its top is "a simple stone coping a sixth of the way down", with roofs "and plain chimneys" only above it. "The foot of the wall is four fifths of the way down: the … ground is a strip along the bottom fifth only, with large plain flagstones in the middle." The room's opening is centred, a quarter of the width between its jambs, with the jambs outside that quarter, and empty (the full wording is under The template backdrop). "To the left and to the right of the gateway, from the gateway out to both edges of the picture … completely plain … nothing standing in front of it, because the game draws its moving machine parts there later." Sky bare paper | The room's moving part is left out: "Its door has been taken out … through it the passage is plain pale paper." No people, animals, vehicles, flames, flowing water, water above the ground line, smoke or steam |
 | Housing | Frontal, symmetrical: two slim columns, a crossbeam with empty brackets for parts drawn in code, small feet. Follow the housing layout guide, because words alone placed the columns 30–140 units off (t23, t25) | At rest. "The opening … holds nothing … only plain flat cream paper"; no ground, ground line or shadow |
 | Automaton, look | Three-quarter view, drawn large and centred | At rest, no glow or motion lines |
 | Map | Bird's-eye, parallel projection; each machine on its own plot; edges fade to paper | No people, smoke or moving water |
@@ -169,11 +172,31 @@ Cut-outs end with "Isolated on plain flat cream paper with no ground, no scenery
 
 **Words that misfire:** "clockwork" draws numbered clock faces; "sketchbook page" invites signatures and margins; "butterfly-shaped key" draws a butterfly; "could be a boy or a girl" draws a girl; "knee-high" shrinks the figure (say "drawn large"); left and right are unreliable; never ask for signs or plaques. Fractions of the picture place things only roughly: in t22, t24 and t26 the wall top landed at y 195, 350 and 250 and the ground line at 730, 745 and 805, and "a quarter of the width apart" put the housing's columns too close (t23) while "wide" put them too far apart (t25). Naming empty regions ("the outer thirds are empty paper") works better than placing objects. Roofs grew antennas in t24 despite the style block, so the slot asks for plain chimneys.
 
-**Review every image:** run `node art-src/tools/quiet-zone.mjs <backdrop|housing> <out-dir> <image>`, which must pass. It overlays the scene zones on the image, marks every 40 × 40 cell that holds an object, and fails a zone that holds more than stray marks. Then look at its overlay, check all four corners for signatures and small signs, tape and dials for glyphs, that nothing is in action, and that a grey preview reads.
+**Review every image:** run `node art-src/tools/quiet-zone.mjs <backdrop|housing> <out-dir> <image>`, which must pass. It overlays the scene zones on the image, marks every 40 × 40 cell that holds an object, and fails a zone that holds more than stray marks. Then look at its overlay, check all four corners for signatures and small signs, tape and dials for glyphs, and that nothing is in action. Last, `node art-src/tools/grey-preview.mjs <out-dir> <image>` shows it in the grey state (luminance on the `ink` → `paper` ramp, as the shader does); forms must read by value alone.
+
+## The template backdrop
+
+`art-src/tests/backdrop-r01-door-lift.t22-refit.webp` is the template for the other twelve backdrops (story 2.12). It is t22, refitted to the zones: it passes the overlay check, reads in grey, and under the live room-1 scale at both ends of the dial the pans, pieces and tags sit on plain wall and the stand in the gateway.
+
+**The recipe for each room's backdrop:**
+
+1. Text to image (`fal-ai/flux-2-max`) with this prompt, filling the brackets for the room, with the room's seed (`1101`, `1201` …). It is t22's (CREDITS, entry 22) with two changes, both untested: the opening is set at exactly a quarter of the width with its jambs outside it (t22 asked for about a quarter and put its jambs inside the opening), and the roofs have plain chimneys (t24 drew antennas).
+
+   ```text
+   A room backdrop: [the room's setting, e.g. the old town wall facing a small cobbled square]. In the exact centre of the wall is one tall empty [opening: arched gateway, gate channel, wheel pit], exactly a quarter of the picture's width between its jambs, with the jambs outside that quarter, from just under the top of the wall down to the ground. [Its moving part has been taken out: it holds no door, no portcullis, no chains and no pulleys,] and through it the passage is plain pale paper. Straight-on frontal elevation at standing eye level, with very weak perspective, like a flat theatre backdrop. The wall runs straight across the whole picture from edge to edge. Its top is a simple stone coping a sixth of the way down; only above it, along the top sixth, do a few baroque house fronts with terracotta roofs and plain chimneys peek over, and the sky is bare paper. The cobbled ground fills the bottom fifth, with large plain flagstones in the middle. To the left and to the right of the gateway, from the gateway out to both edges of the picture and from the coping down to the ground, the wall is completely plain smooth pale limestone with only faint thin joints: no windows, no doors, no posts, no lamps, no pipes, no chains, no machines, no plants, no water and nothing standing in front of it, because the game draws its moving machine parts there later. Everything is still and at rest: no people, no animals, no vehicles, no moving parts, no flames, no smoke, no steam. [Style block, newest]
+   ```
+
+   Words place the wall top and the wall's foot only roughly; step 2 fixes small misses, so don't spend images on them.
+2. Measure where the wall top and the wall's foot landed. Refit only when the top is within about 50 units of y 200 and the foot within about 80 units of y 800, so every band stays within about ±30 %; t22's were 5 and 70 off, its wall stretched by 1.13 and its ground squeezed to 0.74. Further off (t24's top at 350, t26's at 250) needs a new image. Refit with `node art-src/tools/refit.mjs <in> <out.webp> --y 0,<top>,<foot>,1000:0,200,800,1000`. A cut must never run through an object, only through plain wall, sky or ground. A round opening (the wheel pits of r04 and r11) turns oval when the wall is stretched, so keep its wall band near ×1 and take the difference out of the ground. Use `--x` only to widen or narrow plain wall, never across the opening.
+3. Run the overlay check and the grey preview, then `node art-src/tools/scene-mock.mjs <dev-server-url> <grey preview> <out-dir>`, which multiplies the backdrop under the live room-1 scale at x = 1 and x = 10. Look at all three, and record the refit in CREDITS under "Derived images" with its exact command. The template's two mocks are `art-src/tests/backdrop-r01-door-lift.t22-refit.mock-x1.webp` and `…mock-x10.webp`.
+
+**What a refit can't fix:** an object in a pan zone, anything in the opening, or a style miss. Those need a new image.
+
+**For the next rooms:** t22's arch has its jambs just inside the opening (x 610–670 and 905–960), so the check passes there with little margin (2.7 % of a 3 % limit). Ask for "an opening exactly a quarter of the picture's width, with its jambs outside it", so the jambs stand behind the housing's columns.
 
 ## Test images
 
-28 of the 30 allowed images were made, t22–t28 for the review fixes, so 2 remain. Best of each kind: for style, backdrop t21; for layout, no backdrop or housing passes the overlay check yet, and the closest are backdrop t22 and housing t27. Automatons t09, t11 and t12, looks t14–t19, map t20 (concept only).
+28 of the 30 allowed images were made, t22–t28 for the review fixes, so 2 remain, kept in reserve (story 2.12 needed neither). Best of each kind: for style, backdrop t21; for layout, the template backdrop t22-refit (above), which passes the overlay check; no housing passes yet, and the closest is t27. Automatons t09, t11 and t12, looks t14–t19, map t20 (concept only).
 
 **What worked.** The ink-and-wash look holds across every asset type and greys convincingly. The fixed style block alone carries consistency: t21, made from text with no reference, matches t01 and t04 on smoother paper. One seed and template gives six looks with the same pose and scale. Writing the automatons' shared design into each prompt (t11, t12) matched the family as well as a reference did (t10), without its side effects. The review's Backdrop slot keeps objects out of the pan zones: t22, t24, t26 and t28 all have plain wall beside the gateway (1.9–5.9 % ink, where t01's plain wall measures 1 %). A layout guide places a housing almost to the unit (t27).
 
@@ -184,7 +207,7 @@ Cut-outs end with "Isolated on plain flat cream paper with no ground, no scenery
 **Still to do (epic 6):**
 
 - A map on 19 spaced plots with margins.
-- A backdrop that passes the overlay check before it becomes the template for the other twelve. The slot keeps objects out; what is missing is landing the wall top and the ground line. Try a layout guide whose ground band is darker than the wall, so the model keeps it, or text to image with t22's wording and more seeds.
+- The other twelve backdrops, from the template's recipe (The template backdrop).
 - The door-lift housing from its layout guide with thinner columns and nothing under the brackets, then background removal, which must also take out t27's ground wash.
 - Background removal for every cut-out.
 - One moving part per room, drawn in code (provisional; the room names are placeholders and later rooms are designed in epic 4):
@@ -205,17 +228,33 @@ Cut-outs end with "Isolated on plain flat cream paper with no ground, no scenery
 | r12 Junction | The linking gears | Plain wall |
 | r13 Clock tower | The pendulum and the winder, with no clock face | The empty belfry opening |
 
+## Decided in story 2.12
+
+Each is a call for Luka's veto.
+
+1. **The apprentice stays grey** (Display state), keeping NFR12 to the letter.
+2. **The standing scale stays.** `scaleGeometry` in `src/ui/scene/scale/layout.ts` is the source (story 1.4), and `src/art/scene-zones.ts` and this guide follow it.
+3. **The palette is in `src/art/palette.ts`** (Palette). There is one red: the earlier `mark` (#A8343A) was a near twin of the code's `jam` (#A8432F), so the First Automaton's marks use `jam`. The lamp keeps the code's #E0A33A, the lamp seen since story 1.8, rather than this guide's earlier #F2B544.
+4. **The template backdrop is t22, refitted** (The template backdrop). Both images left stay in reserve.
+5. **The review's minor notes** (below):
+   - **Dark automaton bodies:** they become "dark iron in a mid-value wash, never a solid dark mass". The bodies keep their outline and hatching, so in grey they read as ink drawings, not blocks. The automatons are drawn in epic 6, which applies it.
+   - **t09 and t12 against the automaton table:** the table wins. t09 and t12 show the style only, and the epic 6 images follow the table. Seeds stay as CREDITS records them; new automaton images use `4201`, `4301`, `4401` and `4601` by armour.
+   - **Map sizing:** the 70-unit mask is too small. A machine on the map is at most 120 units across, and its mask is a soft circle centred on its node, fully on out to 120 units across and gone by 160. Nodes stand at least 160 units apart, so a neighbour's mask stops at least 20 units short of a machine. The map's layout itself waits for epic 6.
+   - **References that aren't kept:** they stay unkept. t02–t08 and t10 can't be regenerated from CREDITS, which says so. None of them is a template.
+   - **`fal-generate.mjs`'s download:** it now checks the response status, and a failed download stops with an error (the image is still counted).
+   - **`src/art/palette.ts`:** it now holds every token (Palette).
+
 ## Review
 
 The guide was reviewed once, on 2026-11-05. Each finding, and what was done:
 
 1. **Mount points, housing footprint and quiet zone followed a hanging scale** (pivot at about y 230, pans in x 420–1180), while story 1.4's code has a standing scale: pivot (800, 600), floor y 820, pans across x 65–1535. *Done:* followed the code, as this guide said it would. The zones now live in `src/art/scene-zones.ts`, tested against `scaleGeometry` and every GDD room's pieces in `src/art/scene-zones.test.ts`. Camera, Scene zones, Housings and the slots are rewritten from it. The housing was regenerated three times: t23 (columns too close), t25 (too far apart) and t27 (layout guide, within about 7 units, failing narrowly). If Luka prefers the hanging scale, `scaleGeometry` changes instead, and then the zones and this guide follow it. Only one of them is the source.
-2. **"Every backdrop kept a clean quiet zone" was false,** and t21, named best and used as the template, broke it worst. *Done:* corrected. t01, t03, t04, t05, t06 and t21 are marked as failing here and in CREDITS, which adds t03 and t04 to the four the review found. The Backdrop slot keeps all detail to the top band and the ground, with plain wall beside the opening and no water above the ground line. The review step is now an overlay check (`art-src/tools/quiet-zone.mjs`, unit-tested in `scripts/art-tools.test.ts`). The slot was tried on four reserve images (t22, t24, t26, t28). All four kept objects out of the pan zones, but none landed both the wall top and the ground line, so no backdrop is called the template yet.
+2. **"Every backdrop kept a clean quiet zone" was false,** and t21, named best and used as the template, broke it worst. *Done:* corrected. t01, t03, t04, t05, t06 and t21 are marked as failing here and in CREDITS, which adds t03 and t04 to the four the review found. The Backdrop slot keeps all detail to the top band and the ground, with plain wall beside the opening and no water above the ground line. The review step is now an overlay check (`art-src/tools/quiet-zone.mjs`, unit-tested in `scripts/art-tools.test.ts`). The slot was tried on four reserve images (t22, t24, t26, t28). All four kept objects out of the pan zones, but none landed both the wall top and the ground line, so no backdrop was called the template then. (Story 2.12 made the template from t22 by a refit; see The template backdrop.)
 3. **Moving parts were painted into the backdrops,** the slot didn't exclude them, and "a separate image layer" contradicted the architecture. *Done:* followed the architecture. Moving parts are drawn in code, with a material texture if wanted, and are never in an image. The Backdrop slot says the part is left out and its opening is shown empty, and Still to do lists one moving part per room. The architecture needs no change.
 4. **A job without `style` silently used v1.** *Done:* `fal-generate.mjs` now defaults to the newest block (`LATEST_STYLE`), refuses an unknown key before anything is sent and records the resolved key in CREDITS, and its schema comment lists the keys. This is tested in `scripts/art-tools.test.ts`. t22–t28 were made without a style key and CREDITS records v4.
 5. **NFR12 keeps colour, brass and copper for restarted machines,** but the guide gave automatons and looks brass and copper and never said in which state each asset is shown. *Done:* added Display state. Backdrops and housings are grey until the room's last stage restarts, code-drawn parts are ink on paper until then, and automatons, the apprentice and townspeople are always grey. Looks 1 and 5 lose their brass goggles and copper buttons, so a colour apprentice (an NFR12 exception, for Luka's veto) would need no new images.
 
-**Minor notes from the review, not fixed, for Luka:**
+**Minor notes from the review, for Luka** (each decided in story 2.12; see Decided in story 2.12):
 
 - Automatons are specified with a "dark cast-iron body" (line 72 of the reviewed draft), which contradicts the grey-state rule "No large dark masses, which turn into blocks of ink" (line 54). The bodies in t09–t12 would turn into blocks of ink under the shader. With automatons always grey (Display state), this now matters more.
 - The images marked best do not match the automaton table: t09 (armour 20) has two arms where the table says one, t12 (armour 60) shows two legs where it says four plus a butterfly key, and t11 used seed 4451 rather than the 4401 that the 4201–4601 scheme implies.
