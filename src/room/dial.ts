@@ -6,7 +6,7 @@
 import * as q from '@/math/rational';
 import type { RoomEvent } from '@/room/events';
 import { openingPhase, touchMachine } from '@/room/phases';
-import { currentStageSpec, pokeNotches } from '@/room/room';
+import { currentStageSpec, hasPin, pokeNotches } from '@/room/room';
 import { isLevel, sideValues } from '@/room/tilt';
 import type { DialSpec, Phase, RoomState, StageSpec } from '@/room/types';
 
@@ -72,6 +72,11 @@ export interface DialView extends DialSpec {
   openMax: number;
   x: number;
   turns: boolean;
+  /**
+   * A pin waits to be confirmed and holds the dial still where it is: a stage with a pin but
+   * no poke window (room 3's second), in `arrive` and `pin`. The scene clamps the knob there.
+   */
+  heldByPin: boolean;
 }
 
 /** The dial of the stage in play, or null with no room or a locked dial. Flat, for selectors. */
@@ -80,6 +85,8 @@ export function dialView(room: RoomState | null): DialView | null {
   const { dial } = currentStageSpec(room);
   if (dial === 'locked') return null;
   const { stage } = room;
+  const spec = currentStageSpec(room);
+  const waiting = stage.phase === 'arrive' || stage.phase === 'pin';
   return {
     min: dial.min,
     max: dial.max,
@@ -88,6 +95,7 @@ export function dialView(room: RoomState | null): DialView | null {
     openMax: stage.dialOpen.max,
     x: stage.dialX,
     turns: dialTurnsNow(room),
+    heldByPin: waiting && hasPin(spec) && !stage.pin?.locked && !dialTurnsIn(spec, stage.phase),
   };
 }
 

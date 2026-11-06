@@ -25,7 +25,7 @@ export const r03: RoomSpec = {
       type: 'predict',
       machines: [{ equation: '20 − x = 6' }],
       dial: { min: 0, max: 20, step: 1 },
-      pin: { kind: 'effect', options: ['pan-down', 'pan-up'], resolvesOn: 'first-notch' },
+      pin: { kind: 'effect', options: ['pan-down', 'pan-up'] },
       readouts: true,
       ways: ['try'],
       fading: { try: 'blanks' },

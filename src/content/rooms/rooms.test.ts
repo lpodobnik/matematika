@@ -114,10 +114,7 @@ const gddRooms: readonly {
       { min: 0, max: 20, step: 1 },
     ],
     pokeNotches: [4, undefined],
-    pins: [
-      { kind: 'level-x' },
-      { kind: 'effect', options: ['pan-down', 'pan-up'], resolvesOn: 'first-notch' },
-    ],
+    pins: [{ kind: 'level-x' }, { kind: 'effect', options: ['pan-down', 'pan-up'] }],
     ways: ['try'],
     earns: 'balance',
   },
@@ -355,11 +352,7 @@ describe('rooms', () => {
 
     it('gives stage 2 no poke window and a direction pin: x is a spring, so its pan goes up', () => {
       expect(second?.pokeNotches).toBeUndefined();
-      expect(second?.pin).toEqual({
-        kind: 'effect',
-        options: ['pan-down', 'pan-up'],
-        resolvesOn: 'first-notch',
-      });
+      expect(second?.pin).toEqual({ kind: 'effect', options: ['pan-down', 'pan-up'] });
       expect(second?.type).toBe('predict');
       expect(panPieces(stageEquation(second)).left.map((piece) => piece.kind)).toEqual([
         'weight',

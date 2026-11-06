@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import {
+  clampNotch,
   type DialLayout,
   dialGeometry,
   dialLayout,
@@ -172,5 +173,22 @@ describe('followScroll', () => {
     const layout = dialLayout(smallBeside, 30);
     expect(followScroll(layout, 0, layout.length)).toBeCloseTo(layout.maxScroll);
     expect(followScroll(layout, layout.maxScroll, 0)).toBe(0);
+  });
+});
+
+describe('clampNotch (story 1.14)', () => {
+  const dial = { min: 6, max: 20, step: 1, x: 6, heldByPin: false };
+
+  it("grips the first notch past the poke window, and nothing once it's open", () => {
+    expect(clampNotch({ ...dial, openMax: 9 })).toBe(4);
+    expect(clampNotch({ ...dial, openMax: 20 })).toBeNull();
+    expect(clampNotch({ min: 0, max: 30, step: 3, x: 0, heldByPin: false, openMax: 9 })).toBe(4);
+  });
+
+  it('grips the notch just past the knob while a waiting pin holds the dial still', () => {
+    const held = { min: 0, max: 20, step: 1, x: 0, heldByPin: true, openMax: 20 };
+    expect(clampNotch(held)).toBe(1);
+    expect(clampNotch({ ...held, x: 20 })).toBeNull();
+    expect(clampNotch({ ...held, heldByPin: false })).toBeNull();
   });
 });

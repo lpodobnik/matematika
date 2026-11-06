@@ -137,3 +137,53 @@ export function pinTestFrame(test: PinTest, elapsedMs: number): PinTestFrame {
 export function nextChangeMs(test: PinTest, elapsedMs: number): number | null {
   return changes(test).find((at) => at > elapsedMs) ?? null;
 }
+
+/** A test playing: what it is, the stage and dial x it plays for, and its frame now. */
+export interface PinTestPlay {
+  test: PinTest;
+  stage: string;
+  /** Where the store has the dial: it stays there for as long as the test plays. */
+  dialX: number;
+  /** When it started, on the scene's clock. */
+  startedAt: number;
+  frame: PinTestFrame;
+}
+
+/**
+ * What plays once the room has gone from `before` to `after`: a new test on a confirm; the
+ * one playing while its stage and dial x hold; otherwise nothing. Once the dial has moved
+ * (he grabbed the knob, or turned it during the weighing) or the stage has changed, the
+ * test is over for good: the dial coming back to the test's x never resumes it.
+ */
+export function nextPlay(
+  playing: PinTestPlay | null,
+  before: PinTestProbe | null,
+  after: PinTestProbe | null,
+  now: number,
+): PinTestPlay | null {
+  const test = pinTestOf(before, after);
+  if (test && after) {
+    return {
+      test,
+      stage: after.stage,
+      dialX: after.dialX,
+      startedAt: now,
+      frame: pinTestFrame(test, 0),
+    };
+  }
+  if (!playing || !after || after.stage !== playing.stage || after.dialX !== playing.dialX) {
+    return null;
+  }
+  return playing;
+}
+
+/** The frame the scene shows for what plays, given the room now. */
+export function playedFrame(playing: PinTestPlay | null, probe: PinTestProbe | null): PinTestFrame {
+  const live =
+    playing !== null &&
+    probe !== null &&
+    playing.stage === probe.stage &&
+    playing.dialX === probe.dialX &&
+    !playing.frame.done;
+  return live && playing ? playing.frame : restingFrame;
+}

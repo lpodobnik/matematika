@@ -15,7 +15,12 @@ import {
   notchAction,
   watchDragCancel,
 } from '@/ui/scene/scale/dial-drag';
-import { type DialLayout, dialLayout, followScroll } from '@/ui/scene/scale/dial-layout';
+import {
+  clampNotch,
+  type DialLayout,
+  dialLayout,
+  followScroll,
+} from '@/ui/scene/scale/dial-layout';
 import { usePinTest } from '@/ui/scene/scale/use-pin-test';
 
 extend({ Container, Graphics });
@@ -31,21 +36,14 @@ export const clampLiftMs = 360;
 const clampWidth = 0.6;
 
 /**
- * Where the poke window's clamp sits, in notches from notch 0: on the first notch past the
- * window, so the knob at the window's end stands just clear of it. Null with no window.
- */
-export function clampNotch(view: { openMax: number; max: number; min: number; step: number }) {
-  return view.openMax < view.max ? notchOf(view, view.openMax) + 1 : null;
-}
-
-/**
  * The x dial: a horizontal track under the scale, dragged left and right, one notch per
  * 24 CSS px, with a tick on each notch (architecture, The dial). The knob and the track's
  * scroll follow the finger through refs on every move; the store hears only a new notch.
  *
  * While the poke window holds it short, a clamp grips the track just past the window's
- * last notch, and the track beyond it is fainter; when the pin is confirmed the clamp lifts
- * away (story 1.14). Then the machine tests the pin: the knob turns to it notch by notch
+ * last notch, and the track beyond it is fainter; a stage whose pin holds the dial still
+ * until it is confirmed clamps it just past the knob. When the pin is confirmed the clamp
+ * lifts away (story 1.14). Then the machine tests the pin: the knob turns to it notch by notch
  * (use-pin-test.ts), though the store has it there already. If he grabs the dial during the
  * test, his drag takes over from where the knob is: the dial is set there, and the test
  * ends.

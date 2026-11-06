@@ -9,11 +9,13 @@ import { enterRoom, type RoomStep } from '@/room/room';
 import type { PinValue, RoomSpec, RoomState } from '@/room/types';
 import {
   nextChangeMs,
+  nextPlay,
   type PinTest,
   pinTestFrame,
   pinTestOf,
   pinTestProbe,
   pinTestRestMs,
+  playedFrame,
   restingFrame,
 } from '@/ui/scene/scale/pin-test';
 
@@ -125,5 +127,55 @@ describe('pinTestFrame', () => {
     const end = 14 * notch + pinTestRestMs;
     expect(pinTestFrame(widest, end).done).toBe(true);
     expect(end).toBeLessThan(tuning.presentationTimeoutMs);
+  });
+});
+
+describe('nextPlay (review fix: an ended test never resumes)', () => {
+  const placed = confirming(r03, 0, { kind: 'x', x: 20 }).placed;
+  const confirmed = step(confirmPin(placed));
+  const at = (x: number) => pinTestProbe(step(setDial(confirmed, x)));
+
+  it('starts on the confirm and plays while the stage and dial hold', () => {
+    const play = nextPlay(null, pinTestProbe(placed), pinTestProbe(confirmed), 100);
+    expect(play).toMatchObject({
+      test: { kind: 'turn', from: 6, to: 20 },
+      dialX: 20,
+      startedAt: 100,
+    });
+    expect(nextPlay(play, pinTestProbe(confirmed), pinTestProbe(confirmed), 200)).toBe(play);
+    expect(playedFrame(play, pinTestProbe(confirmed)).dialX).toBe(6);
+  });
+
+  it('ends for good when he grabs the knob, even if he drags it back to the test’s end', () => {
+    const play = nextPlay(null, pinTestProbe(placed), pinTestProbe(confirmed), 0);
+    // He grabs the knob at 12, 0.4 s in: the dial is set there, so the test is over…
+    const grabbed = nextPlay(play, pinTestProbe(confirmed), at(12), 400);
+    expect(grabbed).toBeNull();
+    // …and he drags it on to 20, where the machine was turning it: it doesn't resume.
+    const back = pinTestProbe(step(setDial(step(setDial(confirmed, 12)), 20)));
+    const after = nextPlay(grabbed, at(12), back, 700);
+    expect(after).toBeNull();
+    expect(playedFrame(after, back)).toEqual(restingFrame);
+    // Even a play kept from before the grab shows nothing once the dial has moved.
+    expect(playedFrame(play, at(12))).toEqual(restingFrame);
+  });
+
+  it('ends the weighing of a pin beyond the dial for good when the dial turns off and back', () => {
+    const { placed: pinned, confirmed: weighed } = confirming(r04, 0, { kind: 'x', x: 9 }, 2);
+    const play = nextPlay(null, pinTestProbe(pinned), pinTestProbe(weighed), 0);
+    expect(play?.test).toEqual({ kind: 'weigh', x: 9 });
+    const off = pinTestProbe(step(setDial(weighed, 3)));
+    const back = pinTestProbe(step(setDial(step(setDial(weighed, 3)), 2)));
+    const ended = nextPlay(play, pinTestProbe(weighed), off, 300);
+    expect(ended).toBeNull();
+    expect(nextPlay(ended, off, back, 500)).toBeNull();
+    expect(playedFrame(null, back)).toEqual(restingFrame);
+  });
+
+  it('ends when the stage changes', () => {
+    const play = nextPlay(null, pinTestProbe(placed), pinTestProbe(confirmed), 0);
+    const probe = pinTestProbe(confirmed);
+    if (!probe) throw new Error('no probe');
+    expect(nextPlay(play, probe, { ...probe, stage: 'r03.1' }, 100)).toBeNull();
   });
 });

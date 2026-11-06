@@ -102,9 +102,9 @@ export type PinSpec =
   | { kind: 'story-choice' }
   | { kind: 'range'; bounds: number[] } // room 11: under 100, 100–300, over 300
   | { kind: 'next-dot' } // the drum
-  // options are text keys. `resolvesOn` is no longer read: since story 1.14 every pin
-  // resolves on confirm, and the machine tests it (room/pin.ts).
-  | { kind: 'effect'; options: EffectOption[]; resolvesOn: 'first-notch' | 'level' };
+  // predict what a change does; options are text keys. Like every pin, it resolves on
+  // confirm, and the machine tests it (room/pin.ts; story 1.14).
+  | { kind: 'effect'; options: EffectOption[] };
 
 /** Where he put the pin: an x on the track, a line, an option, or a range's bucket. */
 export type PinValue =

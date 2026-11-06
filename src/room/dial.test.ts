@@ -97,7 +97,22 @@ describe('dialView', () => {
       openMax: 10,
       x: 0,
       turns: true,
+      heldByPin: false,
     });
+  });
+
+  // Review fix: room 3's second stage holds its dial still until the pin is confirmed, and
+  // the scene draws why (a clamp just past the knob).
+  it('says when a waiting pin holds the dial still, and only then', () => {
+    expect(dialView(enterRoom(r03, 1).room)?.heldByPin).toBe(true);
+    expect(dialView(inPhase(enterRoom(r03, 1).room, 'pin'))).toMatchObject({
+      turns: false,
+      heldByPin: true,
+    });
+    expect(dialView(inPhase(enterRoom(r03, 1).room, 'open'))?.heldByPin).toBe(false);
+    // With a poke window the dial turns in pin, so nothing holds it.
+    expect(dialView(inPhase(enterRoom(r03).room, 'pin'))?.heldByPin).toBe(false);
+    expect(dialView(inPhase(enterRoom(r01).room, 'locked'))?.heldByPin).toBe(false);
   });
 
   it('has nothing to show with no room or a locked dial', () => {

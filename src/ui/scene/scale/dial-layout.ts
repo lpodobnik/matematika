@@ -9,6 +9,7 @@
 
 import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
+import { type DialView, notchOf } from '@/room/dial';
 import { scaleGeometry } from '@/ui/scene/scale/layout';
 
 export const dialGeometry = {
@@ -129,4 +130,17 @@ export function followScroll(layout: DialLayout, scroll: number, offset: number)
   if (offset < next + margin) next = offset - margin;
   if (offset > next + layout.viewLength - margin) next = offset - layout.viewLength + margin;
   return Math.max(0, Math.min(layout.maxScroll, next));
+}
+
+/**
+ * Where the clamp sits, in notches from notch 0: on the first notch past the poke window,
+ * so the knob at the window's end stands just clear of it; or, while a waiting pin holds the
+ * dial still (room 3's second stage), on the notch just past the knob. Null when nothing
+ * holds the dial short.
+ */
+export function clampNotch(
+  view: Pick<DialView, 'openMax' | 'max' | 'min' | 'step' | 'x' | 'heldByPin'>,
+): number | null {
+  const end = view.heldByPin ? view.x : view.openMax;
+  return end < view.max ? notchOf(view, end) + 1 : null;
 }

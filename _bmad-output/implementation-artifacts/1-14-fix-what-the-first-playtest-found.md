@@ -201,3 +201,18 @@ What was really happening, checked in the browser:
 **Checks:** `npm run check` clean (219 files). `npm test`: 88 files, 1652 passed, 2 skipped. `npm run build` passes (JS 0.32 MB gzipped). Browser (own server on 5310, since stopped) at 1280 × 800 and 640 × 360: rooms 3.1, 3.2 and 4. I saw the tag on the holder and on the wall, the clamp and faint track and the clamp lifting, the dial turning in `pin`, Potvrdi beside the head on both sides, the knob turning notch by notch with the pans following, the pin lighting and dimming, room 4 weighing 9, a grab mid-test taking over at the knob's x, the `+2` rising, and the counter going 0 → 2 → 4 → 6. No console errors after a fresh load.
 
 **Known, not fixed (phone only, 640 × 360):** with the pin on room 3.2's left option, Potvrdi covers the left pan's readout (there's no free spot beside the head). The counter covers the bottom of room 3.1's empty holder post (touches pass through). The phone notebook, when not pushed aside, still covers the right part of the pin track (as before this story).
+
+
+### Lane B fix pass (after the review; on `epic-1` after merge a6f410b)
+
+**Fixed:**
+- **Bug 1, an ended pin test resumed.** The hook's play state is now a pure step, `nextPlay` in `pin-test.ts`. Once the dial moves or the stage changes, the test is dropped for good, so turning the dial back to the test's x never restarts it. That covers both the turn and room 4's weighing. Tests: grab, then drag back to `to`, gives the resting frame; the weighing turned off and back stays ended; a stage change ends it.
+- **Bug 2, Potvrdi under the phone notebook.** While a pin waits, the notebook now shows pushed aside. This is derived in the view (`notebook-aside.ts`, used by `Notebook.tsx`) and leaves his `ui.notebookAside` alone, so after the confirm it shows as he had it. He can still bring it back with the handle for that pin. The tablet ignores it. Tests cover the rule, the handle, and room 4's 9 and room 3's pan-up at 640 × 360.
+- **Item 3, the dial frozen with nothing to show why.** `DialView.heldByPin` is new. While a waiting pin holds the dial still (room 3 stage 2, in `arrive` and `pin`), the clamp grips the notch just past the knob and the whole track beyond it is faint. It lifts on confirm. `clampNotch` moved to `dial-layout.ts` and has tests.
+- **Item 4.** `resolvesOn` is gone from `PinSpec`, from room 3's data, from `rooms.test.ts` and from `pin.test.ts`. The pin test that relied on it ("an effect pin that once waited for the level") was removed, since that pin kind no longer exists.
+
+**Checks:** `npm run check` clean (222 files). `npm test`: 90 files, 1695 passed, 2 skipped. `npm run build` passes. Browser, own server on 5310 (since stopped):
+- 1280 × 800, room 3 stage 1, pin at 20: grabbed 0.4 s in and dragged to 20. The knob stays at 20, the pin dims, nothing resumes.
+- 640 × 360: the notebook shows aside during room 4's and room 3 stage 2's pins, with Potvrdi on the scene, and comes back after the confirm.
+- Room 3 stage 2's clamp shows and lifts.
+- No console errors.

@@ -1,5 +1,5 @@
 import '@/ui/notebook/notebook.css';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { hr } from '@/content/text/hr';
 import type { LineSegment } from '@/math/format';
 import type { LineToken, Token } from '@/math/tokens';
@@ -10,11 +10,13 @@ import {
   type NotebookKey,
   notebookWrites,
 } from '@/room/notebook';
+import { pinOffered } from '@/room/pin';
 import type { NotebookLine } from '@/room/types';
 import { useGame } from '@/store/store';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
 import { LineView, textLine } from '@/ui/notebook/LineView';
 import { NumberPad } from '@/ui/notebook/NumberPad';
+import { pressHandle, shownAside } from '@/ui/notebook/notebook-aside';
 import { keyAction, primaryPress } from '@/ui/notebook/pad-keys';
 
 const noLines: readonly NotebookLine[] = [];
@@ -25,6 +27,7 @@ const noTemplates: LineToken[][] = [];
  * The notebook beside the scale (FR15): the stage equation as line 0, the committed lines,
  * the draft and the number pad. It reads the stage through selectors and acts only through
  * dispatch; what a key does is decided in `room/notebook.ts`. A computer's keys work too.
+ * On a phone it shows pushed aside while a pin waits to be confirmed (notebook-aside.ts).
  */
 export function Notebook() {
   const lines = useGame((s) => s.room?.stage.lines ?? noLines);
@@ -33,16 +36,23 @@ export function Notebook() {
   const wrong = useGame((s) => s.room?.stage.jam?.kind === 'line');
   const refused = useGame((s) => s.room?.stage.refused ?? 0);
   const writes = useGame((s) => (s.room ? notebookWrites(s.room.stage) : false));
-  const aside = useGame((s) => s.ui.notebookAside);
+  const choice = useGame((s) => s.ui.notebookAside);
+  const waiting = useGame((s) =>
+    s.room && pinOffered(s.room) ? `${s.room.spec.id}.${s.room.stageIndex}` : null,
+  );
+  const [broughtBack, setBroughtBack] = useState<string | null>(null);
+  const aside = shownAside(choice, waiting, broughtBack);
   const dispatch = useGame((s) => s.dispatch);
 
   const shown = useMemo(() => lineDisplays(lines), [lines]);
   const display = useMemo(() => draftDisplay({ draft, templates }), [draft, templates]);
   const send = useCallback((key: NotebookKey) => dispatch(keyAction(key)), [dispatch]);
-  const slide = useCallback(
-    (next: boolean) => dispatch({ type: 'notebook/slide', aside: next }),
-    [dispatch],
-  );
+  // The page asks for the opposite of what it shows; the waiting pin decides what that means.
+  const slide = useCallback(() => {
+    const next = pressHandle({ choice, broughtBack }, waiting);
+    setBroughtBack(next.broughtBack);
+    if (next.choice !== choice) dispatch({ type: 'notebook/slide', aside: next.choice });
+  }, [choice, broughtBack, waiting, dispatch]);
 
   useEffect(() => watchKeyboard(window, send), [send]);
 

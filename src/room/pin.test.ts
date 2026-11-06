@@ -127,7 +127,7 @@ describe('the pin track (Pattern 2, Pin)', () => {
 
   it('places only level-x and effect pins so far; the other kinds arrive with their rooms', () => {
     expect(pinSupported({ kind: 'level-x' })).toBe(true);
-    expect(pinSupported({ kind: 'effect', options: ['pan-up'], resolvesOn: 'level' })).toBe(true);
+    expect(pinSupported({ kind: 'effect', options: ['pan-up'] })).toBe(true);
     for (const kind of ['x-hidden', 'wrong-line', 'story-choice', 'next-dot'] as const) {
       expect(pinSupported({ kind })).toBe(false);
       expect(pinTrack({ ...levelStage, pin: { kind } })).toBeNull();
@@ -344,23 +344,6 @@ describe('the machine tests the pin on confirm (Pattern 2, Resolution)', () => {
     expect(machineTestX(division, 6, choice(0))).toBe(15);
     expect(machineTestX(levelStage, 7, at(14))).toBe(14);
     expect(machineTestX({ ...levelStage, dial: { min: 0, max: 6, step: 1 } }, 2, at(9))).toBe(2);
-  });
-
-  it('resolves an effect pin that once waited for the level on confirm too', () => {
-    const levelEffect: RoomSpec = {
-      ...r03,
-      stages: [
-        {
-          ...effectStage,
-          pin: { kind: 'effect', options: ['pan-down', 'pan-up'], resolvesOn: 'level' },
-        },
-      ],
-    };
-    const room = step(touchMachine(enterRoom(levelEffect).room)).room;
-    const confirmed = step(confirmPin(step(setPin(room, choice(1))).room));
-    expect(confirmed.events).toEqual([
-      { type: 'PredictionMade', roomId: 'r03', stage: 0, right: true },
-    ]);
   });
 
   it('fires nothing more when the stage locks, since the pin resolved on confirm', () => {

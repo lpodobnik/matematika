@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
-import { dialView } from '@/room/dial';
+import { type DialView, dialView } from '@/room/dial';
 import type { RoomSpec, StageSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
@@ -274,7 +274,16 @@ describe('createDialDrag', () => {
 
 describe('dialSync and notchAction', () => {
   it("read room 1's dial in notches, and turn a notch back into x", () => {
-    const view = { min: 6, max: 20, step: 1, openMin: 6, openMax: 9, x: 8, turns: true };
+    const view: DialView = {
+      min: 6,
+      max: 20,
+      step: 1,
+      openMin: 6,
+      openMax: 9,
+      x: 8,
+      turns: true,
+      heldByPin: false,
+    };
     expect(dialSync(view)).toEqual({ notch: 2, first: 0, last: 3, enabled: true });
     expect(notchAction(view, 3)).toEqual({ type: 'dial/set', x: 9 });
     expect(dialSync(null)).toEqual({ notch: 0, first: 0, last: 0, enabled: false });
