@@ -1,6 +1,6 @@
 # Story 1.16: One x, a goal and a hint button
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -80,7 +80,7 @@ Story 1.15 weighed the scale at the true x during Balance and showed `x = ?` on 
 - [x] Lane B: AC 5–7
 - [x] Merge; checks green (AC 8)
 - [x] One review, one fix pass
-- [ ] Headless play-through, rooms 1–4
+- [x] Headless play-through, rooms 1–4
 
 ## Dev Notes
 
@@ -238,3 +238,30 @@ Story 1.15 weighed the scale at the true x during Balance and showed `x = ?` on 
 **Not done:**
 - Still open from lane A: an edit after a jam puts the pans back to the last committed line, which would lose moves with Balance `blank` (no room yet).
 - The headless play-through of rooms 1–4 (the story's last task) is not part of this pass.
+
+### Main session: merge and final check
+
+- **Merge:** lane B's hint note and lane A's refusal note now share the notebook. A refusal shows first and doesn't pulse.
+- **Goal test:** fills room 4's new blanks instead of typing whole lines.
+- **Balance tag:** reworded to `Ostavi x samog na jednoj strani, kao na kartici Cilj.`, because the scale no longer knows x.
+- **Goal card's layout sweep:** given 30 s, since it takes about 7 s and timed out in the full parallel run.
+- **Checks after the fix pass:**
+  - `npm run check`: clean, 260 files.
+  - `npm test`: 106 files, 1903 passed, 2 skipped.
+  - `npm run build`: passes, with 0.34 MB of JavaScript gzipped.
+- **Headless Edge play-through at 1280 × 800 and 640 × 360** (`play116.mjs` in the session scratchpad, on a freshly started server):
+  - Room 1: the hint button shows the slider tag, then the knob ghost with `Pomiči klizač udesno.`
+  - Room 4:
+    - The tray appears at the slider's end, with the goal card.
+    - An early `x = 9` is refused with `Prvo pojednostavi vagu.`, as the only tag showing.
+    - The hint's second press flies a −5 ghost with `Skini 5 s obje strane: stavi balon −5 na vagu.`
+    - At slider 6 the scale reads 17 | 23, then 12 | 18, then 6 | 9.
+    - The split hint reads `Podijeli obje strane s 2.`
+    - After the split the goal card lights, and `x = ☐` and the check template appear with `x je sam na vagi. Upiši koliko je x.`
+    - 9 and then 9 lock the machine, and the door opens.
+  - No console errors besides the favicon 404.
+- **Test harness note:** a dev server that has hot-reloaded edits can hand a script that imports `/src/store/store.ts` a second copy of the store. Restart the server before scripted checks.
+- **Left open:**
+  - On the phone, the notebook covers the scale while he writes the answer.
+  - From `x = 23 − 14`, `x = 9` is refused until the tray clears the weight and the balloon (the fix pass's call).
+  - Lane A's note stands: an edit after a jam can lose Balance `blank` moves; no current room is affected.
