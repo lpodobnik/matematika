@@ -76,3 +76,22 @@ export function Automaton({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/** The punched tape a beaten automaton drops as it winds down (GDD, Automaton fights). */
+export function PunchedTape({ className }: { className?: string }) {
+  const holes = [8, 22, 36, 50, 64, 78, 92, 106, 120, 134];
+  return (
+    <svg className={className} viewBox="0 0 150 40" aria-hidden="true">
+      <path d="M2 8 H148 L142 20 L148 32 H2 Z" className="tape" />
+      {holes.map((x, i) => (
+        <circle
+          key={x}
+          cx={x + 6}
+          cy={i % 3 === 0 ? 14 : i % 3 === 1 ? 26 : 20}
+          r="3"
+          className="tape__hole"
+        />
+      ))}
+    </svg>
+  );
+}

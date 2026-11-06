@@ -47,6 +47,31 @@ describe('Luka’s view (story 2.11)', () => {
     expect(html).toContain(hr.luka.notSaving);
     expect(html).toContain(hr.luka.sessionsNone);
     expect(html).toContain(hr.luka.latestNone);
+    expect(html).toContain(hr.luka.fightsNone);
+  });
+
+  it('shows fights by lair, and hard fights after a loss (story 3.3)', () => {
+    const summary = summarize([
+      { type: 'fight', lairId: 'lair-20', won: false, parts: -2, at: at(1) },
+      { type: 'fight', lairId: 'lair-20', won: true, parts: 11, at: at(2) },
+    ]);
+    const html = renderToString(
+      <LukaView
+        summary={summary}
+        notSaving={false}
+        makeBackupLink={async () => ''}
+        exportLog={noop}
+        onBack={noop}
+      />,
+    );
+    const row = html.match(/<tr><td>Automat 20<\/td>(.*?)<\/tr>/)?.[1] ?? '';
+    expect(
+      row
+        .replace(/<[^>]+>/g, ' ')
+        .trim()
+        .split(/\s+/),
+    ).toEqual(['2', '1', '11', '2']);
+    expect(html).toContain(hr.luka.afterLoss(0, 1));
   });
 });
 

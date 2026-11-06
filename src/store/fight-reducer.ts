@@ -11,7 +11,7 @@ import { LAIR_ORDER, lairs } from '@/content/lairs';
 import { districtMap } from '@/content/map';
 import { fightInProgress, reduceFight, startFight } from '@/fight/fight';
 import { seedFrom } from '@/fight/rng';
-import { lairAwake, settleFight } from '@/fight/settle';
+import { asleepLairs, settleFight } from '@/fight/settle';
 import type { FightAction, FightState, LairId } from '@/fight/types';
 import type { RoomSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
@@ -53,10 +53,9 @@ export function lairEnterable(
     done: state.save.progress.roomsDone,
     tools: state.save.progress.tools,
     authored,
+    asleep: asleepLairs(state.save.economy, now),
   };
-  return (
-    nodeState(districtMap, node, reach) === 'open' && lairAwake(state.save.economy, lairId, now)
-  );
+  return nodeState(districtMap, node, reach) === 'open';
 }
 
 /** A tap on a lair: a new fight there, with his upgrades, waiting for the first roll. */

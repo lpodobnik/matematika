@@ -117,3 +117,31 @@ describe('room 6 on the map (story 2.9)', () => {
     expect(html).toContain('5 · x = 40');
   });
 });
+
+describe('lairs on the map screen (story 3.3)', () => {
+  it('shows a winding-down lair off, with when it wakes, and the pile left at a lair', () => {
+    const view = mapView(
+      districtMap,
+      {
+        roomsDone: ['r01', 'r02'],
+        tools: [],
+        started: [],
+        fresh: null,
+        asleep: ['lair-20'],
+        piles: { 'lair-20': 3 },
+      },
+      authored,
+    );
+    const html = renderToString(
+      <MapBoard view={view} wakes={{ 'lair-20': 12 }} onTravel={() => undefined} />,
+    );
+    const lair = buttons(html).find((b) => b.includes('data-node="lair-20"')) ?? '';
+    expect(lair).toContain('disabled');
+    expect(lair).toContain('data-state="winding"');
+    expect(lair).toContain(
+      `aria-label="${hr.map.nodes['lair-20']}, ${hr.map.states.winding}, ${hr.map.wakes(12)}, ${hr.map.pile(3)}"`,
+    );
+    expect(html).toContain(`>${hr.map.wakes(12)}<`);
+    expect(html).toContain('class="map__pile"');
+  });
+});

@@ -1,5 +1,5 @@
 import '@/ui/fight/fight.css';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { lairs } from '@/content/lairs';
 import { hr } from '@/content/text/hr';
 import { blowRange, blowsAffordable, placedValues, SLOTS } from '@/fight/fight';
@@ -7,8 +7,9 @@ import type { FightAction, FightState, Slot } from '@/fight/types';
 import { formatNumber } from '@/math/format';
 import type { FightEnd } from '@/store/fight-end';
 import { useGame } from '@/store/store';
+import { PartsCounterView, partsFlightMs } from '@/ui/common/PartsCounter';
 import { FightEndPanel, LeaveConfirm, StrikeBanner } from '@/ui/fight/FightEnd';
-import { Automaton, DieFace } from '@/ui/fight/fight-art';
+import { Automaton, DieFace, PunchedTape } from '@/ui/fight/fight-art';
 import { type Tap, tapDie, tapLeave, tapSlot } from '@/ui/fight/taps';
 
 /**
@@ -21,20 +22,59 @@ import { type Tap, tapDie, tapLeave, tapSlot } from '@/ui/fight/taps';
 export function FightScreen() {
   const fight = useGame((s) => s.fight);
   const end = useGame((s) => s.ui.fightEnd);
+  const parts = useGame((s) => s.save.economy.parts);
+  const piles = useGame((s) => s.save.economy.piles);
   const dispatch = useGame((s) => s.dispatch);
   if (!fight) return null;
-  return <FightBoard fight={fight} end={end} onAction={dispatch} />;
+  return (
+    <FightBoard
+      fight={fight}
+      end={end}
+      pile={fight.strikes === 0 ? (piles[fight.lairId] ?? 0) : 0}
+      onAction={dispatch}
+    >
+      <FightParts parts={parts} end={end} />
+    </FightBoard>
+  );
+}
+
+/**
+ * The parts counter on the fight screen (story 3.3). A win's parts rise from the end and
+ * land on the counter, which then ticks up; that is the only reward signal (NFR13).
+ */
+function FightParts({ parts, end }: { parts: number; end: FightEnd | null }) {
+  const amount = end?.won ? end.reward + end.recovered : 0;
+  // The end whose parts have landed. Until this fight's end lands, the counter shows his
+  // parts without them, so it ticks once, when they arrive.
+  const [landedFor, setLandedFor] = useState<FightEnd | null>(end);
+  useEffect(() => {
+    if (!end || end === landedFor) return;
+    const timer = setTimeout(() => setLandedFor(end), partsFlightMs);
+    return () => clearTimeout(timer);
+  }, [end, landedFor]);
+  const flying = amount > 0 && end !== landedFor;
+  return (
+    <PartsCounterView
+      shown={flying ? parts - amount : parts}
+      visible={parts > 0 || amount > 0}
+      flight={null}
+    />
+  );
 }
 
 interface BoardProps {
   fight: FightState;
+  /** Parts he left at this lair by losing before, waiting to be won back (story 3.3). */
+  pile?: number;
+  /** The parts counter, which sits in the fight's top-right corner. */
+  children?: ReactNode;
   /** How the fight ended, once it has (store/fight-end.ts). */
   end?: FightEnd | null;
   onAction(action: FightAction | { type: 'fight/close' }): void;
 }
 
 /** The fight from props only. */
-export function FightBoard({ fight, end = null, onAction }: BoardProps) {
+export function FightBoard({ fight, end = null, pile = 0, onAction, children }: BoardProps) {
   const lair = lairs[fight.lairId];
   // Leaving after a strike loses the fight, so he is asked first (story 3.2).
   const [askLeave, setAskLeave] = useState(false);
@@ -84,7 +124,9 @@ export function FightBoard({ fight, end = null, onAction }: BoardProps) {
             fight.phase === 'won' ? 'fight__automaton fight__automaton--down' : 'fight__automaton'
           }
         />
+        {fight.phase === 'won' && <PunchedTape className="fight__tape" />}
         <Armour armour={fight.armour} full={lair.armour} />
+        {pile > 0 && <p className="fight__pile">{hr.fight.pileHere(pile)}</p>}
       </section>
       <section className="fight__bench">
         <Gauges key={`hull-${fight.hull}`} fight={fight} />
@@ -101,6 +143,7 @@ export function FightBoard({ fight, end = null, onAction }: BoardProps) {
           bench()
         )}
       </section>
+      {children}
       {askLeave && !over && (
         <LeaveConfirm
           onStay={() => setAskLeave(false)}

@@ -56,3 +56,32 @@ describe('the fight’s words (story 3.1)', () => {
     ]);
   });
 });
+
+describe('the fight’s parts (story 3.3)', () => {
+  it('counts parts as Croatian does, with the verb agreeing', () => {
+    expect([1, 2, 4, 5, 11, 12, 21, 22, 25].map(hr.fight.paid)).toEqual([
+      '+1 dio',
+      '+2 dijela',
+      '+4 dijela',
+      '+5 dijelova',
+      '+11 dijelova',
+      '+12 dijelova',
+      '+21 dio',
+      '+22 dijela',
+      '+25 dijelova',
+    ]);
+    expect([0, 1, 4, 5, 12, 21].map((n) => hr.fight.paidHow(3, n))).toEqual([
+      '3 za automat + 0 preostalih para',
+      '3 za automat + 1 preostala para',
+      '3 za automat + 4 preostale pare',
+      '3 za automat + 5 preostalih para',
+      '3 za automat + 12 preostalih para',
+      '3 za automat + 21 preostala para',
+    ]);
+    expect(hr.fight.dropped(3)).toBe('3 dijela ostaju kod automata. Pobjeda ih vraća.');
+    expect(hr.fight.dropped(5)).toBe('5 dijelova ostaje kod automata. Pobjeda ih vraća.');
+    expect(hr.fight.dropped(1)).toBe('1 dio ostaje kod automata. Pobjeda ga vraća.');
+    expect(hr.fight.pileHere(1)).toBe('Ovdje te čeka 1 dio s prošle borbe.');
+    expect(hr.fight.pileHere(3)).toBe('Ovdje te čekaju 3 dijela s prošle borbe.');
+  });
+});

@@ -40,6 +40,21 @@ export function FightEndPanel({
     <section className="fight__end" aria-label={won ? hr.fight.won : hr.fight.lost}>
       <h2 className="fight__end-title">{won ? hr.fight.won : hr.fight.lost}</h2>
       {!won && reason && <p className="fight__end-reason">{hr.fight.reasons[reason]}</p>}
+      {end && won && (
+        <div className="fight__pay">
+          <p className="fight__paid">{hr.fight.paid(end.reward + end.recovered)}</p>
+          <p className="fight__pay-line">{hr.fight.paidHow(fight.baseParts, fight.steam)}</p>
+          {end.clean && <p className="fight__pay-line">{hr.fight.doubled}</p>}
+          {end.recovered > 0 && (
+            <p className="fight__pay-line">{hr.fight.recovered(end.recovered)}</p>
+          )}
+        </div>
+      )}
+      {end && !won && (
+        <p className="fight__pay-line">
+          {end.dropped > 0 ? hr.fight.dropped(end.dropped) : hr.fight.droppedNone}
+        </p>
+      )}
       <button type="button" className="fight__close" onClick={onClose}>
         {hr.fight.back}
       </button>

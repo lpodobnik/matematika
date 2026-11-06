@@ -1,10 +1,11 @@
 import '@/ui/map/map.css';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { type MapView, mapView, type NodeView } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
+import { asleepLairs } from '@/fight/settle';
 import { ideasByRoom } from '@/room/ideas';
 import type { IdeaId, RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
@@ -30,15 +31,31 @@ export function MapScreen() {
   const told = useGame((s) => s.save.progress.told);
   const seen = useGame((s) => s.save.progress.ideasSeen);
   const name = useGame((s) => s.save.character.name);
+  const economy = useGame((s) => s.save.economy);
   const dispatch = useGame((s) => s.dispatch);
+  // A winding-down automaton rewinds on the clock (ADR-13), so the map looks again each half
+  // minute while one is asleep.
+  const [now, tick] = useNow();
+  const asleep = useMemo(() => asleepLairs(economy, now), [economy, now]);
+  useEffect(() => tick(asleep.length > 0), [asleep.length, tick]);
   const view = useMemo(
     () =>
       mapView(
         districtMap,
-        { roomsDone, tools, started: started.map((room) => room.id), fresh },
+        {
+          roomsDone,
+          tools,
+          started: started.map((room) => room.id),
+          fresh,
+          asleep,
+          piles: economy.piles,
+        },
         authored,
       ),
-    [roomsDone, tools, started, fresh],
+    [roomsDone, tools, started, fresh, asleep, economy.piles],
+  );
+  const wakes = Object.fromEntries(
+    asleep.map((id) => [id, minutesUntil(economy.lairs[id]?.rewindsAt, now)]),
   );
   return (
     <MapBoard
@@ -46,9 +63,28 @@ export function MapScreen() {
       told={told}
       seen={seen}
       name={name}
+      wakes={wakes}
       onTravel={(node) => dispatch({ type: 'map/travel', node })}
     />
   );
+}
+
+/** The time now, looked at again every 30 s while ticking is on. */
+function useNow(): [number, (on: boolean) => void] {
+  const [now, setNow] = useState(() => Date.now());
+  const [ticking, setTicking] = useState(false);
+  useEffect(() => {
+    if (!ticking) return;
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, [ticking]);
+  return [now, setTicking];
+}
+
+/** Whole minutes from `now` until `at`, at least 1. */
+function minutesUntil(at: string | undefined, now: number): number {
+  const ms = at ? Date.parse(at) - now : 0;
+  return Math.max(1, Math.ceil(ms / 60_000));
 }
 
 interface BoardProps {
@@ -58,6 +94,8 @@ interface BoardProps {
   /** Ideas whose explanation card he has seen (story 2.6). */
   seen?: readonly IdeaId[];
   name?: string | null;
+  /** Lairs winding down: the minutes until each rewinds (story 3.3). */
+  wakes?: Readonly<Partial<Record<NodeId, number>>>;
   onTravel(node: NodeId): void;
   /** For tests: the log starts open. */
   logOpen?: boolean;
@@ -73,6 +111,7 @@ export function MapBoard({
   told = [],
   seen = [],
   name = null,
+  wakes = {},
   onTravel,
   logOpen = false,
 }: BoardProps) {
@@ -94,7 +133,7 @@ export function MapBoard({
         </svg>
         <h1 className="map__title">{hr.map.title}</h1>
         {view.nodes.map((node) => (
-          <MapNode key={node.id} node={node} onTravel={onTravel} />
+          <MapNode key={node.id} node={node} wake={wakes[node.id] ?? null} onTravel={onTravel} />
         ))}
         {view.allDone && <p className="map__note">{hr.app.toBeContinued}</p>}
         <button
@@ -115,12 +154,24 @@ export function MapBoard({
   );
 }
 
-function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): void }) {
+function MapNode({
+  node,
+  wake,
+  onTravel,
+}: {
+  node: NodeView;
+  /** A winding-down lair: minutes until it rewinds. */
+  wake: number | null;
+  onTravel(node: NodeId): void;
+}) {
   const name = hr.map.nodes[node.id];
   // Seen, he knows its name; only a room he can travel to takes a tap (story 2.3).
   const named = node.state !== 'closed';
   const reachable = node.state === 'open' || node.state === 'restored';
-  const label = named ? `${name}, ${hr.map.states[node.state]}` : hr.map.states.closed;
+  const parts: string[] = [name, hr.map.states[node.state]];
+  if (node.state === 'winding' && wake !== null) parts.push(hr.map.wakes(wake));
+  if (node.pile > 0) parts.push(hr.map.pile(node.pile));
+  const label = named ? parts.join(', ') : hr.map.states.closed;
   return (
     <button
       type="button"
@@ -148,6 +199,14 @@ function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): v
       </svg>
       {named && <span className="map__name">{name}</span>}
       {node.plate && <span className="map__plate">{node.plate}</span>}
+      {node.state === 'winding' && wake !== null && (
+        <span className="map__plate">{hr.map.wakes(wake)}</span>
+      )}
+      {node.pile > 0 && (
+        <span className="map__pile" aria-hidden="true">
+          {node.pile}
+        </span>
+      )}
     </button>
   );
 }

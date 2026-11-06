@@ -15,6 +15,8 @@ export interface Reach {
   done: readonly string[];
   tools: readonly string[];
   authored: Authored;
+  /** Lairs whose automaton is winding down after a win (story 3.3, ADR-13). */
+  asleep?: readonly string[];
 }
 
 function neighbours(map: MapSpec, id: string): string[] {
@@ -69,16 +71,17 @@ export function nextRoomOnMap(map: MapSpec, reach: Reach): string | null {
  * - `locked`, seen with its gate shut, its lock showing what opens it;
  * - `seen`, seen with its gate met but taking him nowhere yet (a lair, the workshop, a room
  *   whose story comes later);
+ * - `winding`, a lair whose automaton is winding down after a win, until it rewinds (story 3.3);
  * - `closed`, not seen yet: grey and still (NFR12).
  */
-export type NodeState = 'restored' | 'open' | 'locked' | 'seen' | 'closed';
+export type NodeState = 'restored' | 'open' | 'locked' | 'seen' | 'winding' | 'closed';
 
 export function nodeState(map: MapSpec, node: NodeSpec, reach: Reach): NodeState {
   if (reach.done.includes(node.id)) return 'restored';
   if (roomOpen(map, node.id, reach)) return 'open';
   if (!nodeSeen(map, node.id, reach)) return 'closed';
   // A lair is open once seen (GDD, Level Structure); fights never need a tool (story 3.1).
-  if (node.kind === 'lair') return 'open';
+  if (node.kind === 'lair') return reach.asleep?.includes(node.id) ? 'winding' : 'open';
   return gateMet(node, reach) ? 'seen' : 'locked';
 }
 
@@ -98,6 +101,8 @@ export interface NodeView {
   started: boolean;
   /** The room he has just restored, whose change plays as the map shows. */
   fresh: boolean;
+  /** At a lair: the parts he dropped there by losing, to win back (story 3.3); else 0. */
+  pile: number;
 }
 
 export interface RoadView {
@@ -122,14 +127,18 @@ export interface MapProgress {
   started: readonly string[];
   /** The room just restored, or null. */
   fresh: string | null;
+  /** Lairs winding down after a win (story 3.3). */
+  asleep?: readonly string[];
+  /** Parts dropped at each lair by losing there (story 3.3). */
+  piles?: Readonly<Partial<Record<string, number>>>;
 }
 
 const travels = (state: NodeState) => state === 'open' || state === 'restored';
 
 /** What the map shows. */
 export function mapView(map: MapSpec, progress: MapProgress, authored: Authored): MapView {
-  const { roomsDone: done, tools, started, fresh } = progress;
-  const reach: Reach = { done, tools, authored };
+  const { roomsDone: done, tools, started, fresh, asleep = [], piles = {} } = progress;
+  const reach: Reach = { done, tools, authored, asleep };
   const next = done.length > 0 ? nextRoomOnMap(map, reach) : null;
   const nodes = map.nodes.map((node): NodeView => {
     const state = nodeState(map, node, reach);
@@ -144,6 +153,7 @@ export function mapView(map: MapSpec, progress: MapProgress, authored: Authored)
       next: node.id === next,
       started: started.includes(node.id),
       fresh: node.id === fresh,
+      pile: node.kind === 'lair' && state !== 'closed' ? (piles[node.id] ?? 0) : 0,
     };
   });
   const at = new Map(nodes.map((node) => [node.id, node]));

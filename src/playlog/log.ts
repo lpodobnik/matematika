@@ -3,6 +3,7 @@
 // The log is game data for Luka, kept on the device only; hints are never logged (GDD:
 // free and never recorded), and it never holds his name.
 
+import type { LairId } from '@/fight/types';
 import type { RoomId, WayId } from '@/room/types';
 
 /** One entry in the log. `at` is ISO 8601. */
@@ -13,6 +14,11 @@ export type PlayLogEvent = { at: string } /** The first event after 30 minutes o
   | { type: 'prediction'; roomId: RoomId; stage: number; right: boolean }
   /** A wrong line, as he wrote it. */
   | { type: 'line'; roomId: RoomId; ok: boolean; text: string }
+  /**
+   * A fight that ended (story 3.3): won or lost, and the change in his parts (reward plus
+   * recovered pile on a win, minus the parts dropped on a loss).
+   */
+  | { type: 'fight'; lairId: LairId; won: boolean; parts: number }
 );
 
 /** The domain events the log reads, by what they carry (store/events.ts). */
@@ -22,7 +28,8 @@ export type LoggedEvent =
   | { type: 'StageReset'; roomId: string; stage: number }
   | { type: 'WayUsed'; roomId: string; stage: number; way: WayId }
   | { type: 'PredictionMade'; roomId: string; stage: number; right: boolean }
-  | { type: 'LineWrong'; roomId: string; stage: number; line: string };
+  | { type: 'LineWrong'; roomId: string; stage: number; line: string }
+  | { type: 'FightEnded'; lairId: string; won: boolean; parts: number };
 
 /** A gap this long starts a new session. */
 export const sessionGapMs = 30 * 60 * 1000;
@@ -32,6 +39,12 @@ export const maxLogEvents = 20_000;
 
 function isAuthoredRoom(id: string): id is RoomId {
   return /^r(0[1-9]|1[0-3])$/.test(id);
+}
+
+const lairIds: readonly LairId[] = ['lair-20', 'lair-30', 'lair-45', 'lair-60'];
+
+function isLair(id: unknown): id is LairId {
+  return lairIds.includes(id as LairId);
 }
 
 /**
@@ -51,6 +64,10 @@ export function logEntriesOf(
 }
 
 function entryOf(event: LoggedEvent, at: string): PlayLogEvent | null {
+  if (event.type === 'FightEnded') {
+    if (!isLair(event.lairId)) return null;
+    return { type: 'fight', lairId: event.lairId, won: event.won, parts: event.parts, at };
+  }
   if (!('roomId' in event) || !isAuthoredRoom(event.roomId)) return null;
   const { roomId } = event;
   switch (event.type) {
@@ -90,6 +107,16 @@ export interface RoomSummary {
   wrongLines: number;
 }
 
+/** A lair's line in Luka's view (story 3.3). */
+export interface FightSummary {
+  lairId: LairId;
+  fights: number;
+  wins: number;
+  /** Parts won (rewards and recovered piles) and parts dropped by losing. */
+  partsWon: number;
+  partsLost: number;
+}
+
 /** What Luka's view shows of the log. */
 export interface LogSummary {
   /** Sessions per day, by local date (YYYY-MM-DD), in date order. */
@@ -97,6 +124,14 @@ export interface LogSummary {
   rooms: RoomSummary[];
   /** The latest wrong lines, newest first (up to `latestLines`). */
   wrongLines: { at: string; roomId: RoomId; text: string }[];
+  /** Fights by lair, weakest automaton first (story 3.3). */
+  fights: FightSummary[];
+  /**
+   * GDD, Gameplay Metrics ("he still takes armour 45 or more after a loss"; the risk: fear of
+   * losing): of his fights lost, how many were followed, before the next loss, by a fight
+   * at armour 45 or more.
+   */
+  afterLoss: { losses: number; thenHard: number };
 }
 
 export const latestLines = 30;
@@ -128,12 +163,43 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
     return fresh;
   };
   const wrongLines: LogSummary['wrongLines'] = [];
+  const fights = new Map<LairId, FightSummary>();
+  let losses = 0;
+  let thenHard = 0;
+  // A loss not yet followed by a hard fight.
+  let waiting = false;
   for (const event of log) {
     if (event.type === 'session') {
       const day = dayOf(event.at);
       days.set(day, (days.get(day) ?? 0) + 1);
       continue;
     }
+    if (event.type === 'fight') {
+      if (!isLair(event.lairId) || typeof event.won !== 'boolean') continue;
+      if (typeof event.parts !== 'number' || !Number.isFinite(event.parts)) continue;
+      const lair = fights.get(event.lairId) ?? {
+        lairId: event.lairId,
+        fights: 0,
+        wins: 0,
+        partsWon: 0,
+        partsLost: 0,
+      };
+      fights.set(event.lairId, lair);
+      lair.fights += 1;
+      if (event.won) lair.wins += 1;
+      if (event.parts > 0) lair.partsWon += event.parts;
+      if (event.parts < 0) lair.partsLost -= event.parts;
+      if (waiting && (event.lairId === 'lair-45' || event.lairId === 'lair-60')) {
+        thenHard += 1;
+        waiting = false;
+      }
+      if (!event.won) {
+        losses += 1;
+        waiting = true;
+      }
+      continue;
+    }
+    if (!isAuthoredRoom(String((event as { roomId?: unknown }).roomId))) continue;
     const summary = room(event.roomId);
     if (event.type === 'room') {
       if (event.action === 'enter') summary.entered ??= event.at;
@@ -154,5 +220,7 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
       .map(([day, count]) => ({ day, count })),
     rooms: [...rooms.values()].sort((a, b) => a.roomId.localeCompare(b.roomId)),
     wrongLines: wrongLines.reverse().slice(0, latestLines),
+    fights: lairIds.flatMap((id) => fights.get(id) ?? []),
+    afterLoss: { losses, thenHard },
   };
 }

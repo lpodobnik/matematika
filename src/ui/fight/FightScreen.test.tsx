@@ -180,3 +180,65 @@ describe('the strike and the end (story 3.2)', () => {
     expect(board(set)).not.toContain('data-off');
   });
 });
+
+describe('what a fight pays and costs (story 3.3)', () => {
+  const won = {
+    ...struck,
+    phase: 'won' as const,
+    outcome: { won: true as const, clean: true, reward: 26 },
+  };
+  const end = {
+    lairId: 'lair-20' as const,
+    won: true,
+    clean: true,
+    reason: null,
+    reward: 26,
+    recovered: 4,
+    dropped: 0,
+    page: null,
+  };
+
+  it('shows the win’s parts: reward and pile, how they were made, and the doubling', () => {
+    const html = text(
+      renderToString(<FightBoard fight={won} end={end} onAction={() => undefined} />),
+    );
+    expect(html).toContain(hr.fight.paid(30));
+    expect(html).toContain(hr.fight.paidHow(3, won.steam));
+    expect(html).toContain(hr.fight.doubled);
+    expect(html).toContain(hr.fight.recovered(4));
+  });
+
+  it('shows what a loss left at the automaton, or that it left nothing', () => {
+    const lost = {
+      ...struck,
+      phase: 'lost' as const,
+      outcome: { won: false as const, reason: 'hull' as const },
+    };
+    const loss = {
+      ...end,
+      won: false,
+      clean: false,
+      reason: 'hull' as const,
+      reward: 0,
+      recovered: 0,
+    };
+    const dropped = text(
+      renderToString(
+        <FightBoard fight={lost} end={{ ...loss, dropped: 3 }} onAction={() => undefined} />,
+      ),
+    );
+    expect(dropped).toContain(hr.fight.dropped(3));
+    const none = text(
+      renderToString(<FightBoard fight={lost} end={loss} onAction={() => undefined} />),
+    );
+    expect(none).toContain(hr.fight.droppedNone);
+  });
+
+  it('says a pile waits here before the first strike', () => {
+    const html = text(
+      renderToString(<FightBoard fight={fresh} pile={4} onAction={() => undefined} />),
+    );
+    expect(html).toContain(hr.fight.pileHere(4));
+    expect(text(board(fresh))).not.toContain(hr.fight.pileHere(4));
+  });
+});

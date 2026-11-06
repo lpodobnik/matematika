@@ -51,6 +51,11 @@ export function lairAwake(economy: Economy, lairId: LairId, now: number): boolea
   return !(at > now) || at - now > tuning.fight.lairRewindMinutes * minute;
 }
 
+/** The lairs whose automaton is still winding down at `now` (ADR-13). */
+export function asleepLairs(economy: Economy, now: number): LairId[] {
+  return (Object.keys(economy.lairs) as LairId[]).filter((id) => !lairAwake(economy, id, now));
+}
+
 export function settleFight(
   ledger: FightLedger,
   fight: FightState,

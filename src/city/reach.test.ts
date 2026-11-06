@@ -298,3 +298,23 @@ describe('no softlock (architecture, Testing: map reachability)', () => {
     expect(orders).toBe(9);
   });
 });
+
+describe('lairs on the map (story 3.3)', () => {
+  const progress = { roomsDone: ['r01', 'r02'], tools: [], started: [], fresh: null };
+  const lair = (v: ReturnType<typeof mapView>) => v.nodes.find((n) => n.id === 'lair-20');
+
+  it('shows a lair winding down after a win, which takes no tap until it rewinds', () => {
+    const v = mapView(districtMap, { ...progress, asleep: ['lair-20'] }, authored);
+    expect(lair(v)?.state).toBe('winding');
+    expect(lair(mapView(districtMap, progress, authored))?.state).toBe('open');
+  });
+
+  it('shows the pile he left at a lair, once the lair is seen', () => {
+    const piles = { 'lair-20': 4, 'lair-30': 2 };
+    const v = mapView(districtMap, { ...progress, piles }, authored);
+    expect(lair(v)?.pile).toBe(4);
+    // Not seen yet: no pile shows.
+    expect(v.nodes.find((n) => n.id === 'lair-30')?.pile).toBe(0);
+    expect(v.nodes.find((n) => n.id === 'r02')?.pile).toBe(0);
+  });
+});

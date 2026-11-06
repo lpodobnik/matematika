@@ -18,6 +18,29 @@ function blowsWord(n: number): string {
   return 'udaraca';
 }
 
+/** "dio", "dijela" or "dijelova", as Croatian counts parts: 1, 2–4, else (with 21, 22…). */
+function partsWord(n: number): string {
+  const ten = n % 10;
+  const hundred = n % 100;
+  if (ten === 1 && hundred !== 11) return 'dio';
+  if (ten >= 2 && ten <= 4 && (hundred < 12 || hundred > 14)) return 'dijela';
+  return 'dijelova';
+}
+
+/** "preostala para", "preostale pare" or "preostalih para", for 1, 2–4, else (0 too). */
+function steamLeftWord(n: number): string {
+  const ten = n % 10;
+  const hundred = n % 100;
+  if (ten === 1 && hundred !== 11) return 'preostala para';
+  if (ten >= 2 && ten <= 4 && (hundred < 12 || hundred > 14)) return 'preostale pare';
+  return 'preostalih para';
+}
+
+/** 2–4 parts (not 12–14) take a plural verb in Croatian: "4 dijela ostaju", "5 dijelova ostaje". */
+function fewParts(n: number): boolean {
+  return partsWord(n) === 'dijela';
+}
+
 export const hr = {
   app: {
     turnToLandscape: 'Okreni uređaj vodoravno.',
@@ -199,6 +222,16 @@ export const hr = {
       cantMake: 'Ovaj preglednik ne može napraviti vezu.',
     },
     exportLog: 'Preuzmi dnevnik (JSON)',
+    /** Story 3.3: fights, by lair. */
+    fights: 'Borbe',
+    fightsNone: 'Još nijedna borba.',
+    lair: 'Automat',
+    fightCount: 'Borbe',
+    wins: 'Pobjede',
+    partsWon: 'Dijelova dobiveno',
+    partsLost: 'Dijelova ostavljeno',
+    afterLoss: (thenHard: number, losses: number) =>
+      `Porazi nakon kojih slijedi borba s oklopom 45 ili više: ${thenHard} od ${losses}`,
     restore: {
       title: 'Vraćanje sigurnosne kopije',
       incoming: (rooms: number) => `Kopija: riješenih soba ${rooms}.`,
@@ -249,10 +282,15 @@ export const hr = {
       open: 'otvoreno',
       locked: 'zaključano',
       seen: 'uskoro',
+      winding: 'automat se odmotava',
       closed: 'zatvoreno',
     },
     /** For screen readers: a room he left halfway. */
     started: 'započeto',
+    /** Story 3.3: on a lair, the parts he left there by losing, to win back. */
+    pile: (n: number) => `ostavljeno ${n}`,
+    /** Story 3.3: on a winding-down lair, when its automaton rewinds. */
+    wakes: (minutes: number) => `budi se za ${minutes} min`,
   },
   pin: {
     /** Confirms the prediction pin where it is: it locks, and the machine tests it. */
@@ -397,6 +435,19 @@ export const hr = {
       left: 'Borba je napuštena prije kraja.',
     },
     back: 'Natrag na kartu',
+    /** Story 3.3: what the fight paid or cost, on its end. */
+    paid: (n: number) => `+${n} ${partsWord(n)}`,
+    /** Parts the win paid: base parts and the steam left. */
+    paidHow: (base: number, steam: number) =>
+      `${base} za automat + ${steam} ${steamLeftWord(steam)}`,
+    doubled: 'Čisti rez udvostručuje nagradu.',
+    recovered: (n: number) => `+${n} vraćeno s hrpe`,
+    dropped: (n: number) =>
+      `${n} ${partsWord(n)} ${fewParts(n) ? 'ostaju' : 'ostaje'} kod automata. Pobjeda ${partsWord(n) === 'dio' ? 'ga' : 'ih'} vraća.`,
+    droppedNone: 'Nijedan dio nije ostao kod automata.',
+    /** On the fight's start: a pile he left here before. */
+    pileHere: (n: number) =>
+      `Ovdje te ${fewParts(n) ? 'čekaju' : 'čeka'} ${n} ${partsWord(n)} s prošle borbe.`,
   },
   parts: {
     /** The parts counter in the scene's corner, read out with its number. */

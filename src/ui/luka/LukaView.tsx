@@ -104,6 +104,39 @@ export function LukaView({ summary, notSaving, makeBackupLink, exportLog, onBack
       </section>
 
       <section>
+        <h2>{hr.luka.fights}</h2>
+        {summary.fights.length === 0 ? (
+          <p>{hr.luka.fightsNone}</p>
+        ) : (
+          <>
+            <table className="luka__table">
+              <thead>
+                <tr>
+                  <th>{hr.luka.lair}</th>
+                  <th>{hr.luka.fightCount}</th>
+                  <th>{hr.luka.wins}</th>
+                  <th>{hr.luka.partsWon}</th>
+                  <th>{hr.luka.partsLost}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.fights.map((lair) => (
+                  <tr key={lair.lairId}>
+                    <td>{hr.map.nodes[lair.lairId]}</td>
+                    <td>{lair.fights}</td>
+                    <td>{lair.wins}</td>
+                    <td>{lair.partsWon}</td>
+                    <td>{lair.partsLost}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p>{hr.luka.afterLoss(summary.afterLoss.thenHard, summary.afterLoss.losses)}</p>
+          </>
+        )}
+      </section>
+
+      <section>
         <h2>{hr.luka.latest}</h2>
         {summary.wrongLines.length === 0 ? (
           <p>{hr.luka.latestNone}</p>

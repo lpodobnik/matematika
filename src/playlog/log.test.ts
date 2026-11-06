@@ -77,3 +77,47 @@ describe('the play log (story 2.11)', () => {
     expect(summary.wrongLines).toEqual([{ at: at(3), roomId: 'r03', text: 'x = 2' }]);
   });
 });
+
+describe('fights in the play log (story 3.3)', () => {
+  it('logs a fight that ended, with the change in his parts, and nothing for a lair it doesn’t know', () => {
+    expect(
+      logEntriesOf({ type: 'FightEnded', lairId: 'lair-20', won: true, parts: 9 }, at(1), at(0)),
+    ).toEqual([{ type: 'fight', lairId: 'lair-20', won: true, parts: 9, at: at(1) }]);
+    expect(
+      logEntriesOf({ type: 'FightEnded', lairId: 'lair-99', won: true, parts: 9 }, at(1), at(0)),
+    ).toEqual([]);
+    for (const type of ['FightStarted', 'DiceRolled', 'StrikeLanded', 'FightLeft']) {
+      expect(logEntriesOf({ type, lairId: 'lair-20' } as never, at(1), at(0)), type).toEqual([]);
+    }
+  });
+
+  it('sums fights by lair, and counts hard fights taken on after a loss', () => {
+    const log: PlayLogEvent[] = [
+      { type: 'fight', lairId: 'lair-30', won: true, parts: 10, at: at(1) },
+      { type: 'fight', lairId: 'lair-45', won: false, parts: -3, at: at(2) },
+      { type: 'fight', lairId: 'lair-20', won: true, parts: 8, at: at(3) },
+      { type: 'fight', lairId: 'lair-45', won: true, parts: 12, at: at(4) },
+      { type: 'fight', lairId: 'lair-60', won: false, parts: 0, at: at(5) },
+      { type: 'room', roomId: 'r02', action: 'enter', at: at(6) },
+    ];
+    const summary = summarize(log);
+    expect(summary.fights).toEqual([
+      { lairId: 'lair-20', fights: 1, wins: 1, partsWon: 8, partsLost: 0 },
+      { lairId: 'lair-30', fights: 1, wins: 1, partsWon: 10, partsLost: 0 },
+      { lairId: 'lair-45', fights: 2, wins: 1, partsWon: 12, partsLost: 3 },
+      { lairId: 'lair-60', fights: 1, wins: 0, partsWon: 0, partsLost: 0 },
+    ]);
+    // The armour 45 loss is followed by the armour 45 win; the armour 60 loss by nothing.
+    expect(summary.afterLoss).toEqual({ losses: 2, thenHard: 1 });
+    expect(summary.rooms.map((room) => room.roomId)).toEqual(['r02']);
+  });
+
+  it('skips an entry it can’t read rather than counting it as a room', () => {
+    const odd = [{ type: 'fight', lairId: 'nowhere', at: at(1) }] as unknown as PlayLogEvent[];
+    expect(summarize(odd)).toMatchObject({ fights: [], rooms: [], afterLoss: { losses: 0 } });
+    const noWon = [
+      { type: 'fight', lairId: 'lair-20', parts: 3, at: at(1) },
+    ] as unknown as PlayLogEvent[];
+    expect(summarize(noWon).afterLoss.losses).toBe(0);
+  });
+});

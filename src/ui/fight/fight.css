@@ -507,6 +507,82 @@
   }
 }
 
+/* Story 3.3: what the fight paid or cost, the dropped tape, the pile waiting here, and the
+   counter in the bench's top-right corner. */
+.fight .parts-counter {
+  top: 16px;
+  right: 16px;
+  bottom: auto;
+  left: auto;
+}
+
+.fight__pay {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fight__paid {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  animation: fight-paid 900ms ease-in forwards;
+}
+
+.fight__pay-line {
+  margin: 0;
+  font-size: 18px;
+}
+
+.fight__pile {
+  margin: 0;
+  padding: 4px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: var(--sheet);
+  font-size: 16px;
+  text-align: center;
+}
+
+.fight__tape {
+  width: min(60%, 180px);
+  margin-top: -20px;
+  animation: fight-tape 900ms ease-in both;
+}
+
+.tape {
+  fill: var(--sheet);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.tape__hole {
+  fill: var(--ink);
+}
+
+/* The +n rises toward the counter, then stays, lighter, as the record of what was paid. */
+@keyframes fight-paid {
+  0% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  30% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0.75;
+  }
+}
+
+@keyframes fight-tape {
+  from {
+    transform: translateY(-40px) rotate(-6deg);
+    opacity: 0;
+  }
+}
+
 /* A phone in landscape: the same two columns, tighter. */
 @media (max-height: 499.98px) {
   .fight {
@@ -613,6 +689,24 @@
     font-size: 18px;
   }
 
+  .fight .parts-counter {
+    top: 8px;
+    right: 8px;
+  }
+
+  .fight__paid {
+    font-size: 22px;
+  }
+
+  .fight__pay-line,
+  .fight__pile {
+    font-size: 13px;
+  }
+
+  .fight__tape {
+    display: none;
+  }
+
   .fight__banner {
     padding: 4px 10px;
   }
@@ -654,7 +748,9 @@
   }
 
   .fight__banner,
-  .fight__gauges[data-hit] {
+  .fight__gauges[data-hit],
+  .fight__paid,
+  .fight__tape {
     animation: none;
   }
 
