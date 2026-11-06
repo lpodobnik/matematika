@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { flagBounds } from '@/art/skins/pin';
 import { tuning } from '@/config/tuning';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import { dialGeometry, dialLayout, minHitCssPx } from '@/ui/scene/scale/dial-layout';
@@ -64,24 +65,28 @@ describe('pinLayout', () => {
     expect(pin.aligned).toBe(false);
   });
 
-  it("sets a choice pin's words beside its flags, on the outer sides, clear of the stand", () => {
+  it("sets a choice pin's words over their flags, clear of the slider's plate and the stand", () => {
+    // Story 1.15's final check: beside the flags, the `x = …` plate riding above the knob at
+    // the track's ends covered `lijevo` (x = 0) and `desno` (x = 20). Over the flags it can't.
     for (const scale of [tablet, phone]) {
       const dial = dialLayout(scale, 20);
       const pin = pinLayout(dial, { kind: 'choice', slots: 2 }, labelFontSize(scale));
       const [left, right] = [placeWord(pin, 0, 6), placeWord(pin, 1, 5)];
       if (!left || !right) throw new Error('no words');
-      for (const word of [left, right]) {
+      const flag = flagBounds(pin);
+      for (const [slot, word] of [
+        [0, left],
+        [1, right],
+      ] as const) {
         expect(word.height * scale).toBeGreaterThanOrEqual(20);
-        // Level with the cloth, above the knob.
-        expect(word.y + word.height / 2).toBeCloseTo(pin.headY);
-        expect(word.y + word.height).toBeLessThan(dial.trackY - dial.knob.height / 2);
+        // Just above the flag, centred on it.
+        expect(word.y + word.height).toBeLessThan(flag.top);
+        const centre = placeX(pin, slot) + (flag.left + flag.right) / 2;
+        expect(word.x + word.width / 2).toBeCloseTo(centre);
         expect(word.x).toBeGreaterThanOrEqual(0);
         expect(word.x + word.width).toBeLessThanOrEqual(sceneSize.width);
       }
-      // Left of the left flag's pole, right of the right flag's cloth.
-      expect(left.x + left.width).toBeLessThan(placeX(pin, 0));
-      expect(right.x).toBeGreaterThan(placeX(pin, 1) + pin.headX + pin.headRadius);
-      // Clear of the holder, left of the first place.
+      // Clear of the holder, right of it.
       expect(left.x).toBeGreaterThan(placeX(pin, null) + pin.headX + pin.headRadius);
       // The words and the flags' cloths are clear of the stand's foot, 320 wide under the pivot.
       const foot = { left: scaleGeometry.pivot.x - 160, right: scaleGeometry.pivot.x + 160 };

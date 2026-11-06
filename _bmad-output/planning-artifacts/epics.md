@@ -685,7 +685,7 @@ So that the machine can teach without me standing next to it.
 **Then** a tag asks its question, a clamp marks the end of the poke window, the dial keeps turning inside the window, and confirm sits beside the pin
 
 **Given** he confirms a pin
-**Then** the machine tests it at once (turns the dial to it, weighs its x beyond the dial, or turns 3 notches for a direction pin), and a right pin pays 2 parts once per stage into a counter, with no praise text
+**Then** the machine tests it at once (turns the dial to it, weighs its x beyond the dial, or, for a direction pin, turns the dial to its end), and a right pin pays 2 parts once per stage into a counter, with no praise text
 
 ### Story 1.15: Make rooms 1–4 teach themselves
 

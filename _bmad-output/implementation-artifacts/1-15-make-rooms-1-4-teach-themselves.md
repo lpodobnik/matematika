@@ -1,6 +1,6 @@
 # Story 1.15: Make rooms 1–4 teach themselves
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -112,9 +112,9 @@ And Luka in room 4:
 - [x] Lane A: AC 1–4
 - [x] Lane B: AC 5–11
 - [x] Lane C: AC 12–13
-- [ ] Merge A and B into `epic-1`; checks green (AC 14)
-- [ ] One review, one fix pass
-- [ ] Browser check, rooms 1–4
+- [x] Merge A and B into `epic-1`; checks green (AC 14)
+- [x] One review, one fix pass
+- [x] Browser check, rooms 1–4
 
 ## Dev Notes
 
@@ -287,3 +287,28 @@ And Luka in room 4:
   - Bug 5: at `2x = 18`, the right 18 stays on a tap, a 3 px jitter and a 30 px move over its pan. On the phone the tap was at y 480, inside the shelf's margin (the 18's grab area is y 437–571, the shelf ends at 464). The same grab dragged between the pans does take it off, and the tray's numbers are untouched.
   - Bug 4: the plate reads `x = ?`, dimmed, while room 4's pans weigh 9, then `x = 2`.
   - No page errors. The one console error is the existing 404 for a resource.
+
+### Main session: merge and final check
+
+- **Merging the three lanes** needed these joins:
+  - The reducer and `SceneRoot` from lanes B and C.
+  - The slider keeps its own `?`, since `hiddenXLabel` is gone.
+  - Tests that compared the whole first-use list now ignore the `handover-` ids.
+  - The tray tag test follows the taller tray.
+  - The tray passes the balloon's `string`.
+  - A spring labelled `−x` stays `−x`.
+  - The scene sweep is back at y 243.
+  - The handover tag's string is now tested exactly against obstacles (Liang–Barsky), so it can't clip the bigger flag's corner.
+- **Fixed after the fix pass:** `lijevo` and `desno` now sit above their flags. Beside them, the slider's `x = …` plate covered them at x = 0 and x = 20 (`placeWord`, test rewritten).
+- **Checks:** `npm run check` is clean (237 files). `npm test`: 96 files, 1786 passed, 2 skipped. `npm run build` passes.
+- **Headless Edge play-through at 1280 × 800 and 640 × 360** (`play115.mjs` in the session scratchpad):
+  - Room 1: the slider tag, then the write tag with the notebook line pulsing, then the check tag, then the lock.
+  - Room 3 stage 2: `desno` placed and confirmed. The dial swings to 20 and the scale tips right, the flag lights, and 2 parts are paid.
+  - Room 4: the pin at 9 is weighed, then the tray appears with its tag at the dial's end.
+    - A −5 balloon writes `2x + 5 − 5 = 23 − 5` and `2x = 18`, the scale stays level, and the slider reads `x = ?`.
+    - The splitter appears with its tag, and splitting by 2 writes `2x : 2 = 18 : 2` and leaves x against 9.
+  - No console errors other than the existing 404.
+- **Left open:**
+  - **Phone only (640 × 360):** the parts counter half-covers the `x = 0` plate at the track's left end, `lijevo` touches the tilted beam, tags can cover the machine, and the tray covers the top ring of the right pan's weight.
+  - **Writing x after a split:** after the split, no tag says to write `x = 9`. The `write` handover is for a dial-levelled scale, and it was met in room 1.
+  - **Reset:** after a reset, the `balance-goal` tag can show again, because reset keeps the move count.

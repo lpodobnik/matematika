@@ -160,21 +160,20 @@ export function pinLayout(
 }
 
 /**
- * The box a choice pin's word (`lijevo`, `desno`) takes beside its place, in scene units,
- * for a word of `chars` characters: level with the flag's cloth, on the outer side (left of
- * the pole on the left, right of the cloth on the right), so the flag never covers it, it
- * stays low and clear of a pan hanging down above it (room 3's second stage on a phone), and
- * the confirm control takes the inner side (scene-spots.ts).
+ * The box a choice pin's word (`lijevo`, `desno`) takes over its place, in scene units,
+ * for a word of `chars` characters: centred over the flag, just above it, so the flag never
+ * covers it and the slider's `x = …` plate, which rides above the knob at the track's ends,
+ * never does either (story 1.15's final check). The confirm control takes the inner side
+ * (scene-spots.ts).
  */
 export function placeWord(layout: PinLayout, slot: number, chars: number): Box {
   const width = labelWidth('m'.repeat(chars), layout.labelSize);
   const height = layout.labelSize * 1.2;
   const pole = placeX(layout, slot);
-  const left = pole + layout.headX < dialGeometry.centerX;
-  const gap = pinGeometry.gap;
+  const flag = flagBounds(layout);
   return {
-    x: left ? pole - gap - width : flagBounds(layout).right + pole + gap,
-    y: layout.headY - height / 2,
+    x: pole + (flag.left + flag.right) / 2 - width / 2,
+    y: flag.top - pinGeometry.gap - height,
     width,
     height,
   };

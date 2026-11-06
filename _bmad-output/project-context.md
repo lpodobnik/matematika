@@ -32,7 +32,7 @@ TypeScript 7.0.2, React 19.3.1, PixiJS 8.22.0 through `@pixi/react` 8.0.5 for th
 1. **Game logic lives only in pure folders** (`math`, `room`, `fight`, `city`, `economy`, `workshop`, `links`, `playlog`), with tests. They never import React, Pixi, Zustand, Motion, the DOM or storage. `src/architecture.test.ts` enforces this.
 2. **One store, one `dispatch`.** Pure reducers get time and randomness through `ctx` and return domain events. Saving, audio and the play log react to events; components never call them.
 3. **Lines are judged by their exact solution**, never by matching expected steps (architecture Pattern 1, checker rules).
-4. **Acting out a line uses the stage's solution, shows `?` on the gears and never moves the dial.** Exploring uses the dial's x.
+4. **Acting out a line, or Balance, uses the stage's solution and never moves the dial.** The gears always show `x`; the slider shows the dial's value (`x = 9`) while exploring and `x = ?` while acting out. Exploring uses the dial's x.
 5. **A wrong line is never stored in `lines`.** It goes back to the draft, and the machine jams.
 6. **Per-frame values go through refs**, never React state. The dial dispatches once per notch.
 7. **All Croatian text lives in `src/content/text/hr.ts`.** Notation only through `math/format.ts`: `·`, `:`, `−`, and U+202F as the thousands separator.
