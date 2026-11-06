@@ -80,3 +80,13 @@ Every decision, change and version transition for this GDD.
   - The dial still turns inside the poke window while he pins, and confirm sits beside the pin.
   - The machine tests the pin on confirm, and a right pin pays 2 parts from epic 1 on.
   - "Pogodio" text was dropped, because it would break NFR13; the lit pin and the parts are the signal.
+- **From his son's first play, 2026-11-06 (story 1.15), agreed by Luka:** he stopped at every handover. He didn't know to move the slider, asked "what now?" when the scale levelled, didn't know the notebook was next, took the pin for a balloon and didn't see the float as one. Luka found that x is never shown, the spring makes no sense next to the balloon, and the direction pin's two arrows are the same answer. In room 4, one weight on one side levelled the pans at the dial's guess, and the scale stopped matching the notebook. Luka's rule: "you can only do left what you do right". Changes:
+  - Every Balance move acts on both sides at once, and while he uses Balance the scale is weighed at the true x.
+  - An uneven split is refused, not jammed.
+  - Every minus is a balloon, and springs go.
+  - The pin is a flag.
+  - The direction pin asks which way the scale tilts (lijevo / desno).
+  - The gears show `x`, and the slider shows its value.
+  - One-time handover tags tell him each next step.
+  - The tray, then the splitter, appear one at a time.
+  - Claude's call: zastavica rather than Luka's "hvataljka", because the dial's stop is already drawn as a clamp.

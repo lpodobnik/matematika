@@ -120,7 +120,7 @@ All tuning numbers are provisional until playtesting. Examples here use equation
 | Tilt | 1° per unit of difference between the sides, clamped at ±15°; big-number rooms scale this per room. Each notch tips the pans by the same amount, and more gears tip them faster. |
 | Readouts | Both sides' values show while dragging, except in rooms about judging without calculating. |
 | Poke window | At first the dial moves only 3 or 4 notches. In `3x + 2 = 20` he sees 2, 5, 8, 11, then predicts where it levels. |
-| Prediction | A tag on the pin's holder asks the question. He can still turn the dial inside the poke window, places the pin, and confirms beside it. The machine then tests the pin itself: it turns the dial to the pin (or weighs the pin's x where the dial can't reach), and the pans show whether he was right. A right call earns 2 bonus parts at once, from room 3 on, and once per stage, so resetting earns nothing. A wrong one loses nothing. Only then does the full dial range open. |
+| Prediction | The pin is a small flag. A tag on its holder says what to do. He can still turn the dial inside the poke window, places the pin, and confirms beside it. The machine then tests the pin itself: it turns the dial to the pin (or weighs the pin's x where the dial can't reach), and the pans show whether he was right. A right call earns 2 bonus parts at once, from room 3 on, and once per stage, so resetting earns nothing. A wrong one loses nothing. Only then does the full dial range open. |
 | Too far to drag | The dial stops short of the answer. In `5 905 − 27x = 316`, x = 207 but the dial reaches 30, so he sees the rate and needs another way. |
 
 **Piece kit**
@@ -128,12 +128,12 @@ All tuning numbers are provisional until playtesting. Examples here use equation
 | Piece | Stands for | Effect |
 |---|---|---|
 | Number weight | `+ 7` | Pushes the pan down by its number |
-| x-gear | `+ x`; `3x` is 3 gears | Pushes the pan down by x. Above 12, one large gear shows the count |
-| Float | `− 6` | A balloon labelled `−6`, floating above the pan on a string; it lifts the pan by its number |
-| Spring | `− x`; `5x` is 5 springs | Lifts the pan by x |
+| x-gear | `+ x`; `3x` is 3 gears | Labelled `x`; pushes the pan down by x. Above 12, one large gear shows the count |
+| Float | `− 6` | A balloon labelled `−6`, bobbing above the pan on a string; it lifts the pan by its number |
+| x-balloon | `− x`; `− 5x` is 5 x-balloons | The same balloon carrying an x-gear emblem, labelled `−x`; lifts the pan by x. Every minus is a balloon |
 | Reducer | `x : 3` | One slice of an x-gear cut into 3, tagged `: 3`, with the rest of the gear as a faint outline; it counts for a third of x |
 
-A weight and a float of the same number cancel out, as do a gear and a spring.
+A weight and a float of the same number cancel out, as do an x-gear and an x-balloon. The slider shows the value it gives x (`x = 9`); the pieces only ever show `x`.
 
 #### Three ways to solve
 
@@ -142,7 +142,7 @@ All three are free to try and reversible until he writes. Any correct method is 
 | Way | Machine | Move | Written, for `2x + 7 = 25` |
 |---|---|---|---|
 | Try values | x dial | Drag until the pans level. | `x = 9` |
-| Balance | Pans | Add or remove the same piece on both pans, from a tray of spare pieces whose numbers he sets. Drag the splitter, set to n parts, across both pans to divide them. Moving one side only tips the scale, and a split that doesn't divide evenly jams. | `2x = 18`, `x = 9` |
+| Balance | Pans | Every move acts on both sides at once, because you may only do on the left what you do on the right. A weight or balloon from the tray, dropped on the scale, lands on both sides; a number dragged off one side comes off both; the splitter, set to n, divides both sides into n equal groups and keeps one. While he uses Balance the gears hide their value and the scale is weighed at the true x, so it stays level; the skill is choosing the move that leaves x alone. Each move writes its lines (`2x + 5 − 5 = 23 − 5`, `2x = 18`); he writes `x = 9` himself. A split that doesn't divide evenly is refused. | `2x = 18`, `x = 9` |
 | Undo | Gear chain | Run the chain backward, one link at a time. | `2x = 25 − 7`, `2x = 18`, `x = 18 : 2`, `x = 9` |
 
 Each ends with the check line.
@@ -228,7 +228,7 @@ Designed touch-first for a tablet in landscape. Everything works with one finger
 |---|---|
 | Move the x dial | Drag; one notch per 24 px, with a tick on each notch |
 | Place a prediction pin | Drag onto the machine; a second drag moves it; confirm to run |
-| Balance | Drag a piece off a pan, or from the tray onto it; set the splitter's parts and drag it across both pans |
+| Balance | Drag a piece from the tray onto the scale, or a number off it; set the splitter's parts and drop it on the scale. Each acts on both sides |
 | Gear chain | Tap a link, then choose the operation and number |
 | Notebook | On-screen number pad with digits, `x`, `+`, `−`, `·`, `:`, `=`, brackets, delete and enter. Number keys also work on a computer |
 | Dice | Drag to a slot, or tap the die, then the slot |
@@ -274,7 +274,7 @@ Room types carry the four understanding tasks from the brief:
 | 6 | Weighing yard | `x + 56 = 58 + 27` | 29 | Weight of a crate | Compare | Judging equality without adding. Opens the workshop |
 | 7 | Old logbook | `3x − 1 = 17`, `3x = 18`, with the wrong line `x = 15` | 6 | Teeth per gear | Find the mistake | `3x` is three of x, not 3 + x. The wrong line is Kristijan's planted signal. Earns the gear chain |
 | 8 | Tram | `4x + 9 = 41` | 8 | Length per rail | Solve | Running the chain backward moves the pans too |
-| 9 | Steam lift | `135 − 5x = 100` | 7 | Pressure per valve | Predict | Springs: x lightens the pan, and the inverse is `135 − 100` |
+| 9 | Steam lift | `135 − 5x = 100` | 7 | Pressure per valve | Predict | x-balloons: x lightens the pan, and the inverse is `135 − 100` |
 | 10 | Market scales | `60 + 3x = 90`, then the story for `5 + 2x = 19` | 10, 7 | Price of a cog | Story | A wrench at 60 and 3 equal cogs cost 90 together; then pans into a story |
 | 11 | Great wheel | `5 905 − 27x = 316` | 207 | Load per spoke | Solve | Too far to drag; the rate alone won't finish it |
 | 12 | Junction | `2x + 3 = 11` feeds `3x + ☐ = 19` | 4, 5 | Gear sizes, the first passed to the second | Solve | Linked machines. Earns the recording drum |
@@ -323,7 +323,7 @@ Room types carry the four understanding tasks from the brief:
 
 ### Player Assistance
 
-No instructions appear before a room. The one exception is during a room: a prediction pin's question shows on a tag on its holder, because without it the pin reads as a meaningless circle (first playtest, 2026-11-06). Help arrives when he goes 60 seconds without acting or jams the machine 3 times in a row. It is free and never recorded.
+No instructions appear before a room. During a room, a short tag tells him the next step the first time each step comes up: move the slider, write x when the scale levels, the check line, the pin, the tray, keeping x alone, the splitter. It goes as soon as he does the step and comes back after 60 seconds without acting. His first play (2026-11-06) showed he stops at every handover without it. Help arrives when he goes 60 seconds without acting or jams the machine 3 times in a row. It is free and never recorded.
 
 | Level | Help |
 |---|---|

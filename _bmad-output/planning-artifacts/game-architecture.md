@@ -281,21 +281,23 @@ export type Verdict =
 
 | Situation | x for the pans | Gear labels | Readouts |
 |---|---|---|---|
-| Exploring: dial, tray, splitter | The dial's x | The dial's x | Shown, unless the stage hides them |
-| Acting out a written line | The stage's solution | `?` | Hidden |
+| Exploring: the dial | The dial's x | `x` (the slider shows `x = 9`) | Shown, unless the stage hides them |
+| Acting out a written line, or Balance | The stage's solution | `x` (the slider shows `x = ?`, dimmed) | Hidden |
 
-- Acting out never changes the dial's value. Any exploring action (dial, tray or splitter) ends acting out and returns the pans to the dial's x, in the last committed line's layout.
+- Acting out never changes the dial's value. A Balance move acts out (the pans are weighed at the stage's solution, so they stay level); a dial move ends acting out and returns the pans to the dial's x, in the last committed line's layout (story 1.15).
 - A correct line acted out stays level. A wrong one tips, by at least `tuning.jamMinTilt` (4°), so a near miss still shows, and the machine jams. The child sees exactly what his line claimed.
 - `PansLevel` fires only when he levels the pans with the dial; a dial turned by the machine fires no `DialNotch`, `PansLevel` or `WayUsed`. Pins resolve on confirm (see Pattern 2), never from acting out.
 - Pieces move from the old layout to the new one with **one generic tween**: pieces matched by kind and number move, and the rest fade out or in. `Move` feeds the play log and later flourishes; epic 1 needs nothing per move kind.
 
-**Balance moves**
+**Balance moves** (story 1.15: "you can only do on the left what you do on the right")
 
-- The tray holds **weights and floats only**, numbered 1–99 with a stepper (− and + buttons, which repeat when held). X-gears and springs can't be added or dragged off.
-- After each drop, the number pieces on that pan combine into one piece of their sum: a weight if positive, a float if negative, nothing if zero. A drop that would leave a pan with no x pieces below 0 is refused and slides back.
-- A change to one pan makes the pans' equation differ from the last committed line, so the pans tip at the dial's x. The move is complete when the pans' equation again has the stage's solution. With Balance fading `auto`, that equation is written as the next line, unless it is `x = n`, which he writes himself.
-- The splitter, set to 2–9 parts, first combines each pan's number pieces as a drop does (so `2x = 23 − 5` becomes `2x = 18`), then divides each pan's gear count and number. If any of them doesn't divide evenly, the machine jams (`jam.kind = 'split'`) until he drags the splitter off.
-- Room 4 as a worked sequence: `2x + 5 = 23`; a float 5 on the left gives `2x = 23`, which tips and writes nothing; a float 5 on the right gives `2x = 18`, which is written; the splitter at 2 gives `x = 9` on the pans; he writes `x = 9`, then `2 · 9 + 5 = 23`.
+- Every Balance move acts on **both sides at once**; no one-sided move exists. A weight or float from the tray (numbered 1–99 by + and − on the piece itself), dropped anywhere over the scale, lands on both sides; dragging a number piece off a side takes that number off both; the splitter (2–9 parts, a divider frame), dropped anywhere over the scale, divides both sides into n equal groups and keeps one. X-gears and x-balloons can't be added or dragged off.
+- Number pieces on each side combine after a move into one piece of their sum: a weight if positive, a float if negative, nothing if zero. A move that would leave a side with no x pieces below 0 is refused and slides back.
+- From his first Balance move in a stage, the scale acts out at the stage's solution, so it stays level; the goal is leaving x alone on one side.
+- With Balance fading `auto`, each move writes its lines at once (`LineAccepted`, source `balance`; one `WayUsed` per move): the move as done, then the result (`2x + 5 − 5 = 23 − 5`, `2x = 18`; `2x : 2 = 18 : 2`), except a result `x = n`, which he writes himself.
+- A split whose parts don't divide a side's gear count and number evenly is **refused**: the pieces start to separate, show the remainder and slide back. There is no split jam.
+- The tray is offered once Balance is earned and its first use is met, or the dial has been at its maximum this stage without levelling, or a Balance move was made this stage. The splitter is offered once one side holds only x pieces with a count above 1, then for the rest of the stage.
+- Room 4 as a worked sequence: `2x + 5 = 23`; the dial stops at 6, and at its end the tray appears; a float 5 dropped on the scale writes `2x + 5 − 5 = 23 − 5` and `2x = 18`; the splitter appears and, at 2, writes `2x : 2 = 18 : 2`; he writes `x = 9`, then `2 · 9 + 5 = 23`.
 
 ```ts
 export type Move =
@@ -349,10 +351,10 @@ interface StageState {
   machine: number;                 // index of the active machine, 0–2
   lines: NotebookLine[];           // committed lines only; [0] is the stage equation, read-only
   draft: Token[];                  // a jammed line's tokens come back here
-  jam: { kind: 'line' } | { kind: 'split'; parts: number } | null;
+  jam: { kind: 'line' } | null;
   machineProgress: number[];       // 0–1 per machine
   pans: Equation;
-  actingOut: boolean;              // true from a written line until the next exploring action (dial, tray, splitter)
+  actingOut: boolean;              // true from a written line or a Balance move until the next dial move
   dialX: number;
   dialOpen: { min: number; max: number };   // poke window, then the full range
   pin: { value: PinValue; locked: boolean; resolved: boolean } | null;
@@ -370,10 +372,10 @@ interface StageState {
 | Poke | The dial moves only over the positions min, min + step, …, min + (pokeNotches − 1)·step; the tray, splitter and notebook are off |
 | Pin | Starts when he first drags the pin; a second drag moves it. The dial keeps turning inside the poke window (a stage with no poke window can't turn it before confirming). While the pin is offered, a tag on its holder asks its question (`hr.ts`), and a clamp drawn across the track marks the window's end. Confirm (an HTML button beside the pin's head) locks it and opens the stage. The pin track runs over the dial's range, or to twice the dial's maximum when the pin spec says `beyondDial` (story 1.14) |
 | Resolution | Every pin resolves on confirm, and the machine tests it: a `level-x` pin the dial can reach turns the dial itself to the pin's value, notch by notch (`tuning.pinTestNotchMs`); one beyond the dial has the pans weigh the pin's x for `tuning.pinRevealMs`; an `effect` pin turns the dial up `tuning.pinEffectTestNotches` notches. A right pin lights, a wrong one dims; no praise text (NFR13). `PredictionMade` carries `right`; the root reducer pays `tuning.predictionParts` (2) into `save.economy` for a right one, once per stage, recorded in `paidPredictions` as `"r05:1"`, from epic 1 on. Lock stays a safety trigger. If he grabs the knob during a test, his drag takes over (story 1.14) |
-| Jams | While `jam` is set, he can only edit the draft (which clears a line jam), drag the splitter off (which clears a split jam), reset or leave |
+| Jams | While `jam` is set, he can only edit the draft (which clears it), reset or leave |
 | Room types | `type` selects a small strategy module (`room/types/compare.ts` and so on) that hooks into the common phases. There is no per-room code |
-| First use | The first time the pin, tray or splitter is available, it wiggles once (hint level 1) |
-| Hints | A `clock/tick` action each second checks `ctx.now − lastActionAt ≥ 60 s`; `jamsInARow ≥ 3` raises the level at once. The content comes from `math/steps.ts` |
+| First use | The first time the pin, tray or splitter is available, it wiggles once (hint level 1). **Handover tags** (story 1.15): pure `room/handover.ts` picks the one next step that applies (`dial`, `write`, `check`, `tray`, `balance-goal`, `splitter`, plus the pin's own tag); its tag shows once per game (`save.progress.firstUse`) and goes when he does the step. The dial knob nudges itself during `dial`; the notebook's next line pulses during `write` and `check` |
+| Hints | A `clock/tick` action each second checks `ctx.now − lastActionAt ≥ 60 s` (`tuning.hintIdleMs`); then the current handover's tag shows again, met or not (from story 1.15). `jamsInARow ≥ 3` raises the level at once. The later levels' content comes from `math/steps.ts` |
 | Restart | When a stage locks, part of the machine starts; when the last stage locks, the whole machine restarts. Both end when the UI dispatches `presentation/done`, with a timeout fallback so a missed animation event never strands the game |
 | Reset | Resets the current stage only: lines back to line 0, `machineProgress` to 0, the dial to its minimum, exploratory moves and jams cleared. With a locked pin, the pin stays and the stage returns to `open` with the full dial range; without one, it returns to `poke` (or `open` if the stage has no poke window). Reset is off while the stage is `locked` or restarting |
 | Leave | Keeps the committed lines (from epic 2, when there is a map) |
@@ -410,7 +412,7 @@ export type DomainEvent =
   | { type: 'WayUsed'; roomId: RoomId; stage: number; way: WayId }          // a completed move on the machine
   | { type: 'LineAccepted'; roomId: RoomId; stage: number; source: 'typed' | WayId; progress: boolean }
   | { type: 'LineWrong'; roomId: RoomId; stage: number; line: string }
-  | { type: 'MachineJammed'; roomId: RoomId; kind: 'line' | 'split' }
+  | { type: 'MachineJammed'; roomId: RoomId; kind: 'line' }
   | { type: 'PredictionMade'; roomId: RoomId; stage: number; right: boolean }
   | { type: 'StageLocked'; roomId: RoomId; stage: number }
   | { type: 'RoomRestarted'; roomId: RoomId }

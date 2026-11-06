@@ -687,6 +687,26 @@ So that the machine can teach without me standing next to it.
 **Given** he confirms a pin
 **Then** the machine tests it at once (turns the dial to it, weighs its x beyond the dial, or turns 3 notches for a direction pin), and a right pin pays 2 parts once per stage into a counter, with no praise text
 
+### Story 1.15: Make rooms 1–4 teach themselves
+
+As Luka's son,
+I want the machine to show me what to do next and pictures that mean what they look like,
+So that I can play rooms 1–4 without my dad explaining them.
+
+**Covers:** his first play (2026-11-06); the GDD's Balance, Pieces, Prediction and Player Assistance. Full criteria are in `_bmad-output/implementation-artifacts/1-15-make-rooms-1-4-teach-themselves.md`.
+
+**Acceptance Criteria:**
+
+**Given** a Balance move
+**When** he drops a tray piece, drags a number off, or drops the splitter on the scale
+**Then** it acts on both sides at once, the scale stays level at the true x, and the move and its result are written; an uneven split is refused
+
+**Given** any step he hasn't done before (the slider, writing x, the check line, the pin, the tray, keeping x alone, the splitter)
+**Then** one short tag tells him the step, goes when he does it, and comes back after 60 s idle
+
+**Given** the pieces
+**Then** gears show `x`, the slider shows `x = 9`, every minus is a bobbing balloon, the pin is a flag, and the direction pin asks whether the scale tilts lijevo or desno
+
 ## Epic 2: The city
 
 Turn separate rooms into a world he wants to return to. **Stories are detailed with this workflow before the epic starts.** From the GDD:
@@ -761,7 +781,7 @@ Make it hold up against Zelda on first contact. **Stories are detailed before th
 ## Calls Open to Veto
 
 - **Only epic 1 is broken down now.** Epics 2–6 are detailed before each one starts, because playing epic 1 may change them.
-- **Epic 1 has 14 stories**: 13 splitting the GDD's 8, so each fits one developer session, plus 1.14 from the first playtest.
+- **Epic 1 has 15 stories**: 13 splitting the GDD's 8, so each fits one developer session, plus 1.14 and 1.15 from the first playtests.
 - **Acting out shows `?` on the gears** and never moves the dial, so a written line can't reveal x.
 - **The tray holds weights and floats only**, numbered 1–99, and numbers on a pan combine after each drop, so `2x + 5 = 23` becomes `2x = 18` in two drops.
 - **Reset restarts the current stage**, not the whole room (GDD updated).
