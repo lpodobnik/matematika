@@ -1,8 +1,10 @@
 // What the dev panel shows and offers (architecture, Debug Tools): a jump to any room and
-// stage, and the checker's verdict and progress tuple for the last committed line and for
-// the draft as enter would judge it now. Development builds only; the panel's text is for
-// Luka, in English, and never reaches the game's Croatian text.
+// stage, the checker's verdict and progress tuple for the last committed line and for the
+// draft as enter would judge it now, and the quality setting with a way to force one.
+// Development builds only; the panel's text is for Luka, in English, and never reaches the
+// game's Croatian text.
 
+import { tuning } from '@/config/tuning';
 import { check, type Verdict } from '@/math/check';
 import { formatTokens } from '@/math/format';
 import { complexity, type ProgressTuple } from '@/math/moves';
@@ -10,6 +12,7 @@ import { parse } from '@/math/parse';
 import type { Token } from '@/math/tokens';
 import { committedEquations, lineTokens } from '@/room/notebook';
 import type { RoomId, RoomSpec, RoomState } from '@/room/types';
+import { type Quality, type QualityState, qualityInUse } from '@/store/quality';
 
 /** A place the panel can jump to: an authored room at one of its stages. */
 export interface JumpTarget {
@@ -87,6 +90,31 @@ export function devReadout(room: RoomState): DevReadout {
         ? null
         : lineReadout(tokens, check(committedEquations(stage.lines), tokens)),
   };
+}
+
+/** The quality setting as the panel shows it. */
+export interface QualityReadout {
+  /** The setting in use and why: `high · test running`, `low · forced`, `medium · from the test`. */
+  inUse: string;
+  /** The frame-time test: `running`, or `p95 21.4 ms → medium`. */
+  test: string;
+  /** The forced setting, or null when the test's pick is in use (the panel's `auto`). */
+  forced: Quality | null;
+}
+
+function qualityReason(state: QualityState): string {
+  if (state.measured === null) {
+    return state.forced ? `test running, then ${state.forced} (forced)` : 'test running';
+  }
+  return state.forced ? 'forced' : 'from the test';
+}
+
+export function qualityReadout(state: QualityState): QualityReadout {
+  const test =
+    state.measured === null || state.measuredMs === null
+      ? 'running'
+      : `p${tuning.qualityPercentile} ${state.measuredMs.toFixed(1)} ms → ${state.measured}`;
+  return { inUse: `${qualityInUse(state)} · ${qualityReason(state)}`, test, forced: state.forced };
 }
 
 /** The parts of a KeyboardEvent the toggle reads. */

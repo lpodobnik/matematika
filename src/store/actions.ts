@@ -3,6 +3,7 @@
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
 import type { RoomId } from '@/room/types';
+import type { QualityAction } from '@/store/quality';
 
 export type Action =
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */
@@ -24,4 +25,6 @@ export type Action =
   /** Enter: the draft is judged. */
   | { type: 'notebook/enter' }
   /** On a phone, the notebook slides over the scale; this pushes it aside or brings it back. */
-  | { type: 'notebook/slide'; aside: boolean };
+  | { type: 'notebook/slide'; aside: boolean }
+  /** The frame-time test's report, and the dev panel's forced setting (store/quality.ts). */
+  | QualityAction;

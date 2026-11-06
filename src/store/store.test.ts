@@ -10,6 +10,7 @@ import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
 import { effects, runEffects } from '@/store/effects';
 import type { DomainEvent } from '@/store/events';
+import { initialQuality, qualityInUse } from '@/store/quality';
 import { createReducer, initialGameState, reduce } from '@/store/reducer';
 import { createGameStore, gameStore } from '@/store/store';
 import type { Ctx } from '@/store/types';
@@ -20,7 +21,11 @@ describe('the store', () => {
   it('starts with no room', () => {
     const store = createGameStore();
     expect(store.getState().room).toBeNull();
-    expect(store.getState().ui).toEqual({ screen: 'room', notebookAside: false });
+    expect(store.getState().ui).toEqual({
+      screen: 'room',
+      notebookAside: false,
+      quality: { measured: null, measuredMs: null, forced: null },
+    });
   });
 
   it('loads room 1: one x-gear and a weight of 4 on the left, a weight of 9 on the right', () => {
@@ -503,6 +508,62 @@ describe('a room from arrival to restart (story 1.8)', () => {
     expect(game.phases).toEqual(['r02.1:arrive']);
     expect(game.seen).toEqual([{ type: 'StageArrived', roomId: 'r02', stage: 1 }]);
     expect(machineView(game.store.getState().room)?.partsStarted).toBe(1);
+  });
+});
+
+describe('the quality setting (story 1.12)', () => {
+  const slowFrames = Array(120).fill(30);
+  const fastFrames = Array(120).fill(16);
+
+  function roomOneStore() {
+    const store = createGameStore({ makeCtx: () => fixedCtx });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    return store;
+  }
+
+  it('holds the frame-time test’s pick in memory, with no events and the room untouched', () => {
+    const seen: DomainEvent[] = [];
+    const store = createGameStore({ makeCtx: () => fixedCtx, effects: [(e) => seen.push(e)] });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    seen.length = 0;
+    const room = store.getState().room;
+    store.getState().dispatch({ type: 'quality/measured', frameTimesMs: slowFrames });
+    expect(store.getState().ui.quality).toEqual({ measured: 'low', measuredMs: 30, forced: null });
+    expect(store.getState().room).toBe(room);
+    expect(seen).toEqual([]);
+  });
+
+  it('takes the test once per launch', () => {
+    const store = roomOneStore();
+    store.getState().dispatch({ type: 'quality/measured', frameTimesMs: fastFrames });
+    store.getState().dispatch({ type: 'quality/measured', frameTimesMs: slowFrames });
+    expect(store.getState().ui.quality.measured).toBe('high');
+  });
+
+  it('lets the dev panel force a setting over the test’s pick, and hand back', () => {
+    const store = roomOneStore();
+    store.getState().dispatch({ type: 'quality/measured', frameTimesMs: fastFrames });
+    store.getState().dispatch({ type: 'quality/force', quality: 'low' });
+    expect(qualityInUse(store.getState().ui.quality)).toBe('low');
+    store.getState().dispatch({ type: 'quality/force', quality: null });
+    expect(qualityInUse(store.getState().ui.quality)).toBe('high');
+  });
+
+  it('forgets both on reload: a fresh store starts with the test pending and nothing forced', () => {
+    const store = roomOneStore();
+    store.getState().dispatch({ type: 'quality/measured', frameTimesMs: slowFrames });
+    store.getState().dispatch({ type: 'quality/force', quality: 'medium' });
+    expect(createGameStore().getState().ui.quality).toEqual(initialQuality);
+  });
+
+  it('keeps the setting across rooms and stage resets', () => {
+    const store = roomOneStore();
+    store.getState().dispatch({ type: 'quality/measured', frameTimesMs: slowFrames });
+    store.getState().dispatch({ type: 'quality/force', quality: 'medium' });
+    const quality = store.getState().ui.quality;
+    store.getState().dispatch({ type: 'stage/reset' });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r02' });
+    expect(store.getState().ui.quality).toBe(quality);
   });
 });
 

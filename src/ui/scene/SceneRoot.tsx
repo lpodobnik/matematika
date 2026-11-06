@@ -5,11 +5,12 @@ import {
   Graphics,
   type Application as PixiApplication,
 } from 'pixi.js';
-import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { palette } from '@/art/palette';
 import { useGame } from '@/store/store';
 import { watchContextLoss } from '@/ui/scene/context-loss';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
+import { runFrameTest } from '@/ui/scene/frame-test';
 import { Machine } from '@/ui/scene/machine/Machine';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
@@ -116,12 +117,24 @@ function drawPaper(g: Graphics): void {
  * is the machine, and the first touch ends the stage's arrive (Pattern 2). Presses bubble up
  * to the stage from the dial too, after the dial has started its drag, so grabbing the dial
  * is a touch like any other.
+ *
+ * Until the quality setting is picked, the frame-time test runs from the scene's first frame,
+ * with every effect on (store/quality.ts); a scene remounted mid-test starts it over.
  */
 function SceneContent() {
   const { app, isInitialised } = useApplication();
   const sceneRef = useRef<Container>(null);
   const [sceneScale, setSceneScale] = useState(0);
   const dispatch = useGame((s) => s.dispatch);
+  const qualityPicked = useGame((s) => s.ui.quality.measured !== null);
+
+  // A layout effect, so the ticker callback goes before the app is destroyed on a remount.
+  useLayoutEffect(() => {
+    if (!isInitialised || qualityPicked) return;
+    return runFrameTest(app.ticker, document, (frameTimesMs) =>
+      dispatch({ type: 'quality/measured', frameTimesMs }),
+    );
+  }, [app, isInitialised, qualityPicked, dispatch]);
 
   useEffect(() => {
     if (!isInitialised) return;

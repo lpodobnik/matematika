@@ -12,10 +12,11 @@ import { enterRoom, type RoomStep } from '@/room/room';
 import type { RoomSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
+import { initialQuality, reduceQuality } from '@/store/quality';
 import type { GameState, Reduce } from '@/store/types';
 
 export function initialGameState(): GameState {
-  return { room: null, ui: { screen: 'room', notebookAside: false } };
+  return { room: null, ui: { screen: 'room', notebookAside: false, quality: initialQuality } };
 }
 
 function findRoom(id: RoomSpec['id'], list: readonly RoomSpec[]): RoomSpec {
@@ -69,6 +70,8 @@ function roomStep(
     case 'notebook/enter':
       return enterLine(room, now);
     case 'notebook/slide':
+    case 'quality/measured':
+    case 'quality/force':
       return null;
   }
 }
@@ -82,6 +85,9 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
       if (step) draft.room = castDraft(step.room);
       if (action.type === 'room/enter') draft.ui.screen = 'room';
       if (action.type === 'notebook/slide') draft.ui.notebookAside = action.aside;
+      if (action.type === 'quality/measured' || action.type === 'quality/force') {
+        draft.ui.quality = reduceQuality(state.ui.quality, action);
+      }
     });
     return { state: next, events };
   };

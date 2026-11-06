@@ -7,6 +7,7 @@ import {
   isToggleKey,
   jumpTargets,
   opensOnLoad,
+  qualityReadout,
   tupleText,
   verdictText,
 } from '@/dev/dev-view';
@@ -15,6 +16,7 @@ import { enterLine, typeToken } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
 import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
+import { initialQuality } from '@/store/quality';
 
 const freeStage: StageSpec = { ...(r01.stages[0] as StageSpec), fading: { try: 'blank' } };
 const freeRoomOne: RoomSpec = { ...r01, stages: [freeStage] };
@@ -97,6 +99,35 @@ describe('devReadout', () => {
       text: 'x = 5',
       verdict: 'answer',
       tuple: '(1, 0, 0)',
+    });
+  });
+});
+
+describe('qualityReadout', () => {
+  it('shows the test running, with every effect on meanwhile', () => {
+    expect(qualityReadout(initialQuality)).toEqual({
+      inUse: 'high · test running',
+      test: 'running',
+      forced: null,
+    });
+    expect(qualityReadout({ ...initialQuality, forced: 'low' }).inUse).toBe(
+      'high · test running, then low (forced)',
+    );
+  });
+
+  it('shows the test’s pick and the frame time it came from', () => {
+    expect(qualityReadout({ measured: 'medium', measuredMs: 21.37, forced: null })).toEqual({
+      inUse: 'medium · from the test',
+      test: 'p95 21.4 ms → medium',
+      forced: null,
+    });
+  });
+
+  it('shows a forced setting over the test’s pick', () => {
+    expect(qualityReadout({ measured: 'high', measuredMs: 12, forced: 'low' })).toEqual({
+      inUse: 'low · forced',
+      test: 'p95 12.0 ms → high',
+      forced: 'low',
     });
   });
 });

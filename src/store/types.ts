@@ -4,6 +4,7 @@
 import type { RoomState } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
+import type { QualityState } from '@/store/quality';
 
 /** A source of uniform numbers in [0, 1). */
 export interface Rng {
@@ -23,6 +24,11 @@ export interface UiState {
   screen: Screen;
   /** On a phone, whether the notebook is pushed aside off the scale. The tablet ignores it. */
   notebookAside: boolean;
+  /**
+   * The quality setting, in memory only: until epic 2 saves the test's pick in
+   * `save.settings.quality`, the test runs on every launch. A forced setting never persists.
+   */
+  quality: QualityState;
 }
 
 /**

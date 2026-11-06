@@ -9,14 +9,18 @@ import {
   jumpTargets,
   type LineReadout,
   opensOnLoad,
+  type QualityReadout,
+  qualityReadout,
 } from '@/dev/dev-view';
+import { type Quality, qualities } from '@/store/quality';
 import { useGame } from '@/store/store';
 
 /**
  * The dev panel (architecture, Debug Tools): opened with `?dev` in the address or the
  * backtick key, which also closes it. Development builds only: App loads this module on
  * demand behind `import.meta.env.DEV`, so production builds never contain it. Later
- * stories add their controls here (story 1.12: forcing a quality setting).
+ * stories add their controls here. Story 1.12 added forcing a quality setting, which holds
+ * until reload.
  */
 export default function DevPanel() {
   const [open, setOpen] = useState(() => opensOnLoad(window.location.search));
@@ -37,16 +41,20 @@ export default function DevPanel() {
 /** The open panel, reading the store. */
 function DevPanelLive({ onClose }: { onClose(): void }) {
   const room = useGame((s) => s.room);
+  const qualityState = useGame((s) => s.ui.quality);
   const dispatch = useGame((s) => s.dispatch);
   const readout = useMemo(() => (room ? devReadout(room) : null), [room]);
+  const quality = useMemo(() => qualityReadout(qualityState), [qualityState]);
   const targets = useMemo(() => jumpTargets(rooms), []);
   return (
     <DevPanelView
       readout={readout}
+      quality={quality}
       targets={targets}
       onJump={(target) =>
         dispatch({ type: 'room/enter', roomId: target.roomId, stage: target.stage })
       }
+      onForceQuality={(forced) => dispatch({ type: 'quality/force', quality: forced })}
       onClose={onClose}
     />
   );
@@ -54,13 +62,29 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
 
 export interface DevPanelViewProps {
   readout: DevReadout | null;
+  quality: QualityReadout;
   targets: readonly JumpTarget[];
   onJump(target: JumpTarget): void;
+  /** Forces a quality setting, or with null hands back to the test's pick. */
+  onForceQuality(quality: Quality | null): void;
   onClose(): void;
 }
 
+/** The quality choices: `auto` (the test's pick) and each setting, best first. */
+const qualityChoices: readonly { label: string; quality: Quality | null }[] = [
+  { label: 'auto', quality: null },
+  ...qualities.map((quality) => ({ label: quality, quality })),
+];
+
 /** The panel from props only. */
-export function DevPanelView({ readout, targets, onJump, onClose }: DevPanelViewProps) {
+export function DevPanelView({
+  readout,
+  quality,
+  targets,
+  onJump,
+  onForceQuality,
+  onClose,
+}: DevPanelViewProps) {
   return (
     <section className="dev-panel" aria-label="dev panel">
       <header className="dev-panel__header">
@@ -84,6 +108,26 @@ export function DevPanelView({ readout, targets, onJump, onClose }: DevPanelView
           <dd>{readout.draft ? <Line line={readout.draft} /> : '—'}</dd>
         </dl>
       )}
+      <dl className="dev-panel__readout">
+        <dt>quality</dt>
+        <dd>{quality.inUse}</dd>
+        <dt>frame test</dt>
+        <dd>{quality.test}</dd>
+      </dl>
+      <fieldset className="dev-panel__choices">
+        <legend>force quality until reload</legend>
+        {qualityChoices.map((choice) => (
+          <button
+            key={choice.label}
+            type="button"
+            className="dev-panel__button"
+            aria-pressed={quality.forced === choice.quality}
+            onClick={() => onForceQuality(choice.quality)}
+          >
+            {choice.label}
+          </button>
+        ))}
+      </fieldset>
       <nav className="dev-panel__jumps" aria-label="jump to a room and stage">
         {targets.map((target) => (
           <button
