@@ -1,3 +1,4 @@
+import { gearPath } from '@/app/gear';
 import { hr } from '@/content/text/hr';
 
 /**
@@ -17,17 +18,3 @@ export function ToBeContinued() {
     </main>
   );
 }
-
-/** A 10-tooth gear outline, drawn once. */
-const gearPath = (() => {
-  const teeth = 10;
-  const points: string[] = [];
-  for (let i = 0; i < teeth * 4; i += 1) {
-    const angle = (i / (teeth * 4)) * Math.PI * 2;
-    const radius = i % 4 < 2 ? 44 : 34;
-    points.push(
-      `${(Math.cos(angle) * radius).toFixed(2)} ${(Math.sin(angle) * radius).toFixed(2)}`,
-    );
-  }
-  return `M ${points.join(' L ')} Z`;
-})();

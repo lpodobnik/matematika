@@ -22,7 +22,7 @@ import { splitterOffered } from '@/room/splitter';
 import { trayOffered } from '@/room/tray';
 import type { RoomState } from '@/room/types';
 import type { Action } from '@/store/actions';
-import type { DomainEvent } from '@/store/events';
+import { type DomainEvent, isRoomEvent } from '@/store/events';
 import { createGameStore } from '@/store/store';
 
 /** A fresh game, as main.tsx starts it (room 1), with a clock and every event recorded. */
@@ -31,7 +31,7 @@ function freshGame() {
   const seen: DomainEvent[] = [];
   const store = createGameStore({
     makeCtx: () => ({ now: clock.now, rng: { next: () => 0.5 } }),
-    effects: [(event) => seen.push(event)],
+    effects: [(event) => isRoomEvent(event) && seen.push(event)],
   });
   /** Every phase the game passes through, as `r02.1:open`, without repeats. */
   const phases: string[] = [];

@@ -4,7 +4,6 @@
 
 import { castDraft, produce } from 'immer';
 import { rooms } from '@/content/rooms';
-import { createEconomy } from '@/economy/parts';
 import { payPrediction, predictionKey } from '@/economy/predictions';
 import { assert } from '@/lib/assert';
 import { setDial } from '@/room/dial';
@@ -22,20 +21,30 @@ import {
   touchMachine,
 } from '@/room/phases';
 import { confirmPin, setPin } from '@/room/pin';
+import { isRoomId, resumeRoom, type SavedRoom } from '@/room/resume';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { rememberSplitter, splitBothPans, stepSplitter } from '@/room/splitter';
 import { dropOnScale, rememberTray, stepTray, takeOffPan } from '@/room/tray';
 import type { RoomSpec, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
-import { initialQuality, reduceQuality } from '@/store/quality';
+import { newSave } from '@/store/persist';
+import { initialQuality, type QualityState, reduceQuality } from '@/store/quality';
 import type { GameState, Reduce, SaveState } from '@/store/types';
 
+/** The game at launch: loading, until the save is read and the assets are loaded (`boot/start`). */
 export function initialGameState(): GameState {
   return {
-    save: { progress: { tools: [], firstUse: [] }, economy: createEconomy() },
+    save: newSave(),
     room: null,
-    ui: { screen: 'room', notebookAside: false, quality: initialQuality, copies: 1, hint: null },
+    ui: {
+      screen: 'loading',
+      loaded: 0,
+      notebookAside: false,
+      quality: initialQuality,
+      copies: 1,
+      hint: null,
+    },
   };
 }
 
@@ -59,20 +68,47 @@ function moveOn(step: RoomStep | null, roomList: readonly RoomSpec[]): RoomStep 
 }
 
 /**
+ * The room the game starts in (story 2.1): the saved room in progress, resumed after its
+ * last committed line (room/resume.ts), or that stage fresh when it no longer replays, or
+ * the room fresh when the stage no longer exists; with none in progress, the first room in
+ * play order he hasn't done. Null when he has done them all.
+ */
+function startStep(
+  saved: SavedRoom | null,
+  roomList: readonly RoomSpec[],
+  save: SaveState,
+  now: number,
+): RoomStep | null {
+  const spec = saved ? roomList.find((room) => room.id === saved.id) : undefined;
+  if (saved && spec) {
+    const resumed = resumeRoom(spec, saved, now);
+    if (resumed) return { room: resumed, events: [] };
+    return enterRoom(spec, spec.stages[saved.stage] ? saved.stage : 0);
+  }
+  const done: ReadonlySet<string> = new Set(save.progress.roomsDone);
+  const next = roomList.find((room) => !done.has(room.id));
+  return next ? enterRoom(next) : null;
+}
+
+/**
  * What an action does to the room in play, or null when it leaves the room alone: with no
  * room, in a phase where the action does nothing, or for an action outside the room. The
- * tray and the splitter take the tools he has earned, since they need Balance.
+ * tray and the splitter take the tools he has earned, since they need Balance. `save` is
+ * the saved slice the action starts from (`saveBefore`).
  */
 function roomStep(
   state: GameState,
   action: Action,
   now: number,
   roomList: readonly RoomSpec[],
-  tools: readonly ToolId[],
+  save: SaveState,
 ): RoomStep | null {
+  const { tools } = save.progress;
   if (action.type === 'room/enter') {
     return enterRoom(findRoom(action.roomId, roomList), action.stage ?? 0);
   }
+  if (action.type === 'boot/start') return startStep(action.room, roomList, save, now);
+  if (action.type === 'dev/new-game') return startStep(null, roomList, save, now);
   const { room } = state;
   if (!room) return null;
   switch (action.type) {
@@ -106,6 +142,7 @@ function roomStep(
       return deleteToken(room);
     case 'notebook/enter':
       return enterLine(room, now);
+    case 'boot/progress':
     case 'notebook/slide':
     case 'hint/press':
     case 'quality/measured':
@@ -138,23 +175,31 @@ interface Progressed {
 }
 
 /**
- * What a room step means beyond the room: a room that restarts earns its tool (room 3:
- * Balance), held in memory until saving arrives in epic 2; and the first time the stage
- * offers a control he hasn't met, it wiggles once and counts as met (room/first-use.ts).
+ * What a room step means beyond the room: a room that restarts is done (story 2.1) and
+ * earns its tool (room 3: Balance); and the first time the stage offers a control he
+ * hasn't met, it wiggles once and counts as met (room/first-use.ts).
  */
 function progress(step: RoomStep | null, save: SaveState): Progressed {
   if (!step) return { step, save };
-  const { tools, firstUse } = save.progress;
+  const { tools, firstUse, roomsDone } = save.progress;
   const tool = toolEarned(step);
   const earned = tool !== null && !tools.includes(tool);
   const toolsNow = earned ? [...tools, tool] : tools;
+  const { id } = step.room.spec;
+  const restarted = step.events.some((event) => event.type === 'RoomRestarted');
+  const finished = restarted && isRoomId(id) && !roomsDone.includes(id);
   const met = meetControls(step.room, firstUse, toolsNow);
-  if (!met && !earned) return { step, save };
+  if (!met && !earned && !finished) return { step, save };
   return {
     step: met ? { ...step, room: met.room } : step,
     save: {
       ...save,
-      progress: { ...save.progress, tools: toolsNow, firstUse: met ? met.met : firstUse },
+      progress: {
+        ...save.progress,
+        roomsDone: finished && isRoomId(id) ? [...roomsDone, id] : roomsDone,
+        tools: toolsNow,
+        firstUse: met ? met.met : firstUse,
+      },
     },
   };
 }
@@ -164,6 +209,9 @@ function progress(step: RoomStep | null, save: SaveState): Progressed {
  * that does something to the room restarts the stage's idle clock.
  */
 const notHis: ReadonlySet<Action['type']> = new Set<Action['type']>([
+  'boot/progress',
+  'boot/start',
+  'dev/new-game',
   'room/enter',
   'presentation/done',
   'clock/tick',
@@ -189,7 +237,8 @@ const toolSettings: ReadonlySet<Action['type']> = new Set<Action['type']>([
  */
 function hintAction(action: Action, changed: boolean): HintAction {
   if (action.type === 'hint/press') return 'press';
-  if (action.type === 'room/enter') return 'ends';
+  if (action.type === 'room/enter' || action.type === 'boot/start') return 'ends';
+  if (action.type === 'dev/new-game') return 'ends';
   const his =
     !notHis.has(action.type) && action.type !== 'notebook/slide' && !toolSettings.has(action.type);
   return his && changed ? 'ends' : 'other';
@@ -271,20 +320,69 @@ function withTools(save: SaveState, tools: readonly ToolId[]): SaveState {
   return { ...save, progress: { ...save.progress, tools: [...new Set(tools)] } };
 }
 
+function isoTime(now: number): string {
+  return new Date(now).toISOString();
+}
+
+/**
+ * The saved slice an action starts from: the save read at launch (`boot/start`; a new
+ * game's when there is none), stamped with the first launch's time; a new game from the
+ * dev panel, which keeps the settings; the dev panel's tools; or the slice as it is.
+ */
+function saveBefore(save: SaveState, action: Action, now: number): SaveState {
+  switch (action.type) {
+    case 'boot/start': {
+      const loaded = action.save ?? newSave();
+      return loaded.createdAt === null ? { ...loaded, createdAt: isoTime(now) } : loaded;
+    }
+    case 'dev/new-game':
+      return { ...newSave(isoTime(now)), settings: save.settings };
+    case 'dev/set-tools':
+      return withTools(save, action.tools);
+    default:
+      return save;
+  }
+}
+
+/**
+ * The quality setting after an action: the frame-time test's report and the dev panel's
+ * forced setting (store/quality.ts); and, as the game starts, a saved pick, so the test
+ * doesn't run again (story 2.1).
+ */
+function qualityAfter(quality: QualityState, action: Action, save: SaveState): QualityState {
+  if (action.type === 'quality/measured' || action.type === 'quality/force') {
+    return reduceQuality(quality, action);
+  }
+  const pick = save.settings.quality;
+  if (action.type === 'boot/start' && pick !== null && quality.measured === null) {
+    return { ...quality, measured: pick };
+  }
+  return quality;
+}
+
+/** The test's pick is saved (story 2.1); a forced setting never is. */
+function withQualityPick(save: SaveState, quality: QualityState): SaveState {
+  const pick = quality.measured;
+  if (pick === null || pick === save.settings.quality) return save;
+  return { ...save, settings: { ...save.settings, quality: pick } };
+}
+
 /** The root reducer, over a given list of rooms so tests can bring their own. */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
-    const before =
-      action.type === 'dev/set-tools' ? withTools(state.save, action.tools) : state.save;
+    const before = saveBefore(state.save, action, ctx.now);
     const change = withRefusalDown(
-      withToolMemory(roomStep(state, action, ctx.now, roomList, before.progress.tools), before),
+      withToolMemory(roomStep(state, action, ctx.now, roomList, before), before),
       state.room,
       action,
     );
     const progressed = handOver(state.room, action, ctx.now, progress(change, before));
     const { step } = progressed;
     const events: DomainEvent[] = step ? [...step.events] : [];
-    const save = payPredictions(events, progressed.save);
+    const quality = qualityAfter(state.ui.quality, action, before);
+    const save = withQualityPick(payPredictions(events, progressed.save), quality);
+    // Every change to the saved slice is written (store/effects/save.ts).
+    if (save !== state.save) events.push({ type: 'SaveChanged' });
     const roomNow = step?.room ?? state.room;
     const hint = hintAfter(
       state.ui.hint,
@@ -297,6 +395,14 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
       if (step && step.room !== state.room) draft.room = castDraft(step.room);
       if (save !== state.save) draft.save = castDraft(save);
       if (action.type === 'room/enter') draft.ui.screen = 'room';
+      // The game starts (story 2.1): in a room, or at the end screen when every room is done.
+      if (action.type === 'boot/start' || action.type === 'dev/new-game') {
+        draft.ui.screen = step ? 'room' : 'continued';
+        if (!step) draft.room = null;
+      }
+      if (action.type === 'boot/progress') {
+        draft.ui.loaded = Math.min(1, Math.max(0, action.loaded));
+      }
       // After the last room's restart: the placeholder "to be continued" screen (story 1.13).
       if (step && step.room !== state.room && playedThrough(roomList, step.room)) {
         draft.ui.screen = 'continued';
@@ -304,9 +410,7 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
       if (action.type === 'dev/set-copies') draft.ui.copies = action.copies;
       if (action.type === 'notebook/slide') draft.ui.notebookAside = action.aside;
       if (hint !== state.ui.hint) draft.ui.hint = hint;
-      if (action.type === 'quality/measured' || action.type === 'quality/force') {
-        draft.ui.quality = reduceQuality(state.ui.quality, action);
-      }
+      if (quality !== state.ui.quality) draft.ui.quality = castDraft(quality);
     });
     return { state: next, events };
   };

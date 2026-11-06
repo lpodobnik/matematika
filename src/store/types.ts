@@ -3,7 +3,8 @@
 
 import type { Economy } from '@/economy/types';
 import type { HintState } from '@/room/hint';
-import type { FirstUseId, RoomState, ToolId } from '@/room/types';
+import type { FirstUseId, RoomId, RoomState, ToolId } from '@/room/types';
+import type { Character, Settings } from '@/save/schema';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import type { QualityState } from '@/store/quality';
@@ -20,10 +21,11 @@ export interface Ctx {
 }
 
 /**
- * Screens are a field in the store, with no router. `continued` is the placeholder "to be
+ * Screens are a field in the store, with no router. `loading` shows from launch until the
+ * save is read and the assets are loaded (story 2.1). `continued` is the placeholder "to be
  * continued" screen after the last room (story 1.13); the map replaces it in epic 2.
  */
-export type Screen = 'room' | 'continued';
+export type Screen = 'loading' | 'room' | 'continued';
 
 /**
  * How many copies of the scene the scene area draws side by side: 3 only for the tablet
@@ -33,11 +35,14 @@ export type SceneCopies = 1 | 3;
 
 export interface UiState {
   screen: Screen;
+  /** While loading: how much of the assets has loaded, 0–1 (story 2.1). */
+  loaded: number;
   /** On a phone, whether the notebook is pushed aside off the scale. The tablet ignores it. */
   notebookAside: boolean;
   /**
-   * The quality setting, in memory only: until epic 2 saves the test's pick in
-   * `save.settings.quality`, the test runs on every launch. A forced setting never persists.
+   * The quality setting. The test's pick is saved in `save.settings.quality` (story 2.1), and
+   * a launch with a saved pick starts with it and doesn't run the test again. A forced
+   * setting never persists.
    */
   quality: QualityState;
   /** The dev panel only: 3 draws the scene three times side by side, for the tablet profile. */
@@ -50,11 +55,18 @@ export interface UiState {
 }
 
 /**
- * The part of the architecture's `save` slice (`SaveV1`) that epic 1 needs. It is held in
- * memory only, until saving arrives in epic 2 and writes it to the device.
+ * The architecture's `save` slice: everything kept on the device (story 2.1; save/schema.ts,
+ * `SaveV1`). The room in progress is kept too, read off `room` as it is written
+ * (store/persist.ts). Every change to this slice is written (`SaveChanged`).
  */
 export interface SaveState {
+  /** ISO 8601: the first launch, set as the game starts; null before. */
+  createdAt: string | null;
+  /** His apprentice's name and look (story 2.4); empty until then. */
+  character: Character;
   progress: {
+    /** Rooms whose restart has begun, in the order he finished them. */
+    roomsDone: RoomId[];
     /** Tools earned at the end of rooms (room 3 earns Balance). */
     tools: ToolId[];
     /** Controls he has met, so each wiggles only the first time (Pattern 2, First use). */
@@ -65,6 +77,8 @@ export interface SaveState {
    * into it, once per stage (economy/predictions.ts); fights spend it from epic 3.
    */
   economy: Economy;
+  /** Muted (audio comes in epic 6), and the frame-time test's quality pick. */
+  settings: Settings;
 }
 
 /**

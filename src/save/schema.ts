@@ -1,0 +1,53 @@
+// The save's shape on the device (story 2.1; architecture, Data Persistence and `SaveV1`).
+// One JSON value under `matematika:save`, carrying its version `v`. Fields join the save
+// as their stories need them (the map's node, the city log, fights, the workshop); a field
+// a save lacks takes its default on load (save/decode.ts), so adding one needs no new
+// version. A new version, with a migration, is only for a change an old save can't read.
+
+import type { Economy } from '@/economy/types';
+import type { SavedRoom } from '@/room/resume';
+import type { FirstUseId, RoomId, ToolId } from '@/room/types';
+
+export const saveKey = 'matematika:save';
+
+/** A save that can't be read is kept under this prefix and the time, for Luka to recover. */
+export const corruptKeyPrefix = 'matematika:save:corrupt:';
+
+export const currentVersion = 1;
+
+/** The frame-time test's pick (store/quality.ts). A setting forced from the dev panel is never saved. */
+export type QualityPick = 'high' | 'medium' | 'low';
+
+export const qualityPicks: readonly QualityPick[] = ['high', 'medium', 'low'];
+
+/** His apprentice (story 2.4): empty until he names it and picks a look. */
+export interface Character {
+  name: string | null;
+  look: string | null;
+}
+
+export interface Settings {
+  muted: boolean;
+  quality: QualityPick | null;
+}
+
+export interface SaveProgress {
+  /** Rooms whose restart has begun, in the order he finished them. */
+  roomsDone: RoomId[];
+  /** Tools earned at the end of rooms (room 3 earns Balance). */
+  tools: ToolId[];
+  /** Controls and handover steps he has met, so each shows only the first time. */
+  firstUse: FirstUseId[];
+  /** The room he is in, with its committed lines; null when none is in progress. */
+  room: SavedRoom | null;
+}
+
+export interface SaveV1 {
+  v: 1;
+  /** ISO 8601: the first launch that wrote it. */
+  createdAt: string;
+  character: Character;
+  progress: SaveProgress;
+  economy: Economy;
+  settings: Settings;
+}

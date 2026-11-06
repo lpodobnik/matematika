@@ -194,7 +194,8 @@ export type Reduce = (state: GameState, action: Action, ctx: Ctx) => { state: Ga
 - Every save carries `v`. On load, migrations run in order (`migrations[1]` turns v1 into v2, and so on). A save from a newer version is never overwritten: the game loads it read-only and says so.
 - Corrupt JSON is copied to `matematika:save:corrupt:<ISO time>` before a fresh save starts, so Luka can recover it by hand.
 - On the first launch, `navigator.storage.persist()` asks the browser to keep the data.
-- Inside a room, the stage's committed lines persist, so a reload resumes at the last written line. Exploratory moves (dial position, pieces moved but not written) are not saved.
+- Inside a room, the stage's committed lines persist, so a reload resumes at the last written line. Exploratory moves (dial position, pieces moved but not written, the tray's numbers, a pin not yet confirmed) are not saved. Resuming replays the saved lines through the room's own functions (`room/resume.ts`); a save that no longer replays starts that stage fresh.
+- Nothing is written before the save has been read at launch, and a launch shows a loading screen (static in `index.html`, then React) until the save is read and the assets are loaded (story 2.1).
 - A fight in progress is saved after every strike, and a reload resumes it rather than counting as leaving (ADR-8).
 
 ### Links
@@ -724,14 +725,23 @@ type PinValue =
   | { kind: 'x'; x: number } | { kind: 'line'; index: number }
   | { kind: 'choice'; index: number } | { kind: 'bucket'; index: number };
 
+// Story 2.1 built the fields up to `settings` except those marked "joins": each later field
+// joins with its story, and a save without it takes its default on load (save/decode.ts),
+// so adding a field needs no new version.
 interface SaveV1 {
   v: 1;
   createdAt: string;
   character: { name: string | null; look: LookId | null };
   progress: {
-    roomsDone: RoomId[]; tools: ToolId[]; formsMet: FormId[]; ideasSeen: IdeaId[];
-    seen: NodeId[]; at: NodeId; tornPages: PageId[];
-    room: { id: RoomId; stage: number; lines: string[] } | null;
+    roomsDone: RoomId[]; tools: ToolId[];
+    firstUse: FirstUseId[];                         // controls and handover steps met
+    formsMet: FormId[]; ideasSeen: IdeaId[];        // joins: hints (2.7), cards (2.6)
+    seen: NodeId[]; at: NodeId; tornPages: PageId[]; // joins: the map (2.2), fights (epic 3)
+    room: {                                         // the room in progress
+      id: RoomId; stage: number;
+      lines: { text: string; source: 'typed' | WayId; progress: boolean }[];  // after line 0
+      pin: PinValue | null;                         // once confirmed
+    } | null;
   };
   economy: {
     parts: number; upgrades: UpgradeId[]; paidPredictions: string[];

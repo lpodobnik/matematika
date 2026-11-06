@@ -19,7 +19,10 @@ function playing(tools: ToolId[] = []) {
   const store = createGameStore({
     makeCtx: () => ({ now: clock.now, rng: { next: () => 0.5 } }),
     effects: [(event) => events.push(event)],
-    initialState: { ...initial, save: { ...initial.save, progress: { tools, firstUse: [] } } },
+    initialState: {
+      ...initial,
+      save: { ...initial.save, progress: { roomsDone: [], tools, firstUse: [] } },
+    },
   });
   const act = (action: Action) => store.getState().dispatch(action);
   const write = (text: string) => {

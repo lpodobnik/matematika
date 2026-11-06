@@ -66,6 +66,7 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
       onProfile={() => {
         for (const action of profileToggle(copies, rooms, tools)) dispatch(action);
       }}
+      onNewGame={() => dispatch({ type: 'dev/new-game' })}
       onClose={onClose}
     />
   );
@@ -85,6 +86,8 @@ export interface DevPanelViewProps {
   onForceQuality(quality: Quality | null): void;
   /** Sets the tablet profile up, or leaves it. */
   onProfile(): void;
+  /** Story 2.1: a new game from room 1; the saved progress is replaced, the settings kept. */
+  onNewGame(): void;
   onClose(): void;
 }
 
@@ -105,6 +108,7 @@ export function DevPanelView({
   onToggleBalance,
   onForceQuality,
   onProfile,
+  onNewGame,
   onClose,
 }: DevPanelViewProps) {
   return (
@@ -156,6 +160,9 @@ export function DevPanelView({
           onClick={onProfile}
         >
           profile: 3 × {profileRoomId} {profiling ? 'on' : 'off'}
+        </button>
+        <button type="button" className="dev-panel__button" onClick={onNewGame}>
+          new game
         </button>
       </div>
       <dl className="dev-panel__readout">

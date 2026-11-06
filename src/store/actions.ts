@@ -2,11 +2,19 @@
 
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
+import type { SavedRoom } from '@/room/resume';
 import type { PinValue, RoomId, Side, ToolId, TrayKind } from '@/room/types';
 import type { QualityAction } from '@/store/quality';
-import type { SceneCopies } from '@/store/types';
+import type { SaveState, SceneCopies } from '@/store/types';
 
 export type Action =
+  /** While loading: how much of the assets has loaded, 0–1 (story 2.1). */
+  | { type: 'boot/progress'; loaded: number }
+  /**
+   * The save is read and the assets are loaded: the game starts from the save, or new with
+   * null, back in the room in progress (`room`) or at the next room he hasn't done.
+   */
+  | { type: 'boot/start'; save: SaveState | null; room: SavedRoom | null }
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */
   | { type: 'room/enter'; roomId: RoomId; stage?: number }
   /** A touch anywhere on the machine; the first one ends the stage's arrive. */
@@ -52,6 +60,8 @@ export type Action =
    * the exact next move (room/hint.ts). Free, never recorded: it changes nothing in the room.
    */
   | { type: 'hint/press' }
+  /** The dev panel only: a new game, from room 1; the settings stay. */
+  | { type: 'dev/new-game' }
   /** The dev panel only (architecture, Debug Tools): sets the tools he has earned. */
   | { type: 'dev/set-tools'; tools: ToolId[] }
   /** The dev panel only: draws the scene once, or three times side by side for the profile. */

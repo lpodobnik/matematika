@@ -62,8 +62,8 @@ development_status:
   1-16-one-x-a-goal-and-a-hint-button: done
   epic-1-retrospective: optional
 
-  epic-2: backlog
-  2-1-save-progress-on-the-device: backlog
+  epic-2: in-progress
+  2-1-save-progress-on-the-device: done
   2-2-the-city-map: backlog
   2-3-gates-and-rooms-he-can-see-but-not-open: backlog
   2-4-his-name-and-his-look: backlog

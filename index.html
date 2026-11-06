@@ -4,9 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>matematika</title>
+    <!-- Story 2.1: the loading screen before the code has loaded; LoadingScreen.tsx draws the
+         same gear in the same place, so nothing changes as React takes over. -->
+    <style>
+      html, body, #root { height: 100%; margin: 0; }
+      body { background: #d9d2c1; }
+      .boot { display: flex; height: 100%; align-items: center; justify-content: center; background: #f4efe3; }
+      .boot svg { width: 96px; height: 96px; margin-bottom: 38px; fill: none; stroke: #3d4b5c; stroke-width: 3; stroke-linejoin: round; animation: boot-turn 2.4s linear infinite; }
+      @keyframes boot-turn { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .boot svg { animation: none; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <path d="M 44.00 0.00 L 43.46 6.88 L 32.34 10.51 L 30.29 15.44 L 35.60 25.86 L 31.11 31.11 L 19.98 27.51 L 15.44 30.29 L 13.60 41.85 L 6.88 43.46 L 0.00 34.00 L -5.32 33.58 L -13.60 41.85 L -19.98 39.20 L -19.98 27.51 L -24.04 24.04 L -35.60 25.86 L -39.20 19.98 L -32.34 10.51 L -33.58 5.32 L -44.00 0.00 L -43.46 -6.88 L -32.34 -10.51 L -30.29 -15.44 L -35.60 -25.86 L -31.11 -31.11 L -19.98 -27.51 L -15.44 -30.29 L -13.60 -41.85 L -6.88 -43.46 L -0.00 -34.00 L 5.32 -33.58 L 13.60 -41.85 L 19.98 -39.20 L 19.98 -27.51 L 24.04 -24.04 L 35.60 -25.86 L 39.20 -19.98 L 32.34 -10.51 L 33.58 -5.32 Z" />
+          <circle r="12" />
+        </svg>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

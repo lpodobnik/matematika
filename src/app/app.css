@@ -152,3 +152,53 @@ body {
   margin: 0;
   font-size: 28px;
 }
+
+/* Story 2.1: the loading screen, from launch until the save is read and the assets are
+   loaded. index.html has the same gear in a style of its own, shown before this file loads. */
+.loading {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.loading__gear {
+  width: 96px;
+  height: 96px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  animation: loading-turn 2.4s linear infinite;
+}
+
+.loading__bar {
+  width: min(320px, 60vw);
+  height: 10px;
+  box-sizing: border-box;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.loading__fill {
+  height: 100%;
+  background: var(--ink);
+  transition: width 200ms linear;
+}
+
+@keyframes loading-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading__gear {
+    animation: none;
+  }
+}

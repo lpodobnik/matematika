@@ -14,6 +14,8 @@ export const hr = {
     turnToLandscape: 'Okreni uređaj vodoravno.',
     /** After room 4: the placeholder end screen, until the map takes its place in epic 2. */
     toBeContinued: 'Nastavak slijedi…',
+    /** Story 2.1: the loading screen's bar, for screen readers. */
+    loading: 'Učitavanje',
     crash: {
       title: 'Stroj se zaglavio.',
       tapToRestart: 'Dodirni za ponovno pokretanje.',

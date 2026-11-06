@@ -4,7 +4,7 @@ import { formatEquation, formatTokens } from '@/math/format';
 import { splitGroups, splitterWorks } from '@/room/splitter';
 import type { RoomState } from '@/room/types';
 import type { Action } from '@/store/actions';
-import type { DomainEvent } from '@/store/events';
+import { type DomainEvent, isRoomEvent } from '@/store/events';
 import { initialGameState } from '@/store/reducer';
 import { createGameStore } from '@/store/store';
 import { watchDragCancel } from '@/ui/scene/scale/dial-drag';
@@ -114,10 +114,13 @@ describe('splitterAction (story 1.15: anywhere over the scale)', () => {
 function wiredSplitter() {
   const events: DomainEvent[] = [];
   const store = createGameStore({
-    effects: [(event) => events.push(event)],
+    effects: [(event) => isRoomEvent(event) && events.push(event)],
     initialState: {
       ...initialGameState(),
-      save: { ...initialGameState().save, progress: { tools: ['balance'], firstUse: [] } },
+      save: {
+        ...initialGameState().save,
+        progress: { roomsDone: [], tools: ['balance'], firstUse: [] },
+      },
     },
   });
   const act = (action: Action) => store.getState().dispatch(action);

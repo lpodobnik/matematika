@@ -330,6 +330,24 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
     ];
     return { room: withStage(room, jammed), events, verdict };
   }
+  return { ...commitTypedLine(room, tokens, verdict, now), verdict };
+}
+
+/**
+ * A line he typed, judged committed (`valid`, `answer` or `check`), as enter commits it:
+ * appended to `lines`, the draft emptied and the current blank used up, the last two
+ * lines' blanks brought up to date (`withLastLines`), and `LineAccepted`. The check line
+ * locks the stage, presented from `now` (`StageLocked`), and resolves a pin still
+ * unresolved. Enter calls it, and so does a saved room's replay (room/resume.ts).
+ */
+export function commitTypedLine(
+  room: RoomState,
+  tokens: Token[],
+  verdict: Verdict,
+  now: number,
+): NotebookStep {
+  const { stage } = room;
+  const at = { roomId: room.spec.id, stage: room.stageIndex };
   const locks = verdict.kind === 'check';
   const next: StageState = withLastLines(currentStageSpec(room), {
     ...commitLine(stage, tokens, 'typed', verdict),
@@ -342,11 +360,11 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
   const progress = lineProgress(verdict);
   const events: RoomEvent[] = [{ type: 'LineAccepted', ...at, source: 'typed', progress }];
   const committed = withStage(room, next);
-  if (!locks) return { room: committed, events, verdict };
+  if (!locks) return { room: committed, events };
   events.push({ type: 'StageLocked', ...at });
   const resolved = resolvePin(committed);
-  if (!resolved) return { room: committed, events, verdict };
-  return { room: resolved.room, events: [...events, ...resolved.events], verdict };
+  if (!resolved) return { room: committed, events };
+  return { room: resolved.room, events: [...events, ...resolved.events] };
 }
 
 /** A committed line ready to show: its number (0 is the stage equation) and its text. */

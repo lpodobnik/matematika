@@ -4,19 +4,18 @@ import '@/app/app.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from '@/app/App';
+import { boot } from '@/app/boot';
 import { ErrorBoundary } from '@/app/ErrorBoundary';
 import { crashReporter } from '@/lib/crash';
+import { saveStorage } from '@/save/storage';
 import { gameStore } from '@/store/store';
 
-// Later stories add: read the fragment, load the save, then mount.
 crashReporter.install(window);
-
-// Until the map (epic 2), the game opens on room 1.
-gameStore.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('index.html has no #root element');
 
+// The game mounts on its loading screen (story 2.1), then starts from the save.
 createRoot(rootElement).render(
   <StrictMode>
     <ErrorBoundary>
@@ -24,3 +23,5 @@ createRoot(rootElement).render(
     </ErrorBoundary>
   </StrictMode>,
 );
+
+void boot(saveStorage, gameStore.getState().dispatch);

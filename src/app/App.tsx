@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { startClock } from '@/app/clock';
+import { LoadingScreen } from '@/app/LoadingScreen';
 import { PortraitOverlay } from '@/app/PortraitOverlay';
 import { ToBeContinued } from '@/app/ToBeContinued';
 import { useGame } from '@/store/store';
@@ -23,23 +24,31 @@ const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : nu
 // counter in its bottom-left; the pin's confirm control sits beside the pin's head while a
 // pin waits to be confirmed. The clock ticks for as long as the game is open.
 //
-// The screen is a field in the store: after room 4's restart the placeholder "to be
-// continued" screen takes the scene's and notebook's place (story 1.13), and the scene
-// unmounts until the dev panel jumps back into a room. The map replaces it in epic 2.
+// The screen is a field in the store: the loading screen until the save is read and the
+// assets are loaded (story 2.1); after room 4's restart the placeholder "to be continued"
+// screen takes the scene's and notebook's place (story 1.13), and the scene unmounts until
+// the dev panel jumps back into a room. The map replaces it in epic 2.
 export function App() {
   const dispatch = useGame((s) => s.dispatch);
   const screen = useGame((s) => s.ui.screen);
+  const loaded = useGame((s) => s.ui.loaded);
 
   useEffect(() => startClock(window, dispatch), [dispatch]);
 
-  return <AppScreen screen={screen} />;
+  return <AppScreen screen={screen} loaded={loaded} />;
+}
+
+function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
+  if (screen === 'loading') return <LoadingScreen loaded={loaded} />;
+  if (screen === 'continued') return <ToBeContinued />;
+  return <RoomScreen />;
 }
 
 /** The screen in play, from props only. */
-export function AppScreen({ screen }: { screen: Screen }) {
+export function AppScreen({ screen, loaded = 1 }: { screen: Screen; loaded?: number }) {
   return (
     <div className="app">
-      {screen === 'continued' ? <ToBeContinued /> : <RoomScreen />}
+      <ScreenInPlay screen={screen} loaded={loaded} />
       <PortraitOverlay />
       {DevPanel && (
         <Suspense fallback={null}>

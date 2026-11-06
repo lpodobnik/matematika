@@ -27,6 +27,25 @@ describe('App screens (story 1.13)', () => {
   });
 });
 
+describe('the loading screen (story 2.1)', () => {
+  it('shows a gear and a bar filled as far as the assets have loaded, in place of the room', () => {
+    const html = renderToString(<AppScreen screen="loading" loaded={0.25} />);
+    expect(html).toContain('loading__gear');
+    expect(html).toContain('aria-valuenow="25"');
+    expect(html).toContain('width:25%');
+    expect(html).toContain(`aria-label="${hr.app.loading}"`);
+    expect(html).not.toContain('scene-area');
+  });
+
+  it('matches the gear index.html shows before the code has loaded', () => {
+    const index = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+    const html = renderToString(<AppScreen screen="loading" loaded={0} />);
+    const gear = html.match(/<path d="([^"]+)"/)?.[1];
+    expect(gear).toBeTruthy();
+    expect(index).toContain(`d="${gear}"`);
+  });
+});
+
 describe('the "to be continued" screen', () => {
   it('says only that the story goes on, from hr.ts: no stars, scores or praise', () => {
     const html = renderToString(<ToBeContinued />);

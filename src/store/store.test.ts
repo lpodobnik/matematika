@@ -13,7 +13,7 @@ import { splitterOffered } from '@/room/splitter';
 import type { FirstUseId, RoomSpec, RoomState, StageSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
 import { effects, runEffects } from '@/store/effects';
-import type { DomainEvent } from '@/store/events';
+import { type DomainEvent, isRoomEvent } from '@/store/events';
 import { initialQuality, qualityInUse } from '@/store/quality';
 import { createReducer, initialGameState, reduce } from '@/store/reducer';
 import { createGameStore, gameStore } from '@/store/store';
@@ -22,11 +22,12 @@ import type { Ctx } from '@/store/types';
 const fixedCtx: Ctx = { now: 1_000, rng: { next: () => 0.5 } };
 
 describe('the store', () => {
-  it('starts with no room', () => {
+  it('starts with no room, on the loading screen (story 2.1)', () => {
     const store = createGameStore();
     expect(store.getState().room).toBeNull();
     expect(store.getState().ui).toEqual({
-      screen: 'room',
+      screen: 'loading',
+      loaded: 0,
       notebookAside: false,
       quality: { measured: null, measuredMs: null, forced: null },
       copies: 1,
@@ -52,7 +53,7 @@ describe('the store', () => {
   it('hands each domain event to the effects, after storing the new state', () => {
     const seen: [DomainEvent, string | undefined][] = [];
     const store = createGameStore({
-      effects: [(event, state) => seen.push([event, state.room?.spec.id])],
+      effects: [(event, state) => isRoomEvent(event) && seen.push([event, state.room?.spec.id])],
     });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
     expect(seen).toEqual([[{ type: 'StageArrived', roomId: 'r01', stage: 0 }, 'r01']]);
@@ -118,7 +119,7 @@ describe('dial/set', () => {
     const seen: DomainEvent[] = [];
     const store = createGameStore({
       makeCtx: () => fixedCtx,
-      effects: [(event) => seen.push(event)],
+      effects: [(event) => isRoomEvent(event) && seen.push(event)],
     });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
     seen.length = 0;
@@ -171,7 +172,7 @@ describe('notebook actions', () => {
     const store = createGameStore({
       makeCtx: () => fixedCtx,
       reduce: createReducer(list),
-      effects: [(e) => seen.push(e)],
+      effects: [(e) => isRoomEvent(e) && seen.push(e)],
     });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
     store.getState().dispatch({ type: 'machine/touch' });
@@ -251,7 +252,10 @@ describe('notebook actions', () => {
 
 describe('written lines drive the machine (story 1.7)', () => {
   function roomOne(seen: DomainEvent[]) {
-    const store = createGameStore({ makeCtx: () => fixedCtx, effects: [(e) => seen.push(e)] });
+    const store = createGameStore({
+      makeCtx: () => fixedCtx,
+      effects: [(e) => isRoomEvent(e) && seen.push(e)],
+    });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
     store.getState().dispatch({ type: 'machine/touch' });
     seen.length = 0;
@@ -323,7 +327,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     const seen: DomainEvent[] = [];
     const store = createGameStore({
       makeCtx: () => ({ now: clock.now, rng: { next: () => 0.5 } }),
-      effects: [(event) => seen.push(event)],
+      effects: [(event) => isRoomEvent(event) && seen.push(event)],
       ...(list ? { reduce: createReducer(list) } : {}),
     });
     const phases: string[] = [];
@@ -531,7 +535,7 @@ describe('predict before the dial opens (story 1.9)', () => {
     const seen: DomainEvent[] = [];
     const store = createGameStore({
       makeCtx: () => fixedCtx,
-      effects: [(event) => seen.push(event)],
+      effects: [(event) => isRoomEvent(event) && seen.push(event)],
     });
     const act = (action: Action) => store.getState().dispatch(action);
     const solve = (answer: string) => {
@@ -751,11 +755,14 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     const initial = initialGameState();
     const store = createGameStore({
       makeCtx: () => fixedCtx,
-      effects: [(event) => seen.push(event)],
+      effects: [(event) => isRoomEvent(event) && seen.push(event)],
       ...(spec ? { reduce: createReducer([spec]) } : {}),
       initialState: {
         ...initial,
-        save: { ...initialGameState().save, progress: { tools: ['balance'], firstUse } },
+        save: {
+          ...initialGameState().save,
+          progress: { roomsDone: [], tools: ['balance'], firstUse },
+        },
       },
     });
     const act = (action: Action) => store.getState().dispatch(action);
@@ -906,12 +913,12 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     expect({
       ...store.getState().save.progress,
       firstUse: store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
-    }).toEqual({ tools: ['balance'], firstUse: [] });
+    }).toEqual({ roomsDone: [], tools: ['balance'], firstUse: [] });
     act({ type: 'dial/set', x: 10 });
     expect({
       ...store.getState().save.progress,
       firstUse: store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
-    }).toEqual({ tools: ['balance'], firstUse: ['tray'] });
+    }).toEqual({ roomsDone: [], tools: ['balance'], firstUse: ['tray'] });
     expect(store.getState().room?.stage.hintLevel).toBe(1);
     const empty = reduce(
       initialGameState(),
@@ -933,12 +940,12 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
     const initial = initialGameState();
     const store = createGameStore({
       makeCtx: () => fixedCtx,
-      effects: [(event) => seen.push(event)],
+      effects: [(event) => isRoomEvent(event) && seen.push(event)],
       initialState: {
         ...initial,
         save: {
           ...initialGameState().save,
-          progress: { tools: ['balance'], firstUse: ['pin', 'tray'] },
+          progress: { roomsDone: [], tools: ['balance'], firstUse: ['pin', 'tray'] },
         },
       },
     });
@@ -1064,7 +1071,7 @@ describe('the quality setting (story 1.12)', () => {
     return store;
   }
 
-  it('holds the frame-time test’s pick in memory, with no events and the room untouched', () => {
+  it('saves the frame-time test’s pick, with no room events and the room untouched (story 2.1)', () => {
     const seen: DomainEvent[] = [];
     const store = createGameStore({ makeCtx: () => fixedCtx, effects: [(e) => seen.push(e)] });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
@@ -1072,8 +1079,16 @@ describe('the quality setting (story 1.12)', () => {
     const room = store.getState().room;
     store.getState().dispatch({ type: 'quality/measured', frameTimesMs: slowFrames });
     expect(store.getState().ui.quality).toEqual({ measured: 'low', measuredMs: 30, forced: null });
+    expect(store.getState().save.settings.quality).toBe('low');
     expect(store.getState().room).toBe(room);
-    expect(seen).toEqual([]);
+    expect(seen).toEqual([{ type: 'SaveChanged' }]);
+  });
+
+  it('never saves a forced setting', () => {
+    const store = roomOneStore();
+    store.getState().dispatch({ type: 'quality/measured', frameTimesMs: fastFrames });
+    store.getState().dispatch({ type: 'quality/force', quality: 'low' });
+    expect(store.getState().save.settings.quality).toBe('high');
   });
 
   it('takes the test once per launch', () => {
@@ -1115,7 +1130,7 @@ describe('the tablet profile (story 1.13)', () => {
     const seen: DomainEvent[] = [];
     const store = createGameStore({
       makeCtx: () => fixedCtx,
-      effects: [(event) => seen.push(event)],
+      effects: [(event) => isRoomEvent(event) && seen.push(event)],
     });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r04' });
     const room = store.getState().room;
@@ -1132,8 +1147,8 @@ describe('the tablet profile (story 1.13)', () => {
 });
 
 describe('effects', () => {
-  it('has no effects in epic 1', () => {
-    expect(effects).toEqual([]);
+  it('has one effect so far: saving (story 2.1)', () => {
+    expect(effects).toHaveLength(1);
   });
 
   it('runs events in order through effects in order', () => {

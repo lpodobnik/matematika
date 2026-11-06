@@ -5,7 +5,7 @@ export const errorLogKey = 'matematika:errors';
 export const errorLogLimit = 50;
 const maxTextLength = 4000;
 
-export type ErrorSource = 'render' | 'error' | 'unhandledrejection';
+export type ErrorSource = 'render' | 'error' | 'unhandledrejection' | 'save';
 
 export interface ErrorEntry {
   at: string;

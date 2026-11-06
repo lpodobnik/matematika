@@ -23,6 +23,7 @@ function view(overrides: Partial<DevPanelViewProps> = {}): string {
       onToggleBalance={vi.fn()}
       onForceQuality={vi.fn()}
       onProfile={vi.fn()}
+      onNewGame={vi.fn()}
       onClose={vi.fn()}
       {...overrides}
     />,

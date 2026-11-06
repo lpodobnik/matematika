@@ -6,20 +6,24 @@ import type { Verdict } from '@/math/check';
 import type { Equation } from '@/math/expr';
 import type { LineToken, Token } from '@/math/tokens';
 
-export type RoomId =
-  | 'r01'
-  | 'r02'
-  | 'r03'
-  | 'r04'
-  | 'r05'
-  | 'r06'
-  | 'r07'
-  | 'r08'
-  | 'r09'
-  | 'r10'
-  | 'r11'
-  | 'r12'
-  | 'r13';
+/** Every authored room's id, in play order (the save checks the ids it reads against it). */
+export const roomIds = [
+  'r01',
+  'r02',
+  'r03',
+  'r04',
+  'r05',
+  'r06',
+  'r07',
+  'r08',
+  'r09',
+  'r10',
+  'r11',
+  'r12',
+  'r13',
+] as const;
+
+export type RoomId = (typeof roomIds)[number];
 
 /** Which skin draws the machine (GDD, Puzzle Progression). */
 export type MachineId =
@@ -38,8 +42,10 @@ export type MachineId =
   | 'clock-tower';
 
 export type Side = 'left' | 'right';
-export type ToolId = 'balance' | 'workshop' | 'chain' | 'drum';
-export type WayId = 'try' | 'balance' | 'undo';
+export const toolIds = ['balance', 'workshop', 'chain', 'drum'] as const;
+export type ToolId = (typeof toolIds)[number];
+export const wayIds = ['try', 'balance', 'undo'] as const;
+export type WayId = (typeof wayIds)[number];
 export type FadingMode = 'auto' | 'blanks' | 'blank';
 
 export interface RoomSpec {
@@ -129,14 +135,17 @@ export interface PinState {
  * names the step its tag tells him to take next. Story 1.16 adds `answer`: x is alone on
  * the pans, so he writes how much x is.
  */
-export type HandoverId =
-  | 'dial'
-  | 'write'
-  | 'answer'
-  | 'check'
-  | 'tray'
-  | 'balance-goal'
-  | 'splitter';
+export const handoverIds = [
+  'dial',
+  'write',
+  'answer',
+  'check',
+  'tray',
+  'balance-goal',
+  'splitter',
+] as const;
+
+export type HandoverId = (typeof handoverIds)[number];
 
 /**
  * What he has met, so each shows only the first time (Pattern 2, First use): the controls
