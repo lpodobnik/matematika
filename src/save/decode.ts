@@ -5,6 +5,7 @@
 // it aside). The save is his own device's, but it is still read as untrusted JSON: nothing
 // here throws.
 
+import { cleanName, isLookId } from '@/city/character';
 import { LAIR_ORDER } from '@/content/lairs';
 import { createEconomy } from '@/economy/parts';
 import type { Economy } from '@/economy/types';
@@ -30,8 +31,6 @@ import {
 
 type Json = Record<string, unknown>;
 
-/** The longest name kept (story 2.4 limits what he can type). */
-export const maxNameLength = 24;
 /**
  * The most lines a saved stage keeps, far past play: every Balance move in room 4 writes
  * two lines, and exploring the scale can make dozens (story 2.1 review).
@@ -166,9 +165,8 @@ function decodeStarted(value: unknown): SavedRoom[] {
 
 function decodeCharacter(value: unknown): Character {
   if (!isObject(value)) return { name: null, look: null };
-  const name = typeof value.name === 'string' ? value.name.trim().slice(0, maxNameLength) : '';
-  const look = typeof value.look === 'string' && value.look.length <= 40 ? value.look : null;
-  return { name: name.length > 0 ? name : null, look };
+  const name = typeof value.name === 'string' ? cleanName(value.name) : null;
+  return { name, look: isLookId(value.look) ? value.look : null };
 }
 
 function decodeSettings(value: unknown): Settings {

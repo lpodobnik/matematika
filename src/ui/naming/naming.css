@@ -1,0 +1,171 @@
+/* Story 2.4: the naming. Penkala's question and the name on the left, the six looks on the
+   right, in grey (NFR12): the picker reads by shape and value. Landscape only; on a phone
+   the form sits at the top, so the keyboard covers only the looks while he types. Buttons
+   act on release, have no hover states, and are at least 48 CSS px. */
+.naming {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12px;
+  background: var(--table);
+  color: var(--ink);
+  overflow: auto;
+}
+
+.naming__form,
+.naming__reply {
+  display: flex;
+  gap: 16px;
+  width: min(100%, 1100px);
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.naming__ask {
+  display: flex;
+  flex: 0 0 38%;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.naming__speaker {
+  margin: 0;
+  font-size: clamp(13px, 1.6vw, 18px);
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.naming__line {
+  margin: 0;
+  font-size: clamp(18px, 2.6vw, 30px);
+}
+
+.naming__label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: clamp(13px, 1.6vw, 18px);
+}
+
+.naming__input {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(18px, 2.4vw, 26px);
+}
+
+.naming__button {
+  align-self: flex-start;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: clamp(16px, 2vw, 22px);
+  touch-action: manipulation;
+}
+
+.naming__button[aria-disabled="true"] {
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 0.45;
+}
+
+.naming__looks {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.naming__looks legend {
+  margin-bottom: 6px;
+}
+
+.naming__look {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  aspect-ratio: 2 / 3;
+  max-height: calc((100dvh - 120px) / 2);
+  padding: 4px;
+  border: 2px solid var(--rule);
+  border-radius: 10px;
+  background: var(--paper);
+  touch-action: manipulation;
+}
+
+.naming__look img,
+.naming__portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(1);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.naming__look[aria-pressed="true"] {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--ink);
+}
+
+.naming__look:active {
+  background: var(--table);
+}
+
+.naming__reply {
+  align-items: center;
+}
+
+/* The reply has no keyboard to make room for, so it sits in the middle. */
+.naming:has(.naming__reply) {
+  align-items: center;
+}
+
+.naming__portrait {
+  flex: 0 0 auto;
+  width: auto;
+  height: min(60dvh, 420px);
+  aspect-ratio: 2 / 3;
+}
+
+.naming__speech {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (max-height: 499.98px) {
+  .naming {
+    padding: 6px;
+  }
+
+  .naming__form,
+  .naming__reply {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .naming__looks {
+    gap: 6px;
+  }
+
+  .naming__look {
+    max-height: calc((100dvh - 64px) / 2);
+  }
+}

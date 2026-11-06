@@ -4,6 +4,7 @@
 // a save lacks takes its default on load (save/decode.ts), so adding one needs no new
 // version. A new version, with a migration, is only for a change an old save can't read.
 
+import type { LookId } from '@/city/character';
 import type { Economy } from '@/economy/types';
 import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, RoomId, ToolId } from '@/room/types';
@@ -23,7 +24,7 @@ export const qualityPicks: readonly QualityPick[] = ['high', 'medium', 'low'];
 /** His apprentice (story 2.4): empty until he names it and picks a look. */
 export interface Character {
   name: string | null;
-  look: string | null;
+  look: LookId | null;
 }
 
 export interface Settings {

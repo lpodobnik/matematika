@@ -3,6 +3,7 @@
 // happened goes out as domain events.
 
 import { castDraft, produce } from 'immer';
+import { cleanName, isLookId, needsName } from '@/city/character';
 import { nextRoomOnMap, type Reach, roomOpen } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { districtMap } from '@/content/map';
@@ -108,6 +109,7 @@ function startStep(
   now: number,
 ): RoomStep | null {
   const spec = saved ? roomList.find((room) => room.id === saved.id) : undefined;
+  if (named(save) === false) return null;
   if (saved && spec) return resumeStep(spec, saved, now);
   if (save.progress.onMap) return null;
   const next = nextRoom(roomList, save, null);
@@ -134,6 +136,8 @@ function moveOn(
   now: number,
 ): RoomStep | null {
   if (step?.room.stage.phase !== 'done') return step;
+  // After room 1, he names his apprentice first (story 2.4).
+  if (named(save) === false) return step;
   const spec = nextRoom(roomList, save, step.room.spec.id);
   if (!spec) return step;
   const entered = goInto(spec, save, now);
@@ -177,6 +181,12 @@ function roomStep(
   if (action.type === 'boot/start') return startStep(action.room, roomList, save, now);
   if (action.type === 'dev/new-game') return startStep(null, roomList, save, now);
   if (action.type === 'map/travel') return travelStep(state, action.node, roomList, save, now);
+  if (action.type === 'character/set') {
+    // Named (`save` carries the name once it is valid): on to the room after room 1.
+    if (state.ui.screen !== 'naming' || named(save) !== true) return null;
+    const next = nextRoom(roomList, save, 'r01');
+    return next ? goInto(next, save, now) : null;
+  }
   const { room } = state;
   if (!room) return null;
   switch (action.type) {
@@ -405,7 +415,8 @@ function saveBefore(save: SaveState, action: Action, now: number): SaveState {
   switch (action.type) {
     case 'boot/start': {
       const loaded = action.save ?? newSave();
-      return loaded.createdAt === null ? { ...loaded, createdAt: isoTime(now) } : loaded;
+      const stamped = loaded.createdAt === null ? { ...loaded, createdAt: isoTime(now) } : loaded;
+      return owedRoomAside(stamped, action.room);
     }
     case 'dev/new-game':
       return { ...newSave(isoTime(now)), settings: save.settings };
@@ -449,11 +460,43 @@ function screenAfter(
   action: Action,
   step: RoomStep | null,
   toMap: boolean,
+  save: SaveState,
 ): GameState['ui']['screen'] {
-  if (toMap) return 'map';
-  if (action.type === 'boot/start' || action.type === 'dev/new-game') return step ? 'room' : 'map';
+  // Off to the map, or, after room 1 with no name yet, to the naming (story 2.4).
+  const off = named(save) === false ? 'naming' : 'map';
+  if (toMap) return off;
+  if (action.type === 'boot/start' || action.type === 'dev/new-game') return step ? 'room' : off;
   if (action.type === 'room/enter' || (action.type === 'map/travel' && step)) return 'room';
+  if (action.type === 'character/set' && state.ui.screen === 'naming' && named(save)) {
+    return step ? 'room' : 'map';
+  }
   return state.ui.screen;
+}
+
+/**
+ * A save from before the naming, with a room in progress (story 2.4): the naming comes
+ * first, so that room waits with the rooms he left halfway, and resumes when its turn comes.
+ */
+function owedRoomAside(save: SaveState, room: SavedRoom | null): SaveState {
+  if (!room || named(save) !== false) return save;
+  const started = [...save.progress.started.filter((left) => left.id !== room.id), room];
+  return { ...save, progress: { ...save.progress, started } };
+}
+
+/**
+ * Whether his apprentice is named (story 2.4): false once room 1 is finished without a
+ * name, so the naming comes next; true once named; null before room 1 is finished.
+ */
+function named(save: SaveState): boolean | null {
+  if (needsName(save.progress.roomsDone, save.character.name)) return false;
+  return save.character.name === null ? null : true;
+}
+
+/** The name and look from the naming screen, tidied, when both are good; else none. */
+function namedCharacter(state: GameState, action: Action): SaveState['character'] | null {
+  if (action.type !== 'character/set' || state.ui.screen !== 'naming') return null;
+  const name = cleanName(action.name);
+  return name && isLookId(action.look) ? { name, look: action.look } : null;
 }
 
 /** The save keeps whether he is on the map, so a launch comes back there (story 2.2). */
@@ -499,7 +542,9 @@ function leavingRoom(state: GameState, action: Action): RoomState | null {
 /** The root reducer, over a given list of rooms so tests can bring their own. */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
-    const before = saveBefore(state.save, action, ctx.now);
+    const character = namedCharacter(state, action);
+    const saved = saveBefore(state.save, action, ctx.now);
+    const before = character ? { ...saved, character } : saved;
     const change = withRefusalDown(
       withToolMemory(roomStep(state, action, ctx.now, roomList, before), before),
       state.room,
@@ -514,7 +559,7 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
     // A room whose restart has ended hands over to the map (story 2.2).
     const finished = step?.room.stage.phase === 'done' ? step.room : null;
     const quality = qualityAfter(state.ui.quality, action, before);
-    const screen = screenAfter(state, action, step, leaving !== null || finished !== null);
+    const screen = screenAfter(state, action, step, leaving !== null || finished !== null, before);
     const save = withOnMap(
       withQualityPick(
         withStarted(payPredictions(events, progressed.save), leaving, entered),
@@ -536,7 +581,11 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
       if (step && step.room !== state.room) draft.room = castDraft(step.room);
       if (save !== state.save) draft.save = castDraft(save);
       draft.ui.screen = screen;
-      if (action.type === 'room/enter' || (action.type === 'map/travel' && step)) {
+      if (
+        action.type === 'room/enter' ||
+        (action.type === 'character/set' && screen !== 'naming') ||
+        (action.type === 'map/travel' && step)
+      ) {
         draft.ui.fresh = null;
       }
       // The game starts (story 2.1): in a room, or on the map (story 2.2).

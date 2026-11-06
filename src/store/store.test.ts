@@ -330,6 +330,11 @@ describe('a room from arrival to restart (story 1.8)', () => {
       makeCtx: () => ({ now: clock.now, rng: { next: () => 0.5 } }),
       effects: [(event) => isRoomEvent(event) && seen.push(event)],
       ...(list ? { reduce: createReducer(list) } : {}),
+      // Named already, so room 2 follows room 1 (the naming has its own tests, naming.test.ts).
+      initialState: {
+        ...initialGameState(),
+        save: { ...initialGameState().save, character: { name: 'Ivo', look: 'look-1' as const } },
+      },
     });
     const phases: string[] = [];
     const act = (action: Action) => {

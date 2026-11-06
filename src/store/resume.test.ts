@@ -29,7 +29,11 @@ function game(tools: ToolId[] = []) {
     effects: [],
     initialState: {
       ...initial,
-      save: { ...newSave(at), progress: { ...newSave().progress, tools } },
+      save: {
+        ...newSave(at),
+        character: { name: 'Ivo', look: 'look-1' as const },
+        progress: { ...newSave().progress, tools },
+      },
     },
   });
   const act = (action: Action) => {
@@ -259,6 +263,7 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
   it('with every room done, the map shows', () => {
     const save = {
       ...newSave(at),
+      character: { name: 'Ivo', look: 'look-1' as const },
       progress: { ...newSave().progress, roomsDone: ['r01', 'r02', 'r03', 'r04'] as const },
     };
     const store = createGameStore({ effects: [] });

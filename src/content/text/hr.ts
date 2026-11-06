@@ -29,6 +29,29 @@ export const hr = {
     /** Story 2.2: the map control in a room, bottom left. */
     map: 'Karta',
   },
+  /**
+   * The naming after room 1 (story 2.4; narrative design, Opening): the conductor, Gospon
+   * Penkala, finally asks who he is. The only time the keyboard comes up.
+   */
+  naming: {
+    speaker: 'Gospon Penkala',
+    ask: 'Čekaj malo. A tko si ti uopće?',
+    nameLabel: 'Tvoje ime',
+    pickLook: 'Kako izgledaš?',
+    /** For screen readers: each look, in the art bible's order. */
+    looks: [
+      'Kapa i radna pregača',
+      'Kovrče, naočale i kombinezon',
+      'Riđa kosa, prsluk i zeleni šal',
+      'Kožna kapa i torba',
+      'Ravne šiške i plava kuta',
+      'Velika radna jakna i crvena marama',
+    ],
+    confirm: 'To sam ja',
+    /** His reply, the first line to use the name: the conductor, still doubtful. */
+    reply: (name: string) => `${name}? Hm. Toga nema u knjizi.`,
+    next: 'Dalje',
+  },
   /** Story 2.2: the city map. Place names are placeholders until the final text (epic 6). */
   map: {
     title: 'Donji Kotač',

@@ -25,9 +25,9 @@ export interface Ctx {
  * Screens are a field in the store, with no router. `loading` shows from launch until the
  * save is read and the assets are loaded (story 2.1). `map` is the city map (story 2.2),
  * where he goes after every restart and whenever he leaves a room; it replaced story 1.13's
- * "to be continued" screen.
+ * "to be continued" screen. `naming` comes once, after room 1's restart (story 2.4).
  */
-export type Screen = 'loading' | 'room' | 'map';
+export type Screen = 'loading' | 'room' | 'map' | 'naming';
 
 /**
  * How many copies of the scene the scene area draws side by side: 3 only for the tablet

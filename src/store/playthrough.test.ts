@@ -79,6 +79,8 @@ function playRoomOne(game: Game) {
   game.write('5');
   game.presented();
   game.presented();
+  // Story 2.4: Penkala asks who he is.
+  game.act({ type: 'character/set', name: 'Ivo', look: 'look-3' });
 }
 
 /** Room 2, the street lamps: 3x = 12, then x : 3 = 5 on a dial in 3s. */
@@ -167,6 +169,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r01.0:open',
       'r01.0:locked',
       'r01.0:restart',
+      // Story 2.4: the naming, with no room.
+      'none',
       'r02.0:arrive',
       'r02.0:open',
       'r02.0:locked',
@@ -460,7 +464,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(game.store.getState().room?.spec.id).toBe('r04');
   });
 
-  it('goes from room to room, then shows the map with every room restored (story 2.2)', () => {
+  it('goes from room to room, with the naming after room 1, then the map with every room restored', () => {
     const game = freshGame();
     const screens: string[] = [];
     const unsubscribe = game.store.subscribe((state) => {
@@ -472,7 +476,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomThree(game);
     playRoomFour(game);
     unsubscribe();
-    expect(screens).toEqual(['room', 'map']);
+    expect(screens).toEqual(['room', 'naming', 'room', 'map']);
     const state = game.store.getState();
     expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r04' });
     expect(state.room).toBeNull();

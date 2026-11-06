@@ -127,7 +127,11 @@ describe('starting the game (boot/start)', () => {
     const save = newSave(at);
     store.getState().dispatch({
       type: 'boot/start',
-      save: { ...save, progress: { ...save.progress, roomsDone: ['r01', 'r02'], onMap: true } },
+      save: {
+        ...save,
+        character: { name: 'Ivo', look: 'look-1' as const },
+        progress: { ...save.progress, roomsDone: ['r01', 'r02'], onMap: true },
+      },
       room: null,
     });
     expect(store.getState().room).toBeNull();

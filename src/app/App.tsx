@@ -11,6 +11,7 @@ import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
 import { MapScreen } from '@/ui/map/MapScreen';
+import { NamingScreen } from '@/ui/naming/NamingScreen';
 import { Notebook } from '@/ui/notebook/Notebook';
 import { SceneRoot } from '@/ui/scene/SceneRoot';
 
@@ -27,7 +28,8 @@ const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : nu
 //
 // The screen is a field in the store: the loading screen until the save is read and the
 // assets are loaded (story 2.1); the city map after every restart and whenever he leaves a
-// room (story 2.2), when the scene unmounts until he travels into a room again.
+// room (story 2.2), when the scene unmounts until he travels into a room again; and, once,
+// the naming after room 1 (story 2.4).
 export function App() {
   const dispatch = useGame((s) => s.dispatch);
   const screen = useGame((s) => s.ui.screen);
@@ -41,6 +43,7 @@ export function App() {
 function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
   if (screen === 'loading') return <LoadingScreen loaded={loaded} />;
   if (screen === 'map') return <MapScreen />;
+  if (screen === 'naming') return <NamingScreen />;
   return <RoomScreen />;
 }
 

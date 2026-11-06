@@ -110,9 +110,14 @@ describe('decodeSave', () => {
     }
   });
 
-  it('trims a name and cuts it to 24 letters', () => {
-    const decoded = decodeSave({ v: 1, character: { name: `  ${'a'.repeat(30)} ` } }, now);
-    expect(decoded?.character.name).toBe('a'.repeat(24));
+  it('tidies a name, cuts it to 16 letters, and keeps only a known look (story 2.4)', () => {
+    const decoded = decodeSave(
+      { v: 1, character: { name: `  ${'a'.repeat(30)} `, look: 'look-3' } },
+      now,
+    );
+    expect(decoded?.character).toEqual({ name: 'a'.repeat(16), look: 'look-3' });
+    const odd = decodeSave({ v: 1, character: { name: '   ', look: 'look-9' } }, now);
+    expect(odd?.character).toEqual({ name: null, look: null });
   });
 
   it('refuses only a value that isn’t an object', () => {

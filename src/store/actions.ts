@@ -1,5 +1,6 @@
 // Every action the store accepts, named `domain/verb` (architecture, Naming Conventions).
 
+import type { LookId } from '@/city/character';
 import type { NodeId } from '@/city/types';
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
@@ -23,6 +24,11 @@ export type Action =
   | { type: 'map/open' }
   /** He tapped a node on the map: an open room takes him there at once (FR27). */
   | { type: 'map/travel'; node: NodeId }
+  /**
+   * The naming after room 1 (story 2.4): the name he typed and the look he picked. Only on
+   * the naming screen; the next room follows.
+   */
+  | { type: 'character/set'; name: string; look: LookId }
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */
   | { type: 'room/enter'; roomId: RoomId; stage?: number }
   /** A touch anywhere on the machine; the first one ends the stage's arrive. */

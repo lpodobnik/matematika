@@ -23,7 +23,11 @@ function game(roomsDone: GameState['save']['progress']['roomsDone'] = ['r01', 'r
   const save = newSave(at);
   store.getState().dispatch({
     type: 'boot/start',
-    save: { ...save, progress: { ...save.progress, roomsDone, onMap: true } },
+    save: {
+      ...save,
+      character: { name: 'Ivo', look: 'look-1' as const },
+      progress: { ...save.progress, roomsDone, onMap: true },
+    },
     room: null,
   });
   const act = (action: Action) => {
