@@ -20,3 +20,54 @@
     animation: none;
   }
 }
+
+/* Story 2.7: the help ladder's levels 3 and 4, a card of lines in the notebook's type. */
+.help-note {
+  margin: 4px 0;
+  padding: 6px 12px;
+  border: 2px dashed var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.help-note__label {
+  margin: 0;
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+.help-note__lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.help-note__line {
+  margin: 0;
+  font-size: 1.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* On a phone in landscape, the example runs on one line so the pad keeps its room. */
+@media (max-height: 499.98px) {
+  .help-note {
+    padding: 4px 8px;
+    font-size: 0.85em;
+  }
+
+  /* Room for the lines: at level 4 only the example shows, not level 3's line too. */
+  .help-note:has(.help-note__lines) .help-note__structure {
+    display: none;
+  }
+
+  .help-note__lines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.4em;
+  }
+
+  .help-note__lines .help-note__line + .help-note__line::before {
+    content: "→ ";
+  }
+}

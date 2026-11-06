@@ -57,7 +57,8 @@ export function HintGhost({ sceneScale, dialScroll }: Props) {
   const tools = useGame((s) => s.save.progress.tools);
   const hint = useGame((s) => s.ui.hint);
   const view = useMemo(() => hintView(room, tools, hint), [room, tools, hint]);
-  const move = view?.level === 2 ? view.move : null;
+  // From level 2 up: the button's second press, or the help ladder (story 2.7).
+  const move = view && view.level >= 2 ? view.move : null;
   if (!room || !view || !move || !(sceneScale > 0)) return null;
   switch (move.kind) {
     case 'slide':

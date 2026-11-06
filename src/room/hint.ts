@@ -39,6 +39,7 @@ import * as q from '@/math/rational';
 import { nextStep, type StepWay } from '@/math/steps';
 import { isOnDial } from '@/room/dial';
 import { answerOnPans, handoverApplies, handoverOrder } from '@/room/handover';
+import { workedExample } from '@/room/help';
 import { isNumberPiece, type NumberPiece, panPieces } from '@/room/pieces';
 import { pinOffered } from '@/room/pin';
 import { currentStageSpec, machineEquation } from '@/room/room';
@@ -82,12 +83,15 @@ export type HintStep = HandoverId | 'pin' | 'jam';
 
 /** What the hint shows now. */
 export interface HintView {
-  level: 1 | 2;
+  /** The higher of the button's level and the stage's help (story 2.7), 1–4. */
+  level: 1 | 2 | 3 | 4;
   /** The step whose tag the first press shows (and the second, where it has no move). */
   step: HintStep;
   /** The second press's move; null on the first press, or where there is none to show. */
   move: HintMove | null;
   presses: number;
+  /** Level 4: the same kind of equation with other numbers, solved (room/help.ts). */
+  example: Equation[] | null;
 }
 
 /** Phases he can act in, so the button works: from arrival until the stage locks. */
@@ -285,11 +289,20 @@ export function hintView(
   tools: readonly ToolId[],
   hint: HintState | null,
 ): HintView | null {
-  if (!hint || !room) return null;
+  if (!room) return null;
+  const level = Math.max(hint?.level ?? 0, room.stage.help);
+  if (level === 0) return null;
   const step = hintStep(room, tools);
   if (!step) return null;
-  const move = hint.level === 2 ? nextMove(room, tools) : null;
-  return { level: hint.level, step, move, presses: hint.presses };
+  const move = level >= 2 ? nextMove(room, tools) : null;
+  const example = level === 4 ? workedExample(room, tools) : null;
+  return {
+    level: level as HintView['level'],
+    step,
+    move,
+    presses: hint?.presses ?? 0,
+    example,
+  };
 }
 
 /**

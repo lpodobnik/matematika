@@ -14,13 +14,22 @@ import {
 import { pinOffered } from '@/room/pin';
 import type { NotebookLine, Refusal } from '@/room/types';
 import { useGame } from '@/store/store';
-import { hintKey, hintOf, hintPlace, notebookHint, notebookRefusal } from '@/ui/common/hint-text';
+import {
+  helpExample,
+  helpStructure,
+  hintKey,
+  hintOf,
+  hintPlace,
+  notebookHint,
+  notebookRefusal,
+} from '@/ui/common/hint-text';
 import {
   HandoverNote,
   isNotebookHandover,
   type NotebookHandover,
   RefusalNote,
 } from '@/ui/notebook/HandoverNote';
+import { HelpNote } from '@/ui/notebook/HelpNote';
 import { HintNote } from '@/ui/notebook/HintNote';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
 import { LineView, textLine } from '@/ui/notebook/LineView';
@@ -65,6 +74,8 @@ export function Notebook() {
   const pinWaits = useGame((s) => (s.room ? pinOffered(s.room) : false));
   const hinting = useGame((s) => hintOf(s) !== null);
   const hintNote = useGame(notebookHint);
+  const structure = useGame(helpStructure);
+  const example = useGame(helpExample);
   const hintPadKey = useGame(hintKey);
   const hintOnScene = useGame((s) => hintPlace(s) === 'scene');
   const presses = useGame((s) => s.ui.hint?.presses ?? 0);
@@ -101,6 +112,7 @@ export function Notebook() {
       handover={!hinting && isNotebookHandover(step) ? step : null}
       hint={hintNote === null ? null : { text: hintNote, presses, key: hintPadKey }}
       refusal={refusal}
+      help={structure || example ? { structure, example } : null}
       onKey={send}
       onSlide={slide}
     />
@@ -108,6 +120,8 @@ export function Notebook() {
 }
 
 export interface NotebookPageProps {
+  /** Story 2.7: the help ladder's levels 3 and 4, a card under the tag. */
+  help?: { structure: string | null; example: string | null } | null;
   lines: readonly LineDisplay[];
   /** The draft in school notation: free text, or its template with the blank filled so far. */
   draft: readonly LineSegment[];
@@ -159,6 +173,7 @@ export function NotebookPage({
   handover = null,
   hint = null,
   refusal = null,
+  help = null,
   onKey,
   onSlide,
 }: NotebookPageProps) {
@@ -189,7 +204,7 @@ export function NotebookPage({
         className="notebook__handle"
         aria-label={aside ? hr.notebook.bringBack : hr.notebook.pushAside}
         aria-expanded={!aside}
-        data-pulse={pulsing}
+        data-pulse={pulsing || help !== null}
         onPointerDown={(event) => primaryPress(event, () => onSlide(!aside))}
       >
         <svg className="notebook__chevron" viewBox="0 0 24 24" aria-hidden="true">
@@ -226,6 +241,7 @@ export function NotebookPage({
         ) : (
           handover && <HandoverNote step={handover} />
         )}
+        {help && <HelpNote structure={help.structure} example={help.example} />}
         <NumberPad writes={writes} blank={blank} pulse={hint?.key ?? null} onKey={onKey} />
       </div>
     </aside>

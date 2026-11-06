@@ -217,12 +217,19 @@ describe('the presses (story 1.16)', () => {
 
   it('views the step on the first press and the move on the second', () => {
     expect(hintView(room, [], null)).toBeNull();
-    expect(hintView(room, [], first)).toEqual({ level: 1, step: 'dial', move: null, presses: 1 });
+    expect(hintView(room, [], first)).toEqual({
+      level: 1,
+      step: 'dial',
+      move: null,
+      presses: 1,
+      example: null,
+    });
     expect(hintView(room, [], pressHint(first))).toEqual({
       level: 2,
       step: 'dial',
       move: { kind: 'slide', direction: 1 },
       presses: 2,
+      example: null,
     });
   });
 
@@ -282,6 +289,7 @@ describe('the hint after the review of story 1.16', () => {
         step: 'jam',
         move: null,
         presses: 1,
+        example: null,
       });
       expect(hintView(jammed, balance, { level: 2, presses: 2 })?.move).toEqual({ kind: 'jam' });
       // Deleting the line ends the jam, and the hint goes back to the way he was on.

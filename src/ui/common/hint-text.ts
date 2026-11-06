@@ -4,7 +4,7 @@
 // notebook, which hangs the ones about writing.
 
 import { hr } from '@/content/text/hr';
-import { num, xVar } from '@/math/expr';
+import { add, div, maxNumber, num, sub, xVar } from '@/math/expr';
 import { formatEquation, formatNumber } from '@/math/format';
 import * as q from '@/math/rational';
 import { type HintMove, type HintView, hintView } from '@/room/hint';
@@ -120,4 +120,32 @@ export function sceneTag(
 ): 'hint' | 'handover' | null {
   if (hintOf(state) !== null) return 'hint';
   return refusalView(state.room) === null ? 'handover' : null;
+}
+
+/**
+ * Level 3 of the help ladder (story 2.7): for a move on the machine, the line it will write,
+ * with blanks for its numbers (`2x + 5 − □ = 23 − □`). Null otherwise: a primitive, for a
+ * selector.
+ */
+export function helpStructure(state: Pick<GameState, 'room' | 'save' | 'ui'>): string | null {
+  const view = hintOf(state);
+  if (!view || view.level < 3 || !view.move || !state.room) return null;
+  const { move } = view;
+  if (move.kind !== 'tray' && move.kind !== 'split') return null;
+  const { left, right } = state.room.stage.pans;
+  // A stand-in number for the blank, written as the machine writes the line, then swapped.
+  const blank = num(maxNumber);
+  const apply = move.kind === 'split' ? div : move.piece === 'float' ? sub : add;
+  const line = formatEquation({ left: apply(left, blank), right: apply(right, blank) });
+  return line.split(formatNumber(maxNumber)).join('□');
+}
+
+/**
+ * Level 4 (story 2.7): the same kind of equation with other numbers, solved line by line,
+ * as one string of lines joined by newlines (a primitive, for a selector); null otherwise.
+ */
+export function helpExample(state: Pick<GameState, 'room' | 'save' | 'ui'>): string | null {
+  const view = hintOf(state);
+  if (!view?.example) return null;
+  return view.example.map(formatEquation).join('\n');
 }

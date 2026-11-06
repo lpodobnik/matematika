@@ -8,7 +8,7 @@ import { createGameStore } from '@/store/store';
 import { hintSpot, notebookRefusal, sceneTag } from '@/ui/common/hint-text';
 
 function view(partial: Partial<HintView>): HintView {
-  return { level: 2, step: 'dial', move: null, presses: 2, ...partial };
+  return { level: 2, step: 'dial', move: null, presses: 2, example: null, ...partial };
 }
 
 describe('where the hint’s tag hangs and what it says (story 1.16)', () => {

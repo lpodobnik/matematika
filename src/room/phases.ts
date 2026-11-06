@@ -205,6 +205,9 @@ export function resetStage(room: RoomState): RoomStep | null {
     jamsInARow: stage.jamsInARow,
     refused: stage.refused,
     hintLevel: stage.hintLevel,
+    // A reset doesn't move him on: the help ladder stays where it is (story 2.7).
+    help: stage.help,
+    helpAt: stage.helpAt,
     tray: stage.tray,
     splitter: stage.splitter,
     balance: stage.balance,

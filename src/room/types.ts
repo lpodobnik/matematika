@@ -182,7 +182,10 @@ export type TrayKind = 'weight' | 'float';
 /** The numbers set on the tray's weight and float, each 1–`tuning.trayMaxNumber`. */
 export type TrayNumbers = Record<TrayKind, number>;
 
-/** Pattern 2's hint ladder: 0 is none; 1 wiggles the piece he can move. Levels 2–4 come in epic 2. */
+/**
+ * Pattern 2's hint ladder: 0 is none; 1 the tag and the wiggle; 2 the next move; 3 the line a
+ * machine move writes, with blanks; 4 a worked example (room/help.ts, story 2.7).
+ */
 export type HintLevel = 0 | 1 | 2 | 3 | 4;
 
 /** Pattern 2: arrive → poke (if pokeNotches) → pin (if pin) → open → locked → restart → done. */
@@ -297,6 +300,14 @@ export interface StageState {
    * null until the root reducer stamps it (room/handover.ts). The clock reads it.
    */
   lastActionAt: number | null;
+  /**
+   * The help ladder's level in this stage (story 2.7, room/help.ts): it climbs after
+   * `tuning.hintIdleMs` without an action of his, and every `tuning.helpJams` jams in a
+   * row; a line that moves him on takes it back to 0. Never saved or recorded.
+   */
+  help: HintLevel;
+  /** ctx.now when help last climbed, so it climbs again only after another idle spell. */
+  helpAt: number | null;
   /**
    * `tuning.hintIdleMs` passed without an action of his in the stage: the current handover
    * step's tag shows again, met or not, until he acts (story 1.15).

@@ -239,6 +239,10 @@ export const hr = {
    * numbers and lines come in written in school notation (math/format.ts).
    */
   hint: {
+    /** Story 2.7, help level 3: over the line a move on the machine will write, with blanks. */
+    structure: 'Taj se korak zapisuje ovako:',
+    /** Story 2.7, help level 4: over the same kind of equation with other numbers, solved. */
+    example: 'Isto, s drugim brojevima:',
     /** By the knob: which way to move the slider. */
     slide: { right: 'Pomiči klizač udesno.', left: 'Pomiči klizač ulijevo.' },
     /** At the tray: a balloon of n takes n off both sides. */

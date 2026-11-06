@@ -13,7 +13,8 @@ import { assert } from '@/lib/assert';
 import { setDial } from '@/room/dial';
 import { meetControls } from '@/room/first-use';
 import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } from '@/room/handover';
-import { type HintAction, hintAfter } from '@/room/hint';
+import { withHelp } from '@/room/help';
+import { type HintAction, hintAfter, hintWorks } from '@/room/hint';
 import { newIdeas } from '@/room/ideas';
 import { deleteToken, enterLine, typeToken, withoutRefusal } from '@/room/notebook';
 import {
@@ -403,6 +404,7 @@ function handOver(
   if (step && !notHis.has(action.type)) room = actedAt(room, now);
   if (action.type === 'clock/tick') room = tickIdle(room, now) ?? room;
   const { firstUse, tools } = save.progress;
+  room = withHelp(previous, room, action.type === 'clock/tick', now, hintWorks(room, tools));
   const met = step ? meetHandovers(previous, room, handoverMove(action), firstUse, tools) : null;
   const nextSave = met ? { ...save, progress: { ...save.progress, firstUse: met } } : save;
   if (room === (step?.room ?? previous)) return { step, save: nextSave };

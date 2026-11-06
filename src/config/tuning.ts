@@ -50,6 +50,8 @@ export const tuning = {
   /** Story 1.15 (GDD, Player Assistance): this long without an action of his in a stage,
    * and the current handover step's tag shows again, met or not. */
   hintIdleMs: 60_000,
+  /** Story 2.7 (GDD, Player Assistance): this many jams in a row, and help climbs a level. */
+  helpJams: 3,
   /** Story 1.15: until he first turns a dial, its knob nudges one notch right and back by
    * itself this often (presentation only)… */
   dialNudgeMs: 4000,

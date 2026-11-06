@@ -345,3 +345,15 @@ describe('the handover tags at the notebook (story 1.15)', () => {
     expect(reduced).toMatch(/animation:\s*pulse-blink/);
   });
 });
+
+describe('the help ladder at the notebook (story 2.7)', () => {
+  it('shows levels 3 and 4 as a card, and pulses the handle while the notebook is aside', () => {
+    const html = page(enterRoom(r01).room, {
+      aside: true,
+      help: { structure: '2x + 5 − □ = 23 − □', example: ['x + 4 = 7', 'x = 3'].join('\n') },
+    });
+    expect(html).toContain('2x + 5 − □ = 23 − □');
+    expect(html).toContain('x = 3');
+    expect(html).toMatch(/class="notebook__handle"[^>]*data-pulse="true"/);
+  });
+});

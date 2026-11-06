@@ -121,6 +121,8 @@ export function arriveAtStage(stage: StageSpec): StageState {
     dialOpen: openingDial(stage),
     pin: null,
     hintLevel: 0,
+    help: 0,
+    helpAt: null,
     lastActionAt: null,
     idle: false,
     presentedAt: null,
