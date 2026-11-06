@@ -1,12 +1,13 @@
 // What the dev panel shows and offers (architecture, Debug Tools): a jump to any room and
 // stage, the tools he has earned (Balance can be switched on to try room 4 by a jump), the
 // pans, the tray and the splitter, the checker's verdict and progress tuple for the last
-// committed line and for the draft as enter would judge it now, and the quality setting with
-// a way to force one. Development builds only; the panel's text is for Luka, in English, and
-// never reaches the game's Croatian text.
+// committed line and for the draft as enter would judge it now, the quality setting with
+// a way to force one, and the tablet profile's set-up (story 1.13). Development builds only;
+// the panel's text is for Luka, in English, and never reaches the game's Croatian text.
 
 import { tuning } from '@/config/tuning';
-import { check, type Verdict } from '@/math/check';
+import { assert } from '@/lib/assert';
+import { check, stageSolution, type Verdict } from '@/math/check';
 import { formatEquation, formatTokens } from '@/math/format';
 import { complexity, type ProgressTuple } from '@/math/moves';
 import { parse } from '@/math/parse';
@@ -15,7 +16,9 @@ import { committedEquations, lineTokens } from '@/room/notebook';
 import { splitterView } from '@/room/splitter';
 import { trayView } from '@/room/tray';
 import type { PinState, RoomId, RoomSpec, RoomState, ToolId } from '@/room/types';
+import type { Action } from '@/store/actions';
 import { type Quality, type QualityState, qualityInUse } from '@/store/quality';
+import type { SceneCopies } from '@/store/types';
 
 /** A place the panel can jump to: an authored room at one of its stages. */
 export interface JumpTarget {
@@ -162,6 +165,47 @@ export function qualityReadout(state: QualityState): QualityReadout {
       ? 'running'
       : `p${tuning.qualityPercentile} ${state.measuredMs.toFixed(1)} ms → ${state.measured}`;
   return { inUse: `${qualityInUse(state)} · ${qualityReason(state)}`, test, forced: state.forced };
+}
+
+/** The room the tablet profile runs in: room 4, the water wheel, Balance and all. */
+export const profileRoomId: RoomId = 'r04';
+
+/**
+ * What the panel's profile button dispatches (story 1.13; NFR1: 60 FPS while dragging the
+ * dial in a three-machine room). Room 4 with Balance, its pin placed at the answer and
+ * confirmed, so the dial's whole range is open to drag at once; `high` forced, so the steam
+ * runs whatever the frame-time test picked; then three copies of the scene side by side.
+ * Only existing actions, so the game decides what each does, as when he plays.
+ */
+export function profileActions(list: readonly RoomSpec[], tools: readonly ToolId[]): Action[] {
+  const room = list.find((spec) => spec.id === profileRoomId);
+  assert(room, `no room ${profileRoomId} in content`);
+  const equation = parse(room.stages[0]?.machines[0]?.equation ?? '');
+  assert(equation.ok, `${profileRoomId} has no equation`);
+  return [
+    { type: 'dev/set-tools', tools: [...tools, 'balance'] },
+    { type: 'room/enter', roomId: profileRoomId },
+    { type: 'machine/touch' },
+    { type: 'pin/set', value: { kind: 'x', x: stageSolution(equation.equation) } },
+    { type: 'pin/confirm' },
+    { type: 'quality/force', quality: 'high' },
+    { type: 'dev/set-copies', copies: 3 },
+  ];
+}
+
+/**
+ * Leaving the profile: one copy of the scene again. The room and the forced setting stay,
+ * so one machine and three can be profiled one after the other with the steam on.
+ */
+export const leaveProfile: Action = { type: 'dev/set-copies', copies: 1 };
+
+/** The profile button: sets the profile up, or with three copies showing, leaves it. */
+export function profileToggle(
+  copies: SceneCopies,
+  list: readonly RoomSpec[],
+  tools: readonly ToolId[],
+): Action[] {
+  return copies === 3 ? [leaveProfile] : profileActions(list, tools);
 }
 
 /** The parts of a KeyboardEvent the toggle reads. */

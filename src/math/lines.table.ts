@@ -5,7 +5,9 @@
 //
 // `before` lists the committed lines between the stage equation and the line, and each
 // of them must itself be accepted in turn. Rooms 1–4 list, per stage, the canonical
-// solution of each way (`steps.ts`), skipped-step solutions and wrong lines.
+// solution of each way (`steps.ts`), skipped-step solutions and wrong lines; story 1.13's
+// tests in `lines.table.test.ts` check that they are all here, with every line of epic 1's
+// acceptance criteria.
 
 import type { MoveKind } from '@/math/moves';
 
@@ -237,6 +239,20 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r04, line: 'x = 36', verdict: 'wrong', note: 'multiplied' },
     { stage: r04, line: 'x · 2 + 5 = 23', verdict: 'valid', progress: false, move: 'none' },
     { stage: r04, before: ['x = 9'], line: '2 · 9 + 5 = 24', verdict: 'wrong' },
+  ],
+  // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,
+  // copied as a line, is valid without progress (stories 1.2, 1.4 and 1.8–1.11 name them);
+  // story 1.2's lines that don't parse are refused on the stage they read like.
+  'epic 1 acceptance criteria (story 1.13)': [
+    { stage: r01, line: 'x + 4 = 9', verdict: 'valid', progress: false, move: 'none' },
+    { stage: r02a, line: '3x = 12', verdict: 'valid', progress: false, move: 'none' },
+    { stage: r02b, line: 'x : 3 = 5', verdict: 'valid', progress: false, move: 'none' },
+    { stage: r03a, line: 'x − 6 = 8', verdict: 'valid', progress: false, move: 'none' },
+    { stage: r03b, line: '20 − x = 6', verdict: 'valid', progress: false, move: 'none' },
+    { stage: r04, line: '2x + 5 = 23', verdict: 'valid', progress: false, move: 'none' },
+    { stage: r11, line: r11, verdict: 'valid', progress: false, move: 'none' },
+    { stage: r02a, line: 'x3 = 12', verdict: 'incomplete', note: 'x followed by a digit' },
+    { stage: r03b, line: '−x = 14', verdict: 'incomplete', note: 'a leading minus' },
   ],
   // Story 1.6: lines as the notebook writes them (`formatTokens`, with U+202F between
   // thousands) and as typed on a computer (no spaces, `*`, `/` and `-`).

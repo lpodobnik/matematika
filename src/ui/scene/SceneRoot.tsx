@@ -18,6 +18,7 @@ import {
 import { palette } from '@/art/palette';
 import { useGame } from '@/store/store';
 import { watchContextLoss } from '@/ui/scene/context-loss';
+import { type CopyPlacement, copyPlacements } from '@/ui/scene/copies';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import { runFrameTest } from '@/ui/scene/frame-test';
 import { Machine } from '@/ui/scene/machine/Machine';
@@ -141,20 +142,21 @@ function drawPaper(g: Graphics): void {
  *
  * Until the quality setting is picked, the frame-time test runs from the scene's first frame,
  * with every effect on (store/quality.ts); a scene remounted mid-test starts it over.
+ *
+ * For the tablet profile (story 1.13) the dev panel can ask for three copies of the scene
+ * side by side (`ui.copies`; ui/scene/copies.ts). Each copy is the scene's machine, steam,
+ * scale, dial and pin, reading the same room, so the dial dragged in one moves the pans of
+ * all three. The tray and the splitter stay out of the copies: their controls keep 48 CSS
+ * px for touch, so at a third of the scene's size they would cover the machines, and a
+ * room's machines will share one of each.
  */
 function SceneContent() {
   const { app, isInitialised } = useApplication();
   const sceneRef = useRef<Container>(null);
   const [sceneScale, setSceneScale] = useState(0);
   const dispatch = useGame((s) => s.dispatch);
-  const drag = useMemo(() => createPieceDrag(), []);
-  const splitterDrag = useMemo(() => createSplitterDrag(panUnder), []);
-  const toScene = useCallback((point: PointData): Point => {
-    const scene = sceneRef.current;
-    if (!scene) return { x: point.x, y: point.y };
-    const local = scene.toLocal(point);
-    return { x: local.x, y: local.y };
-  }, []);
+  const copies = useGame((s) => s.ui.copies);
+  const placements = useMemo(() => copyPlacements(copies), [copies]);
   const qualityPicked = useGame((s) => s.ui.quality.measured !== null);
 
   // A layout effect, so the ticker callback goes before the app is destroyed on a remount.
@@ -200,13 +202,53 @@ function SceneContent() {
 
   return (
     <pixiContainer ref={sceneRef}>
+      {placements.map((placement, index) => (
+        <SceneCopy
+          // biome-ignore lint/suspicious/noArrayIndexKey: a copy is its place in the row
+          key={`copy-${index}`}
+          placement={placement}
+          sceneScale={sceneScale}
+          tools={placements.length === 1}
+        />
+      ))}
+    </pixiContainer>
+  );
+}
+
+interface SceneCopyProps {
+  placement: CopyPlacement;
+  /** The whole scene's CSS px per scene unit. */
+  sceneScale: number;
+  /** Whether the copy has the tray and the splitter: only when it is the only one. */
+  tools: boolean;
+}
+
+/**
+ * One copy of the scene: the paper, the machine, the scale, the dial, the pin and, when it
+ * is the only copy, the tray and the splitter. Normally there is one, filling the scene. Its
+ * drags and its `toScene` work in its own units, and its parts get its own CSS px per unit,
+ * so a notch stays 24 CSS px in a copy drawn at a third of the size.
+ */
+function SceneCopy({ placement, sceneScale, tools }: SceneCopyProps) {
+  const copyRef = useRef<Container>(null);
+  const drag = useMemo(() => createPieceDrag(), []);
+  const splitterDrag = useMemo(() => createSplitterDrag(panUnder), []);
+  const toScene = useCallback((point: PointData): Point => {
+    const copy = copyRef.current;
+    if (!copy) return { x: point.x, y: point.y };
+    const local = copy.toLocal(point);
+    return { x: local.x, y: local.y };
+  }, []);
+  const copyScale = sceneScale * placement.scale;
+  return (
+    <pixiContainer ref={copyRef} x={placement.x} y={placement.y} scale={placement.scale}>
       <pixiGraphics draw={drawPaper} />
       <Machine />
-      <Scale sceneScale={sceneScale} drag={drag} toScene={toScene} />
-      <Dial sceneScale={sceneScale} />
-      <Pin sceneScale={sceneScale} />
-      <Tray sceneScale={sceneScale} drag={drag} toScene={toScene} />
-      <Splitter sceneScale={sceneScale} drag={splitterDrag} toScene={toScene} />
+      <Scale sceneScale={copyScale} drag={drag} toScene={toScene} />
+      <Dial sceneScale={copyScale} />
+      <Pin sceneScale={copyScale} />
+      {tools && <Tray sceneScale={copyScale} drag={drag} toScene={toScene} />}
+      {tools && <Splitter sceneScale={copyScale} drag={splitterDrag} toScene={toScene} />}
     </pixiContainer>
   );
 }

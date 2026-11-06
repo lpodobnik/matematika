@@ -159,6 +159,17 @@ export function nextRoom(list: readonly RoomSpec[], id: RoomSpec['id']): RoomSpe
   return index < 0 ? null : (list[index + 1] ?? null);
 }
 
+/**
+ * Whether he has played every room in content: the last room in play order is done, its
+ * restart over. The "to be continued" screen shows then (story 1.13), until the map takes
+ * its place in epic 2. False for a room that isn't in the list (a built or friend's room).
+ */
+export function playedThrough(list: readonly RoomSpec[], room: RoomState): boolean {
+  if (room.stage.phase !== 'done') return false;
+  const index = list.findIndex((spec) => spec.id === room.spec.id);
+  return index >= 0 && index === list.length - 1;
+}
+
 /** Phases from which reset works: any before the stage locks (Pattern 2, Reset). */
 const resettingPhases: ReadonlySet<Phase> = new Set<Phase>(['arrive', 'poke', 'pin', 'open']);
 

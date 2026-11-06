@@ -11,6 +11,7 @@ import { deleteToken, enterLine, typeToken } from '@/room/notebook';
 import {
   finishPresentation,
   nextRoom,
+  playedThrough,
   resetStage,
   tickClock,
   toolEarned,
@@ -30,7 +31,7 @@ export function initialGameState(): GameState {
   return {
     save: { progress: { tools: [], firstUse: [] } },
     room: null,
-    ui: { screen: 'room', notebookAside: false, quality: initialQuality },
+    ui: { screen: 'room', notebookAside: false, quality: initialQuality, copies: 1 },
   };
 }
 
@@ -42,7 +43,8 @@ function findRoom(id: RoomSpec['id'], list: readonly RoomSpec[]): RoomSpec {
 
 /**
  * A room that is done hands over to the next room in content (Pattern 2: "the next room
- * loads"), which arrives at its first stage. The last room stays done.
+ * loads"), which arrives at its first stage. The last room stays done, and the root reducer
+ * shows the "to be continued" screen (`playedThrough`).
  */
 function moveOn(step: RoomStep | null, roomList: readonly RoomSpec[]): RoomStep | null {
   if (step?.room.stage.phase !== 'done') return step;
@@ -105,6 +107,7 @@ function roomStep(
     case 'notebook/slide':
     case 'quality/measured':
     case 'quality/force':
+    case 'dev/set-copies':
       return null;
     case 'dev/set-tools':
       // The room is unchanged, but what it offers may not be (the tray and the splitter), so
@@ -158,6 +161,11 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
       if (step && step.room !== state.room) draft.room = castDraft(step.room);
       if (save !== state.save) draft.save = castDraft(save);
       if (action.type === 'room/enter') draft.ui.screen = 'room';
+      // After the last room's restart: the placeholder "to be continued" screen (story 1.13).
+      if (step && step.room !== state.room && playedThrough(roomList, step.room)) {
+        draft.ui.screen = 'continued';
+      }
+      if (action.type === 'dev/set-copies') draft.ui.copies = action.copies;
       if (action.type === 'notebook/slide') draft.ui.notebookAside = action.aside;
       if (action.type === 'quality/measured' || action.type === 'quality/force') {
         draft.ui.quality = reduceQuality(state.ui.quality, action);

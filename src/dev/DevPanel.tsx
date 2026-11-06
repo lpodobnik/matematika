@@ -9,6 +9,8 @@ import {
   jumpTargets,
   type LineReadout,
   opensOnLoad,
+  profileRoomId,
+  profileToggle,
   type QualityReadout,
   qualityReadout,
   toggledBalance,
@@ -21,7 +23,7 @@ import { useGame } from '@/store/store';
  * backtick key, which also closes it. Development builds only: App loads this module on
  * demand behind `import.meta.env.DEV`, so production builds never contain it. Later
  * stories add their controls here. Story 1.12 added forcing a quality setting, which holds
- * until reload.
+ * until reload; story 1.13 the tablet profile, three copies of room 4's machine side by side.
  */
 export default function DevPanel() {
   const [open, setOpen] = useState(() => opensOnLoad(window.location.search));
@@ -44,6 +46,7 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
   const room = useGame((s) => s.room);
   const tools = useGame((s) => s.save.progress.tools);
   const qualityState = useGame((s) => s.ui.quality);
+  const copies = useGame((s) => s.ui.copies);
   const dispatch = useGame((s) => s.dispatch);
   const readout = useMemo(() => (room ? devReadout(room, tools) : null), [room, tools]);
   const quality = useMemo(() => qualityReadout(qualityState), [qualityState]);
@@ -54,11 +57,15 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
       quality={quality}
       targets={targets}
       balance={tools.includes('balance')}
+      profiling={copies === 3}
       onJump={(target) =>
         dispatch({ type: 'room/enter', roomId: target.roomId, stage: target.stage })
       }
       onToggleBalance={() => dispatch({ type: 'dev/set-tools', tools: toggledBalance(tools) })}
       onForceQuality={(forced) => dispatch({ type: 'quality/force', quality: forced })}
+      onProfile={() => {
+        for (const action of profileToggle(copies, rooms, tools)) dispatch(action);
+      }}
       onClose={onClose}
     />
   );
@@ -70,10 +77,14 @@ export interface DevPanelViewProps {
   targets: readonly JumpTarget[];
   /** Whether Balance is earned: the tray shows in open stages. */
   balance: boolean;
+  /** Whether the tablet profile's three copies of the scene are showing. */
+  profiling: boolean;
   onJump(target: JumpTarget): void;
   onToggleBalance(): void;
   /** Forces a quality setting, or with null hands back to the test's pick. */
   onForceQuality(quality: Quality | null): void;
+  /** Sets the tablet profile up, or leaves it. */
+  onProfile(): void;
   onClose(): void;
 }
 
@@ -89,9 +100,11 @@ export function DevPanelView({
   quality,
   targets,
   balance,
+  profiling,
   onJump,
   onToggleBalance,
   onForceQuality,
+  onProfile,
   onClose,
 }: DevPanelViewProps) {
   return (
@@ -135,6 +148,14 @@ export function DevPanelView({
           onClick={onToggleBalance}
         >
           balance {balance ? 'on' : 'off'}
+        </button>
+        <button
+          type="button"
+          className="dev-panel__button"
+          aria-pressed={profiling}
+          onClick={onProfile}
+        >
+          profile: 3 × {profileRoomId} {profiling ? 'on' : 'off'}
         </button>
       </div>
       <dl className="dev-panel__readout">

@@ -6,7 +6,7 @@ import { r04 } from './r04-water-wheel';
 
 /**
  * Every authored room, in play order: when a room's restart ends, the next one here loads.
- * Room 4 is the last for now: after its restart the game stays done until story 1.13 adds
- * the "to be continued" screen.
+ * Room 4 is the last for now: after its restart the placeholder "to be continued" screen
+ * shows (story 1.13), until the map takes its place in epic 2.
  */
 export const rooms: readonly RoomSpec[] = [r01, r02, r03, r04];

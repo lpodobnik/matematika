@@ -18,9 +18,11 @@ function view(overrides: Partial<DevPanelViewProps> = {}): string {
       quality={qualityReadout(initialQuality)}
       targets={jumpTargets(rooms)}
       balance={false}
+      profiling={false}
       onJump={vi.fn()}
       onToggleBalance={vi.fn()}
       onForceQuality={vi.fn()}
+      onProfile={vi.fn()}
       onClose={vi.fn()}
       {...overrides}
     />,
@@ -93,5 +95,17 @@ describe('the dev panel', () => {
       ['low', 'true'],
     ]);
     expect(forced).toContain('low · forced');
+  });
+
+  it('offers the tablet profile, three copies of room 4, pressed while they show', () => {
+    /** The profile button as rendered: whether it shows pressed, and its text. */
+    const button = (html: string) => {
+      const found = html
+        .replaceAll('<!-- -->', '')
+        .match(/aria-pressed="(true|false)"[^>]*>(profile[^<]*)<\/button>/);
+      return [found?.[1], found?.[2]];
+    };
+    expect(button(view({ profiling: false }))).toEqual(['false', 'profile: 3 × r04 off']);
+    expect(button(view({ profiling: true }))).toEqual(['true', 'profile: 3 × r04 on']);
   });
 });

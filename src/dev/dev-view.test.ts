@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { effectsAt } from '@/art/quality';
 import { rooms } from '@/content/rooms';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { r02 } from '@/content/rooms/r02-street-lamps';
@@ -6,8 +7,11 @@ import {
   devReadout,
   isToggleKey,
   jumpTargets,
+  leaveProfile,
   opensOnLoad,
   pinText,
+  profileActions,
+  profileToggle,
   qualityReadout,
   splitterText,
   toggledBalance,
@@ -16,11 +20,15 @@ import {
   verdictText,
 } from '@/dev/dev-view';
 import { tokenize } from '@/math/tokens';
+import { dialView } from '@/room/dial';
 import { enterLine, typeToken } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
 import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
-import { initialQuality } from '@/store/quality';
+import type { Action } from '@/store/actions';
+import { initialQuality, qualityInUse } from '@/store/quality';
+import { initialGameState, reduce } from '@/store/reducer';
+import type { GameState } from '@/store/types';
 
 const freeStage: StageSpec = { ...(r01.stages[0] as StageSpec), fading: { try: 'blank' } };
 const freeRoomOne: RoomSpec = { ...r01, stages: [freeStage] };
@@ -207,5 +215,54 @@ describe('opening the panel', () => {
     expect(isToggleKey(key('7', 'Digit7'))).toBe(false);
     expect(isToggleKey(key('x', 'KeyX'))).toBe(false);
     expect(isToggleKey(key('¸', 'Backquote', 'ctrl'))).toBe(false);
+  });
+});
+
+describe('the tablet profile (story 1.13)', () => {
+  const ctx = { now: 1_000, rng: { next: () => 0.5 } };
+  const run = (state: GameState, actions: readonly Action[]) =>
+    actions.reduce((current, action) => reduce(current, action, ctx).state, state);
+
+  it('opens room 4 with Balance, its whole dial free to drag, the steam on and three copies', () => {
+    const state = run(initialGameState(), profileActions(rooms, []));
+    const room = state.room as RoomState;
+    expect(room.spec.id).toBe('r04');
+    expect(room.stage.phase).toBe('open');
+    expect(room.stage.pin).toEqual({ value: { kind: 'x', x: 9 }, locked: true, resolved: false });
+    expect(dialView(room)).toMatchObject({ min: 0, max: 6, openMin: 0, openMax: 6, turns: true });
+    expect(state.save.progress.tools).toEqual(['balance']);
+    expect(state.ui.copies).toBe(3);
+    expect(state.ui.quality.forced).toBe('high');
+    expect(effectsAt(qualityInUse(state.ui.quality)).particles).toBe(true);
+    const picked = { ...state.ui.quality, measured: 'low' as const, measuredMs: 40 };
+    expect(effectsAt(qualityInUse(picked)).particles).toBe(true);
+  });
+
+  it('sets up the same from anywhere, keeping the tools he has', () => {
+    let midway = run(initialGameState(), [
+      { type: 'dev/set-tools', tools: ['workshop'] },
+      { type: 'room/enter', roomId: 'r02', stage: 1 },
+      { type: 'machine/touch' },
+      { type: 'dial/set', x: 9 },
+    ]);
+    midway = run(midway, profileActions(rooms, midway.save.progress.tools));
+    expect(midway.save.progress.tools).toEqual(['workshop', 'balance']);
+    expect(midway.room?.spec.id).toBe('r04');
+    expect(midway.room?.stage.phase).toBe('open');
+    expect(midway.room?.stage.dialX).toBe(0);
+  });
+
+  it('toggles: sets the profile up with one copy showing, and leaves it with three', () => {
+    expect(profileToggle(1, rooms, [])).toEqual(profileActions(rooms, []));
+    expect(profileToggle(3, rooms, [])).toEqual([leaveProfile]);
+    const profiled = run(initialGameState(), profileActions(rooms, []));
+    const left = run(profiled, [leaveProfile]);
+    expect(left.ui.copies).toBe(1);
+    expect(left.room).toBe(profiled.room);
+    expect(left.ui.quality.forced).toBe('high');
+  });
+
+  it('needs room 4 in content', () => {
+    expect(() => profileActions([r01, r02], [])).toThrow(/r04/);
   });
 });

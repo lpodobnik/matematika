@@ -3,6 +3,8 @@
 export const hr = {
   app: {
     turnToLandscape: 'Okreni uređaj vodoravno.',
+    /** After room 4: the placeholder end screen, until the map takes its place in epic 2. */
+    toBeContinued: 'Nastavak slijedi…',
     crash: {
       title: 'Stroj se zaglavio.',
       tapToRestart: 'Dodirni za ponovno pokretanje.',

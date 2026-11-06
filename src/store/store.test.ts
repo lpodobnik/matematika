@@ -26,6 +26,7 @@ describe('the store', () => {
       screen: 'room',
       notebookAside: false,
       quality: { measured: null, measuredMs: null, forced: null },
+      copies: 1,
     });
   });
 
@@ -347,6 +348,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     game.act({ type: 'machine/touch' });
     game.solve('5');
     game.presented();
+    expect(game.store.getState().ui.screen).toBe('room');
     game.presented();
     expect(game.phases).toEqual([
       'r01.0:arrive',
@@ -363,7 +365,9 @@ describe('a room from arrival to restart (story 1.8)', () => {
       'StageLocked',
       'RoomRestarted',
     ]);
-    expect(game.store.getState().ui.screen).toBe('room');
+    // Room 1 is the only room in this list, so its restart ending is the end of content:
+    // the placeholder "to be continued" screen (story 1.13), never a success screen.
+    expect(game.store.getState().ui.screen).toBe('continued');
   });
 
   it('keeps the notebook off until his first touch on the machine', () => {
@@ -936,6 +940,27 @@ describe('the quality setting (story 1.12)', () => {
     store.getState().dispatch({ type: 'stage/reset' });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r02' });
     expect(store.getState().ui.quality).toBe(quality);
+  });
+});
+
+describe('the tablet profile (story 1.13)', () => {
+  it('draws the scene three times side by side when the dev panel asks, and once again after', () => {
+    const seen: DomainEvent[] = [];
+    const store = createGameStore({
+      makeCtx: () => fixedCtx,
+      effects: [(event) => seen.push(event)],
+    });
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r04' });
+    const room = store.getState().room;
+    seen.length = 0;
+    store.getState().dispatch({ type: 'dev/set-copies', copies: 3 });
+    expect(store.getState().ui.copies).toBe(3);
+    expect(store.getState().room).toBe(room);
+    expect(seen).toEqual([]);
+    store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
+    expect(store.getState().ui.copies).toBe(3);
+    store.getState().dispatch({ type: 'dev/set-copies', copies: 1 });
+    expect(store.getState().ui.copies).toBe(1);
   });
 });
 

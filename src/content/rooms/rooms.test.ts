@@ -2,13 +2,17 @@
 // needs; later stories add the GDD-table checks (dial ranges, poke windows, the tilt clamp,
 // fading, ways that can finish, paper-test equations) as their rooms arrive. Story 1.9 adds
 // room 3 and the checks for poke windows and pins; story 1.10 room 4, the fading matrix
-// and the ways that can finish.
+// and the ways that can finish. Story 1.13 checks rooms 1–4 against the GDD's tables in
+// one place, xMeaning included, has every finishing way finish through `steps.ts`, and
+// keeps the paper test's equations out of every room.
 
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
+import { paperTest } from '@/content/paper-test';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
 import { check, stageSolution } from '@/math/check';
+import { type Equation, sameEquation } from '@/math/expr';
 import { formatEquation } from '@/math/format';
 import { solve } from '@/math/linear';
 import { classifyMove } from '@/math/moves';
@@ -24,13 +28,113 @@ import { openingDial } from '@/room/room';
 import { splitOutcome } from '@/room/splitter';
 import { isLevel, sideValues, tiltFor } from '@/room/tilt';
 import { sameLayout, trayMinNumber } from '@/room/tray';
-import type { DialSpec, FadingMode, StageSpec, WayId } from '@/room/types';
+import type { DialSpec, FadingMode, PinSpec, RoomSpec, StageSpec, WayId } from '@/room/types';
 
 function stageEquation(stage: StageSpec | undefined) {
   const parsed = parse(stage?.machines[0]?.equation ?? '');
   if (!parsed.ok) throw new Error('does not parse');
   return parsed.equation;
 }
+
+function equationOf(text: string): Equation {
+  const parsed = parse(text);
+  if (!parsed.ok) throw new Error(`"${text}" does not parse: ${parsed.reason}`);
+  return parsed.equation;
+}
+
+/** Every equation a room shows: its machines', and any notebook lines it starts with. */
+function roomEquations(room: RoomSpec): string[] {
+  return room.stages.flatMap((stage) => [
+    ...stage.machines.map((machine) => machine.equation),
+    ...(stage.presetLines ?? []),
+  ]);
+}
+
+/** The paper-test equation `text` is, up to swapped sides and commuted terms, or null. */
+function onPaperTest(text: string): string | null {
+  const equation = equationOf(text);
+  return paperTest.find((paper) => sameEquation(equationOf(paper), equation)) ?? null;
+}
+
+/**
+ * GDD, Puzzle Progression: rows 1–4 of both tables, as written there. Room 3 is a Predict
+ * room by its second stage; its first pins where the pans level, as a Solve stage does.
+ */
+const gddRooms: readonly {
+  id: string;
+  machine: string;
+  xIs: string;
+  equations: string[];
+  answers: number[];
+  types: StageSpec['type'][];
+  dials: DialSpec[];
+  pokeNotches: (number | undefined)[];
+  pins: (PinSpec | undefined)[];
+  ways: WayId[];
+  earns: RoomSpec['earns'];
+}[] = [
+  {
+    id: 'r01',
+    machine: 'door-lift',
+    xIs: 'Counterweight still needed',
+    equations: ['x + 4 = 9'],
+    answers: [5],
+    types: ['solve'],
+    dials: [{ min: 0, max: 10, step: 1 }],
+    pokeNotches: [undefined],
+    pins: [undefined],
+    ways: ['try'],
+    earns: null,
+  },
+  {
+    id: 'r02',
+    machine: 'street-lamps',
+    xIs: 'Oil per lamp, then a full tank',
+    equations: ['3x = 12', 'x : 3 = 5'],
+    answers: [4, 15],
+    types: ['solve', 'solve'],
+    dials: [
+      { min: 0, max: 10, step: 1 },
+      { min: 0, max: 30, step: 3 },
+    ],
+    pokeNotches: [undefined, undefined],
+    pins: [undefined, undefined],
+    ways: ['try'],
+    earns: null,
+  },
+  {
+    id: 'r03',
+    machine: 'sluice-gate',
+    xIs: 'Water before the release, then water to release',
+    equations: ['x − 6 = 8', '20 − x = 6'],
+    answers: [14, 14],
+    types: ['solve', 'predict'],
+    dials: [
+      { min: 6, max: 20, step: 1 },
+      { min: 0, max: 20, step: 1 },
+    ],
+    pokeNotches: [4, undefined],
+    pins: [
+      { kind: 'level-x' },
+      { kind: 'effect', options: ['pan-down', 'pan-up'], resolvesOn: 'first-notch' },
+    ],
+    ways: ['try'],
+    earns: 'balance',
+  },
+  {
+    id: 'r04',
+    machine: 'water-wheel',
+    xIs: 'Load per bucket',
+    equations: ['2x + 5 = 23'],
+    answers: [9],
+    types: ['solve'],
+    dials: [{ min: 0, max: 6, step: 1 }],
+    pokeNotches: [4],
+    pins: [{ kind: 'level-x', beyondDial: true }],
+    ways: ['balance'],
+    earns: null,
+  },
+];
 
 /** The x values the dial reaches before the pin is locked: the poke window. */
 function pokeValues(stage: StageSpec): number[] {
@@ -55,6 +159,78 @@ const machines = rooms.flatMap((room) =>
 const stages = rooms.flatMap((room) =>
   room.stages.map((stage, index) => ({ room: room.id, index, stage })),
 );
+
+describe("rooms 1–4 against the GDD's Puzzle Progression tables", () => {
+  it('has a row for every room in content, and a room for every row', () => {
+    expect(rooms.map((room) => room.id)).toEqual(gddRooms.map((row) => row.id));
+  });
+
+  describe.each(gddRooms)('$id, the $machine', (row) => {
+    const room = rooms.find((spec) => spec.id === row.id) as RoomSpec;
+    const stagesOf = <T>(pick: (stage: StageSpec) => T): T[] => room.stages.map(pick);
+
+    it('is the machine the GDD names, with what x is there in its xMeaning', () => {
+      expect(room.machine).toBe(row.machine);
+      const words = row.xIs
+        .toLowerCase()
+        .split(/[\s,]+/)
+        .filter((word) => !['a', 'the', 'then'].includes(word));
+      for (const word of words) expect(room.xMeaning.toLowerCase(), word).toContain(word);
+    });
+
+    it('has its equations, one per stage, with their answers', () => {
+      expect(stagesOf((stage) => stage.machines.map((m) => m.equation))).toEqual(
+        row.equations.map((equation) => [equation]),
+      );
+      expect(stagesOf((stage) => stageSolution(stageEquation(stage)))).toEqual(row.answers);
+      expect(stagesOf((stage) => stage.type)).toEqual(row.types);
+    });
+
+    it('has its dial ranges, poke windows and pins', () => {
+      expect(stagesOf((stage) => stage.dial)).toEqual(row.dials);
+      expect(stagesOf((stage) => stage.pokeNotches)).toEqual(row.pokeNotches);
+      expect(stagesOf((stage) => stage.pin)).toEqual(row.pins);
+    });
+
+    it('is finished by the ways the GDD lists, and earns what it says', () => {
+      for (const stage of room.stages) expect(stage.ways).toEqual(row.ways);
+      expect(room.earns).toBe(row.earns);
+    });
+  });
+});
+
+describe('the paper test (content/paper-test.ts)', () => {
+  it("holds the brief's paper-test equations, each parsing", () => {
+    expect(paperTest).toEqual(
+      expect.arrayContaining([
+        '47 + 38 = 46 + 39',
+        '3x + 2 = 20',
+        '3x + 2 = 23',
+        '3x = 22',
+        '2x + 7 = 25',
+      ]),
+    );
+    for (const text of paperTest) expect(parse(text).ok, text).toBe(true);
+  });
+
+  it('spots its equations written with swapped sides or commuted terms, and only those', () => {
+    expect(onPaperTest('20 = 2 + 3x')).toBe('3x + 2 = 20');
+    expect(onPaperTest('39 + 46 = 38 + 47')).toBe('47 + 38 = 46 + 39');
+    expect(onPaperTest('25 = 7 + 2x')).toBe('2x + 7 = 25');
+    expect(onPaperTest('x · 3 = 22')).toBe('3x = 22');
+    expect(onPaperTest('3x + 2 = 21')).toBeNull();
+    expect(onPaperTest('2x + 5 = 23')).toBeNull();
+  });
+
+  it.each(rooms.map((room) => [room.id, room] as const))(
+    'appears nowhere in room %s',
+    (_id, room) => {
+      for (const equation of roomEquations(room)) {
+        expect(onPaperTest(equation), equation).toBeNull();
+      }
+    },
+  );
+});
 
 describe('rooms', () => {
   it('starts with room 1, the door lift', () => {
@@ -311,6 +487,23 @@ describe('rooms', () => {
         expect(isLevel(values), `x = ${x}`).toBe(false);
         const tilt = tiltFor(values, stage.tiltPerUnit ?? tuning.tiltPerUnit);
         expect(Math.abs(tilt), `x = ${x}`).toBeLessThan(tuning.tiltMax);
+      }
+    });
+
+    it('is finished by the canonical solution of every way it lists (steps.ts)', () => {
+      const equation = stageEquation(stage);
+      for (const way of stage.ways) {
+        if (way === 'undo') throw new Error('Undo comes with the gear chain in epic 4');
+        const lines = canonicalSolution(equation, way);
+        expect(lines, way).not.toBeNull();
+        const committed = [equation];
+        const verdicts = (lines ?? []).map((line) => {
+          const verdict = check(committed, line);
+          committed.push(line);
+          return verdict.kind;
+        });
+        expect(verdicts.slice(-2), way).toEqual(['answer', 'check']);
+        for (const verdict of verdicts.slice(0, -2)) expect(verdict, way).toBe('valid');
       }
     });
 

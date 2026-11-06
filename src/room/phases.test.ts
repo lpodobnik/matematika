@@ -13,6 +13,7 @@ import {
   isLastStage,
   nextRoom,
   openingPhase,
+  playedThrough,
   presentationOf,
   presentationView,
   resetStage,
@@ -397,6 +398,26 @@ describe('nextRoom', () => {
     expect(nextRoom(list, 'r02')).toBeNull();
     expect(nextRoom(list, 'built-abc')).toBeNull();
     expect(nextRoom([], 'r01')).toBeNull();
+  });
+});
+
+describe('playedThrough', () => {
+  const list: readonly RoomSpec[] = [r01, r02];
+
+  it('is true once the last room in play order is done', () => {
+    expect(playedThrough(list, inPhase(enterRoom(r02).room, 'done'))).toBe(true);
+  });
+
+  it('is false while the last room is still playing, restart included', () => {
+    for (const phase of allPhases.filter((p) => p !== 'done')) {
+      expect(playedThrough(list, inPhase(enterRoom(r02).room, phase)), phase).toBe(false);
+    }
+  });
+
+  it('is false for a room done before the last, and for a room not in the list', () => {
+    expect(playedThrough(list, inPhase(enterRoom(r01).room, 'done'))).toBe(false);
+    expect(playedThrough([r01], inPhase(enterRoom(r02).room, 'done'))).toBe(false);
+    expect(playedThrough([], inPhase(enterRoom(r01).room, 'done'))).toBe(false);
   });
 });
 

@@ -17,8 +17,17 @@ export interface Ctx {
   rng: Rng;
 }
 
-/** Screens are a field in the store, with no router. More join with the map in epic 2. */
-export type Screen = 'room';
+/**
+ * Screens are a field in the store, with no router. `continued` is the placeholder "to be
+ * continued" screen after the last room (story 1.13); the map replaces it in epic 2.
+ */
+export type Screen = 'room' | 'continued';
+
+/**
+ * How many copies of the scene the scene area draws side by side: 3 only for the tablet
+ * profile, which the dev panel sets up (story 1.13; NFR1's three-machine room).
+ */
+export type SceneCopies = 1 | 3;
 
 export interface UiState {
   screen: Screen;
@@ -29,6 +38,8 @@ export interface UiState {
    * `save.settings.quality`, the test runs on every launch. A forced setting never persists.
    */
   quality: QualityState;
+  /** The dev panel only: 3 draws the scene three times side by side, for the tablet profile. */
+  copies: SceneCopies;
 }
 
 /**
