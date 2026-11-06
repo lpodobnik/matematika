@@ -57,7 +57,7 @@ export const hr = {
     /** At the notebook, after the answer line. */
     check: 'Provjeri: uvrsti broj umjesto x.',
     /** At the tray, when it is first offered. */
-    tray: 'Klizač ne doseže. Stavi broj s police na vagu – ide na obje strane.',
+    tray: 'Stavi broj s police na vagu – ide na obje strane.',
     /** Above the scale, after his first Balance move. */
     'balance-goal': 'Ostavi x samog na jednoj strani, kao na kartici Cilj.',
     /** At the splitter, when it is first offered. */
@@ -66,6 +66,9 @@ export const hr = {
   /** Story 1.16: the goal card in the scene while the tray is offered: what Balance aims for. */
   goal: {
     label: 'Cilj: x sam',
+    /** The large banner above the scene (story 1.16): its heading, and what it asks for. */
+    heading: 'Cilj',
+    target: 'x sam na jednoj strani',
   },
   /**
    * Story 1.16: the hint button's second press, the exact next move (room/hint.ts). The

@@ -8,7 +8,9 @@
 // every move acts on both sides and writes its lines straight away, and the splitter
 // appears once a side holds only x pieces. Story 1.16: room 4 has no pin; the pans stay at
 // the slider's x through every move; an early `x = 9` is refused until the pans are
-// simplified; and once x is alone he fills `x = ☐` and the check line's blank.
+// simplified; and once x is alone he fills `x = ☐` and the check line's blank. After story
+// 1.16 Luka ran room 4's dial to 0–12, past the answer, with the tray from the start: the
+// slider at 9 levels the scale, his check, but `x = 9` still waits for simplifying.
 
 import { describe, expect, it } from 'vitest';
 import { formatLine, formatTokens } from '@/math/format';
@@ -112,24 +114,29 @@ function playRoomThree(game: Game) {
   game.presented();
 }
 
-/** Room 4 up to x alone: the dial to 6, a float of 5 over the scale, then a split by 2. */
+/** The dial turned notch by notch from where it stands up to `to`. */
+function dialUpTo(game: Game, to: number) {
+  for (let x = game.stage().dialX + 1; x <= to; x += 1) game.act({ type: 'dial/set', x });
+}
+
+/** Room 4 up to x alone: a float of 5 over the scale, then a split by 2. */
 function balanceRoomFour(game: Game) {
-  for (const x of [1, 2, 3, 4, 5, 6]) game.act({ type: 'dial/set', x });
   for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
   game.act({ type: 'tray/drop', kind: 'float' });
   game.act({ type: 'splitter/split' });
 }
 
 /**
- * Room 4, the water wheel (story 1.16: no pin, one new idea, Balance). He tries `x = 9` at
- * once, and it is refused until the pans are simplified, so he deletes it. The dial stops
- * at 6, which can't level it, so the tray appears. A float of 5 over the scale takes 5 off
- * both sides (`2x + 5 − 5 = 23 − 5`, then `2x = 18`, written for him); the splitter
+ * Room 4, the water wheel (story 1.16: no pin, one new idea, Balance), with the tray from
+ * the start. He turns the slider to 9, where the scale levels, and tries `x = 9`: it is
+ * refused until the pans are simplified, so he deletes it. A float of 5 over the scale takes
+ * 5 off both sides (`2x + 5 − 5 = 23 − 5`, then `2x = 18`, written for him); the splitter
  * appears and splits by 2 (`2x : 2 = 18 : 2`), leaving x alone. He fills 9 into `x = ☐`,
  * then into the check line, `2 · ☐ + 5 = 23`.
  */
 function playRoomFour(game: Game) {
   game.act({ type: 'machine/touch' });
+  dialUpTo(game, 9);
   game.write('x=9');
   for (let i = 0; i < 3; i += 1) game.act({ type: 'notebook/delete' });
   balanceRoomFour(game);
@@ -252,13 +259,20 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     ]);
   });
 
-  // Story 1.16, AC 8: the refused early answer.
+  // Story 1.16, AC 8: the refused early answer. Since Luka ran room 4's dial to 0–12, the
+  // slider at 9 levels the scale first: it is his check, not a way to finish.
   it('refuses his early x = 9 in room 4 like an incomplete line, with its tag, until he simplifies', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
     playRoomThree(game);
     game.act({ type: 'machine/touch' });
+    dialUpTo(game, 9);
+    expect(scaleView(game.store.getState().room as RoomState)).toMatchObject({
+      x: 9,
+      level: true,
+      readouts: { left: '23', right: '23' },
+    });
     const from = game.seen.length;
     game.write('x=9');
     const room = game.store.getState().room as RoomState;
@@ -271,6 +285,12 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     balanceRoomFour(game);
     const alone = game.store.getState().room as RoomState;
     expect(refusalView(alone)).toBeNull();
+    // The slider still stands at 9, and x alone weighs level there too.
+    expect(scaleView(alone)).toMatchObject({
+      x: 9,
+      level: true,
+      readouts: { left: '9', right: '9' },
+    });
     // The blank starts empty: he fills 9 himself. (Story 1.16 review: 1.16 carried the
     // refused x = 9 into the blank, so enter was enough.)
     expect(alone.stage.draft).toEqual([]);
@@ -300,6 +320,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       const view = scaleView(room);
       readouts.push(`${view.x}: ${view.readouts?.left} vs ${view.readouts?.right} ${view.level}`);
     };
+    dialUpTo(game, 6);
     balanceRoomFour(game);
     game.act = act;
     expect(readouts.slice(-3)).toEqual([
@@ -342,7 +363,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     );
   });
 
-  it('offers room 4’s tools one at a time: the tray at the dial’s end, then the splitter', () => {
+  // Story 1.16: Try values can't finish room 4, so the tray is there from his first touch.
+  it('offers room 4’s tools one at a time: the tray from the start, then the splitter', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
@@ -363,7 +385,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFour(game);
     game.act = act;
     // Typing and the presentations go round `game.act`, so only his moves on the machine show.
-    expect(offered).toEqual(['machine/touch: ', 'dial/set 6: tray', 'tray/drop: tray splitter']);
+    expect(offered).toEqual(['machine/touch: tray', 'tray/drop: tray splitter']);
     const done = game.store.getState();
     expect(trayOffered(done.room as RoomState, done.save.progress.tools)).toBe(false);
   });

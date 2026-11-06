@@ -97,3 +97,6 @@ Every decision, change and version transition for this GDD.
   - **Hint button:** the first press shows the step, the second shows the exact next move.
   - **Room 4 changes:** it loses its pin (testing it handed over the answer, so the pin beyond the dial waits for room 8), and it keeps blanks for its last two lines.
   - Try values reaches a blank page from room 5.
+- **From Luka, after story 1.16, 2026-11-06:**
+  - "I solved it but the slider is stuck at 6 and I cannot move it to 9." With one x, the slider has to be able to reach the answer, so room 4's slider runs 0–12. His choice, over Claude's proposal to have the machine turn it past its end, which he called idiotic. Simplifying is still required before `x = 9` counts. The tray is there from the start in a Balance-only room.
+  - "The small cilj x sam in the corner is not noticeable." The goal is now a large banner centred above the scene, with a tick when the pans match. The small card stays only where there is no room above the scene (a phone).

@@ -64,6 +64,8 @@ export const trayMinNumber = 1;
  */
 export function trayOffered(room: RoomState, tools: readonly ToolId[]): boolean {
   if (!tools.includes('balance') || room.stage.phase !== 'open') return false;
+  // A stage Try values can't finish (room 4) offers it from the start (story 1.16).
+  if (!currentStageSpec(room).ways.includes('try')) return true;
   const { balance } = room.stage;
   return balance.trayMet || balance.dialMaxed || balance.moves > 0;
 }

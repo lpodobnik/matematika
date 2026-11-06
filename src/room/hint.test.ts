@@ -20,7 +20,7 @@ import { touchMachine } from '@/room/phases';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { splitBothPans, stepSplitter } from '@/room/splitter';
 import { dropOnScale, stepTray, trayOffered } from '@/room/tray';
-import type { RoomSpec, RoomState, StageSpec, ToolId, TrayKind } from '@/room/types';
+import type { RoomSpec, RoomState, StageSpec, ToolId, TrayKind, WayId } from '@/room/types';
 
 const balance: ToolId[] = ['balance'];
 
@@ -29,15 +29,18 @@ function step(result: RoomStep | null): RoomStep {
   return result;
 }
 
-/** A Balance stage like room 4's, with no pin (story 1.16 takes room 4's away), for `equation`. */
-function balanceRoom(equation: string, max = 6): RoomSpec {
+/**
+ * A Balance stage like room 4's, with no pin (story 1.16 takes room 4's away), for
+ * `equation`, on a dial of 0–6 (room 4's until Luka ran it past the answer).
+ */
+function balanceRoom(equation: string, max = 6, ways: WayId[] = ['balance']): RoomSpec {
   const stage: StageSpec = {
     type: 'solve',
     machines: [{ equation }],
     dial: { min: 0, max, step: 1 },
     tiltPerUnit: 0.75,
     readouts: true,
-    ways: ['balance'],
+    ways,
     fading: { try: 'blank', balance: 'auto' },
   };
   return {
@@ -86,7 +89,7 @@ function dropFloat(room: RoomState, n: number): RoomState {
   return dropPiece(room, 'float', n);
 }
 
-/** The balance room opened, with the dial at its end so the tray is offered. */
+/** The balance room opened, with the dial at its end; Try values can't finish it, so the tray is offered. */
 function wheel(equation = '2x + 5 = 23'): RoomState {
   return dialUp(opened(enterRoom(balanceRoom(equation)).room), 6);
 }
@@ -132,12 +135,17 @@ describe('the next move (story 1.16)', () => {
     expect(nextMove(atThree, balance)).toEqual({ kind: 'split', parts: 2 });
   });
 
+  // Story 1.16: only where Try values could finish but the dial stops short of x, so the
+  // tray waits for the dial's end; where they can't, the tray is offered from the start.
   it('slides toward the dial’s end in a Balance stage until the tray is offered', () => {
-    const room = opened(enterRoom(balanceRoom('2x + 5 = 23')).room);
+    const room = opened(enterRoom(balanceRoom('2x + 5 = 23', 6, ['try', 'balance'])).room);
     expect(trayOffered(room, balance)).toBe(false);
     expect(nextMove(room, balance)).toEqual({ kind: 'slide', direction: 1 });
+    const balanceOnly = opened(enterRoom(balanceRoom('2x + 5 = 23')).room);
+    expect(trayOffered(balanceOnly, balance)).toBe(true);
+    expect(nextMove(balanceOnly, balance)).toEqual({ kind: 'tray', piece: 'float', amount: 5 });
     // Without Balance earned there is no way to finish, and no move to show.
-    expect(nextMove(room, [])).toBeNull();
+    expect(nextMove(balanceOnly, [])).toBeNull();
   });
 
   it('shows the pin’s question while the pin is offered: a prediction has no next move', () => {

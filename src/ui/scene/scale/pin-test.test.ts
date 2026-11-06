@@ -35,14 +35,15 @@ function confirming(spec: RoomSpec, stage: number, value: PinValue, dialX?: numb
 const notch = tuning.pinTestNotchMs;
 
 /**
- * Room 4 as it was until story 1.16, with a "where it levels" pin beyond the dial and a poke
- * window: no room 1–4 has such a pin now, but the weighing stays for later rooms.
+ * Room 4 as it was until story 1.16, with a "where it levels" pin beyond its dial of 0–6
+ * and a poke window: no room 1–4 has such a pin now, but the weighing stays for later rooms.
  */
 const pinnedWheel: RoomSpec = {
   ...r04,
   stages: [
     {
       ...(r04.stages[0] as StageSpec),
+      dial: { min: 0, max: 6, step: 1 },
       pokeNotches: 4,
       pin: { kind: 'level-x', beyondDial: true },
     },

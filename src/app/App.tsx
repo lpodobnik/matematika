@@ -4,6 +4,7 @@ import { PortraitOverlay } from '@/app/PortraitOverlay';
 import { ToBeContinued } from '@/app/ToBeContinued';
 import { useGame } from '@/store/store';
 import type { Screen } from '@/store/types';
+import { GoalBanner } from '@/ui/common/GoalBanner';
 import { HintButton } from '@/ui/common/HintButton';
 import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
@@ -63,6 +64,7 @@ function RoomScreen() {
         <HintButton />
         <PinConfirm area={sceneAreaRef} />
         <PartsCounter area={sceneAreaRef} />
+        <GoalBanner area={sceneAreaRef} />
       </main>
       <Notebook />
     </>

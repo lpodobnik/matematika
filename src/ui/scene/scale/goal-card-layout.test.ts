@@ -13,6 +13,7 @@ import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import type { Box } from '@/ui/scene/scale/dial-layout';
 import {
   controlBoxes,
+  goalBannerFits,
   goalCardBounds,
   goalCardLayout,
   goalCardObstacles,
@@ -33,6 +34,9 @@ const screens = [
   ['the tablet', tabletFit],
   ['640 × 360', phoneFit],
 ] as const;
+// Since Luka found the card unnoticeable, it stands in the scene only where the scene leaves
+// no band above it for the goal banner (ui/common/GoalBanner.tsx): a phone.
+const cardScreens = [['640 × 360', phoneFit]] as const;
 const balance: ToolId[] = ['balance'];
 
 function step(result: RoomStep | null): RoomStep {
@@ -131,13 +135,23 @@ describe('the goal card in the scene (story 1.16)', () => {
     },
   );
 
-  it.each(screens)('stands clear of the machine too, in room 4 on %s', (_, fit) => {
+  it('gives way to the goal banner on the tablet: no card in the scene there', () => {
+    for (const { name, room } of situations(pinless)) {
+      expect(goalBannerFits(tabletFit.y), name).toBe(true);
+      expect(goalCardBounds(room, balance, tabletFit.scale, tabletFit), name).toBeNull();
+    }
+  });
+
+  // Room 4's dial now runs 0–12 (Luka: the slider has to reach 9), so on a phone the pans'
+  // sweep leaves the card no spot clear of the machine's top as well: it may overlap it
+  // there (soft), never the pans, the dial or the tools (the test above).
+  it.each(cardScreens)('stands clear of the machine where it can, in room 4 on %s', (_, fit) => {
     for (const { name, room } of situations(pinless)) {
       const card = goalCardLayout(hr.goal.label, room, balance, fit.scale, fit);
       if (!card) throw new Error(name);
-      const { soft } = goalCardObstacles(room, balance, fit.scale, fit);
+      const { hard } = goalCardObstacles(room, balance, fit.scale, fit);
       expect(
-        soft.filter((o) => overlaps(card.bounds, o)),
+        hard.filter((o) => overlaps(card.bounds, o)),
         name,
       ).toEqual([]);
     }
@@ -152,7 +166,7 @@ describe('the goal card in the scene (story 1.16)', () => {
     expect(places.size).toBe(1);
   });
 
-  it.each(screens)(
+  it.each(cardScreens)(
     'never covers a handover tag or a hint’s tag, which keep clear of it, on %s',
     (_, fit) => {
       for (const { name, room } of situations(pinless)) {

@@ -43,20 +43,24 @@ function equation(text: string): Equation {
 }
 
 /**
- * Room 4, open, with the dial pushed to 6, so the tray is offered. Story 1.16 took its pin
- * away (until then this locked the pin at 9 first).
+ * Room 4, open, with the dial at 6; the tray is offered from the start (story 1.16). Story
+ * 1.16 took its pin away (until then this locked the pin at 9 first).
  */
 function waterWheel(): RoomState {
   const open = step(touchMachine(enterRoom(r04).room)).room;
   return step(setDial(open, 6)).room;
 }
 
-/** Room 4 with the pin and poke window it had until story 1.16, for the phases before open. */
+/**
+ * Room 4 with the dial of 0–6, the pin beyond it and the poke window it had until story
+ * 1.16, for the phases before open.
+ */
 const pinnedWheel: RoomSpec = {
   ...r04,
   stages: [
     {
       ...(r04.stages[0] as StageSpec),
+      dial: { min: 0, max: 6, step: 1 },
       pokeNotches: 4,
       pin: { kind: 'level-x', beyondDial: true },
     },

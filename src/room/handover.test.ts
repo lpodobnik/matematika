@@ -62,12 +62,28 @@ function write(room: RoomState, text: string): RoomState {
 }
 
 /**
- * Room 4, open, with the dial at its end, 6. Story 1.16 took its pin away (until then this
- * locked the pin at 9 first).
+ * Room 4, open, with the dial at 6, short of the answer 9; the tray is offered from the
+ * start (story 1.16). Story 1.16 took its pin away (until then this locked the pin at 9
+ * first).
  */
 function waterWheel(): RoomState {
   return dialTo(opened(enterRoom(r04).room), 6);
 }
+
+/**
+ * Room 4 as a stage Try values could finish, on the dial of 0–6 it had until Luka ran it
+ * past the answer: the tray waits there for the dial's end, so the dial's step applies first.
+ */
+const triedWheel: RoomSpec = {
+  ...r04,
+  stages: [
+    {
+      ...(r04.stages[0] as StageSpec),
+      dial: { min: 0, max: 6, step: 1 },
+      ways: ['try', 'balance'],
+    },
+  ],
+};
 
 /** The stage after Balance moves wrote these lines (as Balance `auto` does), the last on the pans. */
 function balancedTo(room: RoomState, ...lines: string[]): RoomState {
@@ -146,6 +162,8 @@ describe('which handover applies (story 1.15)', () => {
     expect(handoverView(room, metBut('tray'), balance)).toBe('tray');
     // Without Balance there is no tray, so the dial is the step.
     expect(handoverView(room, metBut('dial'), [])).toBe('dial');
+    // Room 4 offers the tray from the start (story 1.16), before any notch.
+    expect(handoverView(opened(enterRoom(r04).room), metBut('tray'), balance)).toBe('tray');
   });
 
   it('sets the goal after a Balance move that leaves numbers beside x', () => {
@@ -253,9 +271,10 @@ describe('which handover applies (story 1.15)', () => {
   });
 
   // Story 1.15 kept the dial's tag away while a written line was acted out; now he has
-  // written a line himself.
+  // written a line himself. On the tried wheel: room 4 offers the tray at once, so its
+  // dial's step never applies with Balance.
   it('stops telling him to turn the dial once he writes a line himself', () => {
-    const open = opened(enterRoom(r04).room);
+    const open = opened(enterRoom(triedWheel).room);
     expect(handoverApplies('dial', open, balance)).toBe(true);
     const typedLine = write(open, '2x = 18');
     expect(handoverApplies('dial', typedLine, balance)).toBe(false);

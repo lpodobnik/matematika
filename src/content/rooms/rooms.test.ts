@@ -5,7 +5,8 @@
 // and the ways that can finish. Story 1.13 checks rooms 1–4 against the GDD's tables in
 // one place, xMeaning included, has every finishing way finish through `steps.ts`, and
 // keeps the paper test's equations out of every room. Story 1.16 takes room 4's pin and
-// poke window away and checks simplify first and the last two lines' blanks.
+// poke window away and checks simplify first and the last two lines' blanks. After story
+// 1.16 Luka runs room 4's dial to 0–12, past the answer: the slider is his check.
 
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
@@ -134,7 +135,8 @@ const gddRooms: readonly {
     equations: ['2x + 5 = 23'],
     answers: [9],
     types: ['solve'],
-    dials: [{ min: 0, max: 6, step: 1 }],
+    // The GDD's table says 0–6; Luka ran it to 0–12 after story 1.16, past the answer.
+    dials: [{ min: 0, max: 12, step: 1 }],
     // Story 1.16: one new idea, Balance; the pin beyond the dial and the poke window went.
     pokeNotches: [undefined],
     pins: [undefined],
@@ -265,13 +267,13 @@ describe('rooms', () => {
     const room = rooms[3];
     const stage = room?.stages[0] as StageSpec;
 
-    it('is 2x + 5 = 23 on a dial of 0–6, at 0.75° per unit, finished by Balance', () => {
+    it('is 2x + 5 = 23 on a dial of 0–12, at 0.75° per unit, finished by Balance', () => {
       expect(room?.id).toBe('r04');
       expect(room?.machine).toBe('water-wheel');
       expect(room?.stages).toHaveLength(1);
       expect(stage.type).toBe('solve');
       expect(stage.machines.map((m) => m.equation)).toEqual(['2x + 5 = 23']);
-      expect(stage.dial).toEqual({ min: 0, max: 6, step: 1 });
+      expect(stage.dial).toEqual({ min: 0, max: 12, step: 1 });
       expect(stage.tiltPerUnit).toBe(0.75);
       expect(stage.readouts).toBe(true);
       expect(stage.ways).toEqual(['balance']);
@@ -285,13 +287,17 @@ describe('rooms', () => {
       expect(stage.pokeNotches).toBeUndefined();
       expect(stage.pin).toBeUndefined();
       expect(pinTrack(stage)).toBeNull();
-      expect(openingDial(stage)).toEqual({ min: 0, max: 6 });
+      expect(openingDial(stage)).toEqual({ min: 0, max: 12 });
     });
 
-    it("answers 9, which the dial can't reach", () => {
+    // Luka, after story 1.16: "the slider reaches 9 always". Until then the dial ran 0–6 and
+    // couldn't reach it. Try values still can't finish the room: x = 9 waits for simplifying.
+    it('answers 9, which the dial reaches, though Try values can’t finish it', () => {
       const answer = stageSolution(stageEquation(stage));
       expect(answer).toBe(9);
-      expect(isOnDial(stage.dial as DialSpec, answer)).toBe(false);
+      expect(isOnDial(stage.dial as DialSpec, answer)).toBe(true);
+      expect(stage.ways).not.toContain('try');
+      expect(answerAllowed(stage, stageEquation(stage))).toBe(false);
     });
 
     // Story 1.16 rewrote this test: until then he could type x = 9 straight away. The checker
@@ -333,7 +339,8 @@ describe('rooms', () => {
 
     // Story 1.16: the pans are weighed at the slider's x through every Balance move, so at
     // a wrong x the scale stays out of balance: at 6, 17 vs 23, then 12 vs 18, then 6 vs 9.
-    it('stays out of balance at every notch through its Balance lines, and never hits the clamp', () => {
+    // At 9 it levels through every line: the slider is his check.
+    it('levels only at 9 through its Balance lines, and never hits the clamp at any notch', () => {
       const dial = stage.dial as DialSpec;
       const balanceLines = [
         stageEquation(stage),
@@ -344,8 +351,11 @@ describe('rooms', () => {
         const x = q.rational(dialValue(dial, notch));
         for (const line of balanceLines) {
           const values = sideValues(line, x);
-          expect(isLevel(values), `${formatEquation(line)} at ${q.toText(x)}`).toBe(false);
-          expect(Math.abs(tiltFor(values, stage.tiltPerUnit ?? 1))).toBeLessThan(tuning.tiltMax);
+          const at = `${formatEquation(line)} at ${q.toText(x)}`;
+          expect(isLevel(values), at).toBe(q.equals(x, q.rational(9)));
+          expect(Math.abs(tiltFor(values, stage.tiltPerUnit ?? 1)), at).toBeLessThan(
+            tuning.tiltMax,
+          );
         }
       }
       const atSix = ['2x + 5 = 23', '2x = 18', 'x = 9'].map((text) => {
@@ -356,6 +366,15 @@ describe('rooms', () => {
         ['17', '23'],
         ['12', '18'],
         ['6', '9'],
+      ]);
+      const atNine = ['2x + 5 = 23', '2x = 18', 'x = 9'].map((text) => {
+        const values = sideValues(equationOf(text), q.rational(9));
+        return [q.toText(values.left), q.toText(values.right)];
+      });
+      expect(atNine).toEqual([
+        ['23', '23'],
+        ['18', '18'],
+        ['9', '9'],
       ]);
     });
 
@@ -631,11 +650,13 @@ describe('rooms', () => {
       if (stage.tiltPerUnit !== undefined) expect(stage.tiltPerUnit).toBeGreaterThan(0);
     });
 
-    // Story 1.16: where Try values can't finish, the answer waits for simplified pans, so the
-    // dial must not reach x (it would level the pans while the answer is refused).
-    it("keeps x off the dial where Try values can't finish", () => {
-      if (stage.ways.includes('try') || stage.dial === 'locked') return;
-      expect(isOnDial(stage.dial, stageSolution(stageEquation(stage)))).toBe(false);
+    // Story 1.16: where Try values can't finish, the answer waits for simplified pans. Until
+    // Luka's change after it, the dial also had to stop short of x there; now the slider may
+    // reach x and level the pans (room 4: it is his check), so the stage's own equation must
+    // need simplifying, or the dial alone would finish it.
+    it("refuses the answer on its first line where Try values can't finish", () => {
+      if (stage.ways.includes('try')) return;
+      expect(answerAllowed(stage, stageEquation(stage))).toBe(false);
     });
 
     // Story 1.16: with Balance `auto` the last two lines come as blanks once x is alone.

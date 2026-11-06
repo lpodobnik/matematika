@@ -28,14 +28,15 @@ const phone = phoneFit.scale;
 const fitOf = (scale: number) => (scale === tablet ? tabletFit : phoneFit);
 
 /**
- * Room 4 as it was until story 1.16, with its "where it levels" pin beyond the dial: no
- * room 1–4 has one now, but later rooms do (GDD: room 8), so its tag stays checked.
+ * Room 4 as it was until story 1.16, with its "where it levels" pin beyond its dial of
+ * 0–6: no room 1–4 has one now, but later rooms do (GDD: room 8), so its tag stays checked.
  */
 const pinnedWheel: RoomSpec = {
   ...(rooms[3] as RoomSpec),
   stages: [
     {
       ...((rooms[3] as RoomSpec).stages[0] as StageSpec),
+      dial: { min: 0, max: 6, step: 1 },
       pokeNotches: 4,
       pin: { kind: 'level-x', beyondDial: true },
     },

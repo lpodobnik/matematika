@@ -218,7 +218,14 @@ describe('handover tags in the scene (story 1.15)', () => {
   });
 
   it('ties the tray and splitter tags to their tools, and nails the goal above the scale', () => {
-    const wheel = openStage(r04, 0);
+    // On room 4's old 0–6 dial: its 0–12 dial (Luka: the slider has to reach 9) sweeps the
+    // pans so high that on a phone the tray's tag has no spot by the tray and hangs from a
+    // nail, which the sweep test above allows.
+    const short: RoomSpec = {
+      ...r04,
+      stages: r04.stages.map((stage) => ({ ...stage, dial: { min: 0, max: 6, step: 1 } })),
+    };
+    const wheel = openStage(short, 0);
     for (const fit of [tabletFit, phoneFit]) {
       expect(tagFor('tray', wheel, balance, fit).tag.nail).toBe(false);
       expect(tagFor('splitter', balancedTo(wheel, '2x = 18'), balance, fit).tag.nail).toBe(false);

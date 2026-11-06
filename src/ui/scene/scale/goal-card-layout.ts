@@ -352,6 +352,20 @@ function spotsFor(
  * of everything, else of the hard obstacles (covering the machine). Null where
  * there is none: never for room 4 on the tablet or at 640 × 360 (the layout tests check).
  */
+/**
+ * How tall the goal banner is, in CSS px (story 1.16, after Luka: "the small cilj x sam in
+ * the corner is not noticeable"). Where the scene leaves a band above it at least this
+ * tall plus a margin (the tablet, a computer), the goal is a large banner in that band
+ * (ui/common/GoalBanner.tsx); only where it doesn't (a phone) does this small card stand in
+ * the scene.
+ */
+export const goalBannerHeight = 88;
+
+/** Whether the band above the scene, `bandPx` CSS px tall, holds the goal banner. */
+export function goalBannerFits(bandPx: number): boolean {
+  return bandPx >= goalBannerHeight + 16;
+}
+
 export function goalCardLayout(
   label: string,
   room: RoomState,
@@ -409,6 +423,6 @@ export function goalCardBounds(
   sceneScale: number,
   origin: Point,
 ): Box | null {
-  if (!goalView(room, tools)) return null;
+  if (!goalView(room, tools) || goalBannerFits(origin.y)) return null;
   return goalCardLayout(hr.goal.label, room, tools, sceneScale, origin)?.bounds ?? null;
 }

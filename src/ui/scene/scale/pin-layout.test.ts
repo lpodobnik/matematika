@@ -37,7 +37,7 @@ describe('pinLayout', () => {
     }
   });
 
-  it("carries on past the dial's end for a pin beyond the dial (room 4: dial 0–6, pin 0–12)", () => {
+  it("carries on past the dial's end for a pin beyond the dial (room 4 until story 1.16: dial 0–6, pin 0–12)", () => {
     for (const scale of [tablet, phone]) {
       const dial = dialLayout(scale, 6);
       const pin = pinLayout(dial, { kind: 'x', slots: 13 }, labelFontSize(scale));

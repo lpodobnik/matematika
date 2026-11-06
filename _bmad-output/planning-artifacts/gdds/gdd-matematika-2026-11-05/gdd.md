@@ -142,7 +142,7 @@ All three are free to try and reversible until he writes. Any correct method is 
 | Way | Machine | Move | Written, for `2x + 7 = 25` |
 |---|---|---|---|
 | Try values | x dial | Drag until the pans level. | `x = 9` |
-| Balance | Pans | Every move acts on both sides at once, because you may only do on the left what you do on the right. A weight or balloon from the tray, dropped on the scale, lands on both sides; a number dragged off one side comes off both; the splitter, set to n, divides both sides into n equal groups and keeps one. There is only one x, the slider's: the scale keeps weighing at it, so at a wrong x it stays out of balance through every move (at 6: 17 vs 23, 12 vs 18, 6 vs 9), and no move can fake a solution. A goal card beside the scale (`Cilj: x sam`) shows the target, one x alone against a number, and lights when the pans match it. Each move writes its lines (`2x + 5 − 5 = 23 − 5`, `2x = 18`); he writes `x = 9` himself, and in a room whose only way is Balance it is accepted only after a line with x alone against a number ("Prvo pojednostavi vagu."). A split that doesn't divide evenly is refused. | `2x = 18`, `x = 9` |
+| Balance | Pans | Every move acts on both sides at once, because you may only do on the left what you do on the right. A weight or balloon from the tray, dropped on the scale, lands on both sides; a number dragged off one side comes off both; the splitter, set to n, divides both sides into n equal groups and keeps one. There is only one x, the slider's: the scale keeps weighing at it, so at a wrong x it stays out of balance through every move (at 6: 17 vs 23, 12 vs 18, 6 vs 9), and no move can fake a solution. A large goal banner above the scene (`Cilj`, a miniature scale with one x alone against a `?` weight, "x sam na jednoj strani") shows the target and gets a tick when the pans match it; on a phone, where there is no room above the scene, a small card in the scene does instead. Each move writes its lines (`2x + 5 − 5 = 23 − 5`, `2x = 18`); he writes `x = 9` himself, and in a room whose only way is Balance it is accepted only after a line with x alone against a number ("Prvo pojednostavi vagu."). A split that doesn't divide evenly is refused. | `2x = 18`, `x = 9` |
 | Undo | Gear chain | Run the chain backward, one link at a time. | `2x = 25 − 7`, `2x = 18`, `x = 18 : 2`, `x = 9` |
 
 Each ends with the check line.
@@ -269,7 +269,7 @@ Room types carry the four understanding tasks from the brief:
 | 1 | Door lift | `x + 4 = 9` | 5 | Counterweight still needed | Solve | The dial and the pans; level means equal |
 | 2 | Street lamps | `3x = 12`, then `x : 3 = 5` | 4, 15 | Oil per lamp, then a full tank | Solve | Each notch moves the pan by the same amount |
 | 3 | Sluice gate | `x − 6 = 8`, then `20 − x = 6` | 14, 14 | Water before the release, then water to release | Predict | First pin; in the second form x pulls the other way. Earns Balance |
-| 4 | Water wheel | `2x + 5 = 23` | 9 | Load per bucket | Solve | The dial stops at 6, so he has to move weights |
+| 4 | Water wheel | `2x + 5 = 23` | 9 | Load per bucket | Solve | Balance only: the slider reaches 9 and is his check, but x = 9 counts only after he simplifies |
 | 5 | Bridge | `3x + 4 = 22`, then the 22 becomes 25 | 6, 7 | Length per plank | Predict | What a change does, without solving |
 | 6 | Weighing yard | `x + 56 = 58 + 27` | 29 | Weight of a crate | Compare | Judging equality without adding. Opens the workshop |
 | 7 | Old logbook | `3x − 1 = 17`, `3x = 18`, with the wrong line `x = 15` | 6 | Teeth per gear | Find the mistake | `3x` is three of x, not 3 + x. The wrong line is Kristijan's planted signal. Earns the gear chain |
@@ -285,7 +285,7 @@ Room types carry the four understanding tasks from the brief:
 | 1 | 0–10 | None | None | Try values |
 | 2 | 0–10, then 0–30 in 3s | None | None | Try values |
 | 3 | 6–20, then 0–20 | First 4 notches, then none | Where it levels, then which way the pan moves as x grows | Try values |
-| 4 | 0–6 | None | None: room 4 introduces only Balance | Balance |
+| 4 | 0–12 | None | None: room 4 introduces only Balance | Balance |
 | 5 | 0–10 | First 4 notches | Where it levels, then where it levels after the change | Try values, Balance |
 | 6 | 20–40 | None | x, with readouts hidden | Try values, Balance |
 | 7 | Locked | None | The wrong line | Balance |

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { r04 } from '@/content/rooms/r04-water-wheel';
 import { createEconomy } from '@/economy/parts';
 import { tokenFromChar } from '@/math/tokens';
 import { dialView } from '@/room/dial';
@@ -727,15 +728,31 @@ describe('predict before the dial opens (story 1.9)', () => {
 
 describe('balance with the tray (story 1.10; both sides at once, story 1.15)', () => {
   /**
-   * Room 4 with Balance earned (as room 3 earns it), open after his touch. Story 1.16 took
-   * its pin away (until then this locked the pin at 9 first).
+   * Room 4 as a stage Try values could finish, on the dial of 0–6 it had until Luka ran it
+   * past the answer: the tray waits there for the dial's end (story 1.15).
    */
-  function inRoomFour(firstUse: FirstUseId[] = ['pin']) {
+  const triedWheel: RoomSpec = {
+    ...r04,
+    stages: [
+      {
+        ...(r04.stages[0] as StageSpec),
+        dial: { min: 0, max: 6, step: 1 },
+        ways: ['try', 'balance'],
+      },
+    ],
+  };
+
+  /**
+   * Room 4 (or `spec` in its place) with Balance earned (as room 3 earns it), open after his
+   * touch. Story 1.16 took its pin away (until then this locked the pin at 9 first).
+   */
+  function inRoomFour(firstUse: FirstUseId[] = ['pin'], spec?: RoomSpec) {
     const seen: DomainEvent[] = [];
     const initial = initialGameState();
     const store = createGameStore({
       makeCtx: () => fixedCtx,
       effects: [(event) => seen.push(event)],
+      ...(spec ? { reduce: createReducer([spec]) } : {}),
       initialState: {
         ...initial,
         save: { ...initialGameState().save, progress: { tools: ['balance'], firstUse } },
@@ -756,8 +773,9 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     return { store, seen, act, stage, lines, type };
   }
 
-  it('offers the tray once his dial reaches 6 without levelling the pans, and wiggles it then', () => {
-    const game = inRoomFour();
+  // Story 1.16: only where Try values can finish; room 4 offers it from the start.
+  it('offers the tray once his dial reaches its end, 6, without levelling the pans, and wiggles it then', () => {
+    const game = inRoomFour(['pin'], triedWheel);
     expect(game.stage()?.phase).toBe('open');
     expect(
       game.store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
@@ -772,6 +790,14 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     ).toEqual(['pin', 'tray']);
     expect(game.stage()?.hintLevel).toBe(1);
     game.act({ type: 'stage/reset' });
+    expect(
+      game.store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
+    ).toEqual(['pin', 'tray']);
+  });
+
+  it('offers room 4’s tray from the start, and wiggles it then (story 1.16)', () => {
+    const game = inRoomFour();
+    expect(game.stage()).toMatchObject({ phase: 'open', dialX: 0, hintLevel: 1 });
     expect(
       game.store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
     ).toEqual(['pin', 'tray']);
@@ -816,12 +842,17 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
   });
 
   // Story 1.16 rewrote this test: until then he could lock room 4 by typing x = 9 and the
-  // check line at once. Now the answer waits for the pans to be simplified.
-  it('refuses x = 9 until the pans are simplified, though he knows it; then it locks', () => {
+  // check line at once. Now the answer waits for the pans to be simplified. Since Luka ran
+  // the dial to 0–12, the slider at 9 levels the scale, and x = 9 is still refused.
+  it('refuses x = 9 until the pans are simplified, though the slider levels there; then it locks', () => {
     const game = inRoomFour();
-    game.act({ type: 'dial/set', x: 6 });
-    game.act({ type: 'dial/set', x: 7 });
-    expect(game.stage()?.dialX).toBe(6);
+    game.act({ type: 'dial/set', x: 9 });
+    game.act({ type: 'dial/set', x: 13 });
+    expect(game.stage()?.dialX).toBe(9);
+    expect(scaleView(game.store.getState().room as RoomState)).toMatchObject({
+      level: true,
+      readouts: { left: '23', right: '23' },
+    });
     game.seen.length = 0;
     game.type('x=9');
     expect(game.lines()).toEqual(['2x+5=23']);

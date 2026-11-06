@@ -1,0 +1,107 @@
+/* Story 1.16: the goal banner, centred in the band above the scene (GoalBanner.tsx). Large
+   on purpose: Luka missed the small card in the corner. Shape carries its state: matched, its
+   frame is heavier and a tick shows; the lamp's colour only adds to that (NFR4). */
+.goal-banner {
+  position: absolute;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  padding: 0 22px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: goal-banner-in 520ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+.goal-banner__heading {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.goal-banner__target {
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.goal-banner__scale {
+  width: 136px;
+  height: 69px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.goal-banner__scale .goal-banner__pan {
+  stroke-width: 4;
+}
+
+.goal-banner__scale .goal-banner__gear {
+  stroke-dasharray: 4 3;
+}
+
+.goal-banner__scale .goal-banner__weight {
+  fill: var(--paper);
+}
+
+.goal-banner__scale text {
+  fill: currentColor;
+  stroke: none;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.goal-banner__tick {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.goal-banner[data-matched="true"] {
+  border-width: 6px;
+  background: #f3dfb4;
+  animation: goal-banner-bump 420ms ease-out;
+}
+
+@keyframes goal-banner-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes goal-banner-bump {
+  0% {
+    transform: translateX(-50%) scale(1);
+  }
+  40% {
+    transform: translateX(-50%) scale(1.08);
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goal-banner,
+  .goal-banner[data-matched="true"] {
+    animation: none;
+  }
+}

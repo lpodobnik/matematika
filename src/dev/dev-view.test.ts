@@ -238,7 +238,7 @@ describe('the tablet profile (story 1.13)', () => {
     expect(room.stage.phase).toBe('open');
     // Story 1.16: room 4 has no pin any more (1.14–1.15 placed and confirmed it at 9 here).
     expect(room.stage.pin).toBeNull();
-    expect(dialView(room)).toMatchObject({ min: 0, max: 6, openMin: 0, openMax: 6, turns: true });
+    expect(dialView(room)).toMatchObject({ min: 0, max: 12, openMin: 0, openMax: 12, turns: true });
     expect(state.save.progress.tools).toEqual(['balance']);
     expect(state.ui.copies).toBe(3);
     expect(state.ui.quality.forced).toBe('high');
