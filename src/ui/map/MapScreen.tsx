@@ -6,7 +6,7 @@ import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
 import { useGame } from '@/store/store';
-import { NodeGlyph } from '@/ui/map/glyphs';
+import { LockBadge, NodeGlyph } from '@/ui/map/glyphs';
 
 const authored = rooms.map((room) => room.id);
 
@@ -15,16 +15,23 @@ const authored = rooms.map((room) => room.id);
  * goes after every restart and whenever he leaves a room. A room he has finished shows its
  * change in colour, and by shape (ui/map/glyphs.tsx); the room to play next pulses; a room
  * he left halfway carries a page. A tap on a room he can reach takes him there at once.
+ * A place he can see but not open yet shows its name, and its lock shows what opens it
+ * (story 2.3).
  */
 export function MapScreen() {
   const roomsDone = useGame((s) => s.save.progress.roomsDone);
+  const tools = useGame((s) => s.save.progress.tools);
   const started = useGame((s) => s.save.progress.started);
   const fresh = useGame((s) => s.ui.fresh);
   const dispatch = useGame((s) => s.dispatch);
   const view = useMemo(
     () =>
-      mapView(districtMap, { roomsDone, started: started.map((room) => room.id), fresh }, authored),
-    [roomsDone, started, fresh],
+      mapView(
+        districtMap,
+        { roomsDone, tools, started: started.map((room) => room.id), fresh },
+        authored,
+      ),
+    [roomsDone, tools, started, fresh],
   );
   return <MapBoard view={view} onTravel={(node) => dispatch({ type: 'map/travel', node })} />;
 }
@@ -67,8 +74,10 @@ export function MapBoard({ view, onTravel }: BoardProps) {
 
 function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): void }) {
   const name = hr.map.nodes[node.id];
-  const reachable = node.state !== 'closed';
-  const label = reachable ? `${name}, ${hr.map.states[node.state]}` : hr.map.states.closed;
+  // Seen, he knows its name; only a room he can travel to takes a tap (story 2.3).
+  const named = node.state !== 'closed';
+  const reachable = node.state === 'open' || node.state === 'restored';
+  const label = named ? `${name}, ${hr.map.states[node.state]}` : hr.map.states.closed;
   return (
     <button
       type="button"
@@ -85,6 +94,7 @@ function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): v
       <svg className="map__glyph" viewBox="-50 -50 100 100" aria-hidden="true">
         {node.next && <circle r="47" className="map__pulse" />}
         <NodeGlyph id={node.id} kind={node.kind} state={node.state} />
+        {node.state === 'locked' && <LockBadge lock={node.lock} />}
         {node.started && (
           <path
             d="M22 -46 H42 V-20 H22 Z M26 -40 H38 M26 -33 H38 M26 -26 H34"
@@ -92,7 +102,8 @@ function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): v
           />
         )}
       </svg>
-      {reachable && <span className="map__name">{name}</span>}
+      {named && <span className="map__name">{name}</span>}
+      {node.plate && <span className="map__plate">{node.plate}</span>}
     </button>
   );
 }

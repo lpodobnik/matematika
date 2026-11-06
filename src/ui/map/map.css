@@ -96,8 +96,35 @@
   overflow: visible;
 }
 
-.map__node:disabled {
+/* Not seen yet: faint. Seen but locked, or not open yet: in ink, named, still no tap. */
+.map__node[data-state="closed"] {
   opacity: 0.38;
+}
+
+/* A dashed ring: there, but not a door yet. */
+.map__node[data-state="locked"] .map__glyph,
+.map__node[data-state="seen"] .map__glyph {
+  outline: 2.5px dashed var(--ink);
+  outline-offset: 0;
+}
+
+.map__lock {
+  fill: var(--paper);
+  stroke-width: 3;
+}
+
+/* Over the gate, out of the button's flow (as the name is), so the glyph stays on its spot. */
+.map__plate {
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 0.4em;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper);
+  font-size: clamp(11px, 1.3cqw, 18px);
+  white-space: nowrap;
 }
 
 .map__node[data-state="open"] .map__glyph {

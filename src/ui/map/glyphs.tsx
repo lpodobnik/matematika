@@ -1,5 +1,5 @@
 import type { NodeState } from '@/city/reach';
-import type { NodeId, NodeKind } from '@/city/types';
+import type { LockKind, NodeId, NodeKind } from '@/city/types';
 
 /**
  * The map's placeholder skin (story 2.2): each node drawn in code, in a 100 × 100 box
@@ -99,6 +99,42 @@ function WaterWheel({ restored }: { restored: boolean }) {
       <circle r="24" />
       <g className={restored ? 'glyph__turning' : undefined}>{spokes}</g>
       <circle r="5" />
+    </g>
+  );
+}
+
+/**
+ * A locked node's badge (story 2.3), top left of its glyph: what opens it, so he knows what
+ * to look for. Balance's weights, the gear chain or the drum; a padlock for anything else.
+ */
+export function LockBadge({ lock }: { lock: LockKind | null }) {
+  return (
+    <g transform="translate(-34 -34)" className="map__lock">
+      <circle r="17" />
+      {lock === 'weights' && (
+        <g>
+          <path d="M-9 9 L-6 -3 H6 L9 9 Z" />
+          <circle cy="-7" r="3.5" />
+        </g>
+      )}
+      {lock === 'chain' && (
+        <g>
+          <ellipse cx="-5" rx="7" ry="4.5" />
+          <ellipse cx="5" rx="7" ry="4.5" />
+        </g>
+      )}
+      {lock === 'drum' && (
+        <g>
+          <ellipse cy="-6" rx="9" ry="3.5" />
+          <path d="M-9 -6 V6 A9 3.5 0 0 0 9 6 V-6 M-3 -2 V8 M3 -2 V8" />
+        </g>
+      )}
+      {(lock === null || lock === 'plate') && (
+        <g>
+          <path d="M-5 -2 V-7 A5 5 0 0 1 5 -7 V-2" />
+          <rect x="-8" y="-2" width="16" height="12" rx="2" />
+        </g>
+      )}
     </g>
   );
 }

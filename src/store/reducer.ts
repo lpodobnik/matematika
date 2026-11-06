@@ -3,7 +3,7 @@
 // happened goes out as domain events.
 
 import { castDraft, produce } from 'immer';
-import { nextRoomOnMap, roomOpen } from '@/city/reach';
+import { nextRoomOnMap, type Reach, roomOpen } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
@@ -27,7 +27,7 @@ import { isRoomId, resumeRoom, type SavedRoom, savedRoomOf } from '@/room/resume
 import { enterRoom, type RoomStep } from '@/room/room';
 import { rememberSplitter, splitBothPans, stepSplitter } from '@/room/splitter';
 import { dropOnScale, rememberTray, stepTray, takeOffPan } from '@/room/tray';
-import type { RoomId, RoomSpec, RoomState, ToolId } from '@/room/types';
+import type { RoomSpec, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import { newSave } from '@/store/persist';
@@ -87,13 +87,12 @@ function goInto(spec: RoomSpec, save: SaveState, now: number): RoomStep {
  * the map he hasn't finished. Null when none is left.
  */
 function nextRoom(roomList: readonly RoomSpec[], save: SaveState, from: string | null) {
-  const { roomsDone } = save.progress;
-  const authored = authoredIds(roomList);
-  const after = from === null ? [] : authored.slice(authored.indexOf(from as RoomSpec['id']) + 1);
+  const reach = reachOf(save, roomList);
+  const { done, authored } = reach;
+  const after = from === null ? [] : authored.slice(authored.indexOf(from) + 1);
   const next =
-    after.find(
-      (id) => !roomsDone.includes(id as RoomId) && roomOpen(districtMap, id, roomsDone, authored),
-    ) ?? nextRoomOnMap(districtMap, roomsDone, authored);
+    after.find((id) => !done.includes(id) && roomOpen(districtMap, id, reach)) ??
+    nextRoomOnMap(districtMap, reach);
   return roomList.find((room) => room.id === next) ?? null;
 }
 
@@ -116,6 +115,13 @@ function startStep(
 }
 
 const authoredIds = (roomList: readonly RoomSpec[]) => roomList.map((room) => room.id);
+
+/** What opens the way forward (story 2.3): rooms finished and tools earned, never parts. */
+const reachOf = (save: SaveState, roomList: readonly RoomSpec[]): Reach => ({
+  done: save.progress.roomsDone,
+  tools: save.progress.tools,
+  authored: authoredIds(roomList),
+});
 
 /**
  * A room whose restart has ended hands over to the next room he can play (`nextRoom`),
@@ -146,7 +152,7 @@ function travelStep(
   now: number,
 ): RoomStep | null {
   if (state.ui.screen !== 'map') return null;
-  if (!roomOpen(districtMap, node, save.progress.roomsDone, authoredIds(roomList))) return null;
+  if (!roomOpen(districtMap, node, reachOf(save, roomList))) return null;
   const spec = roomList.find((room) => room.id === node);
   return spec ? goInto(spec, save, now) : null;
 }

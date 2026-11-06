@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapView, nextRoomOnMap, roomOpen } from '@/city/reach';
+import { mapView, nextRoomOnMap, type Reach, roomOpen } from '@/city/reach';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { roomIds } from '@/room/types';
@@ -70,44 +70,157 @@ describe('the district map (content/map.ts; GDD, Level Structure)', () => {
   });
 });
 
-describe('where he can go (city/reach.ts, story 2.2)', () => {
+describe('the gates on the map (content/map.ts, story 2.3)', () => {
+  const gateOf = (id: string) => districtMap.nodes.find((node) => node.id === id)?.gate;
+
+  it('follows the GDD’s table: Balance, the workshop, the gear chain, the drum', () => {
+    expect(gateOf('r04')).toEqual({ tools: ['balance'] });
+    expect(gateOf('r05')).toEqual({ tools: ['balance'] });
+    expect(gateOf('workshop')).toEqual({ tools: ['workshop'] });
+    expect(gateOf('r08')).toEqual({ tools: ['chain'] });
+    expect(gateOf('r09')).toEqual({ tools: ['chain'] });
+    expect(gateOf('r13')).toEqual({ tools: ['drum'] });
+    expect(gateOf('foundry')).toEqual({ sealed: true });
+  });
+
+  it('has a lock only where it shows what opens the gate', () => {
+    const opens = { weights: 'balance', chain: 'chain', drum: 'drum' } as const;
+    for (const node of districtMap.nodes) {
+      if (!node.lock) continue;
+      if (node.lock === 'plate') {
+        expect(node.gate?.sealed, node.id).toBe(true);
+        expect(node.plate, node.id).toBe('5 · x = 40');
+      } else {
+        expect(node.gate?.tools, node.id).toContain(opens[node.lock]);
+      }
+    }
+  });
+
+  it('opens nothing for parts: gates name only tools and rooms (FR32)', () => {
+    for (const node of districtMap.nodes) {
+      for (const key of Object.keys(node.gate ?? {})) {
+        expect(['tools', 'rooms', 'sealed'], node.id).toContain(key);
+      }
+    }
+  });
+});
+
+// Reach as if every room were authored, to check the gates beyond the rooms built so far.
+const all = roomIds as readonly string[];
+const reach = (done: string[], tools: string[] = [], authoredRooms = all): Reach => ({
+  done,
+  tools,
+  authored: authoredRooms,
+});
+
+describe('where he can go (city/reach.ts, stories 2.2 and 2.3)', () => {
   it('opens room 1 at the start, and nothing else', () => {
-    const open = districtMap.nodes.filter((node) => roomOpen(districtMap, node.id, [], authored));
+    const open = districtMap.nodes.filter((node) => roomOpen(districtMap, node.id, reach([])));
     expect(open.map((node) => node.id)).toEqual(['r01']);
   });
 
   it('opens a room beside a finished one, and keeps finished rooms open to play again', () => {
-    expect(roomOpen(districtMap, 'r02', ['r01'], authored)).toBe(true);
-    expect(roomOpen(districtMap, 'r01', ['r01'], authored)).toBe(true);
-    expect(roomOpen(districtMap, 'r03', ['r01'], authored)).toBe(false);
+    expect(roomOpen(districtMap, 'r02', reach(['r01']))).toBe(true);
+    expect(roomOpen(districtMap, 'r01', reach(['r01']))).toBe(true);
+    expect(roomOpen(districtMap, 'r03', reach(['r01']))).toBe(false);
   });
 
-  it('never opens a room whose story hasn’t been built, a lair, the workshop or the gate', () => {
+  it('keeps the bridge shut until Balance, then opens it', () => {
+    expect(roomOpen(districtMap, 'r05', reach(['r01', 'r02']))).toBe(false);
+    expect(roomOpen(districtMap, 'r05', reach(['r01', 'r02', 'r03'], ['balance']))).toBe(true);
+    // Room 4 likewise: beside room 3, and Balance comes with it.
+    expect(roomOpen(districtMap, 'r04', reach(['r01', 'r02', 'r03']))).toBe(false);
+    expect(roomOpen(districtMap, 'r04', reach(['r01', 'r02', 'r03'], ['balance']))).toBe(true);
+  });
+
+  it('plays rooms 5 and 6 in either order, and room 7 once both are finished', () => {
+    const before = ['r01', 'r02', 'r03', 'r04'];
+    const tools = ['balance'];
+    expect(roomOpen(districtMap, 'r05', reach(before, tools))).toBe(true);
+    expect(roomOpen(districtMap, 'r06', reach(before, tools))).toBe(true);
+    expect(roomOpen(districtMap, 'r07', reach([...before, 'r05'], tools))).toBe(false);
+    expect(roomOpen(districtMap, 'r07', reach([...before, 'r06'], tools))).toBe(false);
+    expect(roomOpen(districtMap, 'r07', reach([...before, 'r05', 'r06'], tools))).toBe(true);
+  });
+
+  it('opens rooms 8 and 9 with the gear chain, and 11 once 9 and 10 are finished', () => {
+    const to7 = ['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07'];
+    const tools = ['balance', 'workshop'];
+    expect(roomOpen(districtMap, 'r08', reach(to7, tools))).toBe(false);
+    expect(roomOpen(districtMap, 'r09', reach(to7, tools))).toBe(false);
+    const chained = [...tools, 'chain'];
+    expect(roomOpen(districtMap, 'r08', reach(to7, chained))).toBe(true);
+    expect(roomOpen(districtMap, 'r09', reach(to7, chained))).toBe(true);
+    const to10 = [...to7, 'r08', 'r10'];
+    expect(roomOpen(districtMap, 'r11', reach(to10, chained))).toBe(false);
+    expect(roomOpen(districtMap, 'r11', reach([...to10, 'r09'], chained))).toBe(true);
+  });
+
+  it('opens room 13 with the drum, and never the foundry gate', () => {
+    const to12 = roomIds.slice(0, 12) as string[];
+    const tools = ['balance', 'workshop', 'chain'];
+    expect(roomOpen(districtMap, 'r13', reach(to12, tools))).toBe(false);
+    expect(roomOpen(districtMap, 'r13', reach(to12, [...tools, 'drum']))).toBe(true);
+    expect(roomOpen(districtMap, 'foundry', reach([...all], [...tools, 'drum']))).toBe(false);
+  });
+
+  it('never opens a room whose story hasn’t been built, a lair or the workshop', () => {
     const done = ['r01', 'r02', 'r03', 'r04'];
     for (const id of ['r05', 'r06', 'r09', 'lair-20', 'workshop', 'foundry']) {
-      expect(roomOpen(districtMap, id, done, authored), id).toBe(false);
+      expect(roomOpen(districtMap, id, reach(done, ['balance'], authored)), id).toBe(false);
     }
   });
 
   it('names the next room: the first open one he hasn’t finished', () => {
-    expect(nextRoomOnMap(districtMap, [], authored)).toBe('r01');
-    expect(nextRoomOnMap(districtMap, ['r01'], authored)).toBe('r02');
-    expect(nextRoomOnMap(districtMap, ['r01', 'r02', 'r03', 'r04'], authored)).toBeNull();
+    expect(nextRoomOnMap(districtMap, reach([], [], authored))).toBe('r01');
+    expect(nextRoomOnMap(districtMap, reach(['r01'], [], authored))).toBe('r02');
+    const done = ['r01', 'r02', 'r03', 'r04'];
+    expect(nextRoomOnMap(districtMap, reach(done, ['balance'], authored))).toBeNull();
   });
 });
 
 describe('what the map shows (mapView)', () => {
+  const toolsAfter = (done: string[]) => (done.includes('r03') ? ['balance'] : []);
   const view = (done: string[], started: string[] = [], fresh: string | null = null) =>
-    mapView(districtMap, { roomsDone: done, started, fresh }, authored);
+    mapView(districtMap, { roomsDone: done, tools: toolsAfter(done), started, fresh }, authored);
   const node = (v: ReturnType<typeof view>, id: string) => v.nodes.find((n) => n.id === id);
 
-  it('shows finished rooms restored, the rooms he can reach open, and the rest closed', () => {
-    const v = view(['r01', 'r02']);
+  it('shows finished rooms restored, the rooms he can reach open, and the unseen closed', () => {
+    const v = view(['r01']);
     expect(node(v, 'r01')?.state).toBe('restored');
-    expect(node(v, 'r02')?.state).toBe('restored');
-    expect(node(v, 'r03')?.state).toBe('open');
+    expect(node(v, 'r02')?.state).toBe('open');
+    expect(node(v, 'r03')?.state).toBe('closed');
     expect(node(v, 'r05')?.state).toBe('closed');
     expect(node(v, 'lair-20')?.state).toBe('closed');
+  });
+
+  it('after room 2: the bridge shows locked with Balance’s weights, and the lair shows (FR29, FR31)', () => {
+    const v = view(['r01', 'r02']);
+    expect(node(v, 'r03')?.state).toBe('open');
+    expect(node(v, 'r05')).toMatchObject({ state: 'locked', lock: 'weights' });
+    expect(node(v, 'lair-20')).toMatchObject({ state: 'seen', lock: null });
+    expect(node(v, 'lair-30')?.state).toBe('closed');
+  });
+
+  it('after room 3: the steam lift shows locked with the gear chain, the bridge waits for its story', () => {
+    const v = view(['r01', 'r02', 'r03']);
+    expect(node(v, 'r09')).toMatchObject({ state: 'locked', lock: 'chain' });
+    expect(node(v, 'r05')).toMatchObject({ state: 'seen', lock: null });
+  });
+
+  it('after room 4: room 6 shows; the foundry gate shows from room 6 with its plate (FR30)', () => {
+    expect(node(view(['r01', 'r02', 'r03', 'r04']), 'r06')?.state).toBe('seen');
+    expect(node(view(['r01', 'r02', 'r03', 'r04']), 'foundry')?.state).toBe('closed');
+    const fromSix = mapView(
+      districtMap,
+      { roomsDone: ['r06'], tools: [], started: [], fresh: null },
+      authored,
+    );
+    expect(node(fromSix, 'foundry')).toMatchObject({
+      state: 'locked',
+      lock: 'plate',
+      plate: '5 · x = 40',
+    });
   });
 
   it('pulses the next room once he has finished room 1, not before', () => {
@@ -126,15 +239,47 @@ describe('what the map shows (mapView)', () => {
     expect(node(v, 'r02')?.fresh).toBe(false);
   });
 
-  it('draws a road in full once both its ends are reachable', () => {
-    const v = view(['r01']);
+  it('draws a road in full only between places he can travel to', () => {
+    const v = view(['r01', 'r02']);
     const travelled = v.roads.filter((road) => road.travelled);
-    expect(travelled).toHaveLength(1);
+    expect(travelled).toHaveLength(2);
     expect(travelled[0]?.from).toEqual({ x: 150, y: 830 });
   });
 
   it('says when every room so far is restored', () => {
     expect(view(['r01', 'r02', 'r03']).allDone).toBe(false);
     expect(view(['r01', 'r02', 'r03', 'r04']).allDone).toBe(true);
+  });
+});
+
+describe('no softlock (architecture, Testing: map reachability)', () => {
+  // What each room earns, from the GDD's table; with every room authored.
+  const earns: Record<string, string> = {
+    r03: 'balance',
+    r06: 'workshop',
+    r07: 'chain',
+    r12: 'drum',
+  };
+
+  it('finishes all 13 rooms in every order the gates allow', () => {
+    let orders = 0;
+    const play = (done: string[], tools: string[]) => {
+      const open = all.filter(
+        (id) => !done.includes(id) && roomOpen(districtMap, id, reach(done, tools)),
+      );
+      if (open.length === 0) {
+        expect(done, 'stuck before the last room').toHaveLength(13);
+        orders += 1;
+        return;
+      }
+      for (const id of open) {
+        const tool = earns[id];
+        play([...done, id], tool ? [...tools, tool] : tools);
+      }
+    };
+    play([], []);
+    // 4, 5 and 6 with 6 after 4 (3 orders: Balance opens the bridge too), times 8, 9 and
+    // 10 with 10 after 8 (3).
+    expect(orders).toBe(9);
   });
 });

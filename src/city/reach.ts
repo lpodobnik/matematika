@@ -1,47 +1,83 @@
-// Where he can go on the map (story 2.2; GDD, Level Structure). Pure: the map and the rooms
-// that exist come in from content. Room 1 is always open; a finished room stays open, so
-// he can play it again; and a room joined by a road to a finished room opens, if it is
-// authored. Story 2.3 adds the gates (Balance, the workshop, the gear chain) and the places
-// he can see but not open; lairs, the workshop and the gate don't take him anywhere yet.
+// Where he can go on the map, and what each node shows (stories 2.2 and 2.3; GDD, Level
+// Structure). Pure: the map, what he has finished and earned, and the rooms that exist come
+// in. A node shows once a room beside it is finished (room 1 from the start). It opens when
+// its gate is met (tools and finished rooms, never parts: FR32) and it is a room that is
+// authored. Lairs and the workshop show but don't take him anywhere until their epics.
 
-import type { MapSpec, NodeId, NodeKind } from '@/city/types';
+import type { LockKind, MapSpec, NodeId, NodeKind, NodeSpec } from '@/city/types';
 
 /** The rooms that exist so far, in play order (content/rooms). */
 export type Authored = readonly string[];
+
+/** What decides the way forward: rooms finished, tools earned, rooms authored. */
+export interface Reach {
+  done: readonly string[];
+  tools: readonly string[];
+  authored: Authored;
+}
 
 function neighbours(map: MapSpec, id: string): string[] {
   return map.edges.flatMap(([a, b]) => (a === id ? [b] : b === id ? [a] : []));
 }
 
-/** Whether he can travel to a node now: room 1, a finished room, or a room beside a finished one. */
-export function roomOpen(
-  map: MapSpec,
-  id: string,
-  done: readonly string[],
-  authored: Authored,
-): boolean {
-  if (!authored.includes(id)) return false;
-  if (id === authored[0] || done.includes(id)) return true;
-  return neighbours(map, id).some((near) => done.includes(near));
+const nodeOf = (map: MapSpec, id: string): NodeSpec | undefined =>
+  map.nodes.find((node) => node.id === id);
+
+/** Whether he can see a node: room 1, a finished room, or a node beside a finished room. */
+export function nodeSeen(map: MapSpec, id: string, reach: Reach): boolean {
+  if (id === reach.authored[0] || reach.done.includes(id)) return true;
+  return neighbours(map, id).some((near) => reach.done.includes(near));
+}
+
+/** Whether a node's gate is met: every tool earned and every room finished; never if sealed. */
+export function gateMet(node: NodeSpec, reach: Reach): boolean {
+  const { gate } = node;
+  if (!gate) return true;
+  if (gate.sealed) return false;
+  const tools = gate.tools ?? [];
+  const rooms = gate.rooms ?? [];
+  return (
+    tools.every((tool) => reach.tools.includes(tool)) &&
+    rooms.every((room) => reach.done.includes(room))
+  );
+}
+
+/**
+ * Whether he can travel to a node now: an authored room that is room 1, finished, or seen
+ * with its gate met.
+ */
+export function roomOpen(map: MapSpec, id: string, reach: Reach): boolean {
+  if (!reach.authored.includes(id)) return false;
+  if (id === reach.authored[0] || reach.done.includes(id)) return true;
+  const node = nodeOf(map, id);
+  return node !== undefined && nodeSeen(map, id, reach) && gateMet(node, reach);
 }
 
 /**
  * The room to play next: the first authored room, in play order, that is open and not
  * finished. Null when every open room is finished.
  */
-export function nextRoomOnMap(
-  map: MapSpec,
-  done: readonly string[],
-  authored: Authored,
-): string | null {
-  return authored.find((id) => !done.includes(id) && roomOpen(map, id, done, authored)) ?? null;
+export function nextRoomOnMap(map: MapSpec, reach: Reach): string | null {
+  return reach.authored.find((id) => !reach.done.includes(id) && roomOpen(map, id, reach)) ?? null;
 }
 
 /**
- * How a node shows: `restored`, a room he has finished, its map change in colour; `open`, a
- * room he can travel to; `closed`, everything else, grey and still (NFR12).
+ * How a node shows:
+ * - `restored`, a room he has finished, its change in colour;
+ * - `open`, a room he can travel to;
+ * - `locked`, seen with its gate shut, its lock showing what opens it;
+ * - `seen`, seen with its gate met but taking him nowhere yet (a lair, the workshop, a room
+ *   whose story comes later);
+ * - `closed`, not seen yet: grey and still (NFR12).
  */
-export type NodeState = 'restored' | 'open' | 'closed';
+export type NodeState = 'restored' | 'open' | 'locked' | 'seen' | 'closed';
+
+export function nodeState(map: MapSpec, node: NodeSpec, reach: Reach): NodeState {
+  if (reach.done.includes(node.id)) return 'restored';
+  if (roomOpen(map, node.id, reach)) return 'open';
+  if (!nodeSeen(map, node.id, reach)) return 'closed';
+  return gateMet(node, reach) ? 'seen' : 'locked';
+}
 
 export interface NodeView {
   id: NodeId;
@@ -49,6 +85,10 @@ export interface NodeView {
   x: number;
   y: number;
   state: NodeState;
+  /** While locked: what its lock shows (a padlock when null). */
+  lock: LockKind | null;
+  /** While locked or seen: the plate a sealed gate shows. */
+  plate: string | null;
   /** The room to play next, which pulses (once he has finished room 1). */
   next: boolean;
   /** A room he left halfway: its lines wait for him. */
@@ -73,38 +113,42 @@ export interface MapView {
 
 export interface MapProgress {
   roomsDone: readonly string[];
+  /** Tools earned (`progress.tools`). */
+  tools: readonly string[];
   /** Rooms he left halfway (`progress.started`). */
   started: readonly string[];
   /** The room just restored, or null. */
   fresh: string | null;
 }
 
+const travels = (state: NodeState) => state === 'open' || state === 'restored';
+
 /** What the map shows. */
 export function mapView(map: MapSpec, progress: MapProgress, authored: Authored): MapView {
-  const { roomsDone: done, started, fresh } = progress;
-  const next = done.length > 0 ? nextRoomOnMap(map, done, authored) : null;
-  const stateOf = (id: NodeId): NodeState => {
-    if (done.includes(id)) return 'restored';
-    return roomOpen(map, id, done, authored) ? 'open' : 'closed';
-  };
-  const nodes = map.nodes.map(
-    (node): NodeView => ({
+  const { roomsDone: done, tools, started, fresh } = progress;
+  const reach: Reach = { done, tools, authored };
+  const next = done.length > 0 ? nextRoomOnMap(map, reach) : null;
+  const nodes = map.nodes.map((node): NodeView => {
+    const state = nodeState(map, node, reach);
+    return {
       id: node.id,
       kind: node.kind,
       x: node.at.x,
       y: node.at.y,
-      state: stateOf(node.id),
+      state,
+      lock: state === 'locked' ? (node.lock ?? null) : null,
+      plate: state === 'locked' || state === 'seen' ? (node.plate ?? null) : null,
       next: node.id === next,
       started: started.includes(node.id),
       fresh: node.id === fresh,
-    }),
-  );
+    };
+  });
   const at = new Map(nodes.map((node) => [node.id, node]));
   const roads = map.edges.flatMap(([a, b]) => {
     const from = at.get(a);
     const to = at.get(b);
     if (!from || !to) return [];
-    const travelled = from.state !== 'closed' && to.state !== 'closed';
+    const travelled = travels(from.state) && travels(to.state);
     return [{ from: { x: from.x, y: from.y }, to: { x: to.x, y: to.y }, travelled }];
   });
   return { nodes, roads, allDone: authored.every((id) => done.includes(id)) };

@@ -54,7 +54,13 @@ export const hr = {
       foundry: 'Ljevaonica',
     },
     /** For screen readers, after a node's name: what state it is in. */
-    states: { restored: 'radi', open: 'otvoreno', closed: 'zatvoreno' },
+    states: {
+      restored: 'radi',
+      open: 'otvoreno',
+      locked: 'zaključano',
+      seen: 'uskoro',
+      closed: 'zatvoreno',
+    },
     /** For screen readers: a room he left halfway. */
     started: 'započeto',
   },

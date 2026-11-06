@@ -739,7 +739,8 @@ interface SaveV1 {
     formsMet: FormId[]; ideasSeen: IdeaId[];        // joins: hints (2.7), cards (2.6)
     started: SavedRoom[];                           // rooms left halfway for the map (2.2)
     onMap: boolean;                                 // on the map; else a launch goes on to the next room (2.2)
-    seen: NodeId[]; at: NodeId; tornPages: PageId[]; // joins: gates (2.3), fights (epic 3)
+    tornPages: PageId[];                            // joins: fights (epic 3)
+    // Not saved: what the map shows is derived from roomsDone and tools (city/reach.ts, 2.3).
     room: {                                         // the room in progress
       id: RoomId; stage: number;
       lines: { text: string; source: 'typed' | WayId; progress: boolean }[];  // after line 0

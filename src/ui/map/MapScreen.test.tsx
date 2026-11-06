@@ -10,8 +10,14 @@ import { MapBoard } from '@/ui/map/MapScreen';
 const authored = rooms.map((room) => room.id);
 const css = readFileSync(new URL('./map.css', import.meta.url), 'utf8');
 
+const toolsAfter = (done: string[]) => (done.includes('r03') ? ['balance'] : []);
+
 function board(done: string[], started: string[] = [], fresh: string | null = null) {
-  const view = mapView(districtMap, { roomsDone: done, started, fresh }, authored);
+  const view = mapView(
+    districtMap,
+    { roomsDone: done, tools: toolsAfter(done), started, fresh },
+    authored,
+  );
   return renderToString(<MapBoard view={view} onTravel={() => undefined} />);
 }
 
@@ -42,6 +48,18 @@ describe('the map screen (story 2.2)', () => {
     expect(html).toContain(
       `aria-label="${hr.map.nodes.r02}, ${hr.map.states.open}, ${hr.map.started}"`,
     );
+  });
+
+  it('names a place he can see but not open, shows its lock, and takes no tap (story 2.3)', () => {
+    const html = board(['r01', 'r02']);
+    const bridge = buttons(html).find((button) => button.includes(`${hr.map.nodes.r05},`));
+    expect(bridge).toContain(`aria-label="${hr.map.nodes.r05}, ${hr.map.states.locked}"`);
+    expect(bridge).toContain('disabled');
+    expect(bridge).toContain('data-state="locked"');
+    expect(html).toContain(`>${hr.map.nodes.r05}<`);
+    expect(html).toContain('map__lock');
+    // The lair beside room 2 shows, named, and waits for epic 3.
+    expect(html).toContain(`aria-label="${hr.map.nodes['lair-20']}, ${hr.map.states.seen}"`);
   });
 
   it('pulses the next room and blooms the one just restored', () => {
