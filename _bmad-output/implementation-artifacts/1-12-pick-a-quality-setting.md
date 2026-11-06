@@ -92,3 +92,19 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/dev/DevPanel.tsx`, `DevPanel.test.tsx`, `dev-view.ts`, `dev-view.test.ts`, `dev-panel.css` (modified)
 - `src/ui/notebook/pad-keys.test.ts` (modified: builds its state from `initialGameState()`)
 - This story file
+
+## Review
+
+One review pass, then one fix pass (branch `lane/1-12-fix`).
+
+### Findings
+
+The review raised no findings to fix, so no code changed in the fix pass. `git merge epic-1` was already up to date (lane/1-12 is built on epic-1's tip, `c570ed0`). `npm run check` (138 files), `npm test` (52 files, 1034 tests) and `npm run build` (1.02 MB in 9 files, JavaScript 0.31 MB gzipped) all pass on the fix branch.
+
+### Minor notes for Luka (not fixed)
+
+- **`low` drops particles and shaders together.** `C:\Users\lpodobnik\Claude\matematika\src\art\quality.ts` has `low: 3`. The order stays bloom, then particles, then shaders, but no setting ever has shaders on with particles off. Epic 6's shaders, the restart glow among them, would then all vanish at `low`. This was the dev's own call; worth a veto check.
+- **The thresholds can't pick `medium` on a 60 Hz screen** (from the architecture, not a code bug). rAF frame times are locked to the screen refresh, so a 60 Hz tablet only gives 16.7 or 33.3 ms. The p95 can't land in the 18-25 ms band, so a few dropped frames go straight from `high` to `low`. Worth checking in story 1.13's tablet profile.
+- **A stall at the window's start isn't counted.** In `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\frame-test.ts`, `if (last >= from)` skips any frame that starts inside the 1-second settle wait and ends inside the timing window. A long stall right at the window's start is never counted, which tilts the pick upward.
+- **Merge risk.** 9 files that lane/1-12 changes also have uncommitted edits in the epic-1 checkout (`store/reducer.ts`, `types.ts`, `actions.ts`, `store.test.ts`, `dev/DevPanel.tsx`, `dev-view.ts`, `dev-view.test.ts`, `ui/scene/SceneRoot.tsx`, `ui/notebook/pad-keys.test.ts`). `C:\Users\lpodobnik\Claude\matematika\src\store\store.test.ts` line 24 expects `ui` to equal `{ screen, notebookAside }` exactly, so it will fail once `ui.quality` merges in.
+- **Review's own run.** The test suite ran once on lane/1-12: 52 files, 1034 tests passing; check and build were not run then (they were in the fix pass, above). All three acceptance criteria are met in code: steam in a `ParticleContainer` runs at `high` and `medium` and unmounts at `low`; the p95 test starts 1 s after the first frame, uses inclusive 18 and 25 ms thresholds and is held in memory; the dev panel's forced setting holds until reload.
