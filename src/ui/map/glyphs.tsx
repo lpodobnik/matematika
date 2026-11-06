@@ -7,7 +7,7 @@ import type { LockKind, NodeId, NodeKind } from '@/city/types';
  * carried by shape as well as colour (NFR4, NFR12): the door stands raised, the lamps have
  * rays, the gate is up with water running under it, the wheel's spokes turn. Grey ink and
  * still until then. Rooms whose stories come later, the lairs, the workshop and the gate
- * get a plain sign of their kind.
+ * get a plain sign of their kind. Story 2.8 adds the bridge.
  */
 export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; state: NodeState }) {
   const restored = state === 'restored';
@@ -20,6 +20,8 @@ export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; sta
       return <SluiceGate restored={restored} />;
     case 'r04':
       return <WaterWheel restored={restored} />;
+    case 'r05':
+      return <Bridge restored={restored} />;
     default:
       return <KindSign kind={kind} />;
   }
@@ -134,6 +136,29 @@ export function LockBadge({ lock }: { lock: LockKind | null }) {
           <path d="M-5 -2 V-7 A5 5 0 0 1 5 -7 V-2" />
           <rect x="-8" y="-2" width="16" height="12" rx="2" />
         </g>
+      )}
+    </g>
+  );
+}
+
+/**
+ * Room 5: a drawbridge between two piers over the water; restored, its deck is down and
+ * lit, so the road runs across. Until then the deck stands raised (story 2.8).
+ */
+function Bridge({ restored }: { restored: boolean }) {
+  return (
+    <g>
+      {/* Two piers on the banks, an arch between them, and the water under it. */}
+      <path d="M-40 36 V4 M40 36 V4" />
+      <path d="M-28 36 Q0 0 28 36" />
+      <path d="M-44 38 Q-30 32 -16 38 T12 38 T40 38" className="glyph__water" />
+      {restored ? (
+        <>
+          <rect x="-40" y="-4" width="80" height="8" className="glyph__lit" />
+          <path d="M-32 -4 V-16 M-16 -4 V-16 M0 -4 V-16 M16 -4 V-16 M32 -4 V-16 M-36 -16 H36" />
+        </>
+      ) : (
+        <path d="M-40 4 L-14 -34 M-36 8 L-10 -30 M-40 4 L-36 8 M-14 -34 L-10 -30" />
       )}
     </g>
   );

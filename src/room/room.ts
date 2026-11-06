@@ -4,7 +4,8 @@
 
 import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
-import type { Equation } from '@/math/expr';
+import { stageSolution } from '@/math/check';
+import { type Equation, num } from '@/math/expr';
 import { parse } from '@/math/parse';
 import { tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
@@ -93,15 +94,29 @@ export function openingDial(stage: StageSpec): { min: number; max: number } {
 export const trayStart: Readonly<TrayNumbers> = { weight: 1, float: 1 };
 
 /**
+ * Where the slider starts: at its lowest notch; or, on a stage after a change (room 5,
+ * story 2.8), where the stage before it levelled, so the change shows as the scale tipping
+ * away from level.
+ */
+function startingDial(stage: StageSpec): number {
+  const { min, max } = fullDial(stage);
+  if (!stage.change || stage.dial === 'locked') return min;
+  const now = machineEquation(stage, 0);
+  const before = stageSolution({ left: now.left, right: num(stage.change.from) });
+  const onDial = (before - stage.dial.min) % stage.dial.step === 0;
+  return onDial && before >= min && before <= max ? before : min;
+}
+
+/**
  * A stage as it arrives: the first machine's equation on the pans and as the notebook's
  * line 0, an empty draft (or, with Try values `blanks`, the lines to fill), every machine
  * stopped, no pin placed, the tray at 1 and 1, the splitter at 2 parts, no Balance move
- * made nor tool offered yet (room/tray.ts), and the dial at its
- * minimum, exploring, with its poke window open if it has one. It waits in `arrive` for
- * his first touch on the machine (room/phases.ts).
+ * made nor tool offered yet (room/tray.ts), and the dial where it starts (`startingDial`),
+ * exploring, with its poke window open if it has one. It waits in `arrive` for his first
+ * touch on the machine (room/phases.ts).
  */
 export function arriveAtStage(stage: StageSpec): StageState {
-  const dialX = fullDial(stage).min;
+  const dialX = startingDial(stage);
   return {
     phase: 'arrive',
     machine: 0,

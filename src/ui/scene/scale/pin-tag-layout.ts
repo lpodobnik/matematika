@@ -23,7 +23,7 @@ import { hr } from '@/content/text/hr';
 import { assert } from '@/lib/assert';
 import { dialTurnsIn } from '@/room/dial';
 import { openingPhase } from '@/room/phases';
-import { arriveAtStage, fullDial, openingDial } from '@/room/room';
+import { arriveAtStage, openingDial } from '@/room/room';
 import { scaleViewAt } from '@/room/scale';
 import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
 import { sceneSize } from '@/ui/scene/fit-scene';
@@ -108,7 +108,9 @@ export function wrapWords(text: string, maxChars: number): string[] {
 /** The x values the dial can show while the pin is offered: the poke window, or its start. */
 function offeredXs(stage: StageSpec): number[] {
   const { dial } = stage;
-  const start = fullDial(stage).min;
+  // Where the slider starts: its lowest notch, or after a change where the stage before
+  // levelled (room 5, story 2.8; room/room.ts).
+  const start = arriveAtStage(stage).dialX;
   if (dial === 'locked' || !dialTurnsIn(stage, openingPhase(stage))) return [start];
   const open = openingDial(stage);
   const xs: number[] = [];

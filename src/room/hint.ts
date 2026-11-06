@@ -117,14 +117,18 @@ function solutionOf(room: RoomState): number {
 }
 
 /**
- * The way the hint shows: Try values where the stage lists it and the dial reaches the
- * solution; else Balance, once he has earned it; else Try where listed. Null for none.
+ * The way the hint shows: Balance once he has made a Balance move in the stage (story 2.8
+ * review: room 5 takes both ways, and a hint mid-Balance must go on with Balance); else Try
+ * values where the stage lists it and the dial reaches the solution; else Balance, once he
+ * has earned it; else Try where listed. Null for none.
  */
-function wayOf(room: RoomState, tools: readonly ToolId[], n: number): StepWay | null {
+export function wayOf(room: RoomState, tools: readonly ToolId[], n: number): StepWay | null {
   const spec = currentStageSpec(room);
   const tries = spec.ways.includes('try');
+  const balances = spec.ways.includes('balance') && tools.includes('balance');
+  if (balances && room.stage.balance.moves > 0) return 'balance';
   if (tries && spec.dial !== 'locked' && isOnDial(spec.dial, n)) return 'try';
-  if (spec.ways.includes('balance') && tools.includes('balance')) return 'balance';
+  if (balances) return 'balance';
   return tries ? 'try' : null;
 }
 

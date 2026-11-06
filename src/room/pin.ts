@@ -256,10 +256,11 @@ function resultOf(right: boolean): 'right' | 'wrong' {
 }
 
 /**
- * The pin kinds the engine places so far; they are also the keys of their questions in
- * `hr.pin.questions`.
+ * The pin kinds the engine places so far, and `change`: a `level-x` pin after the stage's
+ * numbers changed (room 5, story 2.8), with its own question. They are also the keys of
+ * their questions in `hr.pin.questions`.
  */
-export type PinQuestion = Extract<PinSpec['kind'], 'level-x' | 'effect'>;
+export type PinQuestion = Extract<PinSpec['kind'], 'level-x' | 'effect'> | 'change';
 
 /** What the pin shows. Flat, for selectors. */
 export interface PinView {
@@ -298,8 +299,9 @@ export function pinView(room: RoomState | null): PinView | null {
   if (!room) return null;
   const spec = currentStageSpec(room);
   const track = pinTrack(spec);
-  const question = spec.pin?.kind;
-  if (!track || (question !== 'level-x' && question !== 'effect')) return null;
+  const kind = spec.pin?.kind;
+  if (!track || (kind !== 'level-x' && kind !== 'effect')) return null;
+  const question: PinQuestion = kind === 'level-x' && spec.change ? 'change' : kind;
   const { stage } = room;
   const offered = pinOffered(room);
   if (!offered && !stage.pin) return null;

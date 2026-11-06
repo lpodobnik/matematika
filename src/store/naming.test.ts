@@ -144,8 +144,8 @@ describe('the naming after room 1 (story 2.4)', () => {
       ...save,
       progress: {
         ...save.progress,
-        roomsDone: ['r01', 'r02', 'r03', 'r04'],
-        told: ['r01', 'r02', 'r03', 'r04'],
+        roomsDone: ['r01', 'r02', 'r03', 'r04', 'r05'],
+        told: ['r01', 'r02', 'r03', 'r04', 'r05'],
         tools: ['balance'],
       },
     });

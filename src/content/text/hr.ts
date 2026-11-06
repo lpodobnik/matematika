@@ -200,6 +200,8 @@ export const hr = {
     questions: {
       'level-x': 'Postavi zastavicu na mjesto gdje će vaga biti u ravnoteži.',
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
+      /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
+      change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
     },
     /** An effect pin's options (room 3), under their pictures: the scale tilted left or right. */
     options: {

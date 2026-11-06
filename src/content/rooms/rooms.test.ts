@@ -143,6 +143,24 @@ const gddRooms: readonly {
     ways: ['balance'],
     earns: null,
   },
+  {
+    id: 'r05',
+    machine: 'bridge',
+    xIs: 'Length per plank',
+    equations: ['3x + 4 = 22', '3x + 4 = 25'],
+    answers: [6, 7],
+    types: ['predict', 'predict'],
+    dials: [
+      { min: 0, max: 10, step: 1 },
+      { min: 0, max: 10, step: 1 },
+    ],
+    // Story 2.8: a poke window before the first pin; the second pin comes before the
+    // slider opens, after the change.
+    pokeNotches: [4, undefined],
+    pins: [{ kind: 'level-x' }, { kind: 'level-x' }],
+    ways: ['try', 'balance'],
+    earns: null,
+  },
 ];
 
 /** The x values the dial reaches before the pin is locked: the poke window. */
@@ -259,8 +277,8 @@ describe('rooms', () => {
     expect(rooms[0]?.stages[0]?.readouts).toBe(true);
   });
 
-  it('lists the rooms in play order: rooms 1, 2, 3 and 4', () => {
-    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03', 'r04']);
+  it('lists the rooms in play order: rooms 1–5', () => {
+    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03', 'r04', 'r05']);
   });
 
   describe("room 4, the water wheel (GDD's Puzzle Progression tables)", () => {

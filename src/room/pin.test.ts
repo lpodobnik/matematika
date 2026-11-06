@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { r03 } from '@/content/rooms/r03-sluice-gate';
+import { r05 } from '@/content/rooms/r05-bridge';
 import { parse } from '@/math/parse';
 import type { Token } from '@/math/tokens';
 import { dialView, setDial } from '@/room/dial';
@@ -471,5 +472,23 @@ describe('pinView', () => {
       label: null,
       option: 'tilt-right',
     });
+  });
+});
+
+describe('the change’s question (room 5, story 2.8)', () => {
+  it('asks its own question on the second stage, after the load changed; the first asks as ever', () => {
+    const first = touchMachine(enterRoom(r05).room);
+    expect(first && pinView(first.room)?.question).toBe('level-x');
+    const second = touchMachine(enterRoom(r05, 1).room);
+    expect(second && pinView(second.room)).toMatchObject({ question: 'change', asks: true });
+  });
+});
+
+describe('the change’s slider (room 5, story 2.8)', () => {
+  it('starts the second stage where the first levelled, so the change tips the scale', () => {
+    expect(enterRoom(r05).room.stage.dialX).toBe(0);
+    const second = enterRoom(r05, 1).room;
+    expect(second.stage.dialX).toBe(6);
+    expect(scaleView(second).level).toBe(false);
   });
 });

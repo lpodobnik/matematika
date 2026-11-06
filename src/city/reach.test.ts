@@ -166,7 +166,7 @@ describe('where he can go (city/reach.ts, stories 2.2 and 2.3)', () => {
 
   it('never opens a room whose story hasn’t been built, a lair or the workshop', () => {
     const done = ['r01', 'r02', 'r03', 'r04'];
-    for (const id of ['r05', 'r06', 'r09', 'lair-20', 'workshop', 'foundry']) {
+    for (const id of ['r06', 'r09', 'lair-20', 'workshop', 'foundry']) {
       expect(roomOpen(districtMap, id, reach(done, ['balance'], authored)), id).toBe(false);
     }
   });
@@ -175,7 +175,10 @@ describe('where he can go (city/reach.ts, stories 2.2 and 2.3)', () => {
     expect(nextRoomOnMap(districtMap, reach([], [], authored))).toBe('r01');
     expect(nextRoomOnMap(districtMap, reach(['r01'], [], authored))).toBe('r02');
     const done = ['r01', 'r02', 'r03', 'r04'];
-    expect(nextRoomOnMap(districtMap, reach(done, ['balance'], authored))).toBeNull();
+    // Room 5, the bridge, once Balance is earned (story 2.8); then nothing yet.
+    expect(nextRoomOnMap(districtMap, reach(done, ['balance'], authored))).toBe('r05');
+    const toFive = [...done, 'r05'];
+    expect(nextRoomOnMap(districtMap, reach(toFive, ['balance'], authored))).toBeNull();
   });
 });
 
@@ -202,10 +205,11 @@ describe('what the map shows (mapView)', () => {
     expect(node(v, 'lair-30')?.state).toBe('closed');
   });
 
-  it('after room 3: the steam lift shows locked with the gear chain, the bridge waits for its story', () => {
+  it('after room 3: the steam lift shows locked with the gear chain, and the bridge opens', () => {
     const v = view(['r01', 'r02', 'r03']);
     expect(node(v, 'r09')).toMatchObject({ state: 'locked', lock: 'chain' });
-    expect(node(v, 'r05')).toMatchObject({ state: 'seen', lock: null });
+    // Story 2.8: room 5 is built, and Balance opens it.
+    expect(node(v, 'r05')).toMatchObject({ state: 'open', lock: null });
   });
 
   it('after room 4: room 6 shows; the foundry gate shows from room 6 with its plate (FR30)', () => {
@@ -248,7 +252,8 @@ describe('what the map shows (mapView)', () => {
 
   it('says when every room so far is restored', () => {
     expect(view(['r01', 'r02', 'r03']).allDone).toBe(false);
-    expect(view(['r01', 'r02', 'r03', 'r04']).allDone).toBe(true);
+    expect(view(['r01', 'r02', 'r03', 'r04']).allDone).toBe(false);
+    expect(view(['r01', 'r02', 'r03', 'r04', 'r05']).allDone).toBe(true);
   });
 });
 

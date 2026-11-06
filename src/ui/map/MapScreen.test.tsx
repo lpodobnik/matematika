@@ -70,8 +70,8 @@ describe('the map screen (story 2.2)', () => {
   });
 
   it('shows the "to be continued" note once every room so far is restored', () => {
-    expect(board(['r01', 'r02', 'r03'])).not.toContain(hr.app.toBeContinued);
-    expect(board(['r01', 'r02', 'r03', 'r04'])).toContain(hr.app.toBeContinued);
+    expect(board(['r01', 'r02', 'r03', 'r04'])).not.toContain(hr.app.toBeContinued);
+    expect(board(['r01', 'r02', 'r03', 'r04', 'r05'])).toContain(hr.app.toBeContinued);
   });
 
   it('keeps every node at least 48 CSS px, and still under reduced motion', () => {
@@ -81,5 +81,17 @@ describe('the map screen (story 2.2)', () => {
     for (const name of ['glyph__water', 'glyph__turning', 'map__pulse', 'data-fresh']) {
       expect(reduced).toContain(name);
     }
+  });
+});
+
+describe('room 5 on the map (story 2.8)', () => {
+  it('draws the bridge with its deck raised, then lowered and lit once restored', () => {
+    const open = board(['r01', 'r02', 'r03', 'r04']);
+    const done = board(['r01', 'r02', 'r03', 'r04', 'r05']);
+    expect(open).toContain(`aria-label="${hr.map.nodes.r05}, ${hr.map.states.open}"`);
+    expect(done).toContain(`aria-label="${hr.map.nodes.r05}, ${hr.map.states.restored}"`);
+    expect(done.match(/glyph__lit/g)?.length ?? 0).toBeGreaterThan(
+      open.match(/glyph__lit/g)?.length ?? 0,
+    );
   });
 });

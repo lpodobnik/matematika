@@ -180,7 +180,7 @@ export function resetWorks(phase: Phase): boolean {
 
 /**
  * Reset (`stage/reset`): the stage in play goes back to line 0, with its blanks to fill
- * again, the dial at its minimum, every machine of the stage at 0, and exploratory moves and
+ * again, the dial where it starts (room/room.ts, `startingDial`), every machine of the stage at 0, and exploratory moves and
  * jams cleared; it opens at once, so a reset in arrive also ends arrive. A locked pin stays
  * as it is and isn't offered again: the stage returns to `open` with the dial's full range,
  * so he is never left with a short dial and no pin. A pin he hadn't confirmed goes back to

@@ -28,6 +28,8 @@ const r02b = 'x : 3 = 5';
 const r03a = 'x − 6 = 8';
 const r03b = '20 − x = 6';
 const r04 = '2x + 5 = 23';
+const r05a = '3x + 4 = 22';
+const r05b = '3x + 4 = 25';
 /** U+202F, the thousands separator the notebook writes. */
 const nnbsp = ' ';
 const r11 = `5${nnbsp}905 − 27x = 316`;
@@ -239,6 +241,26 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r04, line: 'x = 36', verdict: 'wrong', note: 'multiplied' },
     { stage: r04, line: 'x · 2 + 5 = 23', verdict: 'valid', progress: false, move: 'none' },
     { stage: r04, before: ['x = 9'], line: '2 · 9 + 5 = 24', verdict: 'wrong' },
+  ],
+  'r05 bridge (3x + 4 = 22, then 25)': [
+    // Story 2.8: Try values writes x = 6, Balance 3x = 18 (a float 4 on both sides), then a
+    // split by 3; then the change, 22 to 25, and the same again at x = 7.
+    { stage: r05a, line: 'x = 6', verdict: 'answer' },
+    { stage: r05a, before: ['x = 6'], line: '3 · 6 + 4 = 22', verdict: 'check' },
+    { stage: r05a, line: '3x = 18', verdict: 'valid', progress: true, move: 'add-both' },
+    { stage: r05a, before: ['3x = 18'], line: 'x = 6', verdict: 'answer' },
+    { stage: r05a, before: ['3x = 18', 'x = 6'], line: '3 · 6 + 4 = 22', verdict: 'check' },
+    { stage: r05a, line: '3x = 26', verdict: 'wrong', note: '22 + 4' },
+    { stage: r05a, line: '3 + x = 18', verdict: 'wrong', note: '3x read as 3 + x' },
+    { stage: r05a, line: 'x = 18', verdict: 'wrong', note: 'not divided' },
+    { stage: r05b, line: 'x = 7', verdict: 'answer' },
+    { stage: r05b, before: ['x = 7'], line: '3 · 7 + 4 = 25', verdict: 'check' },
+    { stage: r05b, line: '3x = 21', verdict: 'valid', progress: true, move: 'add-both' },
+    { stage: r05b, before: ['3x = 21'], line: 'x = 7', verdict: 'answer' },
+    { stage: r05b, before: ['3x = 21', 'x = 7'], line: '3 · 7 + 4 = 25', verdict: 'check' },
+    { stage: r05b, line: 'x = 6', verdict: 'wrong', note: 'the old answer, before the change' },
+    { stage: r05b, line: '3x = 22', verdict: 'wrong', note: 'the old load' },
+    { stage: r05b, line: 'x = 9', verdict: 'wrong', note: 'the 3 added to x, not to 3x' },
   ],
   // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,
   // copied as a line, is valid without progress (stories 1.2, 1.4 and 1.8–1.11 name them);

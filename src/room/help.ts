@@ -15,6 +15,7 @@ import { type Equation, hasX, num } from '@/math/expr';
 import { toLinear, valueAt } from '@/math/linear';
 import * as q from '@/math/rational';
 import { canonicalSolution } from '@/math/steps';
+import { wayOf } from '@/room/hint';
 import { lineProgress } from '@/room/notebook';
 import { currentStageSpec, machineEquation } from '@/room/room';
 import type { HintLevel, RoomState, ToolId } from '@/room/types';
@@ -72,7 +73,7 @@ export function workedExample(room: RoomState, tools: readonly ToolId[]): Equati
   const left = toLinear(stage.left);
   if (left.kind !== 'linear') return null;
   const own = stageSolution(stage);
-  const way = spec.ways.includes('balance') && tools.includes('balance') ? 'balance' : 'try';
+  const way = wayOf(room, tools, own) ?? 'try';
   for (const x of exampleSolutions) {
     if (x === own) continue;
     const value = valueAt(left, q.rational(x));

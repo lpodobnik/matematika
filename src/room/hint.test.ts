@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { r03 } from '@/content/rooms/r03-sluice-gate';
+import { r05 as r05Bridge } from '@/content/rooms/r05-bridge';
 import { formatEquation } from '@/math/format';
 import { tokenize } from '@/math/tokens';
 import { setDial } from '@/room/dial';
@@ -324,5 +325,18 @@ describe('the hint after the review of story 1.16', () => {
     const blankPage: RoomSpec = { ...r01, stages: [{ ...first, fading: { try: 'blank' } }] };
     const free = write(dialTo(opened(enterRoom(blankPage).room), 5), 'x = 5');
     expect(nextMove(free, [])).toEqual({ kind: 'check', x: 5, template: false });
+  });
+});
+
+describe('the hint in a room with both ways (room 5, story 2.8 review)', () => {
+  it('goes on with Balance once he has made a Balance move, though the slider reaches x', () => {
+    let room = touchMachine(enterRoom(r05Bridge, 1).room)?.room as RoomState;
+    room = { ...room, stage: { ...room.stage, phase: 'open', pin: null } };
+    expect(nextMove(room, balance)?.kind).toBe('slide');
+    const moved = {
+      ...room,
+      stage: { ...room.stage, balance: { ...room.stage.balance, moves: 1 } },
+    };
+    expect(nextMove(moved, balance)?.kind).not.toBe('slide');
   });
 });

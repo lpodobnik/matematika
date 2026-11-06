@@ -103,6 +103,8 @@ describe('pinTagLayout (story 1.14)', () => {
     expect(stages.map(({ spec, stage }) => `${spec.id}.${stage}`)).toEqual([
       'r03.0',
       'r03.1',
+      'r05.0',
+      'r05.1',
       'r04.0',
     ]);
     expect(rooms[3]?.stages[0]?.pin).toBeUndefined();
