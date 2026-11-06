@@ -4,6 +4,7 @@
 // The pans ride on posts above the beam's ends and stay level, so the heavier pan is the
 // lower one: which side is heavier shows by position, never by colour alone (NFR4).
 
+import { tagOverlap } from '@/art/skins/scale';
 import { isNumberPiece } from '@/room/pieces';
 import type { PieceView } from '@/room/scale';
 import type { Side } from '@/room/types';
@@ -76,26 +77,78 @@ export function labelWidth(label: string, fontSize: number): number {
   return [...label].length * charWidth * fontSize;
 }
 
+/**
+ * Widths of the characters in a slice's tag, `: 3`, as shares of the font size: a little
+ * over what the scene's bold sans draws, so the tag stays small but its text never spills.
+ */
+const tagCharWidths: Readonly<Record<string, number>> = { ':': 0.32, ' ': 0.3, ' ': 0.2 };
+
+/** The width of a slice's tag text (`: 3`), tighter than `labelWidth`, so the tag stays small. */
+export function tagTextWidth(label: string, fontSize: number): number {
+  return [...label].reduce((sum, char) => sum + (tagCharWidths[char] ?? 0.6), 0) * fontSize;
+}
+
 export interface PieceSize {
   width: number;
   height: number;
-  /** Height of the divider under a gear or spring, 0 for none; it is part of `height`. */
-  dividerHeight: number;
+  /** A gear or spring divided by n is drawn as one slice of n (story 1.14); 0 for none. */
+  slices: number;
+  /** The tag showing `: n` beside the slice, 0 by 0 for none; it is part of `width`. */
+  tagWidth: number;
+  tagHeight: number;
 }
+
+/**
+ * A float's height, as a multiple of the label size: the arrow, the balloon round its number,
+ * and the string that holds it well above the pan (story 1.14).
+ */
+export const floatHeight = 4;
+/** A divided gear's diameter, at the least, as a multiple of the label size… */
+export const slicedGearSize = 2.8;
+/** …and a divided spring's cap width and height, which fit its x above its solid layer. */
+export const slicedSpringWidth = 2.4;
+export const slicedSpringHeight = 3.5;
+/** A slice's tag: its height as a multiple of the label size. */
+export const tagHeightShare = 1.15;
 
 /** A piece's size in scene units, large enough for its label with room to spare. */
 export function pieceSize(piece: PieceView, fontSize: number): PieceSize {
-  const fit = labelWidth(piece.label, fontSize) + fontSize;
+  const text = labelWidth(piece.label, fontSize);
+  const fit = text + fontSize;
+  const none = { slices: 0, tagWidth: 0, tagHeight: 0 };
   if (isNumberPiece(piece)) {
-    const width = Math.max(fontSize * 2, fit);
-    // A float rides on a short tether above the pan.
-    const height = piece.kind === 'weight' ? fontSize * 2 : fontSize * 2.6;
-    return { width, height, dividerHeight: 0 };
+    if (piece.kind === 'weight') {
+      return { width: Math.max(fontSize * 2, fit), height: fontSize * 2, ...none };
+    }
+    // The balloon is a little narrower than a weight, so it reads round, not squat.
+    const width = Math.max(fontSize * 1.8, text + fontSize * 0.6);
+    return { width, height: fontSize * floatHeight, ...none };
   }
   const large = piece.count > 1n;
-  const diameter = Math.max(fontSize * (large ? 2.8 : 2), fit);
-  const dividerHeight = piece.divisorLabel === null ? 0 : fontSize * 1.5;
-  return { width: diameter, height: diameter + dividerHeight, dividerHeight };
+  if (piece.divisor === null || piece.divisorLabel === null) {
+    const diameter = Math.max(fontSize * (large ? 2.8 : 2), fit);
+    return { width: diameter, height: diameter, ...none };
+  }
+  // One slice of n: the whole gear (or cap) is drawn faint around it, with x above the
+  // slice, so it is larger than a small gear. The tag hangs beside it, a quarter over its
+  // faint edge (tagOverlap), leaving the slice in view. The tag's text sits right of its
+  // punched hole: 0.24 of its height clear on each side of the text.
+  const tagHeight = fontSize * tagHeightShare;
+  const tagWidth = tagTextWidth(piece.divisorLabel, fontSize) + tagHeight * 0.48;
+  const beside = tagWidth * (1 - tagOverlap);
+  const slices = Number(piece.divisor);
+  if (piece.kind === 'gear') {
+    const diameter = Math.max(fontSize * slicedGearSize, fit + fontSize * 0.6);
+    return { width: diameter + beside, height: diameter, slices, tagWidth, tagHeight };
+  }
+  const cap = Math.max(fontSize * slicedSpringWidth, fit + fontSize * 0.3);
+  return {
+    width: cap + beside,
+    height: fontSize * slicedSpringHeight,
+    slices,
+    tagWidth,
+    tagHeight,
+  };
 }
 
 /**

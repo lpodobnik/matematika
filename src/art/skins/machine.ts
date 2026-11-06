@@ -8,6 +8,9 @@
 //   lamp       a lamp on the housing, one per part of the machine (a room's stage)
 //   lampLight  a lit lamp's flame and rays: shape as well as colour (NFR4)
 //   door       a panel of planks, drawn from its top edge down
+//   latch      a bar across the door's front, with a knob, that holds the door down until the
+//              check line; it slides left into a box on the left post to let the door rise
+//   keepers    the latch's box on the left post and the staple on the right post it runs in
 //   jam        a wedge driven in beside the door and steam lines: shape as well as colour (NFR4)
 //   vent       a short pipe up out of the housing's top at its left end, where the steam rises
 //
@@ -35,6 +38,8 @@ const ink = { width: 4, color: palette.ink };
 const fineInk = { width: 2, color: palette.ink, alpha: 0.6 };
 const heavyFill = { color: palette.ink, alpha: 0.16 };
 const lightFill = { color: palette.paper };
+/** The latch bar: darker than the frame, so it reads as a heavy iron bar. */
+const barFill = { color: palette.ink, alpha: 0.42 };
 const jamInk = { width: 6, color: palette.jam };
 const flame = { color: palette.lamp, alpha: 0.9 };
 const rayInk = { width: 4, color: palette.lamp };
@@ -74,6 +79,54 @@ export function ventOutlet(shape: MachineShape): { x: number; y: number } {
 /** The vent's left edge (its lip), relative to the machine's origin. */
 export function ventLeft(shape: MachineShape): number {
   return ventPipe(shape).x - shape.vent * 0.7;
+}
+
+/** The door's two battens, as shares of its height from its top edge. */
+export const doorBattens = [0.3, 0.7] as const;
+
+/** The latch bar while it holds the door, relative to the machine's origin. */
+export interface LatchBar {
+  /** Its top and bottom edges. */
+  top: number;
+  bottom: number;
+  /** Its ends: inside the left post's box, and through the right post's staple. */
+  left: number;
+  right: number;
+  /** How far left it slides to let the door go: its right end ends inside the left post. */
+  travel: number;
+}
+
+/**
+ * The latch bar across the door's front. It sits where the door's lower batten reaches when
+ * the door has risen `liftShare` of its travel, so a latched door rises until that batten
+ * is up against the bar: the bar visibly holds it.
+ */
+export function latchBar(shape: MachineShape, liftShare: number): LatchBar {
+  const { width, height, post } = shape;
+  const thickness = post * 0.8;
+  const bottom = height * (doorBattens[1] - liftShare);
+  const left = -post * 0.6;
+  const right = width + post * 0.7;
+  return { top: bottom - thickness, bottom, left, right, travel: right - left };
+}
+
+/** The latch's knob: a short stem up from the bar near its right end, with a ball on top. */
+function latchKnob(bar: LatchBar): { x: number; stemTop: number; ball: number } {
+  const thickness = bar.bottom - bar.top;
+  return {
+    x: bar.right - thickness * 3,
+    stemTop: bar.top - thickness * 0.7,
+    ball: thickness * 0.32,
+  };
+}
+
+/** The latch's box on the left post, which the bar and its knob slide into. */
+export function latchBox(shape: MachineShape, bar: LatchBar) {
+  const thickness = bar.bottom - bar.top;
+  const knob = latchKnob(bar);
+  const x = -shape.post * 1.3;
+  const y = knob.stemTop - knob.ball - 3;
+  return { x, y, width: shape.post * 0.15 - x, height: bar.bottom + thickness * 0.35 - y };
 }
 
 export const machineSkin = {
@@ -153,11 +206,58 @@ export const machineSkin = {
       g.moveTo((width * i) / planks, 6).lineTo((width * i) / planks, height - 6);
     }
     g.stroke(fineInk);
-    g.moveTo(8, height * 0.3)
-      .lineTo(width - 8, height * 0.3)
-      .moveTo(8, height * 0.7)
-      .lineTo(width - 8, height * 0.7)
+    for (const batten of doorBattens) {
+      g.moveTo(8, height * batten).lineTo(width - 8, height * batten);
+    }
+    g.stroke(ink);
+  },
+
+  /**
+   * The latch bar holding the door, with its knob: a heavy bar across the door's front,
+   * shaded like iron, so a latched door reads as locked by its shape (NFR4). Drawn where it
+   * holds the door; it slides out by its container's x.
+   */
+  latch(g: Graphics, bar: LatchBar): void {
+    g.clear();
+    const { top, bottom, left, right } = bar;
+    const thickness = bottom - top;
+    const knob = latchKnob(bar);
+    g.rect(knob.x - thickness * 0.16, knob.stemTop, thickness * 0.32, top - knob.stemTop + 2)
+      .fill(barFill)
+      .stroke(fineInk);
+    g.circle(knob.x, knob.stemTop, knob.ball).fill(lightFill).stroke(ink);
+    g.roundRect(left, top, right - left, thickness, thickness * 0.3)
+      .fill(barFill)
       .stroke(ink);
+    g.moveTo(left + 6, (top + bottom) / 2)
+      .lineTo(right - 6, (top + bottom) / 2)
+      .stroke(fineInk);
+  },
+
+  /**
+   * What the bar runs in, drawn over it: a box on the left post that it slides into, and a
+   * staple on the right post that it passes through while it holds the door.
+   */
+  keepers(g: Graphics, shape: MachineShape, bar: LatchBar): void {
+    g.clear();
+    const { width, post } = shape;
+    const thickness = bar.bottom - bar.top;
+    const box = latchBox(shape, bar);
+    g.roundRect(box.x, box.y, box.width, box.height, 4).fill(lightFill).stroke(ink);
+    g.rect(box.x + 5, box.y + 5, box.width - 10, box.height - 10).fill(heavyFill);
+    g.rect(width + post * 0.15, bar.top - thickness * 0.3, post * 0.7, thickness * 1.6)
+      .fill(lightFill)
+      .stroke(ink);
+  },
+
+  /**
+   * Where the latch shows: between the posts' outer edges, with room for its knob. The bar
+   * vanishes into its box on the left post as it slides out, instead of sliding past it.
+   */
+  latchMask(g: Graphics, shape: MachineShape, bar: LatchBar): void {
+    g.clear();
+    const box = latchBox(shape, bar);
+    g.rect(-shape.post, box.y, shape.width + shape.post * 2, box.height).fill({ color: 0xffffff });
   },
 
   /** The opening's outline, for masking the door to it. */

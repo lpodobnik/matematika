@@ -44,13 +44,23 @@ describe('scaleView', () => {
     expect(at5.level).toBe(true);
   });
 
-  it('labels large gears with their count and dividers with their size', () => {
+  it('labels large gears with their count and a divided gear\u2019s slice with its division', () => {
     const view = scaleView(roomWith('27x + x : 3 = 5 905'));
+    // Story 1.14: the slice's tag reads `: 3` with the school sign, not a bare 3.
     expect(view.left.pieces.map((p) => [p.kind, p.label, p.divisorLabel])).toEqual([
       ['gear', '27x', null],
-      ['gear', '0', '3'],
+      ['gear', '0', ': 3'],
     ]);
     expect(view.right.pieces[0]?.label).toBe('5\u202f905');
+  });
+
+  it('labels a float with the school minus: room 3\u2019s x \u2212 6 shows \u22126 (story 1.14)', () => {
+    const view = scaleView(roomWith('x \u2212 6 = 8'));
+    expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
+      ['gear', '0'],
+      ['float', '\u22126'],
+    ]);
+    expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([['weight', '8']]);
   });
 
   it("uses the stage's tilt per unit when it has one", () => {
@@ -115,20 +125,20 @@ describe('acting out a written line (story 1.7)', () => {
     ]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([
       ['weight', '25'],
-      ['float', '7'],
+      ['float', '−7'],
     ]);
     expect(view.readouts).toBeNull();
     expect(view.tilt).toBe(0);
     expect(view.level).toBe(true);
   });
 
-  it('keeps the count on a large gear and the size on a divider: only x is hidden', () => {
+  it('keeps the count on a large gear and the division on a slice: only x is hidden', () => {
     const view = scaleView(write(blankPage('27x + 5 = 5 405'), '27x = 5 400'));
     expect(view.left.pieces.map((p) => p.label)).toEqual(['27x']);
     const divided = scaleView(
       write(blankPage('x : 3 = 5', { dial: { min: 0, max: 30, step: 3 } }), 'x : 3 = 10 − 5'),
     );
-    expect(divided.left.pieces.map((p) => [p.label, p.divisorLabel])).toEqual([['?', '3']]);
+    expect(divided.left.pieces.map((p) => [p.label, p.divisorLabel])).toEqual([['?', ': 3']]);
   });
 
   it("goes back to the dial's x, its label and the readouts on the dial's next notch", () => {
@@ -140,7 +150,7 @@ describe('acting out a written line (story 1.7)', () => {
     expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', '2']]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([
       ['weight', '9'],
-      ['float', '4'],
+      ['float', '−4'],
     ]);
     expect(view.readouts).toEqual({ left: '2', right: '5' });
   });

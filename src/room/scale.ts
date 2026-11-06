@@ -16,7 +16,15 @@ import { type Equation, equationHasX } from '@/math/expr';
 import { formatNumber } from '@/math/format';
 import * as q from '@/math/rational';
 import { jammedLine } from '@/room/notebook';
-import { countLabel, isNumberPiece, numberLabel, type Piece, panPieces } from '@/room/pieces';
+import {
+  countLabel,
+  divisorLabel,
+  isNumberPiece,
+  numberLabel,
+  numberPieceLabel,
+  type Piece,
+  panPieces,
+} from '@/room/pieces';
 import { pinRevealX } from '@/room/pin';
 import { currentStageSpec, machineEquation } from '@/room/room';
 import { isLevel, jamTilt, sideValues, tiltFor } from '@/room/tilt';
@@ -26,9 +34,12 @@ import type { RoomState, StageSpec } from '@/room/types';
 export const hiddenXLabel = '?';
 
 export type PieceView = Piece & {
-  /** The number on the piece: a weight's value, or the x a small gear stands for. */
+  /**
+   * The number on the piece: a weight's value, a float's with the school minus (`−6`), or
+   * the x a small gear stands for.
+   */
   label: string;
-  /** The number on the divider under a gear or spring, or null for none. */
+  /** The tag on a divided gear's or spring's slice, `: 3`, or null for none. */
   divisorLabel: string | null;
 };
 
@@ -59,12 +70,11 @@ export interface ScaleView {
 }
 
 function pieceView(piece: Piece, xLabel: string): PieceView {
-  if (isNumberPiece(piece))
-    return { ...piece, label: numberLabel(piece.value), divisorLabel: null };
+  if (isNumberPiece(piece)) return { ...piece, label: numberPieceLabel(piece), divisorLabel: null };
   return {
     ...piece,
     label: piece.count === 1n ? xLabel : countLabel(piece.count),
-    divisorLabel: piece.divisor === null ? null : formatNumber(piece.divisor),
+    divisorLabel: piece.divisor === null ? null : divisorLabel(piece.divisor),
   };
 }
 

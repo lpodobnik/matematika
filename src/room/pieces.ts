@@ -4,12 +4,12 @@
 //
 //   + n          a weight of n              + kx      k x-gears (one large gear above 12)
 //   − n          a float of n               − kx      k springs (one large spring above 12)
-//   x : n        an x-gear on a divider of n (the GDD's "reducer")
+//   x : n        one slice of an x-gear cut into n (the GDD's "reducer", story 1.14)
 //   2 · 9, 18 : 2, (3 + 4)   one weight of its value, or one float if subtracted
 //   (x + 4), 2 · (x + 3)     acted out from its toLinear form: gears, then a weight
 //
 // A weight and a float of the same number on one pan cancel and vanish, as do a gear and
-// a spring (on dividers of the same size). The pieces are only a picture of the equation:
+// a spring (cut into the same number of slices). The pieces are only a picture of the equation:
 // the tilt comes from the sides' exact values, never from the pieces.
 
 import { tuning } from '@/config/tuning';
@@ -32,7 +32,7 @@ export type XPiece = {
   kind: 'gear' | 'spring';
   /** How many x it stands for: 1 for a small gear, above tuning.maxSmallGears for a large one. */
   count: bigint;
-  /** The divider under it (`x : 3` has 3), or null for none. */
+  /** What it is divided by (`x : 3` has 3), drawn as one slice of n, or null for none. */
   divisor: bigint | null;
 };
 
@@ -179,16 +179,42 @@ export function panPieces(equation: Equation): PanPieces {
 }
 
 /**
- * The number a weight or float shows: `18` for a whole number, otherwise the reduced
- * fraction as a division (`9 : 2`), which only a wrong line acted out can produce. A
- * fraction too big for a number literal shows its nearest whole number.
+ * A number on a piece: `18` for a whole number, otherwise the reduced fraction as a
+ * division (`9 : 2`), which only a wrong line acted out can produce. A fraction too big for
+ * a number literal shows its nearest whole number. `negative` puts the school minus on it,
+ * on the first number of a division (`−9 : 2`, which is the same value).
  */
-export function numberLabel(value: q.Rational): string {
+export function numberLabel(value: q.Rational, negative = false): string {
   const n = abs(value.n);
-  if (value.d === 1n) return formatNumber(n);
+  const signed = (whole: bigint) => formatNumber(negative ? -whole : whole);
+  if (value.d === 1n) return signed(n);
   const limit = BigInt(maxNumber);
-  if (n <= limit && value.d <= limit) return formatExpr(div(num(Number(n)), num(Number(value.d))));
-  return formatNumber((2n * n + value.d) / (2n * value.d));
+  if (n <= limit && value.d <= limit) {
+    const division = formatExpr(div(num(Number(n)), num(Number(value.d))));
+    return division.replace(formatNumber(n), signed(n));
+  }
+  return signed((2n * n + value.d) / (2n * value.d));
+}
+
+/**
+ * What a weight or float shows (story 1.14): a weight its number, `6`; a float its number
+ * with the school minus, `−6`, because it takes 6 off its pan.
+ */
+export function numberPieceLabel(piece: Pick<NumberPiece, 'kind' | 'value'>): string {
+  return numberLabel(piece.value, piece.kind === 'float');
+}
+
+/**
+ * The tag on a gear or spring divided by n (story 1.14): the division without its x, `: 3`,
+ * with the sign and spacing `formatExpr` writes in `x : 3`.
+ */
+export function divisorLabel(divisor: bigint): string {
+  const x = formatExpr(xVar());
+  const one = formatNumber(1);
+  const sign = formatExpr(div(xVar(), num(1)))
+    .slice(x.length, -one.length)
+    .trimStart();
+  return `${sign}${formatNumber(divisor)}`;
 }
 
 /** What a large gear or spring shows: its count of x, as `27x`. */

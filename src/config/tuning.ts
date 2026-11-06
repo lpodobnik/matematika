@@ -22,6 +22,10 @@ export const tuning = {
   progressCap: 0.8,
   /** …which sets this; the check line sets 1 and locks the machine. */
   progressAnswer: 0.9,
+  /** Story 1.14: until the check line, a latch holds the door, so lines lift it only this
+   * share of its travel (the door shows progress × this). The lock slides the latch out,
+   * then the door rises all the way. */
+  doorLiftBeforeLock: 0.3,
   /** Architecture, Which x the pans show: a wrong line acted out tips the pans at least
    * this many degrees, so a near miss still shows. */
   jamMinTilt: 4,

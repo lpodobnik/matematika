@@ -3,7 +3,15 @@
 // long and how it moves when a stage locks and when the whole machine restarts.
 // Presentation only: what it shows comes from room/machine.ts and room/phases.ts.
 
-import { lampRayReach, type MachineShape, ventLeft, ventOutlet } from '@/art/skins/machine';
+import {
+  type LatchBar,
+  lampRayReach,
+  latchBar,
+  type MachineShape,
+  ventLeft,
+  ventOutlet,
+} from '@/art/skins/machine';
+import { tuning } from '@/config/tuning';
 import type { Presentation } from '@/room/phases';
 import { plumeBounds, type SteamSpec } from '@/ui/scene/effects/steam-sim';
 
@@ -92,10 +100,70 @@ export function machineBounds(geometry = machineGeometry, steam = machineSteam):
   };
 }
 
-/** How far up the door is, in scene units, at a progress from 0 (shut) to 1 (open). */
-export function doorLift(progress: number, geometry = machineGeometry): number {
-  const clamped = Math.max(0, Math.min(1, progress));
+/** How far up the door is, in scene units, at a share of its travel from 0 (shut) to 1 (open). */
+export function doorLift(travel: number, geometry = machineGeometry): number {
+  const clamped = Math.max(0, Math.min(1, travel));
   return clamped * geometry.shape.height;
+}
+
+/**
+ * The share of its travel the door rises to at a machine progress (story 1.14). While the
+ * latch holds it, only `tuning.doorLiftBeforeLock` of its travel: progress × that share, so
+ * the answer line's 0.9 isn't a door nearly open. Once the latch is out, all the way to the
+ * progress, which the check line has set to 1.
+ */
+export function doorTravel(
+  progress: number,
+  latched: boolean,
+  share: number = tuning.doorLiftBeforeLock,
+): number {
+  const clamped = Math.max(0, Math.min(1, progress));
+  return latched ? clamped * share : clamped;
+}
+
+/** The latch bar of the placeholder machine, set by the door's lift before the lock. */
+export const machineLatch: LatchBar = latchBar(machineGeometry.shape, tuning.doorLiftBeforeLock);
+
+/**
+ * Whether the latch rattles: a line has just brought the machine to the answer line's
+ * progress, short of the check line's 1 that locks it, so the door is up against the bar
+ * and one more line is needed.
+ */
+export function latchRattles(before: number, after: number): boolean {
+  return before < tuning.progressAnswer && after >= tuning.progressAnswer && after < 1;
+}
+
+/** The latch rattles once the door has risen against it… */
+export const latchRattleDelayMs = 450;
+/** …for this long. */
+export const latchRattleMs = 420;
+
+/**
+ * The latch's sideways rattle, in scene units, at `t` from 0 to 1: a few small quick
+ * knocks that die away, ending where it started. Only the latch moves, not the machine.
+ */
+export function latchRattle(t: number): number {
+  const clamped = Math.max(0, Math.min(1, t));
+  return Math.sin(clamped * Math.PI * 8) * (1 - clamped) * 6;
+}
+
+/** When the stage locks, the latch slides out in this long, and only then the door rises. */
+export const latchSlideMs = 380;
+
+/**
+ * At the next stage the latch slides back in once the door is down: this long after the
+ * stage starts, which lets the door's spring bring it down first.
+ */
+export const latchReturnDelayMs = 700;
+
+/**
+ * The latch's slide out, as its offset from where it holds the door, at `t` from 0 to 1:
+ * eased, from 0 to its whole travel to the left.
+ */
+export function latchSlide(t: number, bar: LatchBar = machineLatch): number {
+  const clamped = Math.max(0, Math.min(1, t));
+  const eased = clamped * clamped * (3 - 2 * clamped);
+  return -eased * bar.travel;
 }
 
 /** How long the machine shakes when it jams. */
@@ -112,17 +180,20 @@ export function joltOffset(t: number): number {
 
 /**
  * How long each presentation plays before the machine reports it done
- * (`presentation/done`): a stage's lock lets the door finish rising and its lamp light; the
- * restart shows the whole machine running. Both are well inside
- * `tuning.presentationTimeoutMs`, the fallback.
+ * (`presentation/done`): a stage's lock slides the latch out, lets the door rise all the
+ * way and its lamp light, and shows the open door a moment; the restart shows the whole
+ * machine running. Both are well inside `tuning.presentationTimeoutMs`, the fallback.
  */
 export const presentationMs: Readonly<Record<Presentation, number>> = {
-  locked: 1800,
+  locked: 2200,
   restart: 3600,
 };
 
-/** A lamp lights this long after its stage locks, once the door is mostly up… */
-export const lampDelayMs = 500;
+/**
+ * A lamp lights this long after its stage locks, once the latch is out and the door is
+ * mostly up…
+ */
+export const lampDelayMs = 850;
 /** …and takes this long to come on. */
 export const lampLightMs = 700;
 
