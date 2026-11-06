@@ -3,6 +3,9 @@
 // happened goes out as domain events.
 
 import { castDraft, produce } from 'immer';
+import { nextRoomOnMap, roomOpen } from '@/city/reach';
+import type { NodeId } from '@/city/types';
+import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { payPrediction, predictionKey } from '@/economy/predictions';
 import { assert } from '@/lib/assert';
@@ -13,19 +16,18 @@ import { type HintAction, hintAfter } from '@/room/hint';
 import { deleteToken, enterLine, typeToken, withoutRefusal } from '@/room/notebook';
 import {
   finishPresentation,
-  nextRoom,
-  playedThrough,
   resetStage,
+  resetWorks,
   tickClock,
   toolEarned,
   touchMachine,
 } from '@/room/phases';
 import { confirmPin, setPin } from '@/room/pin';
-import { isRoomId, resumeRoom, type SavedRoom } from '@/room/resume';
+import { isRoomId, resumeRoom, type SavedRoom, savedRoomOf } from '@/room/resume';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { rememberSplitter, splitBothPans, stepSplitter } from '@/room/splitter';
 import { dropOnScale, rememberTray, stepTray, takeOffPan } from '@/room/tray';
-import type { RoomSpec, RoomState, ToolId } from '@/room/types';
+import type { RoomId, RoomSpec, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import { newSave } from '@/store/persist';
@@ -40,6 +42,7 @@ export function initialGameState(): GameState {
     ui: {
       screen: 'loading',
       loaded: 0,
+      fresh: null,
       notebookAside: false,
       quality: initialQuality,
       copies: 1,
@@ -55,23 +58,49 @@ function findRoom(id: RoomSpec['id'], list: readonly RoomSpec[]): RoomSpec {
 }
 
 /**
- * A room that is done hands over to the next room in content (Pattern 2: "the next room
- * loads"), which arrives at its first stage. The last room stays done, and the root reducer
- * shows the "to be continued" screen (`playedThrough`).
+ * A saved room in progress, resumed after its last committed line (room/resume.ts); that
+ * stage fresh when it no longer replays; or the room fresh when the stage no longer exists.
  */
-function moveOn(step: RoomStep | null, roomList: readonly RoomSpec[]): RoomStep | null {
-  if (step?.room.stage.phase !== 'done') return step;
-  const next = nextRoom(roomList, step.room.spec.id);
-  if (!next) return step;
-  const entered = enterRoom(next);
-  return { room: entered.room, events: [...step.events, ...entered.events] };
+function resumeStep(spec: RoomSpec, saved: SavedRoom, now: number): RoomStep {
+  const resumed = resumeRoom(spec, saved, now);
+  if (resumed) return { room: resumed, events: [] };
+  return enterRoom(spec, spec.stages[saved.stage] ? saved.stage : 0);
 }
 
 /**
- * The room the game starts in (story 2.1): the saved room in progress, resumed after its
- * last committed line (room/resume.ts), or that stage fresh when it no longer replays, or
- * the room fresh when the stage no longer exists; with none in progress, the first room in
- * play order he hasn't done. Null when he has done them all.
+ * A room he goes into: resumed from where he left it halfway, if he did (FR26), else fresh.
+ * A left room that throws as it resumes starts fresh, so a bad entry never blocks the room.
+ */
+function goInto(spec: RoomSpec, save: SaveState, now: number): RoomStep {
+  const saved = save.progress.started.find((room) => room.id === spec.id);
+  if (!saved) return enterRoom(spec);
+  try {
+    return resumeStep(spec, saved, now);
+  } catch {
+    return enterRoom(spec);
+  }
+}
+
+/**
+ * The next room he can play (Luka, story 2.2: "He should go to the next room"): the room
+ * after `from` in play order when he can play it, as in epic 1; else the first open room on
+ * the map he hasn't finished. Null when none is left.
+ */
+function nextRoom(roomList: readonly RoomSpec[], save: SaveState, from: string | null) {
+  const { roomsDone } = save.progress;
+  const authored = authoredIds(roomList);
+  const after = from === null ? [] : authored.slice(authored.indexOf(from as RoomSpec['id']) + 1);
+  const next =
+    after.find(
+      (id) => !roomsDone.includes(id as RoomId) && roomOpen(districtMap, id, roomsDone, authored),
+    ) ?? nextRoomOnMap(districtMap, roomsDone, authored);
+  return roomList.find((room) => room.id === next) ?? null;
+}
+
+/**
+ * The room the game starts in (story 2.1): the saved room in progress; on the map, none
+ * (story 2.2); otherwise the next room, as a restart hands over (so a first launch opens
+ * room 1 straight away, the narrative design: play first).
  */
 function startStep(
   saved: SavedRoom | null,
@@ -80,14 +109,46 @@ function startStep(
   now: number,
 ): RoomStep | null {
   const spec = saved ? roomList.find((room) => room.id === saved.id) : undefined;
-  if (saved && spec) {
-    const resumed = resumeRoom(spec, saved, now);
-    if (resumed) return { room: resumed, events: [] };
-    return enterRoom(spec, spec.stages[saved.stage] ? saved.stage : 0);
-  }
-  const done: ReadonlySet<string> = new Set(save.progress.roomsDone);
-  const next = roomList.find((room) => !done.has(room.id));
-  return next ? enterRoom(next) : null;
+  if (saved && spec) return resumeStep(spec, saved, now);
+  if (save.progress.onMap) return null;
+  const next = nextRoom(roomList, save, null);
+  return next ? goInto(next, save, now) : null;
+}
+
+const authoredIds = (roomList: readonly RoomSpec[]) => roomList.map((room) => room.id);
+
+/**
+ * A room whose restart has ended hands over to the next room he can play (`nextRoom`),
+ * resumed if he left it halfway. With none left, the room stays done and the map shows.
+ */
+function moveOn(
+  step: RoomStep | null,
+  roomList: readonly RoomSpec[],
+  save: SaveState,
+  now: number,
+): RoomStep | null {
+  if (step?.room.stage.phase !== 'done') return step;
+  const spec = nextRoom(roomList, save, step.room.spec.id);
+  if (!spec) return step;
+  const entered = goInto(spec, save, now);
+  return { room: entered.room, events: [...step.events, ...entered.events] };
+}
+
+/**
+ * A tap on a map node (`map/travel`, FR27): an open room takes him there at once (city/reach.ts),
+ * resumed if he left it halfway (FR26). Null for anything else, and when he isn't on the map.
+ */
+function travelStep(
+  state: GameState,
+  node: NodeId,
+  roomList: readonly RoomSpec[],
+  save: SaveState,
+  now: number,
+): RoomStep | null {
+  if (state.ui.screen !== 'map') return null;
+  if (!roomOpen(districtMap, node, save.progress.roomsDone, authoredIds(roomList))) return null;
+  const spec = roomList.find((room) => room.id === node);
+  return spec ? goInto(spec, save, now) : null;
 }
 
 /**
@@ -109,6 +170,7 @@ function roomStep(
   }
   if (action.type === 'boot/start') return startStep(action.room, roomList, save, now);
   if (action.type === 'dev/new-game') return startStep(null, roomList, save, now);
+  if (action.type === 'map/travel') return travelStep(state, action.node, roomList, save, now);
   const { room } = state;
   if (!room) return null;
   switch (action.type) {
@@ -117,9 +179,9 @@ function roomStep(
     case 'stage/reset':
       return resetStage(room);
     case 'presentation/done':
-      return moveOn(finishPresentation(room, action, now), roomList);
+      return moveOn(finishPresentation(room, action, now), roomList, save, now);
     case 'clock/tick':
-      return moveOn(tickClock(room, now), roomList);
+      return moveOn(tickClock(room, now), roomList, save, now);
     case 'dial/set':
       return setDial(room, action.x);
     case 'pin/set':
@@ -143,6 +205,7 @@ function roomStep(
     case 'notebook/enter':
       return enterLine(room, now);
     case 'boot/progress':
+    case 'map/open':
     case 'notebook/slide':
     case 'hint/press':
     case 'quality/measured':
@@ -212,6 +275,8 @@ const notHis: ReadonlySet<Action['type']> = new Set<Action['type']>([
   'boot/progress',
   'boot/start',
   'dev/new-game',
+  'map/open',
+  'map/travel',
   'room/enter',
   'presentation/done',
   'clock/tick',
@@ -239,6 +304,7 @@ function hintAction(action: Action, changed: boolean): HintAction {
   if (action.type === 'hint/press') return 'press';
   if (action.type === 'room/enter' || action.type === 'boot/start') return 'ends';
   if (action.type === 'dev/new-game') return 'ends';
+  if (action.type === 'map/open' || action.type === 'map/travel') return 'ends';
   const his =
     !notHis.has(action.type) && action.type !== 'notebook/slide' && !toolSettings.has(action.type);
   return his && changed ? 'ends' : 'other';
@@ -367,6 +433,63 @@ function withQualityPick(save: SaveState, quality: QualityState): SaveState {
   return { ...save, settings: { ...save.settings, quality: pick } };
 }
 
+/** Whether a room he leaves has anything to keep: a committed line, a pin, or the splitter offered. */
+/**
+ * The screen after an action: a room he goes into; the map when he leaves a room or its
+ * restart ends with no room left (story 2.2); at the start, a room or the map.
+ */
+function screenAfter(
+  state: GameState,
+  action: Action,
+  step: RoomStep | null,
+  toMap: boolean,
+): GameState['ui']['screen'] {
+  if (toMap) return 'map';
+  if (action.type === 'boot/start' || action.type === 'dev/new-game') return step ? 'room' : 'map';
+  if (action.type === 'room/enter' || (action.type === 'map/travel' && step)) return 'room';
+  return state.ui.screen;
+}
+
+/** The save keeps whether he is on the map, so a launch comes back there (story 2.2). */
+function withOnMap(save: SaveState, screen: GameState['ui']['screen']): SaveState {
+  if (screen === 'loading') return save;
+  const onMap = screen === 'map';
+  return save.progress.onMap === onMap ? save : { ...save, progress: { ...save.progress, onMap } };
+}
+
+function worthKeeping(saved: SavedRoom): boolean {
+  // A later stage is worth keeping even before its first line: the stages before it are solved.
+  return saved.stage > 0 || saved.lines.length > 0 || saved.pin !== null || saved.splitterSeen;
+}
+
+/**
+ * Rooms left halfway (story 2.2, FR26): leaving for the map keeps the room's committed
+ * lines, and entering a room takes it off the list, since the room in play is saved as
+ * the room in progress.
+ */
+function withStarted(
+  save: SaveState,
+  leaving: RoomState | null,
+  entered: RoomStep | null,
+): SaveState {
+  const { started } = save.progress;
+  let next = started;
+  const left = savedRoomOf(leaving);
+  if (left) {
+    next = next.filter((room) => room.id !== left.id);
+    if (worthKeeping(left)) next = [...next, left];
+  }
+  const id = entered?.room.spec.id;
+  if (id && next.some((room) => room.id === id)) next = next.filter((room) => room.id !== id);
+  return next === started ? save : { ...save, progress: { ...save.progress, started: next } };
+}
+
+/** He can leave for the map from any phase before the stage locks (story 2.2). */
+function leavingRoom(state: GameState, action: Action): RoomState | null {
+  if (action.type !== 'map/open' || state.ui.screen !== 'room' || !state.room) return null;
+  return resetWorks(state.room.stage.phase) ? state.room : null;
+}
+
 /** The root reducer, over a given list of rooms so tests can bring their own. */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
@@ -379,8 +502,20 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
     const progressed = handOver(state.room, action, ctx.now, progress(change, before));
     const { step } = progressed;
     const events: DomainEvent[] = step ? [...step.events] : [];
+    const leaving = leavingRoom(state, action);
+    if (leaving) events.push({ type: 'RoomLeft', roomId: leaving.spec.id });
+    const entered = step && step.room.spec.id !== state.room?.spec.id ? step : null;
+    // A room whose restart has ended hands over to the map (story 2.2).
+    const finished = step?.room.stage.phase === 'done' ? step.room : null;
     const quality = qualityAfter(state.ui.quality, action, before);
-    const save = withQualityPick(payPredictions(events, progressed.save), quality);
+    const screen = screenAfter(state, action, step, leaving !== null || finished !== null);
+    const save = withOnMap(
+      withQualityPick(
+        withStarted(payPredictions(events, progressed.save), leaving, entered),
+        quality,
+      ),
+      screen,
+    );
     // Every change to the saved slice is written (store/effects/save.ts).
     if (save !== state.save) events.push({ type: 'SaveChanged' });
     const roomNow = step?.room ?? state.room;
@@ -394,19 +529,24 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
     const next = produce(state, (draft) => {
       if (step && step.room !== state.room) draft.room = castDraft(step.room);
       if (save !== state.save) draft.save = castDraft(save);
-      if (action.type === 'room/enter') draft.ui.screen = 'room';
-      // The game starts (story 2.1): in a room, or at the end screen when every room is done.
+      draft.ui.screen = screen;
+      if (action.type === 'room/enter' || (action.type === 'map/travel' && step)) {
+        draft.ui.fresh = null;
+      }
+      // The game starts (story 2.1): in a room, or on the map (story 2.2).
       if (action.type === 'boot/start' || action.type === 'dev/new-game') {
-        draft.ui.screen = step ? 'room' : 'continued';
+        draft.ui.fresh = null;
         if (!step) draft.room = null;
       }
       if (action.type === 'boot/progress') {
         draft.ui.loaded = Math.min(1, Math.max(0, action.loaded));
       }
-      // After the last room's restart: the placeholder "to be continued" screen (story 1.13).
-      if (step && step.room !== state.room && playedThrough(roomList, step.room)) {
-        draft.ui.screen = 'continued';
+      // Leaving a room, or its restart ending, shows the map (story 2.2).
+      if (leaving || finished) {
+        draft.room = null;
+        draft.ui.notebookAside = false;
       }
+      if (finished && isRoomId(finished.spec.id)) draft.ui.fresh = finished.spec.id;
       if (action.type === 'dev/set-copies') draft.ui.copies = action.copies;
       if (action.type === 'notebook/slide') draft.ui.notebookAside = action.aside;
       if (hint !== state.ui.hint) draft.ui.hint = hint;

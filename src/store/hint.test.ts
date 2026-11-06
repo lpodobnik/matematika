@@ -21,7 +21,10 @@ function playing(tools: ToolId[] = []) {
     effects: [(event) => events.push(event)],
     initialState: {
       ...initial,
-      save: { ...initial.save, progress: { roomsDone: [], tools, firstUse: [] } },
+      save: {
+        ...initial.save,
+        progress: { roomsDone: [], started: [], onMap: false, tools, firstUse: [] },
+      },
     },
   });
   const act = (action: Action) => store.getState().dispatch(action);

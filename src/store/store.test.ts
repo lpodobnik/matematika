@@ -28,6 +28,7 @@ describe('the store', () => {
     expect(store.getState().ui).toEqual({
       screen: 'loading',
       loaded: 0,
+      fresh: null,
       notebookAside: false,
       quality: { measured: null, measuredMs: null, forced: null },
       copies: 1,
@@ -370,7 +371,8 @@ describe('a room from arrival to restart (story 1.8)', () => {
       'r01.0:open',
       'r01.0:locked',
       'r01.0:restart',
-      'r01.0:done',
+      // Story 2.2: the restart ends on the map.
+      'none',
     ]);
     expect(game.seen.map((event) => event.type)).toEqual([
       'StageArrived',
@@ -379,9 +381,8 @@ describe('a room from arrival to restart (story 1.8)', () => {
       'StageLocked',
       'RoomRestarted',
     ]);
-    // Room 1 is the only room in this list, so its restart ending is the end of content:
-    // the placeholder "to be continued" screen (story 1.13), never a success screen.
-    expect(game.store.getState().ui.screen).toBe('continued');
+    // The map, never a success screen (story 2.2), with room 1's change playing on it.
+    expect(game.store.getState().ui).toMatchObject({ screen: 'map', fresh: 'r01' });
   });
 
   it('keeps the notebook off until his first touch on the machine', () => {
@@ -394,7 +395,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     expect(game.store.getState().room?.stage.draft).toEqual(['5']);
   });
 
-  it('loads the next room in content when a restart ends: room 1, then room 2', () => {
+  it('loads the next room when a restart ends: room 1, then room 2', () => {
     const game = playing();
     game.act({ type: 'room/enter', roomId: 'r01' });
     game.act({ type: 'machine/touch' });
@@ -402,6 +403,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     game.presented();
     game.seen.length = 0;
     game.presented();
+    expect(game.store.getState().ui.screen).toBe('room');
     const room = game.store.getState().room as RoomState;
     expect(room.spec.id).toBe('r02');
     expect(room.stageIndex).toBe(0);
@@ -761,7 +763,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
         ...initial,
         save: {
           ...initialGameState().save,
-          progress: { roomsDone: [], tools: ['balance'], firstUse },
+          progress: { roomsDone: [], started: [], onMap: false, tools: ['balance'], firstUse },
         },
       },
     });
@@ -913,12 +915,18 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     expect({
       ...store.getState().save.progress,
       firstUse: store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
-    }).toEqual({ roomsDone: [], tools: ['balance'], firstUse: [] });
+    }).toEqual({ roomsDone: [], started: [], onMap: false, tools: ['balance'], firstUse: [] });
     act({ type: 'dial/set', x: 10 });
     expect({
       ...store.getState().save.progress,
       firstUse: store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
-    }).toEqual({ roomsDone: [], tools: ['balance'], firstUse: ['tray'] });
+    }).toEqual({
+      roomsDone: [],
+      started: [],
+      onMap: false,
+      tools: ['balance'],
+      firstUse: ['tray'],
+    });
     expect(store.getState().room?.stage.hintLevel).toBe(1);
     const empty = reduce(
       initialGameState(),
@@ -945,7 +953,13 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
         ...initial,
         save: {
           ...initialGameState().save,
-          progress: { roomsDone: [], tools: ['balance'], firstUse: ['pin', 'tray'] },
+          progress: {
+            roomsDone: [],
+            started: [],
+            onMap: false,
+            tools: ['balance'],
+            firstUse: ['pin', 'tray'],
+          },
         },
       },
     });

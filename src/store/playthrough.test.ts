@@ -1,6 +1,7 @@
 // Story 1.13: rooms 1–4 back to back, from a fresh start without the dev panel, through
 // the real store, reducer and content, each room from arrival to restart, then the
-// placeholder "to be continued" screen. He plays as he would on the tablet: he touches the
+// map (story 2.2: each restart hands over to the next room, as before; after room 4, the
+// map with its "to be continued" note). He plays as he would on the tablet: he touches the
 // machine, pokes the dial, pins, writes his lines and, in room 4, moves weights and splits.
 // Story 1.14's pin flow: the dial keeps turning in its poke window while he pins, the
 // machine tests each pin as he confirms it, and each right pin pays 2 parts. Story 1.15's
@@ -65,6 +66,11 @@ function freshGame() {
 
 type Game = ReturnType<typeof freshGame>;
 
+/** From the map, a tap on a room (story 2.2); in a room already (a test that went there), nothing. */
+function travel(game: Game, node: 'r02' | 'r03' | 'r04') {
+  if (game.store.getState().ui.screen === 'map') game.act({ type: 'map/travel', node });
+}
+
 /** Room 1, the door lift: he finds 5 on the dial and fills both blanks. */
 function playRoomOne(game: Game) {
   game.act({ type: 'machine/touch' });
@@ -77,6 +83,7 @@ function playRoomOne(game: Game) {
 
 /** Room 2, the street lamps: 3x = 12, then x : 3 = 5 on a dial in 3s. */
 function playRoomTwo(game: Game) {
+  travel(game, 'r02');
   game.act({ type: 'machine/touch' });
   game.act({ type: 'dial/set', x: 4 });
   game.write('4');
@@ -96,6 +103,7 @@ function playRoomTwo(game: Game) {
  * machine turns the dial to its maximum, 20) and explores from there.
  */
 function playRoomThree(game: Game) {
+  travel(game, 'r03');
   game.act({ type: 'machine/touch' });
   for (const x of [7, 8, 9]) game.act({ type: 'dial/set', x });
   game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
@@ -135,6 +143,7 @@ function balanceRoomFour(game: Game) {
  * then into the check line, `2 · ☐ + 5 = 23`.
  */
 function playRoomFour(game: Game) {
+  travel(game, 'r04');
   game.act({ type: 'machine/touch' });
   dialUpTo(game, 9);
   game.write('x=9');
@@ -180,7 +189,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r04.0:open',
       'r04.0:locked',
       'r04.0:restart',
-      'r04.0:done',
+      // Story 2.2: no room left to play, so the map.
+      'none',
     ]);
   });
 
@@ -248,8 +258,15 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomOne(game);
     playRoomTwo(game);
     playRoomThree(game);
+    // The map takes the room's place once its restart ends (story 2.2): keep its last state.
+    let last: RoomState | null = null;
+    const unsubscribe = game.store.subscribe((state) => {
+      if (state.room) last = state.room;
+    });
     playRoomFour(game);
-    expect(game.stage().lines.map((line) => [formatTokens(line.tokens), line.source])).toEqual([
+    unsubscribe();
+    const lines = (last as RoomState | null)?.stage.lines ?? [];
+    expect(lines.map((line) => [formatTokens(line.tokens), line.source])).toEqual([
       ['2x + 5 = 23', 'given'],
       ['2x + 5 − 5 = 23 − 5', 'balance'],
       ['2x = 18', 'balance'],
@@ -266,6 +283,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomOne(game);
     playRoomTwo(game);
     playRoomThree(game);
+    travel(game, 'r04');
     game.act({ type: 'machine/touch' });
     dialUpTo(game, 9);
     expect(scaleView(game.store.getState().room as RoomState)).toMatchObject({
@@ -304,6 +322,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomOne(game);
     playRoomTwo(game);
     playRoomThree(game);
+    travel(game, 'r04');
     game.act({ type: 'machine/touch' });
     const readouts: string[] = [];
     const act = game.act;
@@ -336,6 +355,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomOne(game);
     playRoomTwo(game);
     playRoomThree(game);
+    travel(game, 'r04');
     game.act({ type: 'machine/touch' });
     const blanks = () =>
       game.stage().templates.map((line) =>
@@ -369,6 +389,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomOne(game);
     playRoomTwo(game);
     playRoomThree(game);
+    travel(game, 'r04');
     const offered: string[] = [];
     const act = game.act;
     game.act = (action) => {
@@ -386,8 +407,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     game.act = act;
     // Typing and the presentations go round `game.act`, so only his moves on the machine show.
     expect(offered).toEqual(['machine/touch: tray', 'tray/drop: tray splitter']);
-    const done = game.store.getState();
-    expect(trayOffered(done.room as RoomState, done.save.progress.tools)).toBe(false);
+    // The restart ended: the map shows, with no room and so no tray.
+    expect(game.store.getState().room).toBeNull();
   });
 
   it('tests each pin as he confirms it: the machine turns the dial, firing no dial events', () => {
@@ -439,25 +460,26 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(game.store.getState().room?.spec.id).toBe('r04');
   });
 
-  it('stays on the room screen until room 4’s restart ends, then shows "to be continued"', () => {
+  it('goes from room to room, then shows the map with every room restored (story 2.2)', () => {
     const game = freshGame();
-    const screens = new Set<string>();
+    const screens: string[] = [];
     const unsubscribe = game.store.subscribe((state) => {
-      if (state.room?.stage.phase !== 'done') screens.add(state.ui.screen);
+      if (screens.at(-1) !== state.ui.screen) screens.push(state.ui.screen);
     });
     playRoomOne(game);
+    expect(game.store.getState().room?.spec.id).toBe('r02');
     playRoomTwo(game);
     playRoomThree(game);
     playRoomFour(game);
     unsubscribe();
-    expect([...screens]).toEqual(['room']);
+    expect(screens).toEqual(['room', 'map']);
     const state = game.store.getState();
-    expect(state.ui.screen).toBe('continued');
-    expect(state.room?.spec.id).toBe('r04');
-    expect(state.room?.stage.phase).toBe('done');
+    expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r04' });
+    expect(state.room).toBeNull();
+    expect(state.save.progress.roomsDone).toEqual(['r01', 'r02', 'r03', 'r04']);
   });
 
-  it('keeps the "to be continued" screen on the clock, and a dev jump leaves it for a room', () => {
+  it('keeps the map on the clock, and a dev jump leaves it for a room', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
@@ -473,7 +495,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(game.stage().phase).toBe('arrive');
   });
 
-  it('gets to "to be continued" on the clock too, if the machine never reports its restart', () => {
+  it('gets to the map on the clock too, if the machine never reports its restart', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
@@ -484,6 +506,6 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     game.write('9');
     game.write('9');
     for (let i = 0; i < 40; i += 1) game.act({ type: 'clock/tick' });
-    expect(game.store.getState().ui.screen).toBe('continued');
+    expect(game.store.getState().ui.screen).toBe('map');
   });
 });

@@ -12,7 +12,7 @@ function withS(n: string): string {
 export const hr = {
   app: {
     turnToLandscape: 'Okreni uređaj vodoravno.',
-    /** After room 4: the placeholder end screen, until the map takes its place in epic 2. */
+    /** On the map once every room so far is restored (story 2.2): more of the district is coming. */
     toBeContinued: 'Nastavak slijedi…',
     /** Story 2.1: the loading screen's bar, for screen readers. */
     loading: 'Učitavanje',
@@ -26,6 +26,37 @@ export const hr = {
     reset: 'Ispočetka',
     /** Story 1.16: the hint button, `?` under the reset control. */
     hint: 'Pomoć',
+    /** Story 2.2: the map control in a room, bottom left. */
+    map: 'Karta',
+  },
+  /** Story 2.2: the city map. Place names are placeholders until the final text (epic 6). */
+  map: {
+    title: 'Donji Kotač',
+    nodes: {
+      r01: 'Dizalo vrata',
+      r02: 'Ulične svjetiljke',
+      r03: 'Ustava',
+      r04: 'Vodeno kolo',
+      r05: 'Most',
+      r06: 'Vagaonica',
+      r07: 'Stari dnevnik',
+      r08: 'Tramvaj',
+      r09: 'Parno dizalo',
+      r10: 'Tržnica',
+      r11: 'Veliki kotač',
+      r12: 'Raskrižje',
+      r13: 'Toranj sa satom',
+      'lair-20': 'Automat',
+      'lair-30': 'Automat',
+      'lair-45': 'Automat',
+      'lair-60': 'Automat',
+      workshop: 'Radionica',
+      foundry: 'Ljevaonica',
+    },
+    /** For screen readers, after a node's name: what state it is in. */
+    states: { restored: 'radi', open: 'otvoreno', closed: 'zatvoreno' },
+    /** For screen readers: a room he left halfway. */
+    started: 'započeto',
   },
   pin: {
     /** Confirms the prediction pin where it is: it locks, and the machine tests it. */

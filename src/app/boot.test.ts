@@ -11,6 +11,8 @@ const save: SaveV1 = {
   progress: {
     roomsDone: ['r01'],
     tools: [],
+    started: [],
+    onMap: false,
     firstUse: [],
     room: { id: 'r02', stage: 0, lines: [], pin: null, splitterSeen: false },
   },

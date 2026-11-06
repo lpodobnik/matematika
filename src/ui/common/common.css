@@ -202,3 +202,50 @@
     display: none;
   }
 }
+
+/* Story 2.2: the map control, in the scene area's bottom-left corner above the parts
+   counter (PartsCounter.tsx, 8 px from the corner, 52 px tall). */
+.map-button {
+  position: absolute;
+  bottom: 72px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  touch-action: manipulation;
+}
+
+.map-button:active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.map-button:disabled {
+  opacity: 0.4;
+}
+
+.map-button__icon {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+@media (max-height: 499.98px) {
+  .map-button {
+    bottom: 66px;
+    width: 48px;
+    height: 48px;
+  }
+}

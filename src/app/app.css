@@ -4,6 +4,8 @@
   --paper: #f4efe3;
   --ink: #3d4b5c;
   --jam: #a8432f;
+  /* A lit lamp: colour comes only with a restarted machine (NFR12); palette.ts `lamp`. */
+  --lamp: #e0a33a;
   --rule: rgb(61 75 92 / 0.18);
   color-scheme: light;
 }
@@ -122,35 +124,6 @@ body {
 
 .crash-screen__action {
   font-size: 20px;
-}
-
-/* The placeholder "to be continued" screen after room 4 (story 1.13), until the map
-   replaces it in epic 2: paper, grey ink, a still gear. No success marks (NFR13). */
-.continued {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  padding: 24px;
-  background: var(--paper);
-  color: var(--ink);
-  text-align: center;
-}
-
-.continued__gear {
-  width: 96px;
-  height: 96px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 3;
-  stroke-linejoin: round;
-}
-
-.continued__text {
-  margin: 0;
-  font-size: 28px;
 }
 
 /* Story 2.1: the loading screen, from launch until the save is read and the assets are

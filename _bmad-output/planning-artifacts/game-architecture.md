@@ -541,7 +541,8 @@ matematika/
     │   ├── scene/                                  # Pixi (WebGL) components
     │   │   ├── SceneRoot.tsx                       # <Application>, resize, resolution, context loss
     │   │   ├── scale/                              # Scale, Pan, Piece, Dial, Pin, Tray, Splitter
-    │   │   ├── chain/  drum/  map/  fight/  workshop/  effects/   # effects: steam, sparks, glow
+    │   │   ├── chain/  drum/  fight/  workshop/  effects/   # effects: steam, sparks, glow
+    │   ├── map/                                    # HTML over SVG: the city map (story 2.2)
     │   ├── notebook/                               # HTML: Notebook, NumberPad, LineView
     │   ├── cards/  luka/  common/                  # HTML: cards, dialogs, Luka's view, loading screen
     ├── lib/                                        # log, assert, small helpers
@@ -556,7 +557,7 @@ matematika/
 | Scale, balance | `src/room/`, `src/math/moves.ts` | `ui/scene/scale/` |
 | Gear chain, drum | `src/math/chain.ts`, `src/room/` | `ui/scene/chain/`, `ui/scene/drum/` |
 | Room types, fading, hints | `src/room/` | `ui/cards/`, `ui/scene/scale/` |
-| Map and gates | `src/city/`, `content/map.ts` | `ui/scene/map/` |
+| Map and gates | `src/city/`, `content/map.ts` | `ui/map/` (story 2.2: HTML buttons over an SVG of the roads, not Pixi, so every node is a real button at least 56 CSS px; the illustration goes under them) |
 | Fights | `src/fight/`, `src/economy/` | `ui/scene/fight/` |
 | Builder | `src/workshop/` | `ui/scene/workshop/`, `ui/common/` |
 | Links | `src/links/` | `app/` (entry), `ui/common/` (sharing) |
@@ -736,7 +737,9 @@ interface SaveV1 {
     roomsDone: RoomId[]; tools: ToolId[];
     firstUse: FirstUseId[];                         // controls and handover steps met
     formsMet: FormId[]; ideasSeen: IdeaId[];        // joins: hints (2.7), cards (2.6)
-    seen: NodeId[]; at: NodeId; tornPages: PageId[]; // joins: the map (2.2), fights (epic 3)
+    started: SavedRoom[];                           // rooms left halfway for the map (2.2)
+    onMap: boolean;                                 // on the map; else a launch goes on to the next room (2.2)
+    seen: NodeId[]; at: NodeId; tornPages: PageId[]; // joins: gates (2.3), fights (epic 3)
     room: {                                         // the room in progress
       id: RoomId; stage: number;
       lines: { text: string; source: 'typed' | WayId; progress: boolean }[];  // after line 0
@@ -837,7 +840,7 @@ Epic 1 ends with a profile on the tablet, with effects on.
 | Epic | Main locations | Patterns |
 |---|---|---|
 | 1. First machine | `math/`, `room/`, `ui/scene/SceneRoot.tsx`, `ui/scene/scale/`, `ui/notebook/`, `content/rooms/r01`–`r04`, `store/`, quality setting | 1, 2, 4 |
-| 2. The city | `city/`, `save/`, `links/` (backup), `playlog/`, `ui/scene/map/`, `ui/cards/`, `ui/luka/`, loading screen, `content/text/`, `r05`–`r07` | 2, 3, 4 |
+| 2. The city | `city/`, `save/`, `links/` (backup), `playlog/`, `ui/map/`, `ui/cards/`, `ui/luka/`, loading screen, `content/text/`, `r05`–`r07` | 2, 3, 4 |
 | 3. Automaton fights | `fight/`, `economy/`, `ui/scene/fight/`, `content/lairs.ts`, `fight/balance.test.ts` | 4 |
 | 4. The whole district | `math/chain.ts`, `room/types/story.ts`, linked machines, drum, `ui/scene/chain/`, `ui/scene/drum/`, `r08`–`r13` | 1, 2 |
 | 5. Rooms for friends | `workshop/`, `links/` (room, reply), `ui/scene/workshop/`, friend mode in `app/` | 2, 3 |

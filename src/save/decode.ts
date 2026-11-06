@@ -157,6 +157,13 @@ function decodeRoom(value: unknown): SavedRoom | null {
   };
 }
 
+/** Rooms left halfway: each that reads, once per room, the first kept. */
+function decodeStarted(value: unknown): SavedRoom[] {
+  if (!Array.isArray(value)) return [];
+  const rooms = value.slice(0, 50).flatMap((room) => decodeRoom(room) ?? []);
+  return rooms.filter((room, i) => rooms.findIndex((other) => other.id === room.id) === i);
+}
+
 function decodeCharacter(value: unknown): Character {
   if (!isObject(value)) return { name: null, look: null };
   const name = typeof value.name === 'string' ? value.name.trim().slice(0, maxNameLength) : '';
@@ -190,6 +197,8 @@ export function decodeSave(value: unknown, now: string): SaveV1 | null {
       tools: known(progress.tools, isTool),
       firstUse: known(progress.firstUse, isFirstUse),
       room: decodeRoom(progress.room),
+      started: decodeStarted(progress.started),
+      onMap: progress.onMap === true,
     },
     economy: decodeEconomy(value.economy),
     settings: decodeSettings(value.settings),

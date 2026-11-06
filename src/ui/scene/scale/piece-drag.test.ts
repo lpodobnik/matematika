@@ -193,7 +193,7 @@ function wiredTray(scale = 0.54) {
       ...initialGameState(),
       save: {
         ...initialGameState().save,
-        progress: { roomsDone: [], tools: ['balance'], firstUse: [] },
+        progress: { roomsDone: [], started: [], onMap: false, tools: ['balance'], firstUse: [] },
       },
     },
   });

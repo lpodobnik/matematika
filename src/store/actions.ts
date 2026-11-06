@@ -1,5 +1,6 @@
 // Every action the store accepts, named `domain/verb` (architecture, Naming Conventions).
 
+import type { NodeId } from '@/city/types';
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
 import type { SavedRoom } from '@/room/resume';
@@ -15,6 +16,13 @@ export type Action =
    * null, back in the room in progress (`room`) or at the next room he hasn't done.
    */
   | { type: 'boot/start'; save: SaveState | null; room: SavedRoom | null }
+  /**
+   * The map control in a room (story 2.2): he leaves for the map, any time before the stage
+   * locks. The room keeps its committed lines for when he comes back.
+   */
+  | { type: 'map/open' }
+  /** He tapped a node on the map: an open room takes him there at once (FR27). */
+  | { type: 'map/travel'; node: NodeId }
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */
   | { type: 'room/enter'; roomId: RoomId; stage?: number }
   /** A touch anywhere on the machine; the first one ends the stage's arrive. */

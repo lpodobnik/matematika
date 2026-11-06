@@ -3,6 +3,7 @@
 
 import type { Economy } from '@/economy/types';
 import type { HintState } from '@/room/hint';
+import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, RoomId, RoomState, ToolId } from '@/room/types';
 import type { Character, Settings } from '@/save/schema';
 import type { Action } from '@/store/actions';
@@ -22,10 +23,11 @@ export interface Ctx {
 
 /**
  * Screens are a field in the store, with no router. `loading` shows from launch until the
- * save is read and the assets are loaded (story 2.1). `continued` is the placeholder "to be
- * continued" screen after the last room (story 1.13); the map replaces it in epic 2.
+ * save is read and the assets are loaded (story 2.1). `map` is the city map (story 2.2),
+ * where he goes after every restart and whenever he leaves a room; it replaced story 1.13's
+ * "to be continued" screen.
  */
-export type Screen = 'loading' | 'room' | 'continued';
+export type Screen = 'loading' | 'room' | 'map';
 
 /**
  * How many copies of the scene the scene area draws side by side: 3 only for the tablet
@@ -37,6 +39,11 @@ export interface UiState {
   screen: Screen;
   /** While loading: how much of the assets has loaded, 0–1 (story 2.1). */
   loaded: number;
+  /**
+   * The room whose restart has just ended, so its change plays on the map (story 2.2); null
+   * once he travels on.
+   */
+  fresh: RoomId | null;
   /** On a phone, whether the notebook is pushed aside off the scale. The tablet ignores it. */
   notebookAside: boolean;
   /**
@@ -71,6 +78,13 @@ export interface SaveState {
     tools: ToolId[];
     /** Controls he has met, so each wiggles only the first time (Pattern 2, First use). */
     firstUse: FirstUseId[];
+    /**
+     * Rooms he left halfway for the map (story 2.2, FR26): their committed lines, resumed
+     * when he comes back. The room in play is never here.
+     */
+    started: SavedRoom[];
+    /** He is on the map (story 2.2): a launch opens the map, not the next room. */
+    onMap: boolean;
   };
   /**
    * Parts, upgrades and piles (`createEconomy()`). From story 1.14 a right prediction pays

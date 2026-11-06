@@ -40,6 +40,7 @@ describe('the save effect', () => {
     expect([...SAVE_TRIGGERS].sort()).toEqual([
       'LineAccepted',
       'PredictionMade',
+      'RoomLeft',
       'RoomRestarted',
       'SaveChanged',
       'StageArrived',
@@ -121,15 +122,16 @@ describe('starting the game (boot/start)', () => {
     expect(store.getState().ui.quality.measured).toBe('low');
   });
 
-  it('starts at the first room he hasn’t done', () => {
+  it('starts on the map when he left the game on the map (story 2.2)', () => {
     const store = createGameStore({ effects: [] });
     const save = newSave(at);
     store.getState().dispatch({
       type: 'boot/start',
-      save: { ...save, progress: { ...save.progress, roomsDone: ['r01', 'r02'] } },
+      save: { ...save, progress: { ...save.progress, roomsDone: ['r01', 'r02'], onMap: true } },
       room: null,
     });
-    expect(store.getState().room?.spec.id).toBe('r03');
+    expect(store.getState().room).toBeNull();
+    expect(store.getState().ui.screen).toBe('map');
   });
 
   it('shows the loading progress, clamped to 0–1', () => {
@@ -154,7 +156,13 @@ describe('a new game from the dev panel', () => {
     g.act({ type: 'dev/new-game' });
     const state = g.store.getState();
     expect(state.room?.spec.id).toBe('r01');
-    expect(state.save.progress).toEqual({ roomsDone: [], tools: [], firstUse: [] });
+    expect(state.save.progress).toEqual({
+      roomsDone: [],
+      tools: [],
+      firstUse: [],
+      started: [],
+      onMap: false,
+    });
     expect(state.save.settings).toEqual({ muted: true, quality: 'medium' });
     expect(g.written.at(-1)?.progress.room?.id).toBe('r01');
   });

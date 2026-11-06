@@ -10,7 +10,8 @@ import type { GameState } from '@/store/types';
 
 /**
  * What writes the save: a committed line, typed or written by Balance; a stage arriving,
- * locking or reset; a pin confirmed (whether or not the prediction pays); a restart; and
+ * locking or reset; a pin confirmed (whether or not the prediction pays); a restart; a room
+ * left for the map; and
  * any other change to the saved slice (`SaveChanged`: a tool, a first use, the economy, a
  * setting, a new game).
  */
@@ -21,6 +22,7 @@ export const SAVE_TRIGGERS: ReadonlySet<DomainEventType> = new Set<DomainEventTy
   'StageReset',
   'PredictionMade',
   'RoomRestarted',
+  'RoomLeft',
   'SaveChanged',
 ]);
 

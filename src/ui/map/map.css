@@ -1,0 +1,214 @@
+/* Story 2.2: the city map. The board keeps the map's 16 : 10 shape and fits the screen;
+   nodes are buttons placed by percentage over the roads' SVG. Grey ink until restored
+   (NFR12); a restored room's glyph takes the lamp colour and its change of shape. Buttons
+   act on release, have no hover states, and are at least 56 CSS px (48 on a phone). */
+.map {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  background: var(--table);
+}
+
+.map__board {
+  position: relative;
+  width: min(100vw - 16px, (100dvh - 16px) * 1.6);
+  aspect-ratio: 1600 / 1000;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background:
+    linear-gradient(var(--rule) 1px, transparent 1px) 0 0 / 6.25% 10%,
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px) 0 0 / 6.25% 10%,
+    var(--paper);
+  container-type: inline-size;
+  overflow: hidden;
+}
+
+.map__roads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.map__road {
+  stroke: var(--ink);
+  stroke-opacity: 0.3;
+  stroke-width: 6;
+  stroke-dasharray: 14 12;
+  stroke-linecap: round;
+}
+
+.map__road--travelled {
+  stroke-opacity: 1;
+  stroke-dasharray: none;
+}
+
+.map__title {
+  position: absolute;
+  top: 2.5cqw;
+  left: 3cqw;
+  margin: 0;
+  font-size: clamp(16px, 2.6cqw, 34px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.map__node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  transform: translate(-50%, -50%);
+  touch-action: manipulation;
+}
+
+/* The name hangs under the glyph, so the glyph sits on the node's spot. */
+.map__node .map__name {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--paper);
+  font-size: clamp(11px, 1.35cqw, 19px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.map__glyph {
+  width: max(56px, 7.5cqw);
+  height: max(56px, 7.5cqw);
+  border-radius: 50%;
+  background: var(--paper);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+
+.map__node:disabled {
+  opacity: 0.38;
+}
+
+.map__node[data-state="open"] .map__glyph {
+  box-shadow: 0 0 0 3px var(--ink);
+}
+
+.map__node[data-state="restored"] .map__glyph {
+  box-shadow: 0 0 0 4px var(--ink);
+}
+
+.glyph__lit {
+  fill: var(--lamp);
+}
+
+.glyph__sign {
+  stroke-dasharray: 5 4;
+}
+
+.glyph__water {
+  stroke-dasharray: 10 6;
+  animation: glyph-flow 1.2s linear infinite;
+}
+
+.glyph__turning {
+  animation: glyph-turn 6s linear infinite;
+}
+
+.map__page {
+  fill: var(--paper);
+  stroke-width: 3;
+}
+
+/* The room to play next: a ring that breathes out. */
+.map__pulse {
+  stroke-width: 4;
+  transform-origin: center;
+  animation: map-pulse 1.8s ease-out infinite;
+}
+
+/* The room just restored: its glyph blooms once as the map shows. */
+.map__node[data-fresh="true"] .map__glyph {
+  animation: map-bloom 1.4s ease-out both;
+}
+
+/* Last among the glyph rules, so a press shows over every state. */
+.map__node:active:not(:disabled) .map__glyph {
+  background: var(--table);
+}
+
+.map__note {
+  position: absolute;
+  right: 3cqw;
+  bottom: 3cqw;
+  margin: 0;
+  padding: 0.6em 1em;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: clamp(14px, 2cqw, 26px);
+}
+
+@keyframes glyph-flow {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+@keyframes glyph-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes map-pulse {
+  from {
+    opacity: 0.9;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes map-bloom {
+  0% {
+    transform: scale(0.7);
+    box-shadow: 0 0 0 0 var(--lamp);
+  }
+  50% {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 14px var(--lamp);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px var(--ink);
+  }
+}
+
+@media (max-height: 499.98px) {
+  .map__glyph {
+    width: max(48px, 7.5cqw);
+    height: max(48px, 7.5cqw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph__water,
+  .glyph__turning,
+  .map__pulse,
+  .map__node[data-fresh="true"] .map__glyph {
+    animation: none;
+  }
+}

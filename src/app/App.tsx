@@ -2,14 +2,15 @@ import { lazy, Suspense, useEffect, useRef } from 'react';
 import { startClock } from '@/app/clock';
 import { LoadingScreen } from '@/app/LoadingScreen';
 import { PortraitOverlay } from '@/app/PortraitOverlay';
-import { ToBeContinued } from '@/app/ToBeContinued';
 import { useGame } from '@/store/store';
 import type { Screen } from '@/store/types';
 import { GoalBanner } from '@/ui/common/GoalBanner';
 import { HintButton } from '@/ui/common/HintButton';
+import { MapButton } from '@/ui/common/MapButton';
 import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
+import { MapScreen } from '@/ui/map/MapScreen';
 import { Notebook } from '@/ui/notebook/Notebook';
 import { SceneRoot } from '@/ui/scene/SceneRoot';
 
@@ -25,9 +26,8 @@ const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : nu
 // pin waits to be confirmed. The clock ticks for as long as the game is open.
 //
 // The screen is a field in the store: the loading screen until the save is read and the
-// assets are loaded (story 2.1); after room 4's restart the placeholder "to be continued"
-// screen takes the scene's and notebook's place (story 1.13), and the scene unmounts until
-// the dev panel jumps back into a room. The map replaces it in epic 2.
+// assets are loaded (story 2.1); the city map after every restart and whenever he leaves a
+// room (story 2.2), when the scene unmounts until he travels into a room again.
 export function App() {
   const dispatch = useGame((s) => s.dispatch);
   const screen = useGame((s) => s.ui.screen);
@@ -40,7 +40,7 @@ export function App() {
 
 function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
   if (screen === 'loading') return <LoadingScreen loaded={loaded} />;
-  if (screen === 'continued') return <ToBeContinued />;
+  if (screen === 'map') return <MapScreen />;
   return <RoomScreen />;
 }
 
@@ -71,6 +71,7 @@ function RoomScreen() {
         <SceneRoot resizeTo={sceneAreaRef} />
         <ResetButton />
         <HintButton />
+        <MapButton />
         <PinConfirm area={sceneAreaRef} />
         <PartsCounter area={sceneAreaRef} />
         <GoalBanner area={sceneAreaRef} />

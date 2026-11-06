@@ -38,8 +38,15 @@ export interface SaveProgress {
   tools: ToolId[];
   /** Controls and handover steps he has met, so each shows only the first time. */
   firstUse: FirstUseId[];
-  /** The room he is in, with its committed lines; null when none is in progress. */
+  /** The room he is in, with its committed lines; null when he is on the map. */
   room: SavedRoom | null;
+  /** Rooms he left halfway for the map, with their committed lines (story 2.2). */
+  started: SavedRoom[];
+  /**
+   * He is on the map (story 2.2). With no room in progress and this false, he was between
+   * rooms, in a restart: a launch goes on to the next room.
+   */
+  onMap: boolean;
 }
 
 export interface SaveV1 {

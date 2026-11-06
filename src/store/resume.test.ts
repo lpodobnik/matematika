@@ -242,7 +242,7 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
     expect(splitterOffered(store.getState().room as RoomState, ['balance'])).toBe(true);
   });
 
-  it('a room whose restart has begun is done: the next room arrives', () => {
+  it('a reload in a restart goes on to the next room (story 2.2)', () => {
     const g = game();
     g.act({ type: 'room/enter', roomId: 'r01' });
     g.act({ type: 'machine/touch' });
@@ -252,11 +252,11 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
     expect(g.store.getState().room?.stage.phase).toBe('restart');
     expect(g.store.getState().save.progress.roomsDone).toEqual(['r01']);
     const { state } = reload(g.store.getState());
+    expect(state.ui.screen).toBe('room');
     expect(state.room?.spec.id).toBe('r02');
-    expect(state.room?.stage.phase).toBe('arrive');
   });
 
-  it('with every room done, the "to be continued" screen shows', () => {
+  it('with every room done, the map shows', () => {
     const save = {
       ...newSave(at),
       progress: { ...newSave().progress, roomsDone: ['r01', 'r02', 'r03', 'r04'] as const },
@@ -267,7 +267,7 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
       save: { ...save, progress: { ...save.progress, roomsDone: [...save.progress.roomsDone] } },
       room: null,
     });
-    expect(store.getState().ui.screen).toBe('continued');
+    expect(store.getState().ui.screen).toBe('map');
     expect(store.getState().room).toBeNull();
   });
 
