@@ -1,6 +1,6 @@
 # Story 1.9: Predict before the dial opens
 
-Status: review
+Status: done
 
 ## Story
 
@@ -114,3 +114,25 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/dev/DevPanel.tsx`, `dev-view.ts`, `dev-view.test.ts` (modified)
 - `src/ui/notebook/pad-keys.test.ts` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Findings
+
+- None. The review raised no findings that needed a fix, so no code changed.
+
+### Minor notes (not fixed, for Luka)
+
+- `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\Pin.tsx` (wiggle effect): `pinView.wiggle` stays true for all of poke and pin, so the wiggle plays only once because the effect fires on a change. It plays again when the Pin remounts (for example the scene remount after Android loses WebGL) or when `reach` changes on a resize. A ref guard like the one in `usePinReveal` would make it play strictly once.
+- `C:\Users\lpodobnik\Claude\matematika\src\art\skins\pin.ts` (light): a right pin that resolves when the pans level gets a `palette.lamp` flame and rays before the stage locks. That is colour on a machine that hasn't started, against NFR12 and the comment on `palette.lamp` ("colour comes only with a restarted part of a machine").
+- `C:\Users\lpodobnik\Claude\matematika\src\ui\common\PinConfirm.tsx`: the effect options' text (`hr.pin.options`) is only in the confirm button's `aria-label`. On screen nothing says "as x grows" or which pan the arrow badges mean, so room 3 stage 2 depends entirely on the arrow icons.
+- `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\Scale.tsx` (`usePinReveal`): any dial notch ends the wrong-pin reveal, so if he drags straight through 14 the reveal shows for only a moment and he may never see his pin's tilt.
+- `C:\Users\lpodobnik\Claude\matematika\src\store\types.ts`: `save.progress.firstUse` is not in the architecture's `SaveV1`. This story file flags it, but `game-architecture.md` was not updated, so epic 2's save work could leave it out.
+
+### Checks after the review
+
+- `npm run check`: 142 files, no errors (unchanged).
+- `npm test`: 54 files, 1,087 tests passing (unchanged).
+- `npm run build`: `tsc --noEmit` clean; 1.02 MB in 9 files, JavaScript 0.31 MB gzipped (unchanged).
