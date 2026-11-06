@@ -8,6 +8,7 @@ import { machineView } from '@/room/machine';
 import { panPieces } from '@/room/pieces';
 import { pinView } from '@/room/pin';
 import { scaleView } from '@/room/scale';
+import { splitterOffered } from '@/room/splitter';
 import type { FirstUseId, RoomSpec, RoomState, StageSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
 import { effects, runEffects } from '@/store/effects';
@@ -642,7 +643,7 @@ describe('predict before the dial opens (story 1.9)', () => {
     expect(game.store.getState().save.economy.parts).toBe(0);
   });
 
-  it('pins a direction before the dial moves in stage 2; the machine turns it 3 notches', () => {
+  it("pins a direction before the dial moves in stage 2; the machine turns it to the dial's maximum", () => {
     const game = inRoomThree(1);
     game.act({ type: 'dial/set', x: 1 });
     expect(game.stage()?.dialX).toBe(0);
@@ -656,10 +657,10 @@ describe('predict before the dial opens (story 1.9)', () => {
     game.seen.length = 0;
     game.act({ type: 'pin/confirm' });
     expect(game.seen).toEqual([{ type: 'PredictionMade', roomId: 'r03', stage: 1, right: true }]);
-    expect(game.stage()).toMatchObject({ phase: 'open', dialX: tuning.pinEffectTestNotches });
+    expect(game.stage()).toMatchObject({ phase: 'open', dialX: 20 });
     game.seen.length = 0;
-    game.act({ type: 'dial/set', x: 4 });
-    expect(game.seen).toEqual([{ type: 'DialNotch', x: 4 }]);
+    game.act({ type: 'dial/set', x: 19 });
+    expect(game.seen).toEqual([{ type: 'DialNotch', x: 19 }]);
   });
 
   it('pays 2 parts for a right pin once per stage, and nothing for a wrong one (story 1.14)', () => {
@@ -917,6 +918,23 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
       game.store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
     ).toEqual(['pin', 'tray', 'splitter']);
     expect(game.stage()?.hintLevel).toBe(1);
+  });
+
+  // Story 1.15 review: AC 10 offers it "for the rest of the stage", however it was offered.
+  it('keeps offering the splitter after a reset when a typed 2x = 18 offered it', () => {
+    const game = inRoomFour();
+    const offered = () => {
+      const { room, save } = game.store.getState();
+      return room !== null && splitterOffered(room, save.progress.tools);
+    };
+    expect(offered()).toBe(false);
+    game.type('2x = 18');
+    expect(game.lines()).toEqual(['2x+5=23', '2x=18']);
+    expect(offered()).toBe(true);
+    game.act({ type: 'stage/reset' });
+    expect(game.lines()).toEqual(['2x+5=23']);
+    expect(game.stage()?.balance.splitterSeen).toBe(true);
+    expect(offered()).toBe(true);
   });
 
   it('sets 2–9 parts with its stepper', () => {

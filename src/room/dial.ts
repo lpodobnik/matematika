@@ -8,7 +8,14 @@ import type { RoomEvent } from '@/room/events';
 import { openingPhase, touchMachine } from '@/room/phases';
 import { currentStageSpec, hasPin, pokeNotches } from '@/room/room';
 import { isLevel, sideValues } from '@/room/tilt';
-import type { DialSpec, Phase, RoomState, StageSpec } from '@/room/types';
+import type {
+  BalanceMemory,
+  DialSpec,
+  Phase,
+  RoomState,
+  StageSpec,
+  StageState,
+} from '@/room/types';
 
 /** Notches from min to max: room 1's 0–10 has 10, room 2's 0–30 in 3s has 10 too. */
 export function notchCount(dial: DialSpec): number {
@@ -115,7 +122,7 @@ export interface DialStep {
  * jammed (Pattern 2: while jammed he can only edit the draft, reset or leave). The store only changes when the notch does. A notch in `arrive` is a touch on
  * the machine, so it ends arrive too (the scene reports the touch first, so this only
  * matters if that report is ever missed). A notch at the dial's maximum that leaves the
- * pans tipped is remembered: it offers the tray (room/tray.ts; story 1.15).
+ * pans tipped is remembered: it offers the tray (room/tray.ts; story 1.15; `dialMaxedAt`).
  */
 export function setDial(room: RoomState, x: number): DialStep | null {
   const { dial } = currentStageSpec(room);
@@ -124,13 +131,24 @@ export function setDial(room: RoomState, x: number): DialStep | null {
   if (x === stage.dialX || !isOnDial(dial, x)) return null;
   if (x < stage.dialOpen.min || x > stage.dialOpen.max) return null;
   const events: RoomEvent[] = [{ type: 'DialNotch', x }];
-  const level = isLevel(sideValues(stage.pans, q.rational(x)));
-  if (level) {
+  if (isLevel(sideValues(stage.pans, q.rational(x)))) {
     events.push({ type: 'PansLevel', roomId: room.spec.id, stage: room.stageIndex, x });
   }
   const touched = touchMachine(room)?.room.stage ?? stage;
-  // Story 1.15: his dial at its maximum without levelling the pans offers the tray.
-  const maxed = x === dial.max && !level && !touched.balance.dialMaxed;
-  const balance = maxed ? { ...touched.balance, dialMaxed: true } : touched.balance;
+  const balance = dialMaxedAt(touched, dial, x);
   return { room: { ...room, stage: { ...touched, dialX: x, actingOut: false, balance } }, events };
+}
+
+/**
+ * What the stage remembers about Balance once the dial stands at x (story 1.15): at the
+ * dial's maximum with the pans tipped there, the dial counts as maxed, which offers the tray
+ * (room/tray.ts). His notch there does it, and so does the machine's pin test leaving the
+ * dial there (room/pin.ts, `confirmPin`): in room 4 a pin at 6 parks the knob at the
+ * maximum, where his grab sends a notch the dial already has. The same memory otherwise.
+ */
+export function dialMaxedAt(stage: StageState, dial: DialSpec, x: number): BalanceMemory {
+  const { balance } = stage;
+  if (balance.dialMaxed || x !== dial.max) return balance;
+  if (isLevel(sideValues(stage.pans, q.rational(x)))) return balance;
+  return { ...balance, dialMaxed: true };
 }

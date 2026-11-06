@@ -171,11 +171,17 @@ export type Jam = { kind: 'line' };
 export interface BalanceMemory {
   /** Balance moves made this stage: tray drops, drag-offs and even splits. */
   moves: number;
-  /** His dial has stood at its maximum this stage with the pans not level. */
+  /**
+   * The dial has stood at its maximum this stage with the pans not level: his notch, or the
+   * machine's pin test leaving it there (room/dial.ts, `dialMaxedAt`).
+   */
   dialMaxed: boolean;
   /** He had met the tray before this stage (`save.progress.firstUse`; the root reducer). */
   trayMet: boolean;
-  /** A Balance move left one side holding only x pieces, more than one x. */
+  /**
+   * The splitter has been offered this stage (room/splitter.ts, `rememberSplitter`), so it
+   * stays after a reset takes away the line or the pans that offered it.
+   */
   splitterSeen: boolean;
 }
 

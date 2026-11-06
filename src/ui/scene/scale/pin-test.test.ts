@@ -45,14 +45,17 @@ describe('pinTestOf (story 1.14)', () => {
     });
   });
 
-  it('turns the dial up 3 notches for a direction pin', () => {
+  // Story 1.15 review: all the way to the dial's maximum, not 3 notches, so room 3.2 ends
+  // tipped right as the right option shows; at 120 ms a notch its 20 notches take 2.4 s.
+  it('turns the dial to its maximum for a direction pin, one notch every 120 ms', () => {
     const { placed, confirmed } = confirming(r03, 1, { kind: 'choice', index: 1 });
-    expect(pinTestOf(pinTestProbe(placed), pinTestProbe(confirmed))).toEqual({
-      kind: 'turn',
-      from: 0,
-      to: 3,
-      step: 1,
-    });
+    const test = pinTestOf(pinTestProbe(placed), pinTestProbe(confirmed));
+    expect(test).toEqual({ kind: 'turn', from: 0, to: 20, step: 1 });
+    if (!test) return;
+    expect(pinTestFrame(test, 20 * notch - 1).dialX).toBe(19);
+    expect(pinTestFrame(test, 20 * notch)).toMatchObject({ dialX: null, done: false });
+    expect(pinTestFrame(test, 20 * notch + pinTestRestMs).done).toBe(true);
+    expect(20 * notch).toBe(2400);
   });
 
   it('weighs the x of a pin beyond the dial, without turning it', () => {

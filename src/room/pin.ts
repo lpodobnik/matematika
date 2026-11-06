@@ -12,9 +12,12 @@
 //               notebook turns on, and resolves it at once: `PredictionMade` says whether
 //               it was right. The machine tests it: it turns the dial itself to a `level-x`
 //               pin's x (or, beyond the dial, the scene has the pans weigh that x for a
-//               moment), or up `tuning.pinEffectTestNotches` notches for an `effect` pin.
+//               moment), or all the way to the dial's maximum for an `effect` pin, so the
+//               scale ends tilted the way the right option shows (story 1.15 review).
 //               A dial the machine turns fires no `DialNotch`, `PansLevel` or `WayUsed`:
-//               it is neither his exploring nor his way (story 1.14).
+//               it is neither his exploring nor his way (story 1.14). Left at the dial's
+//               maximum with the pans tipped, it counts as his dial having been there: it
+//               offers the tray (room/tray.ts), since grabbing the knob there does nothing.
 //   lock        a pin still unresolved when the stage locks resolves then; a safety only,
 //               since confirming resolves every pin.
 //
@@ -22,14 +25,13 @@
 // so the dial doesn't move before he pins. A wrong pin costs nothing; the root reducer pays
 // parts for a right one (store/reducer.ts), so this file knows nothing of the economy.
 
-import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
 import { stageSolution } from '@/math/check';
 import type { Equation } from '@/math/expr';
 import { formatNumber } from '@/math/format';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
-import { isOnDial } from '@/room/dial';
+import { dialMaxedAt, isOnDial } from '@/room/dial';
 import type { RoomEvent } from '@/room/events';
 import { currentStageSpec, fullDial, machineEquation, type RoomStep } from '@/room/room';
 import type {
@@ -148,9 +150,11 @@ export function setPin(room: RoomState, value: PinValue): RoomStep | null {
 
 /**
  * Where the machine turns the dial to test a pin he confirms (story 1.14): to a `level-x`
- * pin's x when the dial reaches it, up `tuning.pinEffectTestNotches` notches from where it
- * is for an `effect` pin (never past the dial's maximum), and nowhere for a pin beyond the
- * dial, whose x the scene has the pans weigh instead (`pinRevealX`).
+ * pin's x when the dial reaches it; all the way to the dial's maximum for an `effect` pin,
+ * so the scale swings as far as x grows on the dial and ends tilted the way x tips it (in
+ * room 3's `20 − x = 6`, from tipped left at 0, through level at 14, to tipped right at
+ * 20; story 1.15 review, replacing three notches, which left it tipped left); and nowhere
+ * for a pin beyond the dial, whose x the scene has the pans weigh instead (`pinRevealX`).
  */
 export function machineTestX(stage: StageSpec, dialX: number, value: PinValue): number {
   const { dial, pin } = stage;
@@ -158,9 +162,7 @@ export function machineTestX(stage: StageSpec, dialX: number, value: PinValue): 
   if (pin?.kind === 'level-x' && value.kind === 'x') {
     return isOnDial(dial, value.x) ? value.x : dialX;
   }
-  if (pin?.kind === 'effect') {
-    return Math.min(dial.max, dialX + tuning.pinEffectTestNotches * dial.step);
-  }
+  if (pin?.kind === 'effect') return dial.max;
   return dialX;
 }
 
@@ -169,19 +171,23 @@ export function machineTestX(stage: StageSpec, dialX: number, value: PinValue): 
  * the stage opens, so the notebook turns on. The machine tests the pin at once: it turns
  * the dial itself (`machineTestX`), which fires no dial events, and the pin resolves, with
  * `PredictionMade`. The scene plays the test out: the knob moves there notch by notch, or
- * the pans weigh the pin's x beyond the dial. Null unless the stage is in `pin` with the pin
- * placed.
+ * the pans weigh the pin's x beyond the dial. A test that leaves the dial at its maximum
+ * with the pans tipped counts as the dial maxed (`dialMaxedAt`), so it offers the tray: in
+ * room 4 a pin at 6 parks the knob there, and grabbing it there sends a notch the dial
+ * already has, which does nothing. Null unless the stage is in `pin` with the pin placed.
  */
 export function confirmPin(room: RoomState): RoomStep | null {
   const { stage } = room;
   if (stage.phase !== 'pin' || !stage.pin || stage.pin.locked) return null;
   const spec = currentStageSpec(room);
+  const dialX = machineTestX(spec, stage.dialX, stage.pin.value);
   const opened: StageState = {
     ...stage,
     phase: 'open',
     pin: { ...stage.pin, locked: true },
     dialOpen: fullDial(spec),
-    dialX: machineTestX(spec, stage.dialX, stage.pin.value),
+    dialX,
+    balance: spec.dial === 'locked' ? stage.balance : dialMaxedAt(stage, spec.dial, dialX),
   };
   const confirmed = withStage(room, opened);
   return resolvePin(confirmed) ?? { room: confirmed, events: [] };

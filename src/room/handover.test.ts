@@ -23,8 +23,8 @@ import { resetStage, touchMachine } from '@/room/phases';
 import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { splitterOffered } from '@/room/splitter';
-import { trayOffered } from '@/room/tray';
-import type { FirstUseId, HandoverId, RoomState, ToolId } from '@/room/types';
+import { dropOnScale, trayOffered } from '@/room/tray';
+import type { FirstUseId, HandoverId, RoomSpec, RoomState, StageSpec, ToolId } from '@/room/types';
 
 const balance: ToolId[] = ['balance'];
 
@@ -87,7 +87,10 @@ function balancedTo(room: RoomState, ...lines: string[]): RoomState {
       actingOut: true,
     };
   }
-  return { ...room, stage };
+  return {
+    ...room,
+    stage: { ...stage, balance: { ...stage.balance, moves: stage.balance.moves + 1 } },
+  };
 }
 
 describe('which handover applies (story 1.15)', () => {
@@ -149,6 +152,25 @@ describe('which handover applies (story 1.15)', () => {
     expect(handoverApplies('tray', moved, balance)).toBe(false);
     expect(handoverView(moved, metBut('balance-goal'), balance)).toBe('balance-goal');
     expect(handoverView(moved, [], balance)).toBe('balance-goal');
+  });
+
+  // Story 1.15 review: it looked for a line written by Balance, and Balance `blank` and
+  // `blanks` write none, so the goal never showed there. It counts the moves now.
+  it('sets the goal after a Balance move that writes no line (Balance blank or blanks)', () => {
+    for (const mode of ['blank', 'blanks'] as const) {
+      const first = r04.stages[0] as StageSpec;
+      const quiet: RoomSpec = {
+        ...r04,
+        stages: [{ ...first, fading: { try: 'blank', balance: mode } }],
+      };
+      const poking = opened(enterRoom(quiet).room);
+      const open = step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
+      const moved = step(dropOnScale(dialTo(open, 6), balance, 'float')).room;
+      expect(moved.stage.lines, mode).toHaveLength(1);
+      expect(moved.stage.balance.moves, mode).toBe(1);
+      expect(handoverApplies('tray', moved, balance), mode).toBe(false);
+      expect(handoverView(moved, metBut('balance-goal'), balance), mode).toBe('balance-goal');
+    }
   });
 
   it('shows the splitter once a side holds only x, and nothing once x stands alone', () => {

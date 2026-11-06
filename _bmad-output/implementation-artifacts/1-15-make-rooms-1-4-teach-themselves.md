@@ -256,3 +256,34 @@ And Luka in room 4:
 - `npm run build` passes (JavaScript 0.33 MB gzipped).
 - Browser at 1280 × 800 in the app's pane: room 1 shows the dial tag, the nudge, and the label following the knob; the tag goes on the first notch; at level the draft pulses with the write tag; after the answer, the check tag shows with `x = ?` dimmed.
 - The pane then went hidden (other lanes share it), so the rest ran in headless Chrome (Playwright, system Chrome) on port 5310. Covered at 1280 × 800 and 640 × 360: the room 1 dial, write and check tags; the room 2 dial tag; the room 4 tray, goal and splitter tags; the dial tag shown again after idling. No page errors.
+
+### Fix pass (main checkout, `epic-1`): the review's five bugs and three small items
+
+**Fixed** (each with a test that fails without it; checked by reverting the fix):
+1. **Room 3.2's test contradicted the answer.** An effect pin's test now turns the dial all the way to the dial's maximum (`machineTestX`), not 3 notches. `tuning.pinEffectTestNotches` is gone; `pinTestNotchMs` stays at 120, so room 3.2's 20 notches take 2.4 s. `20 − x = 6` swings from 14° left, through level at 14, to 6° right at 20, and `desno` lights. New content test in `rooms.test.ts`: for every effect pin, from every dial x he can confirm at, the test ends tilted to the side the right option names. Rewritten in place: the 3-notch cases in `pin.test.ts`, `pin-test.test.ts`, `store.test.ts` and `playthrough.test.ts`.
+2. **Room 4: a pin at 6 parked the dial at its max with no tray.** `dialMaxedAt` (`room/dial.ts`) is shared by `setDial` and `confirmPin`: a machine test that leaves the dial at `dial.max` with the pans not level counts as maxed, so the tray is offered. Test in `tray.test.ts` (pin at 6 offers it; at 5, beyond the dial, or levelling at the max, it doesn't).
+3. **Dragging a weight off a pan almost never worked.** A pan's piece now comes off both sides when let go outside its own pan's sweep plus a margin: `panSweep` in `tray-layout.ts` is the box the pan and its pieces' grab areas sweep at ±`tuning.tiltMax`, and the margin is 40 scene units or 16 CSS px, whichever is more. `dropTarget` gains an `own-pan` target. `releaseActionAt` (`piece-drag.ts`) is what Tray.tsx's release handler asks, so the tests run the same code.
+4. **The slider showed the dial's x while room 4's pans weighed a pin beyond the dial.** `dialLabelState` (`dial-label.ts`) reads `x = ?`, dimmed, while `weighX !== null`, as during acting out. `Dial.tsx` uses it.
+5. **At 640 × 360 a tap on the right pan's 18 took it off.** Both parts: a release within `tapSlopCssPx` (8 CSS px) of where the finger went down is a tap, and `createPieceDrag` settles it without asking the release handler (`setTapSlop`, set by Tray.tsx); and over-its-own-pan wins over the shelf's drop margin.
+6. **`splitterSeen`** is now set whenever the splitter is offered: `rememberSplitter` (`room/splitter.ts`), called by the root reducer after every room step next to `rememberTray` (`withToolMemory`). A typed `2x = 18` followed by a reset keeps it offered. Tests in `splitter.test.ts` and `store.test.ts`.
+7. **`balanced()`** in `room/handover.ts` now reads `stage.balance.moves > 0`, so Balance `blank` and `blanks` show the `balance-goal` step. `handover.test.ts`'s `balancedTo` helper counts a move; new test for both modes.
+
+**Calls** (flag any for veto):
+- The pan's sweep uses the pan's poses at −15°, 0° and +15°, with every piece's grab area (at least 48 CSS px). At 640 × 360 the right pan's sweep reaches up under the shelf, so a right-pan piece let go on the shelf's lower part slides back; on the shelf above the pan's sweep it still comes off.
+- After a reset, `balance.moves` is kept (reset keeps the Balance memory), so `balance-goal` applies again if he hasn't met it. That matches AC 13 ("after his first Balance move"); with the old rule a reset hid it.
+- A tap slides back from where it is, a few px, so it just settles.
+
+**Not fixed, for the main session:** with the test ending at 20, the slider's plate `x = 20` sits over the `desno` word at rest after room 3.2's test: mostly covered at 1280 × 800, its last letter touched at 640 × 360. Before confirming, `x = 0` covers `lijevo` the same way (from 1.15, not this pass).
+
+**Files:** `src/config/tuning.ts`, `src/room/{pin,dial,tray,splitter,handover,types}.ts`, `src/store/reducer.ts`, `src/ui/scene/scale/{tray-layout,piece-drag,dial-label}.ts`, `src/ui/scene/scale/{Tray,Dial}.tsx`. Tests: `src/content/rooms/rooms.test.ts`, `src/room/{pin,tray,splitter,handover}.test.ts`, `src/store/{store,playthrough}.test.ts`, `src/ui/scene/scale/{pin-test,piece-drag,tray-layout,dial-label}.test.ts`.
+
+**Checks:**
+- `npm run check`: clean (237 files).
+- `npm test`: 96 files, 1786 passed, 2 skipped.
+- `npm run build`: passes, 0.33 MB of JavaScript gzipped.
+- Browser: headless Chrome (Playwright) on my own Vite server, port 5330, since stopped; 5173 untouched. At 1280 × 800 and 640 × 360:
+  - Bug 1: room 3.2 with `desno` pinned swings from tipped left, through level at 14, to tipped right at 20; the flag lights.
+  - Bug 3: room 4's left 5, dragged with the mouse between the pans, onto the floor or over the other pan, gives `2x = 18`; let go over its own pan, it slides back.
+  - Bug 5: at `2x = 18`, the right 18 stays on a tap, a 3 px jitter and a 30 px move over its pan. On the phone the tap was at y 480, inside the shelf's margin (the 18's grab area is y 437–571, the shelf ends at 464). The same grab dragged between the pans does take it off, and the tray's numbers are untouched.
+  - Bug 4: the plate reads `x = ?`, dimmed, while room 4's pans weigh 9, then `x = 2`.
+  - No page errors. The one console error is the existing 404 for a resource.

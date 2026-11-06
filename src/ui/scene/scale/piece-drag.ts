@@ -5,11 +5,13 @@
 // - A drag starts on one of the tray's pieces (a new weight or float with the stepper's
 //   number) or on a weight or float on a pan. Either way the move acts on both sides at
 //   once (story 1.15): a tray piece let go over the scale sends a copy to each side, and a
-//   pan's piece let go off the scale comes off both. The piece follows the finger, keeping where
-//   he grabbed it (`onMove`, written to Pixi through a ref, never React state).
+//   pan's piece let go off its own pan comes off both. The piece follows the finger, keeping
+//   where he grabbed it (`onMove`, written to Pixi through a ref, never React state).
 // - It ends on pointer up and up outside (`end`): the release handler decides where it
 //   landed, from the point he let go. When the store takes the move the piece lands
-//   (`landing`) and fades where it is; otherwise it slides back (`returning`).
+//   (`landing`) and fades where it is; otherwise it slides back (`returning`). A release
+//   within `setTapSlop` of where the finger went down is a tap, not a move: the piece
+//   settles back and the release handler is not asked (story 1.15 review).
 // - A cancelled drag is not a drop: on the DOM's pointercancel (`abort`, an Android edge
 //   gesture or palm rejection), and on blur or a hidden page (`cancel`), both through
 //   dial-drag's watchDragCancel, it slides back without asking the release handler.
@@ -18,11 +20,18 @@
 // Only a start, a release and a settle change what is carried (`subscribe`), so React
 // renders per drag, never per move.
 
-import type { PieceView } from '@/room/scale';
+import { type PieceView, scaleView } from '@/room/scale';
 import { dropOnScale, takeOffPan } from '@/room/tray';
 import type { RoomState, Side, ToolId, TrayKind } from '@/room/types';
 import type { Action } from '@/store/actions';
-import type { DropTarget, Point } from '@/ui/scene/scale/tray-layout';
+import { minHitCssPx } from '@/ui/scene/scale/dial-layout';
+import {
+  type DropTarget,
+  dropTarget,
+  type Point,
+  panSweep,
+  type TrayLayout,
+} from '@/ui/scene/scale/tray-layout';
 
 /** Where a carried piece came from. */
 export type DragSource =
@@ -70,6 +79,11 @@ export interface PieceDrag {
   /** Every move of the carried piece (the tray writes it to its Pixi container). */
   setMoveListener(listener: ((at: Point) => void) | null): void;
   setReleaseHandler(handler: ReleaseHandler | null): void;
+  /**
+   * How far from where the finger went down (scene units) a release is still a tap, which
+   * settles the piece without asking the release handler. 0 until set: every release asks.
+   */
+  setTapSlop(units: number): void;
 }
 
 export function createPieceDrag(): PieceDrag {
@@ -78,6 +92,7 @@ export function createPieceDrag(): PieceDrag {
   let at: Point | null = null;
   let onMove: ((point: Point) => void) | null = null;
   let onRelease: ReleaseHandler | null = null;
+  let tapSlop = 0;
   const listeners = new Set<() => void>();
 
   const notify = () => {
@@ -111,7 +126,9 @@ export function createPieceDrag(): PieceDrag {
     },
     end(pointerId) {
       if (!held || held.pointerId !== pointerId || !carry) return;
-      const landed = onRelease?.(carry, held.last) ?? false;
+      const { grab, last } = held;
+      const tapped = Math.hypot(last.x - grab.x, last.y - grab.y) <= tapSlop;
+      const landed = !tapped && (onRelease?.(carry, last) ?? false);
       letGo(landed ? 'landing' : 'returning');
     },
     abort(pointerId) {
@@ -140,6 +157,9 @@ export function createPieceDrag(): PieceDrag {
     setReleaseHandler(handler) {
       onRelease = handler;
     },
+    setTapSlop(units) {
+      tapSlop = Number.isFinite(units) && units > 0 ? units : 0;
+    },
   };
 }
 
@@ -154,15 +174,40 @@ export function cancelWatch(drag: PieceDrag): { end(pointerId: number): void; ca
 
 /**
  * The store action a piece let go over `target` asks for (story 1.15): a tray piece over the
- * scale drops a copy on each side, and a pan's piece let go off the scale (the tray or
- * anywhere else) comes off both sides. A tray piece let go off the scale, or a pan's piece
- * let go over it, asks for nothing, and the piece slides back.
+ * scale drops a copy on each side, and a pan's piece let go anywhere off its own pan (the
+ * other pan, between them, the floor, the tray) comes off both sides. A tray piece let go
+ * off the scale, or a pan's piece let go back over its own pan, asks for nothing, and the
+ * piece slides back.
  */
 export function releaseAction(source: DragSource, target: DropTarget): Action | null {
   if (source.from === 'tray') {
     return target === 'scale' ? { type: 'tray/drop', kind: source.kind } : null;
   }
-  return target === 'scale' ? null : { type: 'tray/take', side: source.side, key: source.key };
+  if (target === 'own-pan') return null;
+  return { type: 'tray/take', side: source.side, key: source.key };
+}
+
+/**
+ * The store action a carried piece let go at `at` (scene units) asks for, as Tray.tsx's
+ * release handler asks it: a pan's piece is measured against the box its own pan sweeps
+ * (tray-layout.ts, `panSweep`), with the room's pieces on that pan at `labelSize`, and
+ * grab areas at least 48 CSS px, as the pans draw them. Null with no room.
+ */
+export function releaseActionAt(
+  room: RoomState | null,
+  carry: Carry,
+  at: Point,
+  layout: TrayLayout,
+  labelSize: number,
+): Action | null {
+  if (!room) return null;
+  const { source } = carry;
+  const minHit = minHitCssPx * layout.unitsPerPx;
+  const ownPan =
+    source.from === 'pan'
+      ? panSweep(source.side, scaleView(room)[source.side].pieces, labelSize, minHit)
+      : null;
+  return releaseAction(source, dropTarget(at, layout, ownPan));
 }
 
 /**

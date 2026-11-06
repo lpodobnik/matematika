@@ -22,19 +22,19 @@ import {
   type Carry,
   cancelWatch,
   type PieceDrag,
-  releaseAction,
+  releaseActionAt,
   storeTakes,
 } from '@/ui/scene/scale/piece-drag';
 import { pinWiggle } from '@/ui/scene/scale/pin-layout';
 import { StepButton } from '@/ui/scene/scale/StepButton';
 import {
   copyMs,
-  dropTarget,
   landMs,
   type Point,
   returnMs,
   type TrayLayout,
   type TraySlotLayout,
+  tapSlopCssPx,
   trayLayout,
   trayWiggleMs,
 } from '@/ui/scene/scale/tray-layout';
@@ -84,22 +84,27 @@ export function Tray({ sceneScale, drag, toScene }: Props) {
   const carry = useCarry(drag);
 
   // Handlers read the latest store values without re-registering.
-  const latest = useRef({ room, tools, layout });
+  const latest = useRef({ room, tools, layout, fontSize });
   useLayoutEffect(() => {
-    latest.current = { room, tools, layout };
+    latest.current = { room, tools, layout, fontSize };
   });
 
+  // A pan's piece is back on its pan when let go over the box its pan sweeps (story 1.15
+  // review), and a release within a few CSS px of where the finger went down is a tap.
   useEffect(() => {
     drag.setReleaseHandler((held, at) => {
       const current = latest.current;
       if (!current.layout) return false;
-      const action = releaseAction(held.source, dropTarget(at, current.layout));
+      const action = releaseActionAt(current.room, held, at, current.layout, current.fontSize);
       if (!action || !storeTakes(current.room, current.tools, action)) return false;
       dispatch(action);
       return true;
     });
     return () => drag.setReleaseHandler(null);
   }, [drag, dispatch]);
+
+  const tapSlop = layout ? tapSlopCssPx * layout.unitsPerPx : 0;
+  useEffect(() => drag.setTapSlop(tapSlop), [drag, tapSlop]);
 
   // A drag can start on the tray or on a pan, so it is followed on the stage: every move,
   // and up or up outside wherever the finger was let go. A cancelled pointer (the DOM's

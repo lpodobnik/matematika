@@ -34,12 +34,11 @@ export const tuning = {
    * game. Longer than either animation (ui/scene/machine/layout.ts). */
   presentationTimeoutMs: 8000,
   /** Architecture, Pattern 2 (Resolution; story 1.14): on confirm the machine tests the
-   * pin by turning the dial itself, one notch this often… */
+   * pin by turning the dial itself, one notch this often (a direction pin turns it all the
+   * way to the dial's maximum: room 3's 20 notches take 2.4 s)… */
   pinTestNotchMs: 120,
-  /** …a pin beyond the dial has the pans weigh its x for this long instead… */
+  /** …and a pin beyond the dial has the pans weigh its x for this long instead. */
   pinRevealMs: 1600,
-  /** …and a direction pin turns the dial up this many notches from where it is. */
-  pinEffectTestNotches: 3,
   /** GDD, Prediction: a right pin pays this many parts, once per stage. */
   predictionParts: 2,
   /** Architecture, Balance moves: the tray's weight and float are numbered 1 to this. */

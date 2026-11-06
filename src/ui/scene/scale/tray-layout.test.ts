@@ -1,9 +1,26 @@
 import { describe, expect, it } from 'vitest';
+import { tuning } from '@/config/tuning';
+import { r04 } from '@/content/rooms/r04-water-wheel';
+import { enterRoom } from '@/room/room';
+import { scaleView } from '@/room/scale';
 import { trayPiece } from '@/room/tray';
 import { machineBounds } from '@/ui/scene/machine/layout';
 import { type Box, minHitCssPx } from '@/ui/scene/scale/dial-layout';
-import { beamPose, labelFontSize, pieceSize, scaleGeometry } from '@/ui/scene/scale/layout';
-import { dropTarget, overScale, scaleZone, trayLayout } from '@/ui/scene/scale/tray-layout';
+import {
+  beamPose,
+  grabArea,
+  labelFontSize,
+  layoutPan,
+  pieceSize,
+  scaleGeometry,
+} from '@/ui/scene/scale/layout';
+import {
+  dropTarget,
+  overScale,
+  panSweep,
+  scaleZone,
+  trayLayout,
+} from '@/ui/scene/scale/tray-layout';
 
 const tablet = 0.54;
 const phone = 360 / 1000; // 640 × 360: the scene's height sets its scale
@@ -124,5 +141,66 @@ describe('dropTarget (story 1.15: anywhere over the scale)', () => {
     expect(dropTarget({ x: 300, y: scaleZone.y + scaleZone.height + 1 }, layout)).toBeNull();
     expect(dropTarget({ x: 300, y: 920 }, layout)).toBeNull();
     expect(dropTarget({ x: 800, y: 100 }, layout)).toBeNull();
+  });
+});
+
+// Story 1.15 review: a pan's piece came off only when let go off the whole scale zone, so
+// beside its pan, between the pans or on the floor it slid back. Now it stays only over
+// the box its own pan sweeps, plus a margin, and that wins over the shelf's drop margin.
+describe('a pan’s own sweep (story 1.15 review)', () => {
+  const pieces = scaleView(enterRoom(r04).room);
+
+  it.each([
+    ['the tablet', tablet],
+    ['640 × 360', phone],
+  ])('covers its pan and every piece’s grab area at any tilt on %s', (_, scale) => {
+    const labelSize = labelFontSize(scale);
+    const minHit = minHitCssPx / scale;
+    for (const side of ['left', 'right'] as const) {
+      const sweep = panSweep(side, pieces[side].pieces, labelSize, minHit);
+      for (let tilt = -tuning.tiltMax; tilt <= tuning.tiltMax; tilt += 2.5) {
+        const pan = beamPose(tilt)[side];
+        const half = scaleGeometry.panWidth / 2;
+        expect(within({ x: pan.x - half, y: pan.y - 1, width: 2 * half, height: 1 }, sweep)).toBe(
+          true,
+        );
+        for (const box of layoutPan(pieces[side].pieces, labelSize)) {
+          const area = grabArea(box.width, box.height, minHit);
+          const grab = {
+            x: pan.x + box.x + area.x,
+            y: pan.y + box.y + area.y,
+            width: area.width,
+            height: area.height,
+          };
+          expect(within(grab, sweep), `${side} ${box.key} at ${tilt}°`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('keeps a pan’s piece over its own pan, plus a margin, and nowhere else', () => {
+    const layout = trayLayout(tablet, labelFontSize(tablet));
+    const left = panSweep('left', pieces.left.pieces, labelFontSize(tablet), minHitCssPx / tablet);
+    expect(dropTarget({ x: 300, y: 560 }, layout, left)).toBe('own-pan');
+    expect(dropTarget({ x: left.x - 20, y: left.y + left.height + 20 }, layout, left)).toBe(
+      'own-pan',
+    );
+    // Between the pans, on the floor, over the other pan: off its pan, so it comes off.
+    expect(dropTarget({ x: 800, y: 560 }, layout, left)).toBe('scale');
+    expect(dropTarget({ x: 300, y: 830 }, layout, left)).toBe('scale');
+    expect(dropTarget({ x: 1300, y: 500 }, layout, left)).toBe('scale');
+  });
+
+  it('wins over the shelf’s drop margin where that reaches down over the right pan (640 × 360)', () => {
+    const layout = trayLayout(phone, labelFontSize(phone));
+    const right = panSweep('right', pieces.right.pieces, labelFontSize(phone), minHitCssPx / phone);
+    const { box } = layout;
+    // Just under the shelf, inside its drop margin, over the right pan.
+    const under = { x: Math.max(box.x, right.x) + 20, y: box.y + box.height + 20 };
+    expect(within({ ...under, width: 0, height: 0 }, right)).toBe(true);
+    expect(dropTarget(under, layout)).toBe('tray');
+    expect(dropTarget(under, layout, right)).toBe('own-pan');
+    // On the shelf itself, above the pan's sweep, a pan's piece still goes to the tray.
+    expect(dropTarget({ x: box.x + 20, y: box.y + 20 }, layout, right)).toBe('tray');
   });
 });

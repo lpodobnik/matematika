@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { tuning } from '@/config/tuning';
 import { r03 } from '@/content/rooms/r03-sluice-gate';
 import { parse } from '@/math/parse';
 import type { Token } from '@/math/tokens';
@@ -24,7 +23,7 @@ import {
   tiltAsXGrows,
 } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
-import { pinRevealView, scaleView } from '@/room/scale';
+import { pinRevealView, scaleView, scaleViewAt } from '@/room/scale';
 import type { Phase, PinValue, RoomSpec, RoomState, StageSpec } from '@/room/types';
 
 function step(result: RoomStep | null): RoomStep {
@@ -228,8 +227,8 @@ describe('poke, then pin (Pattern 2)', () => {
     expect(pinned.stage.phase).toBe('pin');
     const confirmed = step(confirmPin(pinned)).room;
     expect(confirmed.stage.phase).toBe('open');
-    // The machine turned it up 3 notches to test the pin; now it is his.
-    expect(confirmed.stage.dialX).toBe(3);
+    // The machine turned it to its maximum to test the pin; now it is his.
+    expect(confirmed.stage.dialX).toBe(20);
     expect(setDial(confirmed, 1)?.room.stage.dialX).toBe(1);
   });
 });
@@ -312,21 +311,29 @@ describe('the machine tests the pin on confirm (Pattern 2, Resolution)', () => {
     expect(scaleView(wrong.room).x).toBe(2);
   });
 
-  it('turns the dial up 3 notches for a direction pin: up is right for 20 − x', () => {
-    expect(tuning.pinEffectTestNotches).toBe(3);
-    const right = step(confirmPin(step(setPin(opened(1), choice(1))).room));
+  // Story 1.15 review: 1.14 turned the dial up 3 notches, which left 20 − x = 6 tipped
+  // left (14° → 11°), so the right answer, `desno`, looked wrong. The test now turns the dial
+  // all the way to its maximum, and the scale ends tipped the way the right option shows.
+  it('turns the dial to its maximum for a direction pin: 20 − x swings from left to right', () => {
+    const pinned = step(setPin(opened(1), choice(1))).room;
+    expect(scaleView(pinned).tilt).toBe(14);
+    const right = step(confirmPin(pinned));
     expect(right.events).toEqual([
       { type: 'PredictionMade', roomId: 'r03', stage: 1, right: true },
     ]);
-    expect(right.room.stage.dialX).toBe(3);
+    expect(right.room.stage.dialX).toBe(20);
     expect(pinView(right.room)?.result).toBe('right');
+    // On the way it passes level at 14, and it ends tipped right, as `desno` shows.
+    expect(scaleViewAt(right.room, 14).level).toBe(true);
+    expect(scaleView(right.room).tilt).toBe(-6);
     const wrong = step(confirmPin(step(setPin(opened(1), choice(0))).room));
     expect(wrong.events.at(-1)).toMatchObject({ type: 'PredictionMade', right: false });
+    expect(wrong.room.stage.dialX).toBe(20);
     expect(pinView(wrong.room)?.result).toBe('wrong');
     expect(pinRevealX(wrong.room)).toBeNull();
     expect(pinRevealView(wrong.room)).toBeNull();
-    const next = step(setDial(right.room, 4));
-    expect(next.events).toEqual([{ type: 'DialNotch', x: 4 }]);
+    const next = step(setDial(right.room, 19));
+    expect(next.events).toEqual([{ type: 'DialNotch', x: 19 }]);
   });
 
   it("raises x's spring pan as the machine turns the dial: 20 − x = 6", () => {
@@ -335,13 +342,14 @@ describe('the machine tests the pin on confirm (Pattern 2, Resolution)', () => {
     expect(scaleView(after).tilt).toBeLessThan(scaleView(pinned).tilt);
   });
 
-  it('turns a direction pin only as far as the dial goes', () => {
+  it("turns a direction pin to the dial's maximum from wherever the dial is, whichever option", () => {
     const spec = effectStage;
-    expect(machineTestX(spec, 0, choice(0))).toBe(3);
+    expect(machineTestX(spec, 0, choice(0))).toBe(20);
+    expect(machineTestX(spec, 0, choice(1))).toBe(20);
     expect(machineTestX(spec, 18, choice(1))).toBe(20);
     expect(machineTestX(spec, 20, choice(1))).toBe(20);
     const division: StageSpec = { ...spec, dial: { min: 0, max: 30, step: 3 } };
-    expect(machineTestX(division, 6, choice(0))).toBe(15);
+    expect(machineTestX(division, 6, choice(0))).toBe(30);
     expect(machineTestX(levelStage, 7, at(14))).toBe(14);
     expect(machineTestX({ ...levelStage, dial: { min: 0, max: 6, step: 1 } }, 2, at(9))).toBe(2);
   });

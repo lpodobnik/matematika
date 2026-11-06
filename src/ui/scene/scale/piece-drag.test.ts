@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import { formatEquation } from '@/math/format';
 import { panPieces } from '@/room/pieces';
 import { scaleView } from '@/room/scale';
 import { trayPiece } from '@/room/tray';
@@ -8,17 +9,20 @@ import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import { initialGameState } from '@/store/reducer';
 import { createGameStore } from '@/store/store';
+import { fitScene } from '@/ui/scene/fit-scene';
 import { watchDragCancel } from '@/ui/scene/scale/dial-drag';
-import { labelFontSize } from '@/ui/scene/scale/layout';
+import { minHitCssPx } from '@/ui/scene/scale/dial-layout';
+import { beamPose, grabArea, labelFontSize, layoutPan } from '@/ui/scene/scale/layout';
 import {
   type Carry,
   cancelWatch,
   createPieceDrag,
   type DragSource,
   releaseAction,
+  releaseActionAt,
   storeTakes,
 } from '@/ui/scene/scale/piece-drag';
-import { dropTarget, trayLayout } from '@/ui/scene/scale/tray-layout';
+import { dropTarget, tapSlopCssPx, trayGeometry, trayLayout } from '@/ui/scene/scale/tray-layout';
 
 const fromTray: DragSource = { from: 'tray', kind: 'float' };
 const piece = trayPiece('float', 5);
@@ -56,6 +60,34 @@ describe('createPieceDrag', () => {
     drag.move(2, { x: 1300, y: 500 });
     drag.end(2);
     expect(drag.carry()?.phase).toBe('returning');
+  });
+
+  // Story 1.15 review: a tap on a pan's piece asked the release handler, which could read
+  // the spot as "off the pan" (at 640 × 360, the shelf's margin over the right pan).
+  it('settles a tap, a release within the tap slop of where the finger went down, without asking', () => {
+    const drag = createPieceDrag();
+    const release = vi.fn(() => true);
+    drag.setReleaseHandler(release);
+    drag.setTapSlop(20);
+    const grab = { x: 1300, y: 450 };
+    drag.start(1, fromTray, piece, home, grab);
+    drag.move(1, { x: 1312, y: 466 });
+    drag.end(1);
+    expect(release).not.toHaveBeenCalled();
+    expect(drag.carry()?.phase).toBe('returning');
+    drag.settle();
+    // Moved off and back is still a tap; past the slop it is a move, and the handler decides.
+    drag.start(1, fromTray, piece, home, grab);
+    drag.move(1, { x: 300, y: 450 });
+    drag.move(1, { x: 1301, y: 450 });
+    drag.end(1);
+    expect(release).not.toHaveBeenCalled();
+    drag.settle();
+    drag.start(1, fromTray, piece, home, grab);
+    drag.move(1, { x: 1300, y: 471 });
+    drag.end(1);
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(drag.carry()?.phase).toBe('landing');
   });
 
   it('slides back with no release handler, and on cancel, without asking', () => {
@@ -124,8 +156,11 @@ describe('createPieceDrag', () => {
   });
 });
 
+// Story 1.15 review: a pan's piece let go anywhere over the scale used to slide back, so
+// beside its pan, between the pans or on the floor it almost never came off. Now only its
+// own pan keeps it.
 describe('releaseAction (story 1.15: both sides at once)', () => {
-  it('drops a tray piece over the scale, and takes a pan’s piece off anywhere off the scale', () => {
+  it('drops a tray piece over the scale, and takes a pan’s piece off anywhere off its own pan', () => {
     expect(releaseAction(fromTray, 'scale')).toEqual({ type: 'tray/drop', kind: 'float' });
     expect(releaseAction({ from: 'tray', kind: 'weight' }, 'scale')).toEqual({
       type: 'tray/drop',
@@ -135,18 +170,22 @@ describe('releaseAction (story 1.15: both sides at once)', () => {
     const take = { type: 'tray/take', side: 'right', key: 'right-weight-0' };
     expect(releaseAction(pan, 'tray')).toEqual(take);
     expect(releaseAction(pan, null)).toEqual(take);
+    expect(releaseAction(pan, 'scale')).toEqual(take);
   });
 
   it('asks for nothing otherwise, so the piece slides back', () => {
     expect(releaseAction(fromTray, 'tray')).toBeNull();
     expect(releaseAction(fromTray, null)).toBeNull();
     const pan: DragSource = { from: 'pan', side: 'left', key: 'left-weight-0' };
-    expect(releaseAction(pan, 'scale')).toBeNull();
+    expect(releaseAction(pan, 'own-pan')).toBeNull();
   });
 });
 
-/** Room 4, open, with Balance: the drag wired to the store as Tray.tsx wires it. */
-function wiredTray() {
+/**
+ * Room 4, open, with Balance: the drag wired to the store as Tray.tsx wires it, at a scene
+ * scale (CSS px per scene unit).
+ */
+function wiredTray(scale = 0.54) {
   const events: DomainEvent[] = [];
   const store = createGameStore({
     effects: [(event) => events.push(event)],
@@ -163,18 +202,33 @@ function wiredTray() {
   // Story 1.15: the dial at 6 can't level the pans, so the tray is offered.
   act({ type: 'dial/set', x: 6 });
   for (let i = 0; i < 4; i += 1) act({ type: 'tray/step', kind: 'float', by: 1 });
-  const layout = trayLayout(0.54, labelFontSize(0.54));
+  const fontSize = labelFontSize(scale);
+  const layout = trayLayout(scale, fontSize);
   const drag = createPieceDrag();
   const release = vi.fn((held: Carry, at: { x: number; y: number }) => {
     const { room, save } = store.getState();
-    const action = releaseAction(held.source, dropTarget(at, layout));
+    const action = releaseActionAt(room, held, at, layout, fontSize);
     if (!action || !storeTakes(room, save.progress.tools, action)) return false;
     act(action);
     return true;
   });
   drag.setReleaseHandler(release);
+  drag.setTapSlop(tapSlopCssPx * layout.unitsPerPx);
   const room = () => store.getState().room as RoomState;
-  return { store, events, drag, layout, room, release };
+  return { store, events, drag, layout, room, release, fontSize };
+}
+
+/** A float of 5 over the scale, so the pans show `2x = 18`, level. */
+function toTwoXEighteen(game: ReturnType<typeof wiredTray>) {
+  const slot = game.layout.slots[1];
+  if (!slot) throw new Error('no float slot');
+  const float5 = trayPiece('float', game.room().stage.tray.float);
+  game.drag.start(1, { from: 'tray', kind: 'float' }, float5, slot.piece, slot.piece);
+  game.drag.move(1, { x: 800, y: 560 });
+  game.drag.end(1);
+  game.drag.settle();
+  game.release.mockClear();
+  expect(formatEquation(game.room().stage.pans)).toBe('2x = 18');
 }
 
 describe('the piece drag, wired to the store', () => {
@@ -233,20 +287,93 @@ describe('the piece drag, wired to the store', () => {
     expect(room()).toBe(before);
   });
 
-  it('slides back a pan’s piece let go over the scale, either pan, and asks the store nothing', () => {
-    const { drag, room } = wiredTray();
-    const before = room();
-    drag.start(
-      1,
-      { from: 'pan', side: 'left', key: 'left-weight-0' },
-      trayPiece('weight', 5),
-      { x: 300, y: 560 },
-      { x: 300, y: 540 },
-    );
-    drag.move(1, { x: 1300, y: 450 });
-    drag.end(1);
-    expect(drag.carry()?.phase).toBe('returning');
-    expect(room()).toBe(before);
+  // Story 1.15 review: rewritten. It slid back anywhere over the scale, the other pan
+  // included; now only its own pan, at any tilt, plus a margin, keeps it.
+  it('slides back a pan’s piece let go over its own pan, and asks the store nothing', () => {
+    for (const at of [
+      { x: 340, y: 520 },
+      { x: 120, y: 600 },
+      { x: 520, y: 430 },
+    ]) {
+      const { drag, room, release } = wiredTray();
+      const before = room();
+      drag.start(
+        1,
+        { from: 'pan', side: 'left', key: 'left-weight-0' },
+        trayPiece('weight', 5),
+        { x: 300, y: 560 },
+        { x: 300, y: 540 },
+      );
+      drag.move(1, at);
+      drag.end(1);
+      expect(release, `at ${at.x}, ${at.y}`).toHaveBeenCalled();
+      expect(drag.carry()?.phase, `at ${at.x}, ${at.y}`).toBe('returning');
+      expect(room()).toBe(before);
+    }
+  });
+
+  it('takes a pan’s piece off both sides anywhere off its own pan: between the pans, the floor, the other pan', () => {
+    for (const at of [
+      { x: 800, y: 560 },
+      { x: 700, y: 380 },
+      { x: 300, y: 830 },
+      { x: 1300, y: 450 },
+    ]) {
+      const { drag, room } = wiredTray();
+      drag.start(
+        1,
+        { from: 'pan', side: 'left', key: 'left-weight-0' },
+        trayPiece('weight', 5),
+        { x: 300, y: 560 },
+        { x: 300, y: 540 },
+      );
+      drag.move(1, at);
+      drag.end(1);
+      expect(drag.carry()?.phase, `at ${at.x}, ${at.y}`).toBe('landing');
+      expect(formatEquation(room().stage.pans), `at ${at.x}, ${at.y}`).toBe('2x = 18');
+    }
+  });
+
+  // Story 1.15 review: at 640 × 360 the shelf's drop margin reaches down over the top of
+  // the right pan's 18, so a tap there took the 18 off both sides.
+  it('at 640 × 360, keeps the right pan’s 18 on a tap, or a small move, under the shelf’s margin', () => {
+    const phone = fitScene(640, 360).scale;
+    const game = wiredTray(phone);
+    toTwoXEighteen(game);
+    const view = scaleView(game.room());
+    const eighteen = view.right.pieces.find((each) => each.kind === 'weight');
+    const box = layoutPan(view.right.pieces, game.fontSize).find((b) => b.key === eighteen?.key);
+    if (!eighteen || !box) throw new Error('no 18 on the right pan');
+    expect(eighteen.label).toBe('18');
+    const pan = beamPose(view.tilt).right;
+    const home = { x: pan.x + box.x, y: pan.y + box.y };
+    const area = grabArea(box.width, box.height, minHitCssPx / phone);
+    // Just under the shelf, which is drawn over the top of its grab area (y 437–571, shelf
+    // to 464): still on the 18, and in the shelf's drop margin (to 504), which used to win.
+    const { box: shelf } = game.layout;
+    const grab = { x: home.x, y: shelf.y + shelf.height + 16 };
+    expect(grab.y).toBeGreaterThan(home.y + area.y);
+    expect(grab.y).toBeLessThan(home.y + area.y + area.height);
+    expect(grab.y).toBeLessThan(shelf.y + shelf.height + trayGeometry.dropMargin);
+    expect(dropTarget(grab, game.layout)).toBe('tray');
+    const before = game.room();
+    const source = { from: 'pan', side: 'right', key: eighteen.key } as const;
+    // A tap: down and up in place, or with a jitter of a few CSS px.
+    for (const jitter of [0, 3]) {
+      game.drag.start(1, source, eighteen, home, grab);
+      game.drag.move(1, { x: grab.x + jitter / phone, y: grab.y });
+      game.drag.end(1);
+      expect(game.drag.carry()?.phase).toBe('returning');
+      game.drag.settle();
+    }
+    expect(game.release).not.toHaveBeenCalled();
+    // A small move that stays over its pan, still in the shelf's margin: over its pan wins.
+    game.drag.start(1, source, eighteen, home, grab);
+    game.drag.move(1, { x: grab.x - 30 / phone, y: grab.y });
+    game.drag.end(1);
+    expect(game.release).toHaveBeenCalledTimes(1);
+    expect(game.drag.carry()?.phase).toBe('returning');
+    expect(game.room()).toBe(before);
   });
 
   it('slides back a piece held over a pan when the DOM cancels its pointer: nothing is written', () => {

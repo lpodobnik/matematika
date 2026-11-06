@@ -3,6 +3,7 @@ import { thousandsSeparator } from '@/math/format';
 import { fitScene } from '@/ui/scene/fit-scene';
 import {
   dialLabelLayout,
+  dialLabelState,
   dialLabelText,
   dialLabelTop,
   nudgeOffset,
@@ -18,6 +19,23 @@ describe('the slider’s x label (story 1.15)', () => {
     expect(dialLabelText(0)).toBe('x = 0');
     expect(dialLabelText(12_500)).toBe(`x = 12${thousandsSeparator}500`);
     expect(dialLabelText(null)).toBe('x = ?');
+  });
+
+  // Story 1.15 review: in room 4 a pin beyond the dial has the pans weigh its x (9) for a
+  // moment while the dial stays at 2, and the plate showed `x = 2` over pans weighing 9.
+  it('reads x = ?, dimmed, while the pans weigh the x of a pin beyond the dial', () => {
+    const none = { dialX: null, weighX: null };
+    expect(dialLabelState({ dialX: null, weighX: 9 }, false, 2)).toEqual({
+      text: 'x = ?',
+      dimmed: true,
+    });
+    expect(dialLabelState(none, false, 2)).toEqual({ text: 'x = 2', dimmed: false });
+    expect(dialLabelState(none, true, 2)).toEqual({ text: 'x = ?', dimmed: true });
+    // While the machine turns the dial, the plate follows the knob, bright.
+    expect(dialLabelState({ dialX: 13, weighX: null }, true, 20)).toEqual({
+      text: 'x = 13',
+      dimmed: false,
+    });
   });
 
   it.each([

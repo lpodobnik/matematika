@@ -5,10 +5,11 @@
 // Every Balance move acts on both sides at once: "you can only do left what you do right".
 //
 //   offered    in an open stage once Balance is earned, from the moment one of these holds:
-//              he met the tray before this stage; his dial has stood at its maximum this
-//              stage without levelling the pans; a Balance move was made this stage. Each
-//              is remembered, so it stays for the rest of the stage. It does nothing while
-//              the machine is jammed (Pattern 2, Jams)
+//              he met the tray before this stage; the dial has stood at its maximum this
+//              stage without levelling the pans (his notch, or the machine's pin test
+//              leaving it there: room/dial.ts, `dialMaxedAt`); a Balance move was made
+//              this stage. Each is remembered, so it stays for the rest of the stage. It
+//              does nothing while the machine is jammed (Pattern 2, Jams)
 //   pieces     weights and floats only, each numbered 1–99 by a stepper (− and +); x-gears
 //              and springs can't be added or dragged off
 //   a drop     a piece from the tray let go anywhere over the scale sends one copy to each
@@ -55,7 +56,7 @@ export const trayMinNumber = 1;
 
 /**
  * Whether the game offers the tray now: Balance is earned, the stage is open, and he met
- * the tray before, his dial has been at its maximum without levelling the pans, or a
+ * the tray before, the dial has been at its maximum without levelling the pans, or a
  * Balance move was made this stage (story 1.15). Lane C's handovers read this too.
  */
 export function trayOffered(room: RoomState, tools: readonly ToolId[]): boolean {

@@ -22,6 +22,34 @@ export function dialLabelText(x: number | null): string {
 /** How faint the label is while the scale acts out. */
 export const dimmedLabelAlpha = 0.45;
 
+/** What the plate shows now: its text, and whether it is dimmed. */
+export interface DialLabelState {
+  text: string;
+  dimmed: boolean;
+}
+
+/**
+ * What the plate shows, from the machine's pin test (use-pin-test.ts), whether the scale
+ * acts out (`scaleView`), and the dial's x (null with no dial):
+ * - while the machine turns the dial to test a pin, the x it has turned to, bright;
+ * - while the pans weigh the x of a pin beyond the dial (room 4), `x = ?`, dimmed: the pans
+ *   don't weigh the dial's x then (story 1.15 review; it showed the dial's x);
+ * - while the scale acts out a line or Balance, `x = ?`, dimmed;
+ * - else the dial's x, bright.
+ */
+export function dialLabelState(
+  test: { dialX: number | null; weighX: number | null },
+  actingOut: boolean,
+  dialX: number | null,
+): DialLabelState {
+  if (test.dialX !== null) return { text: dialLabelText(test.dialX), dimmed: false };
+  const hidden = test.weighX !== null || actingOut || dialX === null;
+  return {
+    text: dialLabelText(hidden ? null : dialX),
+    dimmed: test.weighX !== null || actingOut,
+  };
+}
+
 export interface DialLabelLayout {
   /** At least 20 CSS px (NFR4), as the pieces' numbers. */
   fontSize: number;

@@ -3,8 +3,9 @@
 // dropping it over the scale does to the stage.
 //
 //   offered    in an open stage once Balance is earned, from the moment one side holds only
-//              x pieces, more than one x (`2x = 18`), then for the rest of the stage. It
-//              does nothing while the machine is jammed
+//              x pieces, more than one x (`2x = 18`), then for the rest of the stage, a
+//              reset included (`rememberSplitter`). It does nothing while the machine is
+//              jammed
 //   parts      2–9 (`tuning.splitterMinParts`–`splitterMaxParts`), set by a stepper (−
 //              and +); a stage arrives with 2, and reset keeps what he set
 //   a split    dropped anywhere over the scale: each side's pieces separate into n equal
@@ -45,6 +46,19 @@ export function splitterOffered(room: RoomState, tools: readonly ToolId[]): bool
     readyToSplit(stage.pans) ||
     committedEquations(stage.lines).some(readyToSplit)
   );
+}
+
+/**
+ * The room with its stage remembering that the splitter is offered (AC 10: from that moment
+ * "for the rest of the stage"), so a reset that takes away the line or the pans that
+ * offered it keeps it: `2x = 18` typed, then a reset (story 1.15 review). The root reducer
+ * calls it after every room step, as it does `rememberTray`. The same room when nothing
+ * changes.
+ */
+export function rememberSplitter(room: RoomState, tools: readonly ToolId[]): RoomState {
+  const { stage } = room;
+  if (stage.balance.splitterSeen || !splitterOffered(room, tools)) return room;
+  return { ...room, stage: { ...stage, balance: { ...stage.balance, splitterSeen: true } } };
 }
 
 /**

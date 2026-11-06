@@ -52,9 +52,13 @@ function hasLine(room: RoomState, kind: 'answer' | 'check'): boolean {
   return room.stage.lines.some((line) => line.verdict.kind === kind);
 }
 
-/** A Balance move was made in this stage: a line written by Balance. */
+/**
+ * A Balance move was made in this stage (`stage.balance.moves`), whatever its line mode
+ * writes: with Balance `blank` or `blanks` a move writes no line (story 1.15 review; it
+ * looked for a line written by Balance, so the goal tag never showed there).
+ */
 function balanced(room: RoomState): boolean {
-  return room.stage.lines.some((line) => line.source === 'balance');
+  return room.stage.balance.moves > 0;
 }
 
 interface Side {

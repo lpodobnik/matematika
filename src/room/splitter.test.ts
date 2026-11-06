@@ -17,6 +17,7 @@ import { enterRoom, type RoomStep } from '@/room/room';
 import { scaleView } from '@/room/scale';
 import {
   canStepParts,
+  rememberSplitter,
   splitBothPans,
   splitGroups,
   splitOutcome,
@@ -160,6 +161,21 @@ describe('when the splitter is offered (story 1.15: one tool at a time)', () => 
     const moved = drop(blank, 'weight', 1).room;
     expect(shown(moved)).toBe('2x + 1 = 19');
     expect(splitterOffered(moved, balance)).toBe(true);
+  });
+
+  // Story 1.15 review: only Balance moves remembered it, so a typed `2x = 18` offered it
+  // until a reset took the line away. The root reducer remembers it whenever it is offered.
+  it('stays after a reset when a typed line offered it: 2x = 18, then reset', () => {
+    const typedLine = write(waterWheel(), '2x = 18').room;
+    expect(typedLine.stage.balance.splitterSeen).toBe(false);
+    const remembered = rememberSplitter(typedLine, balance);
+    expect(remembered.stage.balance.splitterSeen).toBe(true);
+    expect(splitterOffered(step(resetStage(remembered)).room, balance)).toBe(true);
+    // Not offered, or already remembered: the same room, untouched.
+    const notOffered = waterWheel();
+    expect(rememberSplitter(notOffered, balance)).toBe(notOffered);
+    expect(rememberSplitter(typedLine, [])).toBe(typedLine);
+    expect(rememberSplitter(remembered, balance)).toBe(remembered);
   });
 
   it('shows 2 parts as it appears, and nothing with no room', () => {

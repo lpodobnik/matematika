@@ -151,6 +151,30 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
     expect(trayOffered(levelled, balance)).toBe(false);
   });
 
+  // Story 1.15 review: a pin at 6 has the machine park the dial at its maximum itself, and
+  // his grab there sends `dial/set 6`, which the dial already has, so it was never maxed.
+  it("is offered when the machine's pin test leaves the dial at its maximum with the pans tipped", () => {
+    const poking = step(touchMachine(enterRoom(r04).room)).room;
+    const atSix = step(confirmPin(step(setPin(poking, { kind: 'x', x: 6 })).room)).room;
+    expect(atSix.stage.dialX).toBe(6);
+    expect(atSix.stage.balance.dialMaxed).toBe(true);
+    expect(trayOffered(atSix, balance)).toBe(true);
+    expect(setDial(atSix, 6)).toBeNull();
+    // A test that stops short of the maximum, or weighs a pin beyond the dial, doesn't.
+    const atFive = step(confirmPin(step(setPin(poking, { kind: 'x', x: 5 })).room)).room;
+    expect(atFive.stage.balance.dialMaxed).toBe(false);
+    expect(trayOffered(lockedPin(), balance)).toBe(false);
+    // Nor does one that levels the pans at the maximum: the dial solves it there.
+    const reachable: RoomSpec = {
+      ...r04,
+      stages: [{ ...(r04.stages[0] as StageSpec), dial: { min: 0, max: 9, step: 1 } }],
+    };
+    const levelling = step(touchMachine(enterRoom(reachable).room)).room;
+    const atNine = step(confirmPin(step(setPin(levelling, { kind: 'x', x: 9 })).room)).room;
+    expect(atNine.stage.dialX).toBe(9);
+    expect(atNine.stage.balance.dialMaxed).toBe(false);
+  });
+
   it('stays for the rest of the stage: the dial back down, or a reset, keeps it', () => {
     const back = step(setDial(waterWheel(), 2)).room;
     expect(trayOffered(back, balance)).toBe(true);

@@ -22,7 +22,7 @@ import {
 } from '@/room/phases';
 import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
-import { splitBothPans, stepSplitter } from '@/room/splitter';
+import { rememberSplitter, splitBothPans, stepSplitter } from '@/room/splitter';
 import { dropOnScale, rememberTray, stepTray, takeOffPan } from '@/room/tray';
 import type { RoomSpec, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
@@ -119,11 +119,13 @@ function roomStep(
 
 /**
  * Story 1.15: a stage knows he met the tray in an earlier stage, so it offers the tray at
- * once (room/tray.ts). The same step when nothing changes.
+ * once (room/tray.ts); and once it offers the splitter, it keeps offering it for the rest
+ * of the stage, a reset included (room/splitter.ts). The same step when nothing changes.
  */
-function withTrayMemory(step: RoomStep | null, save: SaveState): RoomStep | null {
+function withToolMemory(step: RoomStep | null, save: SaveState): RoomStep | null {
   if (!step) return step;
-  const room = rememberTray(step.room, save.progress.firstUse);
+  const { firstUse, tools } = save.progress;
+  const room = rememberSplitter(rememberTray(step.room, firstUse), tools);
   return room === step.room ? step : { ...step, room };
 }
 
@@ -232,7 +234,7 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
     const before =
       action.type === 'dev/set-tools' ? withTools(state.save, action.tools) : state.save;
-    const change = withTrayMemory(
+    const change = withToolMemory(
       roomStep(state, action, ctx.now, roomList, before.progress.tools),
       before,
     );

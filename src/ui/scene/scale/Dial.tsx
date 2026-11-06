@@ -20,7 +20,7 @@ import {
 } from '@/ui/scene/scale/dial-drag';
 import {
   dialLabelLayout,
-  dialLabelText,
+  dialLabelState,
   dialLabelTop,
   dimmedLabelAlpha,
   nudgeOffset,
@@ -59,7 +59,8 @@ const clampWidth = 0.6;
  * ends.
  *
  * A plate above the knob shows its x, `x = 9`, and follows it; while the scale acts out a
- * line (or Balance) it reads `x = ?`, dimmed (story 1.15; dial-label.ts). It is drawn
+ * line (or Balance), or the pans weigh a pin's x beyond the dial, it reads `x = ?`, dimmed
+ * (story 1.15; dial-label.ts). It is drawn
  * outside the track's mask, so a scrolling track never clips it, and a drag can start on it
  * too. Until he first turns a dial (the `dial` handover, room/handover.ts), the knob and
  * its plate nudge one notch over and back by themselves every `tuning.dialNudgeMs`, with no
@@ -222,10 +223,9 @@ export function Dial({ sceneScale }: Props) {
     };
   }, [nudging, turns, spacing, drag]);
 
-  // The plate's text: the test's x while the machine turns the dial, `x = ?` while the
-  // scale acts out, else the dial's x.
-  const labelText = dialLabelText(test.dialX ?? (actingOut || !dial ? null : dial.x));
-  const dimmed = actingOut && test.dialX === null;
+  // The plate's text: the test's x while the machine turns the dial, `x = ?` (dimmed) while
+  // the pans weigh a pin's x beyond the dial or the scale acts out, else the dial's x.
+  const { text: labelText, dimmed } = dialLabelState(test, actingOut, dial?.x ?? null);
   const label = useMemo(
     () => (layout ? dialLabelLayout(layout, labelText, sceneScale) : null),
     [layout, labelText, sceneScale],

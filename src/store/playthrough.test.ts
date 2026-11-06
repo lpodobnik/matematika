@@ -86,7 +86,7 @@ function playRoomTwo(game: Game) {
 /**
  * Room 3, the sluice gate: he pokes, pins where it levels and pokes again while the pin
  * waits, confirms (the machine turns the dial to 14 itself), then pins a direction (the
- * machine turns the dial up 3 notches) and explores from there.
+ * machine turns the dial to its maximum, 20) and explores from there.
  */
 function playRoomThree(game: Game) {
   game.act({ type: 'machine/touch' });
@@ -292,7 +292,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     confirming(playRoomFour);
     expect(confirms).toEqual([
       { dialX: 14, events: ['PredictionMade'] },
-      { dialX: 3, events: ['PredictionMade'] },
+      { dialX: 20, events: ['PredictionMade'] },
       { dialX: 2, events: ['PredictionMade'] },
     ]);
   });

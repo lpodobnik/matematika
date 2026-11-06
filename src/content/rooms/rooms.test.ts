@@ -23,7 +23,14 @@ import { fillBlanks, tokenize } from '@/math/tokens';
 import { dialValue, isOnDial, notchCount } from '@/room/dial';
 import { openingTemplates } from '@/room/fading';
 import { panPieces } from '@/room/pieces';
-import { pinSupported, pinTrack, slotCount, slotValue, tiltAsXGrows } from '@/room/pin';
+import {
+  machineTestX,
+  pinSupported,
+  pinTrack,
+  slotCount,
+  slotValue,
+  tiltAsXGrows,
+} from '@/room/pin';
 import { openingDial } from '@/room/room';
 import { splitOutcome } from '@/room/splitter';
 import { isLevel, sideValues, tiltFor } from '@/room/tilt';
@@ -134,6 +141,12 @@ const gddRooms: readonly {
 ];
 
 /** The x values the dial reaches before the pin is locked: the poke window. */
+/** Which way a tilt leans the whole scale, as a direction pin's options name it. */
+function tiltSide(tilt: number): 'tilt-left' | 'tilt-right' | 'level' {
+  if (tilt === 0) return 'level';
+  return tilt > 0 ? 'tilt-left' : 'tilt-right';
+}
+
 function pokeValues(stage: StageSpec): number[] {
   if (stage.dial === 'locked') return [];
   const { min, max } = openingDial(stage);
@@ -472,6 +485,22 @@ describe('rooms', () => {
       for (const option of stage.pin.options) expect(hr.pin.options[option]).toMatch(/\S/);
       expect([...stage.pin.options].sort()).toEqual(['tilt-left', 'tilt-right']);
       expect(() => tiltAsXGrows(stageEquation(stage))).not.toThrow();
+    });
+
+    // Story 1.15 review: the machine tests a direction pin by turning the dial (room/pin.ts).
+    // 1.14's 3 notches left room 3.2 tipped left, so the right answer, `desno`, looked wrong.
+    // Wherever the dial stood when he confirmed, the test must end tipped the right way.
+    it("ends the machine's test of a direction pin tipped the way the right option names", () => {
+      if (stage.pin?.kind !== 'effect') return;
+      const equation = stageEquation(stage);
+      const right = tiltAsXGrows(equation);
+      const value = { kind: 'choice', index: stage.pin.options.indexOf(right) } as const;
+      for (const from of pokeValues(stage)) {
+        const x = machineTestX(stage, from, value);
+        const values = sideValues(equation, q.rational(x));
+        const tilt = tiltFor(values, stage.tiltPerUnit ?? tuning.tiltPerUnit);
+        expect(tiltSide(tilt), `from x = ${from}, tested at ${x}`).toBe(right);
+      }
     });
 
     it("never levels the pans or hits the tilt clamp inside the poke window, so it can't give the answer away", () => {
