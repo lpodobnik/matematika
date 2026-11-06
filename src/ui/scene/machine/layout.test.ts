@@ -1,17 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { lampRayReach, pulleyRadius, ventOutlet } from '@/art/skins/machine';
+import {
+  doorBattens,
+  lampRayReach,
+  latchBar,
+  latchBox,
+  pulleyRadius,
+  ventOutlet,
+} from '@/art/skins/machine';
 import { tuning } from '@/config/tuning';
 import { plumeBounds } from '@/ui/scene/effects/steam-sim';
 import { sceneSize } from '@/ui/scene/fit-scene';
 import {
   doorLift,
+  doorTravel,
   joltOffset,
   lampDelayMs,
   lampGlow,
   lampLightMs,
   lampPositions,
+  latchRattle,
+  latchRattleDelayMs,
+  latchRattleMs,
+  latchRattles,
+  latchReturnDelayMs,
+  latchSlide,
+  latchSlideMs,
   machineBounds,
   machineGeometry,
+  machineLatch,
   machineSteam,
   presentationMs,
   pulleyPositions,
@@ -75,6 +91,13 @@ describe('the presentations', () => {
     expect(lampDelayMs + lampLightMs).toBeLessThan(presentationMs.locked);
   });
 
+  it('slide the latch out before the lamp lights, and rattle it before any lock', () => {
+    expect(latchSlideMs).toBeLessThan(lampDelayMs);
+    expect(latchRattleDelayMs + latchRattleMs).toBeLessThan(presentationMs.locked);
+    // The latch returns at the next stage within the clock fallback too.
+    expect(latchReturnDelayMs + latchSlideMs).toBeLessThan(tuning.presentationTimeoutMs);
+  });
+
   it('bring a lamp on from nothing to full size and strength', () => {
     expect(lampGlow(0).alpha).toBe(0);
     expect(lampGlow(1)).toEqual({ alpha: 1, scale: 1 });
@@ -134,6 +157,104 @@ describe('the steam effect', () => {
     const box = machineBounds();
     expect(box.left).toBeLessThanOrEqual(machineGeometry.x + plume.left);
     expect(box.top).toBeLessThanOrEqual(machineGeometry.y + plume.top);
+  });
+});
+
+describe('doorTravel (story 1.14)', () => {
+  const share = tuning.doorLiftBeforeLock;
+
+  it('lifts a latched door only progress × the share before the lock', () => {
+    expect(share).toBe(0.3);
+    expect(doorTravel(0, true)).toBe(0);
+    expect(doorTravel(0.2, true)).toBeCloseTo(0.2 * share);
+    expect(doorTravel(tuning.progressCap, true)).toBeCloseTo(tuning.progressCap * share);
+    // The answer line's 0.9 is no longer a door nearly open.
+    expect(doorTravel(tuning.progressAnswer, true)).toBeCloseTo(0.27);
+  });
+
+  it('never lifts a latched door past its share, at any progress', () => {
+    for (const progress of [-0.5, 0, 0.4, 0.9, 1, 1.5]) {
+      expect(doorTravel(progress, true)).toBeGreaterThanOrEqual(0);
+      expect(doorTravel(progress, true)).toBeLessThanOrEqual(share);
+    }
+  });
+
+  it('lets the door rise all the way once the latch is out', () => {
+    expect(doorTravel(1, false)).toBe(1);
+    expect(doorTravel(1.2, false)).toBe(1);
+    expect(doorLift(doorTravel(1, false))).toBe(machineGeometry.shape.height);
+  });
+
+  it('takes another share when the tuning says so', () => {
+    expect(doorTravel(0.5, true, 0.5)).toBeCloseTo(0.25);
+  });
+});
+
+describe('the latch (story 1.14)', () => {
+  const { shape } = machineGeometry;
+  const bar = machineLatch;
+  const battenLow = doorBattens[1] * shape.height;
+
+  it('crosses the whole door, inside the opening, between the posts’ outer edges', () => {
+    expect(bar.left).toBeLessThan(0);
+    expect(bar.right).toBeGreaterThan(shape.width);
+    expect(bar.left).toBeGreaterThan(-shape.post);
+    expect(bar.right).toBeLessThan(shape.width + shape.post);
+    expect(bar.top).toBeGreaterThan(0);
+    expect(bar.bottom).toBeLessThan(shape.height);
+  });
+
+  it('holds the door: at its share, the door’s lower batten is up against the bar', () => {
+    const highest = doorLift(doorTravel(1, true));
+    expect(battenLow - highest).toBeCloseTo(bar.bottom);
+    // At the answer line the batten sits just under the bar, still below it.
+    const answered = doorLift(doorTravel(tuning.progressAnswer, true));
+    expect(battenLow - answered).toBeGreaterThan(bar.bottom);
+    expect(battenLow - answered - bar.bottom).toBeLessThan(shape.height * 0.05);
+  });
+
+  it('follows the share in the tuning', () => {
+    expect(latchBar(shape, 0.2).bottom).toBeCloseTo((doorBattens[1] - 0.2) * shape.height);
+  });
+
+  it('slides out of the door’s way, into its box on the left post', () => {
+    expect(latchSlide(0)).toBeCloseTo(0);
+    expect(latchSlide(1)).toBeCloseTo(-bar.travel);
+    const steps = [0, 0.25, 0.5, 0.75, 1].map((t) => latchSlide(t));
+    expect([...steps].sort((a, b) => b - a)).toEqual(steps);
+    const box = latchBox(shape, bar);
+    const outRight = bar.right + latchSlide(1);
+    expect(outRight).toBeLessThanOrEqual(0);
+    expect(outRight).toBeGreaterThanOrEqual(box.x);
+    expect(box.x + box.width).toBeGreaterThan(0);
+  });
+
+  it('stays inside the machine’s box, so the scene layout is unchanged', () => {
+    const box = machineBounds();
+    const keeper = latchBox(shape, bar);
+    expect(machineGeometry.x + keeper.x).toBeGreaterThanOrEqual(box.left);
+    expect(machineGeometry.y + keeper.y).toBeGreaterThan(box.top);
+    expect(machineGeometry.x + bar.right).toBeLessThan(box.right);
+  });
+
+  it('rattles when the answer line arrives, and only then', () => {
+    expect(latchRattles(tuning.progressCap, tuning.progressAnswer)).toBe(true);
+    expect(latchRattles(0, tuning.progressAnswer)).toBe(true);
+    // Not again for a later line at the same progress, nor for other lines.
+    expect(latchRattles(tuning.progressAnswer, tuning.progressAnswer)).toBe(false);
+    expect(latchRattles(0.4, 0.6)).toBe(false);
+    // Not for the check line: that slides the latch out instead.
+    expect(latchRattles(tuning.progressAnswer, 1)).toBe(false);
+    expect(latchRattles(tuning.progressCap, 1)).toBe(false);
+  });
+
+  it('rattles a little, from rest to rest, without leaving its staple', () => {
+    expect(latchRattle(0)).toBe(0);
+    expect(latchRattle(1)).toBeCloseTo(0);
+    const knocks = [0.06, 0.19, 0.31, 0.44].map(latchRattle);
+    expect(Math.max(...knocks.map(Math.abs))).toBeGreaterThan(2);
+    expect(new Set(knocks.map(Math.sign)).size).toBe(2);
+    expect(Math.max(...knocks.map(Math.abs))).toBeLessThan(shape.post * 0.7);
   });
 });
 

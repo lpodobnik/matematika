@@ -1,7 +1,7 @@
 import type { Graphics } from 'pixi.js';
 import { describe, expect, it } from 'vitest';
 import { palette } from '@/art/palette';
-import { machineSkin, ventLeft, ventOutlet } from '@/art/skins/machine';
+import { latchBar, machineSkin, ventLeft, ventOutlet } from '@/art/skins/machine';
 import { steamSkin } from '@/art/skins/steam';
 import { machineGeometry } from '@/ui/scene/machine/layout';
 
@@ -39,6 +39,33 @@ describe('machineSkin', () => {
       expect(colours, part).not.toContain(palette.jam);
       expect(colours, part).not.toContain(palette.lamp);
     }
+  });
+
+  it('draws the latch, its keepers and its mask in ink alone (NFR12)', () => {
+    const bar = latchBar(shape, 0.3);
+    for (const [part, draw] of [
+      ['latch', (g: Graphics) => machineSkin.latch(g, bar)],
+      ['keepers', (g: Graphics) => machineSkin.keepers(g, shape, bar)],
+    ] as const) {
+      const { g, colours, shapes } = recordingGraphics();
+      draw(g);
+      expect(shapes.length, part).toBeGreaterThan(0);
+      for (const colour of colours) expect([palette.ink, palette.paper], part).toContain(colour);
+    }
+    const { g, shapes } = recordingGraphics();
+    machineSkin.latchMask(g, shape, bar);
+    expect(shapes).toEqual(['rect']);
+  });
+
+  it('shows the latch by shape: a bar across the door with a knob, in a box and a staple (NFR4)', () => {
+    const bar = latchBar(shape, 0.3);
+    const latch = recordingGraphics();
+    machineSkin.latch(latch.g, bar);
+    expect(latch.shapes).toContain('roundRect');
+    expect(latch.shapes).toContain('circle');
+    const keepers = recordingGraphics();
+    machineSkin.keepers(keepers.g, shape, bar);
+    expect(keepers.shapes.filter((name) => name === 'rect' || name === 'roundRect').length).toBe(3);
   });
 
   it('gives a pulley spokes, so it shows turning', () => {

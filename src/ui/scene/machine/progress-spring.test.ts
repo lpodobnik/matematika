@@ -1,5 +1,12 @@
 import { MotionGlobalConfig, processFrame } from 'motion';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { tuning } from '@/config/tuning';
+import {
+  doorTravel,
+  lampDelayMs,
+  latchReturnDelayMs,
+  latchSlideMs,
+} from '@/ui/scene/machine/layout';
 import {
   createProgressSpring,
   type ProgressSpring,
@@ -67,5 +74,30 @@ describe('createProgressSpring', () => {
     const count = seen.length;
     await runFrames(20);
     expect(seen.length).toBe(count);
+  });
+});
+
+describe('the door with its latch (story 1.14)', () => {
+  const framesIn = (ms: number) => Math.floor(ms / (1000 / 60));
+  let spring: ProgressSpring;
+
+  afterEach(() => spring.destroy());
+
+  it('is mostly up when the lamp lights: the latch slides out, then the door rises', async () => {
+    const answered = doorTravel(tuning.progressAnswer, true);
+    spring = createProgressSpring(() => {}, answered);
+    await runFrames(framesIn(latchSlideMs));
+    expect(spring.current()).toBeCloseTo(answered, 3);
+    spring.setTarget(doorTravel(1, false));
+    await runFrames(framesIn(lampDelayMs - latchSlideMs));
+    expect(spring.current()).toBeGreaterThan(0.85);
+  });
+
+  it('is down below the latch before the latch slides back in at the next stage', async () => {
+    spring = createProgressSpring(() => {}, 1);
+    spring.setTarget(doorTravel(0, true));
+    await runFrames(framesIn(latchReturnDelayMs));
+    // The door's lower batten has dropped back under the bar.
+    expect(spring.current()).toBeLessThan(tuning.doorLiftBeforeLock);
   });
 });

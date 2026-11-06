@@ -148,7 +148,8 @@ describe('when the tray is offered', () => {
       label: '5',
       divisorLabel: null,
     });
-    expect(trayPiece('float', 99)).toMatchObject({ kind: 'float', label: '99' });
+    // Story 1.14: a float shows its number with the school minus, on the tray as on a pan.
+    expect(trayPiece('float', 99)).toMatchObject({ kind: 'float', label: '−99' });
   });
 });
 

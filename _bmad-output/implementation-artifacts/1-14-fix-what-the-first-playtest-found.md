@@ -85,9 +85,9 @@ What was really happening, checked in the browser:
 
 ## Tasks / Subtasks
 
-- [ ] A1 door latch: `src/art/skins/machine.ts`, `src/ui/scene/machine/*`, `tuning.doorLiftBeforeLock` (AC 1)
-- [ ] A2 reducer slice: `src/art/skins/scale.ts`, `src/ui/scene/scale/Piece.tsx` and the label spots (AC 2)
-- [ ] A3 balloon: `src/art/skins/scale.ts`, the float's label (AC 3)
+- [x] A1 door latch: `src/art/skins/machine.ts`, `src/ui/scene/machine/*`, `tuning.doorLiftBeforeLock` (AC 1)
+- [x] A2 reducer slice: `src/art/skins/scale.ts`, `src/ui/scene/scale/Piece.tsx` and the label spots (AC 2)
+- [x] A3 balloon: `src/art/skins/scale.ts`, the float's label (AC 3)
 - [x] B1 question tag and clamp: `src/ui/scene/scale/Pin.tsx`, `src/art/skins/pin.ts`, `src/ui/scene/scale/Dial.tsx`, `src/art/skins/dial.ts`, `src/content/text/hr.ts` (AC 4)
 - [x] B2 confirm beside the pin, dial in `pin`: `src/ui/common/PinConfirm.tsx`, `common.css`, `src/room/dial.ts`, `src/room/pin.ts` (AC 5)
 - [x] B3 machine tests the pin: `src/room/pin.ts`, `src/ui/scene/scale/Scale.tsx`, `Dial.tsx`, tuning (AC 6)
@@ -123,6 +123,58 @@ What was really happening, checked in the browser:
 ## Dev Agent Record
 
 (Builders fill in Calls, the file list and check results here, one section per lane.)
+
+### Lane A (`lane/1-14-art`): door latch, reducer slice, balloon
+
+**Calls**
+
+- The latch is a heavy iron-shaded bar with a knob across the door's front. It slides left into a box on the left post, through a staple on the right post. It is masked to the posts, so it vanishes into its box instead of sliding over the left pan.
+- The bar sits where the door's lower batten reaches at `doorLiftBeforeLock` of its travel (`latchBar`). A latched door rises until that batten is up against the bar, so the bar visibly holds it. The answer line's 0.27 leaves the batten just under it.
+- `doorLift` now takes the door's share of its travel. A new `doorTravel(progress, latched)` maps progress to that share: progress × 0.3 while latched, progress once the bar is out. `machineProgress` and the checker are unchanged.
+- The rattle fires when a line takes progress across 0.9 and below 1 (`latchRattles`), 450 ms after the line (when the door has reached the bar). It lasts 420 ms, ±6 units, and moves the latch only. The check line never rattles it; it slides it out.
+- On lock, the bar slides out (380 ms), and only then is the door aimed at 1. At the next stage the door is aimed down at once, and the bar slides back in 700 ms later, once the door's batten is back under it (spring-tested).
+- `presentationMs.locked` goes from 1800 to 2200 ms, so the open door shows for a moment before the next stage. `lampDelayMs` goes from 500 to 850 ms, so the lamp still lights "once the door is mostly up". Both stay well inside `tuning.presentationTimeoutMs` (tested).
+- `x : n`: the ghost gear is at least 2.8 label sizes across (same as a large gear, but 10 teeth and faint), with x 0.45 r above its centre. The solid slice is the bottom sector of 360°/n, shaded ink 0.2 over paper. Faint cut lines divide the ghost into n.
+- The `: n` tag hangs **beside** the gear, tied to the slice's edge by a short string. It doesn't sit on the slice: in the browser, a tag of 20 CSS px or more, on a slice of a reasonably sized gear, covered the whole third. The tag overlaps the ghost's faint right edge by a quarter of its width. The gear is the left part of the piece's box and the tag the right. A divided piece is wider (≈ 182 units at the tablet's label size for `x : 3`) but shorter than before (123 instead of 154).
+- The tag's text width uses a tighter per-character estimate (`tagTextWidth`) than `labelWidth`, so the tag stays small.
+- A spring with a divisor is drawn the same way (the builder's call in AC 2): a faint cap cut into n horizontal layers, the bottom layer solid on the coil, with x in the faint layers above and the tag beside it.
+- A drawing shows at most 36 parts; the tag always states the exact divisor.
+- The divisor tag text is `: 3`, built in `room/pieces.ts` (`divisorLabel`) from `formatExpr`'s own `x : 1` sign and spacing plus `formatNumber`. The float label `−6` comes from `formatNumber(−n)` (`numberLabel(value, negative)`, `numberPieceLabel`). A fractional float reads `−9 : 2`. `math/` is untouched.
+- The tray's float also reads `−n` (same `numberPieceLabel`), so a float looks the same on the shelf and on a pan.
+- The float is a teardrop balloon with a knot, on a curved string, and a bold arrow above it. From the top, its height is 30 % arrow, 3 % gap, 43 % balloon, 4 % knot and 20 % string. The arrow (0.30 h) is taller than knot-to-centre (≈ 0.29 h). It is 4 label sizes tall (was 2.6) and max(1.8 F, text + 0.6 F) wide (was max(2 F, text + F)), so it reads round, not squat. It uses no circle and no straight post, so it can't be mistaken for the pin (tested).
+- The arrow sits above the balloon, not beside it, because a beside arrow widened the tray's float. That pushed the shelf into the machine's box on the tablet.
+
+**Files changed**
+
+- `src/config/tuning.ts`: `doorLiftBeforeLock: 0.3`.
+- `src/art/skins/machine.ts`: `doorBattens`, `latchBar`, `latchBox`, and `latch` / `keepers` / `latchMask` drawings.
+- `src/ui/scene/machine/layout.ts`: `doorTravel`, `machineLatch`, `latchRattles`, `latchRattle`, `latchSlide` and their timings. `presentationMs.locked` and `lampDelayMs` are retimed.
+- `src/ui/scene/machine/Machine.tsx`: the latch, masked, with its rattle, its slide out on lock and its return at the next stage.
+- `src/art/skins/scale.ts`: balloon, ghost-gear slice, layered spring, and tag with string. Also `balloonParts`, `gearSlice`, `springLayers`, `slicedBody`, `sliceTag` and `tagSpot`. The divider wheel and `dividerSpot` are removed.
+- `src/ui/scene/scale/layout.ts`: `PieceSize` drops `dividerHeight` for `slices` / `tagWidth` / `tagHeight`. New sizes for floats and divided pieces, and `tagTextWidth`.
+- `src/ui/scene/scale/Piece.tsx`: the new shape fields, and the tag text on the tag.
+- `src/room/pieces.ts`: `numberLabel(value, negative)`, `numberPieceLabel` and `divisorLabel`.
+- `src/room/scale.ts`, `src/room/tray.ts`: floats show `−n`, and divided pieces `: n`.
+- Tests:
+  - New: `src/art/skins/scale.test.ts`.
+  - Extended: `src/art/skins/machine.test.ts`, `src/ui/scene/machine/layout.test.ts`, `src/ui/scene/machine/progress-spring.test.ts`, `src/ui/scene/scale/layout.test.ts`, `src/room/pieces.test.ts`.
+  - Updated for the replaced behaviour (each says so):
+    - `src/room/scale.test.ts`: floats `−7` / `−4`, tags `: 3`, and a new room 3 `−6` case.
+    - `src/room/tray.test.ts`: the tray float `−99`.
+    - `src/room/dial.test.ts`: one expectation, `divisorLabel: ': 3'`. This file is lane B's area, so expect a one-line merge there.
+    - `src/ui/scene/scale/layout.test.ts`: the old divider-height test is replaced by slice and tag tests.
+
+**Checks**
+
+- `npm run check`: clean (208 files).
+- `npm test`: 84 files, 1639 passed, 2 skipped (the existing fight-balance skips).
+- `npm run build`: passes. 0.32 MB of JavaScript gzipped.
+- The layout tests still cover 640 × 360 and the tablet, and the scene-zone sweep (x 65–1535, y 243–739) is unchanged.
+- Browser (`vite --port 5300`, stopped afterwards; 5173 untouched):
+  - Room 1 at 1280 × 800: the latch holds the door at the answer line; on the check line it slides out, then the door rises and the lamp lights.
+  - Room 2 at 1280 × 800: from stage 1 to stage 2, the door comes down, the latch slides back, and the first lamp stays lit.
+  - `x : 3` (room 2 stage 2) and `x − 6` (room 3) at 1280 × 800 and 640 × 360: the ghost gear with its solid third and tag, and the balloon `−6` with its arrow.
+- Not seen in the browser: the latch's rattle (too short and small to catch in a screenshot; covered by unit tests) and a spring with a divisor (no room has one; covered by unit tests).
 
 ### Lane B (pin, parts; main checkout on `epic-1`)
 

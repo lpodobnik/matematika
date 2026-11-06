@@ -49,10 +49,10 @@ export function Piece({
 }: Props) {
   const { kind } = piece;
   const large = (piece.kind === 'gear' || piece.kind === 'spring') && piece.count > 1n;
-  const { width, height, dividerHeight } = box;
+  const { width, height, slices, tagWidth, tagHeight } = box;
   const shape: PieceShape = useMemo(
-    () => ({ kind, width, height, dividerHeight, large }),
-    [kind, width, height, dividerHeight, large],
+    () => ({ kind, width, height, slices, tagWidth, tagHeight, large }),
+    [kind, width, height, slices, tagWidth, tagHeight, large],
   );
   const draw = useCallback((g: Graphics) => scaleSkin.piece(g, shape), [shape]);
   const style: TextStyleOptions = useMemo(
@@ -66,7 +66,7 @@ export function Piece({
     return new Rectangle(area.x, area.y, area.width, area.height);
   }, [grabbable, width, height, minHit]);
   const label = scaleSkin.labelSpot(shape);
-  const divider = scaleSkin.dividerSpot(shape);
+  const tag = slices > 0 ? scaleSkin.tagSpot(shape) : null;
   return (
     <pixiContainer
       ref={nodeRef}
@@ -78,14 +78,8 @@ export function Piece({
       <pixiContainer visible={!hidden}>
         <pixiGraphics draw={draw} />
         <pixiText text={piece.label} anchor={0.5} x={label.x} y={label.y} style={style} />
-        {piece.divisorLabel !== null && (
-          <pixiText
-            text={piece.divisorLabel}
-            anchor={0.5}
-            x={divider.x}
-            y={divider.y}
-            style={style}
-          />
+        {piece.divisorLabel !== null && tag !== null && (
+          <pixiText text={piece.divisorLabel} anchor={0.5} x={tag.x} y={tag.y} style={style} />
         )}
       </pixiContainer>
     </pixiContainer>

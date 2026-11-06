@@ -12,13 +12,22 @@ import { useGame } from '@/store/store';
 import { Steam } from '@/ui/scene/effects/Steam';
 import {
   doorLift,
+  doorTravel,
   joltMs,
   joltOffset,
   lampDelayMs,
   lampGlow,
   lampLightMs,
   lampPositions,
+  latchRattle,
+  latchRattleDelayMs,
+  latchRattleMs,
+  latchRattles,
+  latchReturnDelayMs,
+  latchSlide,
+  latchSlideMs,
   machineGeometry,
+  machineLatch,
   machineSteam,
   presentationMs,
   pulleyPositions,
@@ -33,8 +42,10 @@ const { shape } = machineGeometry;
 const pulleys = pulleyPositions();
 
 /**
- * The room's machine (placeholder skin): its door rises with the machine's progress, a
- * wedge and steam show when it jams, a lamp for each stage lights when that stage locks,
+ * The room's machine (placeholder skin): its door rises with the machine's progress, held
+ * by a latch to a share of its travel until the check line, when the latch slides out and
+ * the door rises all the way (story 1.14); the latch rattles when the answer line brings the
+ * door up against it. A wedge and steam show when it jams, a lamp for each stage lights when that stage locks,
  * and when the room's last stage locks the whole machine runs: its pulleys turn and it hums.
  * Steam rises from its vent while the quality setting keeps particles (story 1.12).
  * It is the only thing that shows success: there are no stars, scores or "correct" screens
@@ -56,12 +67,25 @@ export function Machine() {
   const parts = view?.parts ?? 0;
   const partsStarted = view?.partsStarted ?? 0;
   const running = view?.running ?? false;
+  const locked = view?.locked ?? false;
 
   const bodyRef = useRef<Container>(null);
   const doorRef = useRef<Container>(null);
   const maskRef = useRef<Graphics>(null);
+  const latchRef = useRef<Container>(null);
+  const latchMaskRef = useRef<Graphics>(null);
   const springRef = useRef<ProgressSpring | null>(null);
   const pulleyRefs = useRef<(Container | null)[]>([]);
+  // The door's aim: the latest progress, and whether the latch still holds the door. The
+  // latch lets go only once it has slid out, so these live in refs, not React state.
+  const progressRef = useRef(progress);
+  const latchedRef = useRef(true);
+  // Whether the latch is drawn out (slid into its box), or holding the door.
+  const latchOutRef = useRef(false);
+
+  const aimDoor = useCallback(() => {
+    springRef.current?.setTarget(doorTravel(progressRef.current, latchedRef.current));
+  }, []);
 
   useLayoutEffect(() => {
     const spring = createProgressSpring((value) => {
@@ -74,17 +98,95 @@ export function Machine() {
     };
   }, []);
 
-  // When the machine appears, the door is masked to its opening and set where it is.
+  // When the machine appears, the door is masked to its opening and set where it is, and
+  // the latch is masked to the posts and set holding the door, or out if the stage is
+  // already locked. Later locks and unlocks slide the latch (below), so `locked` is read
+  // only here, as it appears.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: locked is read once, on appearing
   useLayoutEffect(() => {
     const door = doorRef.current;
-    if (!present || !door) return;
+    const latch = latchRef.current;
+    if (!present || !door || !latch) return;
     door.mask = maskRef.current;
     door.y = -doorLift(springRef.current?.current() ?? 0);
+    latch.mask = latchMaskRef.current;
+    latchedRef.current = !locked;
+    latchOutRef.current = locked;
+    latch.x = locked ? latchSlide(1) : 0;
   }, [present]);
 
+  // Each line's progress aims the door. When the answer line brings it up against the
+  // latch, the latch rattles once.
   useEffect(() => {
-    springRef.current?.setTarget(progress);
-  }, [progress]);
+    const before = progressRef.current;
+    progressRef.current = progress;
+    aimDoor();
+    const latch = latchRef.current;
+    if (!latch || latchOutRef.current || !latchRattles(before, progress)) return;
+    const controls = animate(0, 1, {
+      delay: latchRattleDelayMs / 1000,
+      duration: latchRattleMs / 1000,
+      ease: 'linear',
+      onUpdate: (t) => {
+        latch.x = latchRattle(t);
+      },
+      onComplete: () => {
+        latch.x = 0;
+      },
+    });
+    return () => {
+      controls.stop();
+      if (!latchOutRef.current) latch.x = 0;
+    };
+  }, [progress, aimDoor]);
+
+  // A lock slides the latch out, and only then lets the door rise all the way. The next
+  // stage brings the door down and, once it is down, slides the latch back in.
+  useEffect(() => {
+    const latch = latchRef.current;
+    if (!present || !latch) return;
+    if (locked) {
+      if (latchOutRef.current) return;
+      const finish = () => {
+        latch.x = latchSlide(1);
+        latchOutRef.current = true;
+        latchedRef.current = false;
+        aimDoor();
+      };
+      const controls = animate(0, 1, {
+        duration: latchSlideMs / 1000,
+        ease: 'linear',
+        onUpdate: (t) => {
+          latch.x = latchSlide(t);
+        },
+        onComplete: finish,
+      });
+      return () => {
+        controls.stop();
+        if (!latchOutRef.current) finish();
+      };
+    }
+    latchedRef.current = true;
+    aimDoor();
+    if (!latchOutRef.current) return;
+    const finish = () => {
+      latch.x = 0;
+      latchOutRef.current = false;
+    };
+    const controls = animate(1, 0, {
+      delay: latchReturnDelayMs / 1000,
+      duration: latchSlideMs / 1000,
+      ease: 'linear',
+      onUpdate: (t) => {
+        latch.x = latchSlide(t);
+      },
+      onComplete: finish,
+    });
+    return () => {
+      controls.stop();
+      if (latchOutRef.current) finish();
+    };
+  }, [locked, present, aimDoor]);
 
   // A jam shakes the machine once.
   useEffect(() => {
@@ -149,6 +251,12 @@ export function Machine() {
   const drawPulley = useCallback((g: Graphics) => machineSkin.pulley(g, shape), []);
   const drawOpening = useCallback((g: Graphics) => machineSkin.opening(g, shape), []);
   const drawDoor = useCallback((g: Graphics) => machineSkin.door(g, shape), []);
+  const drawLatch = useCallback((g: Graphics) => machineSkin.latch(g, machineLatch), []);
+  const drawKeepers = useCallback((g: Graphics) => machineSkin.keepers(g, shape, machineLatch), []);
+  const drawLatchMask = useCallback(
+    (g: Graphics) => machineSkin.latchMask(g, shape, machineLatch),
+    [],
+  );
   const drawMask = useCallback((g: Graphics) => machineSkin.mask(g, shape), []);
   const drawJam = useCallback((g: Graphics) => machineSkin.jam(g, shape), []);
   const drawVent = useCallback((g: Graphics) => machineSkin.vent(g, shape), []);
@@ -166,6 +274,11 @@ export function Machine() {
           <pixiGraphics draw={drawDoor} />
         </pixiContainer>
         <pixiGraphics draw={drawFrame} />
+        <pixiGraphics ref={latchMaskRef} draw={drawLatchMask} />
+        <pixiContainer ref={latchRef}>
+          <pixiGraphics draw={drawLatch} />
+        </pixiContainer>
+        <pixiGraphics draw={drawKeepers} />
         {pulleys.map((point, i) => (
           <pixiContainer
             // biome-ignore lint/suspicious/noArrayIndexKey: the two pulleys never change

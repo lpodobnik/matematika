@@ -6,8 +6,10 @@ import { parse, parseExpr } from '@/math/parse';
 import * as q from '@/math/rational';
 import {
   countLabel,
+  divisorLabel,
   isNumberPiece,
   numberLabel,
+  numberPieceLabel,
   type Piece,
   panPieces,
   sidePieces,
@@ -257,5 +259,30 @@ describe('labels', () => {
     expect(countLabel(13n)).toBe('13x');
     expect(countLabel(1234n)).toBe('1\u202f234x');
     expect(countLabel(9_999_999n ** 2n)).toBe('99\u202f999\u202f980\u202f000\u202f001');
+  });
+
+  it('puts the school minus on a negative number, on a division\u2019s first number', () => {
+    expect(numberLabel(q.rational(6), true)).toBe('\u22126');
+    expect(numberLabel(q.rational(5905), true)).toBe('\u22125\u202f905');
+    expect(numberLabel(q.rational(25, 2), true)).toBe('\u221225 : 2');
+    expect(numberLabel(q.rational(9_999_999n ** 2n + 1n, 3n), true)).toBe(
+      '\u221233\u202f333\u202f326\u202f666\u202f667',
+    );
+  });
+
+  it('labels a weight with its number and a float with its minus (story 1.14)', () => {
+    expect(numberPieceLabel({ kind: 'weight', value: q.rational(6) })).toBe('6');
+    expect(numberPieceLabel({ kind: 'float', value: q.rational(6) })).toBe('\u22126');
+    expect(numberPieceLabel({ kind: 'float', value: q.rational(9, 2) })).toBe('\u22129 : 2');
+    const [, float] = sidePieces(side('x \u2212 6'), 'left');
+    if (!float || !isNumberPiece(float)) throw new Error('expected a float');
+    expect(numberPieceLabel(float)).toBe('\u22126');
+  });
+
+  it('tags a divided gear or spring with its division, with the school sign (story 1.14)', () => {
+    expect(divisorLabel(3n)).toBe(': 3');
+    expect(divisorLabel(12n)).toBe(': 12');
+    expect(divisorLabel(1234n)).toBe(': 1\u202f234');
+    expect(divisorLabel(9_999_999n ** 2n)).toBe(': 99\u202f999\u202f980\u202f000\u202f001');
   });
 });

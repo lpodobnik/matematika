@@ -33,7 +33,7 @@ import * as q from '@/math/rational';
 import { tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
 import { commitLine, committedEquations, lastCommitted, lineProgress } from '@/room/notebook';
-import { isNumberPiece, numberLabel, sidePieces } from '@/room/pieces';
+import { isNumberPiece, numberPieceLabel, sidePieces } from '@/room/pieces';
 import { currentStageSpec, machineEquation, type RoomStep } from '@/room/room';
 import type { PieceView } from '@/room/scale';
 import type {
@@ -255,7 +255,7 @@ export function trayPiece(kind: TrayKind, value: number): PieceView {
     key: `tray-${kind}`,
     kind,
     value: q.rational(value),
-    label: numberLabel(q.rational(value)),
+    label: numberPieceLabel({ kind, value: q.rational(value) }),
     divisorLabel: null,
   };
 }

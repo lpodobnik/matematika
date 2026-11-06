@@ -222,14 +222,14 @@ describe('setDial', () => {
       expect(setDial(room, 8)).toBeNull();
     });
 
-    it('levels at 15, with the divider under the gear showing 3', () => {
+    it('levels at 15, with the gear’s slice tagged : 3', () => {
       const step = setDial(thirds(), 15);
       expect(step?.events).toContainEqual({ type: 'PansLevel', roomId: 'r01', stage: 0, x: 15 });
       if (!step) return;
       expect(scaleView(step.room).left.pieces[0]).toMatchObject({
         kind: 'gear',
         label: '15',
-        divisorLabel: '3',
+        divisorLabel: ': 3',
       });
     });
   });
