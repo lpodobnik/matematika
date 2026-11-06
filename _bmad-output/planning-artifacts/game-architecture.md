@@ -707,7 +707,7 @@ type PinSpec =
   | { kind: 'story-choice' }
   | { kind: 'range'; bounds: number[] }      // room 11: under 100, 100–300, over 300
   | { kind: 'next-dot' }                     // the drum
-  | { kind: 'effect'; options: string[]; resolvesOn: 'first-notch' | 'level' };  // predict what a change does; options are text keys
+  | { kind: 'effect'; options: string[] };  // predict what a change does; options are text keys; resolves on confirm (story 1.14)
 type PinValue =
   | { kind: 'x'; x: number } | { kind: 'line'; index: number }
   | { kind: 'choice'; index: number } | { kind: 'bucket'; index: number };

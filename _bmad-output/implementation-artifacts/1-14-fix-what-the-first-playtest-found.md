@@ -1,6 +1,6 @@
 # Story 1.14: Fix what the first playtest found
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -92,9 +92,9 @@ What was really happening, checked in the browser:
 - [x] B2 confirm beside the pin, dial in `pin`: `src/ui/common/PinConfirm.tsx`, `common.css`, `src/room/dial.ts`, `src/room/pin.ts` (AC 5)
 - [x] B3 machine tests the pin: `src/room/pin.ts`, `src/ui/scene/scale/Scale.tsx`, `Dial.tsx`, tuning (AC 6)
 - [x] B4 parts: `src/store/*`, a new `src/ui/common/PartsCounter.tsx`, tuning, hr.ts (AC 7)
-- [ ] Merge `lane/1-14-art` into `epic-1`; checks green (AC 8)
-- [ ] One review, one fix pass
-- [ ] Browser check at 1280 × 800 and 640 × 360
+- [x] Merge `lane/1-14-art` into `epic-1`; checks green (AC 8)
+- [x] One review, one fix pass
+- [x] Browser check at 1280 × 800 and 640 × 360
 
 ## Dev Notes
 
@@ -216,3 +216,17 @@ What was really happening, checked in the browser:
 - 640 × 360: the notebook shows aside during room 4's and room 3 stage 2's pins, with Potvrdi on the scene, and comes back after the confirm.
 - Room 3 stage 2's clamp shows and lifts.
 - No console errors.
+### Main session: final check
+
+- **Checks after the fix pass:** `npm run check` is clean (222 files). `npm test`: 90 files, 1695 passed, 2 skipped. `npm run build` passes (0.33 MB of gzipped JavaScript).
+- **Played in the browser at 1280 × 800:**
+  - Room 1: the latch holds the door at the answer line and releases on the check line.
+  - Room 2 stage 2: `x : 3` is drawn as a slice tagged `: 3`.
+  - Room 3 stage 1: the balloon reads `−6`, and the tag and clamp are there. Confirming the pin at 14 turned the dial from 9 to 14, the pans levelled, the pin lit and `+2` flew to the counter.
+  - Room 3 stage 2: the direction pin turned the dial 3 notches and the counter reached 4.
+- **At 640 × 360:** in room 4 the notebook slid aside for the pin, and confirming at 9 weighed the pans level and paid 2.
+- **Left open, phone only:**
+  - The notebook returns the moment he confirms, so it hides the right pan during the test.
+  - Potvrdi covers the left readout on room 3 stage 2's left option.
+  - The counter overlaps the bottom of room 3 stage 1's empty holder.
+- **For Luka to confirm:** the `: n` tag hangs beside the gear rather than on the slice (lane A's call, because on the slice it covered the whole third).
