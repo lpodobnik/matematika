@@ -7,7 +7,7 @@ import type { LockKind, NodeId, NodeKind } from '@/city/types';
  * carried by shape as well as colour (NFR4, NFR12): the door stands raised, the lamps have
  * rays, the gate is up with water running under it, the wheel's spokes turn. Grey ink and
  * still until then. Rooms whose stories come later, the lairs, the workshop and the gate
- * get a plain sign of their kind. Story 2.8 adds the bridge.
+ * get a plain sign of their kind. Story 2.8 adds the bridge, 2.9 the weighing yard.
  */
 export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; state: NodeState }) {
   const restored = state === 'restored';
@@ -22,6 +22,8 @@ export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; sta
       return <WaterWheel restored={restored} />;
     case 'r05':
       return <Bridge restored={restored} />;
+    case 'r06':
+      return <WeighingYard restored={restored} />;
     default:
       return <KindSign kind={kind} />;
   }
@@ -160,6 +162,25 @@ function Bridge({ restored }: { restored: boolean }) {
       ) : (
         <path d="M-40 4 L-14 -34 M-36 8 L-10 -30 M-40 4 L-36 8 M-14 -34 L-10 -30" />
       )}
+    </g>
+  );
+}
+
+/**
+ * Room 6: the yard's big scale, a post with a beam and a pan on each end; restored, the beam
+ * is level and a crate sits lit on one pan (story 2.9). Until then the beam hangs tipped.
+ */
+function WeighingYard({ restored }: { restored: boolean }) {
+  const beam = restored ? 'M-34 -18 L34 -18' : 'M-34 -26 L34 -10';
+  const leftY = restored ? -18 : -26;
+  const rightY = restored ? -18 : -10;
+  return (
+    <g>
+      <path d="M0 -18 V36 M-18 36 H18" />
+      <path d={beam} />
+      <path d={`M-34 ${leftY} V${leftY + 18} M-44 ${leftY + 18} H-24`} />
+      <path d={`M34 ${rightY} V${rightY + 18} M24 ${rightY + 18} H44`} />
+      {restored && <rect x="-42" y="-12" width="16" height="12" className="glyph__lit" />}
     </g>
   );
 }

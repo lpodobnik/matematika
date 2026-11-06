@@ -70,8 +70,8 @@ describe('the map screen (story 2.2)', () => {
   });
 
   it('shows the "to be continued" note once every room so far is restored', () => {
-    expect(board(['r01', 'r02', 'r03', 'r04'])).not.toContain(hr.app.toBeContinued);
-    expect(board(['r01', 'r02', 'r03', 'r04', 'r05'])).toContain(hr.app.toBeContinued);
+    expect(board(['r01', 'r02', 'r03', 'r04', 'r05'])).not.toContain(hr.app.toBeContinued);
+    expect(board(['r01', 'r02', 'r03', 'r04', 'r05', 'r06'])).toContain(hr.app.toBeContinued);
   });
 
   it('keeps every node at least 48 CSS px, and still under reduced motion', () => {
@@ -93,5 +93,25 @@ describe('room 5 on the map (story 2.8)', () => {
     expect(done.match(/glyph__lit/g)?.length ?? 0).toBeGreaterThan(
       open.match(/glyph__lit/g)?.length ?? 0,
     );
+  });
+});
+
+describe('room 6 on the map (story 2.9)', () => {
+  it('opens the workshop’s gate and shows the foundry’s plate once the weighing yard is restored', () => {
+    const view = mapView(
+      districtMap,
+      {
+        roomsDone: ['r01', 'r02', 'r03', 'r04', 'r05', 'r06'],
+        tools: ['balance', 'workshop'],
+        started: [],
+        fresh: null,
+      },
+      authored,
+    );
+    const html = renderToString(<MapBoard view={view} onTravel={() => undefined} />);
+    expect(html).toContain(`aria-label="${hr.map.nodes.r06}, ${hr.map.states.restored}"`);
+    expect(html).toContain(`aria-label="${hr.map.nodes.workshop}, ${hr.map.states.seen}"`);
+    expect(html).toContain(`aria-label="${hr.map.nodes.foundry}, ${hr.map.states.locked}"`);
+    expect(html).toContain('5 · x = 40');
   });
 });

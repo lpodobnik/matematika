@@ -11,7 +11,7 @@
 
 import { tuning } from '@/config/tuning';
 import { stageSolution } from '@/math/check';
-import { type Equation, hasX, num } from '@/math/expr';
+import { add, type Equation, hasX, num, xVar } from '@/math/expr';
 import { toLinear, valueAt } from '@/math/linear';
 import * as q from '@/math/rational';
 import { canonicalSolution } from '@/math/steps';
@@ -57,6 +57,28 @@ export function withHelp(
   return now - since >= tuning.hintIdleMs ? climb(room, now) : room;
 }
 
+/**
+ * A compare stage's example (room 6, story 2.9 review): `x + a = b + c` with smaller
+ * numbers, solved by comparing, as the room asks: b is (b − a) more than a, so x is c plus
+ * that (`x + 36 = 38 + 17`, `x = 17 + 2`, `x = 19`, then the check line). Null for any
+ * other shape.
+ */
+function comparedExample(stage: Equation): Equation[] | null {
+  const { left, right } = stage;
+  if (left.k !== 'add' || left.l.k !== 'x' || left.r.k !== 'num') return null;
+  if (right.k !== 'add' || right.l.k !== 'num' || right.r.k !== 'num') return null;
+  const [a, b, c] = [left.r.v - 20, right.l.v - 20, right.r.v - 10];
+  if (a <= 0 || b <= 0 || c <= 0 || b <= a) return null;
+  const example: Equation = { left: add(xVar(), num(a)), right: add(num(b), num(c)) };
+  const x = c + (b - a);
+  return [
+    example,
+    { left: xVar(), right: add(num(c), num(b - a)) },
+    { left: xVar(), right: num(x) },
+    { left: add(num(x), num(a)), right: add(num(b), num(c)) },
+  ];
+}
+
 /** The solutions a worked example may take: small, and never the stage's own. */
 const exampleSolutions = [3, 4, 2, 5, 6, 7, 8, 9, 10, 12, 15, 20];
 
@@ -69,6 +91,7 @@ const exampleSolutions = [3, 4, 2, 5, 6, 7, 8, 9, 10, 12, 15, 20];
 export function workedExample(room: RoomState, tools: readonly ToolId[]): Equation[] | null {
   const spec = currentStageSpec(room);
   const stage = machineEquation(spec, room.stage.machine);
+  if (spec.type === 'compare') return comparedExample(stage);
   if (hasX(stage.right) || !hasX(stage.left)) return null;
   const left = toLinear(stage.left);
   if (left.kind !== 'linear') return null;

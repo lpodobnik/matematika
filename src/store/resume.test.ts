@@ -266,8 +266,8 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
       character: { name: 'Ivo', look: 'look-1' as const },
       progress: {
         ...newSave().progress,
-        roomsDone: ['r01', 'r02', 'r03', 'r04'] as const,
-        told: ['r01', 'r02', 'r03', 'r04'] as const,
+        roomsDone: ['r01', 'r02', 'r03', 'r04', 'r05', 'r06'] as const,
+        told: ['r01', 'r02', 'r03', 'r04', 'r05', 'r06'] as const,
       },
     };
     const store = createGameStore({ effects: [] });

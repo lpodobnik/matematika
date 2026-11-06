@@ -125,7 +125,6 @@ export type EffectOption = 'tilt-left' | 'tilt-right';
 
 export type PinSpec =
   | { kind: 'level-x'; beyondDial?: true } // where it levels
-  | { kind: 'x-hidden' } // compare: x before anything moves
   | { kind: 'wrong-line' } // find the mistake
   | { kind: 'story-choice' }
   | { kind: 'range'; bounds: number[] } // room 11: under 100, 100–300, over 300

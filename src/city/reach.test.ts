@@ -166,7 +166,7 @@ describe('where he can go (city/reach.ts, stories 2.2 and 2.3)', () => {
 
   it('never opens a room whose story hasn’t been built, a lair or the workshop', () => {
     const done = ['r01', 'r02', 'r03', 'r04'];
-    for (const id of ['r06', 'r09', 'lair-20', 'workshop', 'foundry']) {
+    for (const id of ['r07', 'r09', 'lair-20', 'workshop', 'foundry']) {
       expect(roomOpen(districtMap, id, reach(done, ['balance'], authored)), id).toBe(false);
     }
   });
@@ -177,8 +177,11 @@ describe('where he can go (city/reach.ts, stories 2.2 and 2.3)', () => {
     const done = ['r01', 'r02', 'r03', 'r04'];
     // Room 5, the bridge, once Balance is earned (story 2.8); then nothing yet.
     expect(nextRoomOnMap(districtMap, reach(done, ['balance'], authored))).toBe('r05');
+    // Then room 6 (story 2.9), which earns the workshop; then nothing yet.
     const toFive = [...done, 'r05'];
-    expect(nextRoomOnMap(districtMap, reach(toFive, ['balance'], authored))).toBeNull();
+    expect(nextRoomOnMap(districtMap, reach(toFive, ['balance'], authored))).toBe('r06');
+    const toSix = [...toFive, 'r06'];
+    expect(nextRoomOnMap(districtMap, reach(toSix, ['balance', 'workshop'], authored))).toBeNull();
   });
 });
 
@@ -213,7 +216,7 @@ describe('what the map shows (mapView)', () => {
   });
 
   it('after room 4: room 6 shows; the foundry gate shows from room 6 with its plate (FR30)', () => {
-    expect(node(view(['r01', 'r02', 'r03', 'r04']), 'r06')?.state).toBe('seen');
+    expect(node(view(['r01', 'r02', 'r03', 'r04']), 'r06')?.state).toBe('open');
     expect(node(view(['r01', 'r02', 'r03', 'r04']), 'foundry')?.state).toBe('closed');
     const fromSix = mapView(
       districtMap,
@@ -253,7 +256,8 @@ describe('what the map shows (mapView)', () => {
   it('says when every room so far is restored', () => {
     expect(view(['r01', 'r02', 'r03']).allDone).toBe(false);
     expect(view(['r01', 'r02', 'r03', 'r04']).allDone).toBe(false);
-    expect(view(['r01', 'r02', 'r03', 'r04', 'r05']).allDone).toBe(true);
+    expect(view(['r01', 'r02', 'r03', 'r04', 'r05']).allDone).toBe(false);
+    expect(view(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']).allDone).toBe(true);
   });
 });
 

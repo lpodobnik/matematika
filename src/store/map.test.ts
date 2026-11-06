@@ -165,7 +165,7 @@ describe('the map (story 2.2)', () => {
   });
 
   it('a new game from the dev panel forgets the room that just bloomed', () => {
-    const g = game(['r01', 'r02', 'r03', 'r04']);
+    const g = game(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']);
     g.act({ type: 'map/travel', node: 'r01' });
     g.act({ type: 'machine/touch' });
     for (const x of [1, 2, 3, 4, 5]) g.act({ type: 'dial/set', x });

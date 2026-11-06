@@ -105,6 +105,7 @@ describe('pinTagLayout (story 1.14)', () => {
       'r03.1',
       'r05.0',
       'r05.1',
+      'r06.0',
       'r04.0',
     ]);
     expect(rooms[3]?.stages[0]?.pin).toBeUndefined();

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { r03 } from '@/content/rooms/r03-sluice-gate';
 import { r05 } from '@/content/rooms/r05-bridge';
+import { r06 } from '@/content/rooms/r06-weighing-yard';
 import { parse } from '@/math/parse';
 import type { Token } from '@/math/tokens';
 import { dialView, setDial } from '@/room/dial';
@@ -128,7 +129,7 @@ describe('the pin track (Pattern 2, Pin)', () => {
   it('places only level-x and effect pins so far; the other kinds arrive with their rooms', () => {
     expect(pinSupported({ kind: 'level-x' })).toBe(true);
     expect(pinSupported({ kind: 'effect', options: ['tilt-right'] })).toBe(true);
-    for (const kind of ['x-hidden', 'wrong-line', 'story-choice', 'next-dot'] as const) {
+    for (const kind of ['wrong-line', 'story-choice', 'next-dot'] as const) {
       expect(pinSupported({ kind })).toBe(false);
       expect(pinTrack({ ...levelStage, pin: { kind } })).toBeNull();
     }
@@ -490,5 +491,13 @@ describe('the change’s slider (room 5, story 2.8)', () => {
     const second = enterRoom(r05, 1).room;
     expect(second.stage.dialX).toBe(6);
     expect(scaleView(second).level).toBe(false);
+  });
+});
+
+describe('the hidden readouts’ question (room 6, story 2.9)', () => {
+  it('asks its own question while the readouts are hidden, before anything moves', () => {
+    const room = touchMachine(enterRoom(r06).room)?.room ?? null;
+    expect(pinView(room)).toMatchObject({ question: 'hidden', asks: true });
+    expect(scaleView(room as RoomState).readouts).toBeNull();
   });
 });

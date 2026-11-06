@@ -61,8 +61,8 @@ export type PinTrack =
 
 /**
  * The stage's pin track, or null with no pin, or a pin kind that arrives with its rooms
- * (compare, mistake, story, range and drum pins: epics 2 and 4; content tests keep them out
- * of the rooms until then).
+ * (mistake, story, range and drum pins: epics 2 and 4; content tests keep them out of the
+ * rooms until then). A compare stage pins with `level-x` and its readouts hidden (room 6).
  */
 export function pinTrack(stage: StageSpec): PinTrack | null {
   const { pin, dial } = stage;
@@ -257,10 +257,11 @@ function resultOf(right: boolean): 'right' | 'wrong' {
 
 /**
  * The pin kinds the engine places so far, and `change`: a `level-x` pin after the stage's
- * numbers changed (room 5, story 2.8), with its own question. They are also the keys of
+ * numbers changed (room 5, story 2.8), and `hidden`: one with the readouts hidden (room 6,
+ * story 2.9), each with its own question. They are also the keys of
  * their questions in `hr.pin.questions`.
  */
-export type PinQuestion = Extract<PinSpec['kind'], 'level-x' | 'effect'> | 'change';
+export type PinQuestion = Extract<PinSpec['kind'], 'level-x' | 'effect'> | 'change' | 'hidden';
 
 /** What the pin shows. Flat, for selectors. */
 export interface PinView {
@@ -301,7 +302,15 @@ export function pinView(room: RoomState | null): PinView | null {
   const track = pinTrack(spec);
   const kind = spec.pin?.kind;
   if (!track || (kind !== 'level-x' && kind !== 'effect')) return null;
-  const question: PinQuestion = kind === 'level-x' && spec.change ? 'change' : kind;
+  const question: PinQuestion =
+    kind !== 'level-x'
+      ? kind
+      : spec.change
+        ? 'change'
+        : // As the scale shows them (room/scale.ts, `showsReadouts`), without importing it back.
+          spec.readouts && !spec.blinds?.readouts
+          ? 'level-x'
+          : 'hidden';
   const { stage } = room;
   const offered = pinOffered(room);
   if (!offered && !stage.pin) return null;

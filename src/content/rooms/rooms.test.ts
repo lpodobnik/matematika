@@ -161,6 +161,20 @@ const gddRooms: readonly {
     ways: ['try', 'balance'],
     earns: null,
   },
+  {
+    id: 'r06',
+    machine: 'weighing-yard',
+    xIs: 'Weight of a crate',
+    equations: ['x + 56 = 58 + 27'],
+    answers: [29],
+    types: ['compare'],
+    dials: [{ min: 20, max: 40, step: 1 }],
+    // Story 2.9: the pin before anything moves, with the readouts hidden.
+    pokeNotches: [undefined],
+    pins: [{ kind: 'level-x' }],
+    ways: ['try', 'balance'],
+    earns: 'workshop',
+  },
 ];
 
 /** The x values the dial reaches before the pin is locked: the poke window. */
@@ -277,8 +291,8 @@ describe('rooms', () => {
     expect(rooms[0]?.stages[0]?.readouts).toBe(true);
   });
 
-  it('lists the rooms in play order: rooms 1–5', () => {
-    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03', 'r04', 'r05']);
+  it('lists the rooms in play order: rooms 1–6', () => {
+    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']);
   });
 
   describe("room 4, the water wheel (GDD's Puzzle Progression tables)", () => {
@@ -415,7 +429,9 @@ describe('rooms', () => {
       return {
         try: number <= 3 ? 'blanks' : 'blank',
         // Balance is earned at the end of room 3, so rooms 1–3 have no Balance mode.
-        balance: number <= 3 ? undefined : number <= 5 ? 'auto' : number <= 7 ? 'blanks' : 'blank',
+        // Room 6 keeps `auto` (story 2.9's call): filling in each move's numbers would be
+        // doing the sums the room is about not doing.
+        balance: number <= 3 ? undefined : number <= 6 ? 'auto' : number <= 7 ? 'blanks' : 'blank',
       };
     };
     rooms.forEach((room, index) => {

@@ -30,6 +30,7 @@ const r03b = '20 − x = 6';
 const r04 = '2x + 5 = 23';
 const r05a = '3x + 4 = 22';
 const r05b = '3x + 4 = 25';
+const r06 = 'x + 56 = 58 + 27';
 /** U+202F, the thousands separator the notebook writes. */
 const nnbsp = ' ';
 const r11 = `5${nnbsp}905 − 27x = 316`;
@@ -261,6 +262,19 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r05b, line: 'x = 6', verdict: 'wrong', note: 'the old answer, before the change' },
     { stage: r05b, line: '3x = 22', verdict: 'wrong', note: 'the old load' },
     { stage: r05b, line: 'x = 9', verdict: 'wrong', note: 'the 3 added to x, not to 3x' },
+  ],
+  'r06 weighing yard (x + 56 = 58 + 27)': [
+    // Story 2.9: judged without adding. Try values and Balance both write x = 29 (a float
+    // of 56 on both sides leaves x against 58 + 27 − 56); a comparing line, the 2 by which
+    // 58 is more than 56 added to the 27, is a step too.
+    { stage: r06, line: 'x = 29', verdict: 'answer' },
+    { stage: r06, before: ['x = 29'], line: '29 + 56 = 58 + 27', verdict: 'check' },
+    { stage: r06, line: 'x = 58 + 27 − 56', verdict: 'valid', progress: true },
+    { stage: r06, line: 'x = 27 + 2', verdict: 'valid', progress: true, note: 'compared' },
+    { stage: r06, before: ['x = 27 + 2'], line: 'x = 29', verdict: 'answer' },
+    { stage: r06, line: 'x = 85', verdict: 'wrong', note: 'the right side added up, not compared' },
+    { stage: r06, line: 'x = 27', verdict: 'wrong', note: 'the 2 left out' },
+    { stage: r06, line: 'x = 31', verdict: 'wrong', note: 'the 2 the wrong way' },
   ],
   // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,
   // copied as a line, is valid without progress (stories 1.2, 1.4 and 1.8–1.11 name them);

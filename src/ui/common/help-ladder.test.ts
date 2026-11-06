@@ -149,6 +149,13 @@ describe('the help ladder (story 2.7)', () => {
     expect(helpStructure(state)).toBe('2x + 5 − □ = 23 − □');
   });
 
+  it('at level 4 in room 6, compares, as the room asks, never adding up the right side', () => {
+    const g = playing(['balance']);
+    g.act({ type: 'room/enter', roomId: 'r06' });
+    const lines = (workedExample(g.room(), ['balance']) ?? []).map(formatEquation);
+    expect(lines).toEqual(['x + 36 = 38 + 17', 'x = 17 + 2', 'x = 19', '19 + 36 = 38 + 17']);
+  });
+
   it('at level 4, solves the same kind of equation with other numbers, for rooms 1–4', () => {
     const g = playing(['balance']);
     for (const roomId of ['r01', 'r02', 'r03', 'r04'] as const) {

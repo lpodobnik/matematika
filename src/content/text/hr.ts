@@ -202,6 +202,8 @@ export const hr = {
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
       /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
       change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
+      /** Story 2.9: room 6, the readouts hidden: compare the pieces, don't add them up. */
+      hidden: 'Vaga ne pokazuje zbrojeve. Usporedi utege: gdje će vaga biti u ravnoteži?',
     },
     /** An effect pin's options (room 3), under their pictures: the scale tilted left or right. */
     options: {
