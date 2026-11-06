@@ -730,16 +730,294 @@ So that I can solve room 4 by simplifying, not by guessing, and never get stuck.
 
 ## Epic 2: The city
 
-Turn separate rooms into a world he wants to return to. **Stories are detailed with this workflow before the epic starts.** From the GDD:
+Turn separate rooms into a world he wants to return to. Detailed on 2026-11-06, after the playtests of rooms 1–4.
 
-1. The map shows connected nodes and restored or grey states, and leaving a room keeps its lines.
-2. Gates open from tools earned and rooms completed, and locked rooms stay visible.
-3. Progress saves automatically and can be restored by backup link, with a loading screen.
-4. After room 1, someone asks who he is, and he names his character and picks a look.
-5. The hint ladder triggers on inactivity or repeated jams.
-6. Rooms 5–7 play, including acting out the wrong line in the old logbook, which reveals Kristijan's planted signal; their line-checker rows are added.
-7. The play log records sessions, ways used, predictions and wrong lines on the device.
-8. The art style guide sets the palette, line weight, lighting and prompt template, with test images from fal.ai.
+Every room story follows the GDD's "Rules from the playtests":
+- one x, and a slider that reaches the answer;
+- one new idea per room, with its handover tag;
+- both-sided Balance with the goal banner;
+- pictures that mean one thing;
+- the last two lines as blanks.
+
+Each story ends with a headless play-through of its room or screen at 1280 × 800 and 640 × 360, and its screenshots are looked at, not only the tests. The epic ends with Luka's son playing it on the tablet.
+
+### Story 2.1: Save progress on the device
+
+As Luka's son,
+I want the game to remember where I am,
+So that I can stop and come back without losing anything.
+
+**Covers:** FR52, NFR3; architecture `SaveV1`.
+
+**Acceptance Criteria:**
+
+**Given** a committed line, a restart, an earned tool, a paid prediction or a settings change
+**When** it happens
+**Then** `matematika:save` is written. It holds:
+- progress: rooms, tools and first uses;
+- the economy;
+- the room in progress, with its committed lines;
+- settings, with the quality pick;
+- his name and look.
+
+**Given** a launch with a save
+**When** the game loads
+**Then** a loading screen shows until the assets and the save are ready, and he is back where he left off, in the same room and stage with its lines
+
+**Given** a save from an older version, or one that can't be read
+**When** the game loads
+**Then** an older save is migrated, and one that can't be read is kept aside under another key while the game starts fresh, never crashing
+
+### Story 2.2: The city map
+
+As Luka's son,
+I want a map of the district I can travel around,
+So that the rooms become a city I am bringing back to life.
+
+**Covers:** FR25, FR26 (leaving), FR27; NFR12.
+
+**Acceptance Criteria:**
+
+**Given** the map
+**Then** it shows the GDD's 19 nodes and connections, grey until restored, and a room he has finished shows its map change in colour (FR25)
+
+**When** he taps a reached, connected node
+**Then** he travels there at once
+
+**Given** a room he has started
+**When** he leaves it for the map and comes back
+**Then** its committed lines and stage are kept (FR26)
+
+**And** after room 4 the map replaces the "Nastavak slijedi…" screen
+
+### Story 2.3: Gates and rooms he can see but not open
+
+As Luka's son,
+I want locked places I can see from where I am,
+So that I know there's more, and what opens it.
+
+**Covers:** FR28–FR32.
+
+**Acceptance Criteria:**
+
+**Given** the tools and rooms finished
+**Then** each gate opens as the GDD's table says:
+- Balance at room 3 opens room 4, then room 5;
+- the workshop opens at room 6;
+- the gear chain opens at room 7 (room 8 itself is in epic 4).
+
+Rooms 5 and 6 can be played in either order.
+
+**And** gates depend only on tools and finished rooms, never on parts (FR32)
+
+**Given** room 2 is finished
+**Then** the bridge (room 5) is visible from it, with its weights locked until Balance is earned (FR29)
+
+**And** the foundry gate shows from room 6 with `5 · x = 40` and stays closed (FR30)
+
+**And** the lairs near rooms 2 and 5 appear once seen; their fights come in epic 3 (FR31)
+
+### Story 2.4: His name and his look
+
+As Luka's son,
+I want to name my apprentice and pick how he looks,
+So that the story is mine.
+
+**Covers:** FR36; narrative design, the apprentice.
+
+**Acceptance Criteria:**
+
+**Given** room 1 has just restarted
+**When** the conductor asks who he is
+**Then** the OS keyboard appears, for the only time in the game, and he types a name
+
+**And** he picks one of the looks from the style guide, in grey (NFR12)
+
+**And** the name is saved on the device (2.1), and from then on townspeople's lines use it
+
+### Story 2.5: Story lines for rooms 1–7
+
+As Luka's son,
+I want the city to talk back when I fix things,
+So that each restart feels like it matters.
+
+**Covers:** FR37 for rooms 1–7; narrative design, Story Beats.
+
+**Acceptance Criteria:**
+
+**Given** a machine restarts in rooms 1–7
+**Then** one or two story lines from the narrative design play, spoken by townspeople, in Croatian from `hr.ts`
+
+**And** Kristijan's notebook notes and the First Automaton's punched-tape notices appear where the beats call for them
+
+**And** the city's log of restarts lists what he has restarted
+
+**And** no line praises him (NFR13)
+
+### Story 2.6: Explanation cards
+
+As Luka's son,
+I want to know the real name for what I just did,
+So that what I learned matches what school calls it.
+
+**Covers:** FR34 for rooms 1–7.
+
+**Acceptance Criteria:**
+
+**Given** the first time he uses an idea in rooms 1–7: level means equal, the same step per notch, a prediction, Balance, a split, judging without adding, or finding a mistake
+**When** the room restarts
+**Then** Nikola asks "how?", and a card of one or two sentences connects the idea to the school term
+
+**And** each card shows once, and the city's log keeps them to reread
+
+### Story 2.7: The hint ladder
+
+As Luka's son,
+I want help that gets more specific the longer I'm stuck,
+So that I never have to give up.
+
+**Covers:** FR33 for rooms 1–7.
+
+**Acceptance Criteria:**
+
+**Given** 60 s without acting, or 3 jams in a row
+**Then** help climbs one level:
+1. the handover tag and the wiggle (built in 1.15 and 1.16);
+2. the next move shown on the machine, as the hint button's second press;
+3. the notebook shows the next line's structure, with blanks;
+4. the machine solves the same form with other numbers.
+
+**And** the hint button keeps working as in 1.16
+
+**And** help is free and never recorded
+
+### Story 2.8: Room 5, the bridge
+
+As Luka's son,
+I want to predict what a change does without solving again,
+So that I see what the numbers in an equation do.
+
+**Covers:** FR21 (predict), FR22; GDD room 5.
+
+**Acceptance Criteria:**
+
+**Given** room 5:
+- `3x + 4 = 22` (x = 6), then the 22 becomes 25 (x = 7);
+- slider 0–10, poke window of 4 notches;
+- ways Try values and Balance;
+- Balance fading `auto`, with the last two lines as blanks.
+
+**When** he plays it
+**Then** he pins where it levels, and the machine tests the pin
+
+**And** after the change he pins where it levels now, before the slider opens
+
+**And** the change has its own handover tag
+
+**And** content tests and line-table rows cover both stages, and the room plays to its restart and map change
+
+### Story 2.9: Room 6, the weighing yard
+
+As Luka's son,
+I want to judge an equation without adding it up,
+So that I learn equal means the same, not "do the sum".
+
+**Covers:** FR21 (compare), FR22; GDD room 6.
+
+**Acceptance Criteria:**
+
+**Given** room 6:
+- `x + 56 = 58 + 27` (x = 29);
+- slider 20–40, readouts hidden;
+- ways Try values and Balance;
+- Balance fading `blanks`.
+
+**When** he plays it
+**Then** he pins x before anything moves, with the readouts hidden, and the machine tests it
+
+**And** the hidden readouts have their own handover tag, and the slider's `x = …` plate still shows
+
+**And** finishing it opens the workshop gate (2.3) and shows the foundry gate
+
+### Story 2.10: Room 7, the old logbook
+
+As Luka's son,
+I want to find the wrong line in someone else's notebook,
+So that I can explain why it's wrong, not just that it is.
+
+**Covers:** FR21 (mistake), FR22; GDD room 7; narrative, the logbook twist; architecture, Find the mistake.
+
+**Acceptance Criteria:**
+
+**Given** room 7:
+- the notebook holds `3x − 1 = 17`, `3x = 18` and the wrong line `x = 15`;
+- slider 0–10;
+- ways Balance.
+
+**When** he slides to 6
+**Then** the stage equation balances
+
+**When** he taps a written line
+**Then** it goes on the scale at the slider's x: `3x = 18` stays level at 6, and `x = 15` tips
+
+**When** he pins `x = 15` as the mistake
+**Then** he rewrites it, and the new line is judged against the lines before it
+
+**And** tapping lines, the mistake pin and the rewrite each have their own handover tag
+
+**And** finishing it reveals Kristijan's planted signal (2.5) and earns the gear chain (2.3)
+
+### Story 2.11: The play log and Luka's view
+
+As Luka,
+I want to see how my son plays and keep a backup of his progress,
+So that I can follow his thinking and never lose his save.
+
+**Covers:** FR53, FR54.
+
+**Acceptance Criteria:**
+
+**Given** play
+**Then** the device keeps a log of dates, rooms, ways used, predictions and wrong lines
+
+**When** Luka opens his view, through a gesture or address his son won't stumble on
+**Then** it shows the log, and a backup link that restores the whole save on any device (FR53)
+
+**And** opening the backup link asks before replacing a save that is already there
+
+### Story 2.12: Finish the style guide
+
+As Luka,
+I want the art direction settled before the city is drawn,
+So that every room and the map look like one world.
+
+**Covers:** the GDD's Art; architecture, Asset Management; the open calls in `_bmad-output/art-bible.md`.
+
+**Acceptance Criteria:**
+
+**Given** the art bible's open calls (a colour apprentice against NFR12, and the standing scale)
+**When** Luka decides them
+**Then** the guide records them, and the palette tokens move into `src/art/palette.ts`
+
+**And** one backdrop passes the overlay check and becomes the template for the rest, using at most the 2 test images left
+
+### Story 2.13: Play rooms 1–7 on the tablet
+
+As Luka,
+I want rooms 1–7 to play back to back on the map, on the tablet,
+So that the city is ready for my son's next real play.
+
+**Covers:** epic 2's playable result; NFR1, NFR3.
+
+**Acceptance Criteria:**
+
+**Given** a fresh start
+**When** he plays
+**Then** rooms 1–7 run from the map with gates, his name, story lines, cards, hints and saving, and after room 7 a "to be continued" screen shows on the map
+
+**And** a headless play-through test, with screenshots at 1280 × 800 and 640 × 360, covers every room's end state
+
+**And** Luka's son plays it on the tablet, and what he runs into becomes the next story
 
 ## Epic 3: Automaton fights
 
@@ -763,6 +1041,10 @@ Finish the solo game through the line reveal. **Stories are detailed before the 
 5. One machine's answer becomes a weight in the next.
 6. The drum plots dots and the level line, and the reveal follows.
 7. Rooms 8–13 play, with their map changes, gates, hints, cards, story lines and line-checker rows.
+8. From the design pass before epic 2:
+   - Room 11's coarse slider: 0–300 in tens, with ± for single steps, and simplify-first as in room 4.
+   - The tray's x-gear from room 9.
+   - Room 8's slider at 0–10.
 
 ## Epic 5: Rooms for friends
 

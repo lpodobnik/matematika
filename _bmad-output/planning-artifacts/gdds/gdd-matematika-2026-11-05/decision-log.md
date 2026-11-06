@@ -100,3 +100,11 @@ Every decision, change and version transition for this GDD.
 - **From Luka, after story 1.16, 2026-11-06:**
   - "I solved it but the slider is stuck at 6 and I cannot move it to 9." With one x, the slider has to be able to reach the answer, so room 4's slider runs 0–12. His choice, over Claude's proposal to have the machine turn it past its end, which he called idiotic. Simplifying is still required before `x = 9` counts. The tray is there from the start in a Balance-only room.
   - "The small cilj x sam in the corner is not noticeable." The goal is now a large banner centred above the scene, with a tick when the pans match. The small card stays only where there is no room above the scene (a phone).
+- **Design pass on rooms 5–13 before epic 2 (2026-11-06), from the playtest rules:**
+  - **Decided by Luka, on Claude's recommendation:**
+    - Room 7's slider runs 0–10 instead of being locked. He finds the wrong line by putting each written line on the scale at x = 6.
+    - Room 11's "too far to drag" becomes "too slow to drag": a slider 0–300 in tens with ± for single steps. Simplifying is required, as in room 4.
+  - **Claude's calls, open to veto:**
+    - Room 8's slider runs 0–10, so the pin beyond the dial leaves the design. The code stays.
+    - From room 9 the tray holds an x-gear, so Balance can finish `135 − 5x = 100`. This answers the overnight report's open question about rooms 9 and 11.
+    - The rules from the playtests are written into the GDD as a list every room follows.

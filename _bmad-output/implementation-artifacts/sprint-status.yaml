@@ -32,7 +32,7 @@
 # - Stories can be worked in parallel if team capacity allows
 # - Developer typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
-# - Epics 2-6 list no stories yet: they are detailed in epics.md before each epic starts,
+# - Epics 3-6 list no stories yet: they are detailed in epics.md before each epic starts,
 #   then this workflow is re-run to add them.
 
 generated: 2026-11-05
@@ -63,6 +63,19 @@ development_status:
   epic-1-retrospective: optional
 
   epic-2: backlog
+  2-1-save-progress-on-the-device: backlog
+  2-2-the-city-map: backlog
+  2-3-gates-and-rooms-he-can-see-but-not-open: backlog
+  2-4-his-name-and-his-look: backlog
+  2-5-story-lines-for-rooms-1-7: backlog
+  2-6-explanation-cards: backlog
+  2-7-the-hint-ladder: backlog
+  2-8-room-5-the-bridge: backlog
+  2-9-room-6-the-weighing-yard: backlog
+  2-10-room-7-the-old-logbook: backlog
+  2-11-the-play-log-and-lukas-view: backlog
+  2-12-finish-the-style-guide: backlog
+  2-13-play-rooms-1-7-on-the-tablet: backlog
   epic-2-retrospective: optional
 
   epic-3: backlog

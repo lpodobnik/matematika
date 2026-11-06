@@ -298,6 +298,17 @@ export type Verdict =
 - The tray is offered once Balance is earned and its first use is met, or the dial has been at its maximum this stage without levelling, or a Balance move was made this stage. The splitter is offered once one side holds only x pieces with a count above 1, then for the rest of the stage.
 - Room 4 as a worked sequence (no pin, dial 0–12): `2x + 5 = 23`; the tray and the goal banner are there from the start; a float 5 dropped on the scale writes `2x + 5 − 5 = 23 − 5` and `2x = 18`; the splitter appears and, at 2, writes `2x : 2 = 18 : 2`; the notebook offers `x = ☐`, he fills 9, then the check template `2 · ☐ + 5 = 23`. At slider 6 the scale reads 17 | 23, 12 | 18, 6 | 9 throughout; at 9 it levels, so the slider is his check, but `x = 9` is refused until x is alone.
 
+**Find the mistake** (room 7; design pass before epic 2)
+
+- **Putting a line on the scale.** Tapping a committed line (`notebook/show-line`, by its index) puts that line's layout on the pans, weighed at the slider's x like everything else. The pans keep it until the dial moves, another line is tapped, or a line is written. Then they go back to the last committed line.
+- **Reading the result.** At the x where the stage equation balances (room 7: 6), the right lines stay level and the wrong one tips. That is the room's whole proof, with no extra rule.
+- **Pinning and fixing.** The pin is the wrong line itself, a `mistake` pin (Pattern 2). Pinning it unlocks editing that line. The rewritten line is judged against the lines before it.
+
+**Later rooms** (epic 4, recorded now so epic 2 builds nothing against them)
+
+- **A coarse dial.** A dial spec may carry `coarse: n`. The track then moves n steps per notch, and + and − on the plate step one unit (room 11: 0–300 in tens). The rule that the slider always reaches the answer still holds.
+- **x-gears on the tray.** From room 9 the tray offers an x-gear, with its count on a stepper. A drop adds kx to both sides, the same both-sided rule as for numbers.
+
 ```ts
 export type Move =
   | { kind: 'add-both'; term: Term }        // same piece on or off both pans

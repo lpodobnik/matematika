@@ -116,12 +116,12 @@ All tuning numbers are provisional until playtesting. Examples here use equation
 | Element | Spec |
 |---|---|
 | Pans | Each side of the equation sits on its own pan as objects from the piece kit below. |
-| x dial | Whole numbers only, one notch per step. Range is set per room. In division forms, each notch is a multiple of the divisor. |
+| x dial | Whole numbers only, one notch per step. Range is set per room, and always reaches the room's answer: the slider is the one x, so he must be able to set it to what he found (Luka, after room 4). In division forms, each notch is a multiple of the divisor. |
 | Tilt | 1° per unit of difference between the sides, clamped at ±15°; big-number rooms scale this per room. Each notch tips the pans by the same amount, and more gears tip them faster. |
 | Readouts | Both sides' values show while dragging, except in rooms about judging without calculating. |
 | Poke window | At first the dial moves only 3 or 4 notches. In `3x + 2 = 20` he sees 2, 5, 8, 11, then predicts where it levels. |
 | Prediction | The pin is a small flag. A tag on its holder says what to do. He can still turn the dial inside the poke window, places the pin, and confirms beside it. The machine then tests the pin itself: it turns the dial to the pin (or weighs the pin's x where the dial can't reach), and the pans show whether he was right. A right call earns 2 bonus parts at once, from room 3 on, and once per stage, so resetting earns nothing. A wrong one loses nothing. Only then does the full dial range open. |
-| Too far to drag | The dial stops short of the answer. In `5 905 − 27x = 316`, x = 207 but the dial reaches 30, so he sees the rate and needs another way. |
+| Too slow to drag | In a big-number room the slider moves in coarse steps, with + and − on its plate for single steps, so it can reach the answer but only slowly. In `5 905 − 27x = 316` (x = 207) it runs 0–300 in tens. Its only finishing ways are Balance and Undo, so, as in room 4, `x = 207` counts only after he simplifies, and the slider is his check. |
 
 **Piece kit**
 
@@ -257,7 +257,7 @@ Room types carry the four understanding tasks from the brief:
 | Solve | Using the model in a new place | None beyond dial range | Where it levels |
 | Compare | Judging without calculating | Readouts hidden | x, before anything moves |
 | Predict | Predicting what changes | Something behaves unexpectedly, or a number changes after he solves | The effect, before it runs |
-| Find the mistake | Explaining why something is wrong | A notebook holds one wrong line and the machine is jammed. After pinning, he acts out what the line did on the pans, sees them tip, then fixes it | The wrong line |
+| Find the mistake | Explaining why something is wrong | A notebook holds written lines, one of them wrong. He slides to where the first line balances, then taps each written line to put it on the scale at the slider's x: the right lines stay level there, the wrong one tips. He pins it, then rewrites it | The wrong line |
 | Story | Moving between a story and the maths | He builds the pans from a story, then picks the story that fits a set of pans | The matching story |
 
 ### Puzzle Progression
@@ -272,11 +272,11 @@ Room types carry the four understanding tasks from the brief:
 | 4 | Water wheel | `2x + 5 = 23` | 9 | Load per bucket | Solve | Balance only: the slider reaches 9 and is his check, but x = 9 counts only after he simplifies |
 | 5 | Bridge | `3x + 4 = 22`, then the 22 becomes 25 | 6, 7 | Length per plank | Predict | What a change does, without solving |
 | 6 | Weighing yard | `x + 56 = 58 + 27` | 29 | Weight of a crate | Compare | Judging equality without adding. Opens the workshop |
-| 7 | Old logbook | `3x − 1 = 17`, `3x = 18`, with the wrong line `x = 15` | 6 | Teeth per gear | Find the mistake | `3x` is three of x, not 3 + x. The wrong line is Kristijan's planted signal. Earns the gear chain |
+| 7 | Old logbook | `3x − 1 = 17`, `3x = 18`, with the wrong line `x = 15` | 6 | Teeth per gear | Find the mistake | `3x` is three of x, not 3 + x: at x = 6 the first two lines balance and `x = 15` tips. The wrong line is Kristijan's planted signal. Earns the gear chain |
 | 8 | Tram | `4x + 9 = 41` | 8 | Length per rail | Solve | Running the chain backward moves the pans too |
-| 9 | Steam lift | `135 − 5x = 100` | 7 | Pressure per valve | Predict | x-balloons: x lightens the pan, and the inverse is `135 − 100` |
+| 9 | Steam lift | `135 − 5x = 100` | 7 | Pressure per valve | Predict | x-balloons: x lightens the pan, and the inverse is `135 − 100`. From here the tray also holds an x-gear, so Balance can add 5x to both sides |
 | 10 | Market scales | `60 + 3x = 90`, then the story for `5 + 2x = 19` | 10, 7 | Price of a cog | Story | A wrench at 60 and 3 equal cogs cost 90 together; then pans into a story |
-| 11 | Great wheel | `5 905 − 27x = 316` | 207 | Load per spoke | Solve | Too far to drag; the rate alone won't finish it |
+| 11 | Great wheel | `5 905 − 27x = 316` | 207 | Load per spoke | Solve | Too slow to drag: the slider can reach 207 only in tens and single steps, so he simplifies; the slider is his check |
 | 12 | Junction | `2x + 3 = 11` feeds `3x + ☐ = 19` | 4, 5 | Gear sizes, the first passed to the second | Solve | Linked machines. Earns the recording drum |
 | 13 | Clock tower | `3x + 5 = 20`, then `50 − 4x = 34` | 5, 4 | Turns of the winder | Predict | The line reveal |
 
@@ -288,15 +288,23 @@ Room types carry the four understanding tasks from the brief:
 | 4 | 0–12 | None | None: room 4 introduces only Balance | Balance |
 | 5 | 0–10 | First 4 notches | Where it levels, then where it levels after the change | Try values, Balance |
 | 6 | 20–40 | None | x, with readouts hidden | Try values, Balance |
-| 7 | Locked | None | The wrong line | Balance |
-| 8 | 0–5 | First 4 notches | Where it levels, beyond the dial | Balance, Undo |
+| 7 | 0–10 | None | The wrong line | Balance |
+| 8 | 0–10 | First 4 notches | Where it levels | Balance, Undo |
 | 9 | 0–10 | First 4 notches | Where it levels | All three |
 | 10 | 0–15 | None | The matching story | All three |
-| 11 | 0–30 | First 4 notches | x under 100, 100–300 or over 300 | Balance, Undo |
+| 11 | 0–300 in tens, ± for single steps | First 4 notches | x under 100, 100–300 or over 300 | Balance, Undo |
 | 12 | 0–10 each | First 4 notches | Where each levels | All three |
 | 13 | 0–10 | Whole dial, with the drum | The next dot | All three |
 
 **Line reveal.** The recording drum draws a dot for each x he tries, with the right-hand side as a level line. In `3x + 5 = 20`, x = 3 to 7 gives 14, 17, 20, 23, 26. He pins the next dot before dragging, the dots form a straight line, and it crosses the level line at the answer. The second equation draws a falling line. Only then does the explanation appear: "linearna" comes from "linija".
+
+**Rules from the playtests (2026-11-06).** Luka's and his son's first plays of rooms 1–4 set these for every room:
+
+- **One x.** The slider is the only x. The scale is always weighed at it, and every room's slider reaches its answer.
+- **One new idea per room.** It arrives with a short tag the first time it is needed (a handover), and the hint button is always there.
+- **Balance acts on both sides.** Every Balance move does. A goal banner shows the target, x alone. In a room whose ways don't include Try values, `x = n` counts only after a simplified line.
+- **Pictures mean one thing.** Every minus is a balloon, the pieces show `x` and never a number, and a prediction is a flag.
+- **The last two lines are blanks.** The answer and the check come as blanks in Balance's `auto` rooms, so the step from the machine to the notebook is always the same.
 
 **Difficulty pacing.** Numbers stay small until each idea has landed. Room 11 is the deliberate hard point. Equations from the paper test, before or after, must not appear in any room, compared up to swapped sides and the order of terms.
 
