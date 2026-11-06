@@ -1,6 +1,7 @@
 // The store's shapes (architecture, State Management). One store holds the whole game;
 // every change goes through dispatch, which calls the pure root reducer with ctx.
 
+import type { Economy } from '@/economy/types';
 import type { FirstUseId, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
@@ -53,6 +54,11 @@ export interface SaveState {
     /** Controls he has met, so each wiggles only the first time (Pattern 2, First use). */
     firstUse: FirstUseId[];
   };
+  /**
+   * Parts, upgrades and piles (`createEconomy()`). From story 1.14 a right prediction pays
+   * into it, once per stage (economy/predictions.ts); fights spend it from epic 3.
+   */
+  economy: Economy;
 }
 
 /**

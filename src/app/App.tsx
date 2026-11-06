@@ -4,6 +4,7 @@ import { PortraitOverlay } from '@/app/PortraitOverlay';
 import { ToBeContinued } from '@/app/ToBeContinued';
 import { useGame } from '@/store/store';
 import type { Screen } from '@/store/types';
+import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
 import { Notebook } from '@/ui/notebook/Notebook';
@@ -16,8 +17,9 @@ const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : nu
 // Landscape layout: the scene on the left and the notebook beside it on the tablet; on a
 // phone the notebook slides over the scene (ui/notebook/notebook.css). The canvas fills
 // the scene area and SceneRoot scales the scene to fit. The reset control sits in the
-// scene area's corner, and the pin's confirm control in the opposite corner while a pin
-// waits to be confirmed. The clock ticks for as long as the game is open.
+// scene area's top-left corner and the parts counter in its bottom-left; the pin's confirm
+// control sits beside the pin's head while a pin waits to be confirmed. The clock ticks for
+// as long as the game is open.
 //
 // The screen is a field in the store: after room 4's restart the placeholder "to be
 // continued" screen takes the scene's and notebook's place (story 1.13), and the scene
@@ -46,7 +48,10 @@ export function AppScreen({ screen }: { screen: Screen }) {
   );
 }
 
-/** A room in play: the scene, with its reset and pin controls, and the notebook beside it. */
+/**
+ * A room in play: the scene, with its reset and pin controls and the parts counter, and the
+ * notebook beside it.
+ */
 function RoomScreen() {
   const sceneAreaRef = useRef<HTMLDivElement>(null);
   return (
@@ -54,7 +59,8 @@ function RoomScreen() {
       <main className="scene-area" ref={sceneAreaRef}>
         <SceneRoot resizeTo={sceneAreaRef} />
         <ResetButton />
-        <PinConfirm />
+        <PinConfirm area={sceneAreaRef} />
+        <PartsCounter area={sceneAreaRef} />
       </main>
       <Notebook />
     </>

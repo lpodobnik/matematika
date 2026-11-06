@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { createEconomy } from '@/economy/parts';
 import { tokenFromChar } from '@/math/tokens';
 import { dialView } from '@/room/dial';
 import { machineView } from '@/room/machine';
@@ -543,7 +544,7 @@ describe('predict before the dial opens (story 1.9)', () => {
     return { store, seen, act, solve, presented, stage: () => store.getState().room?.stage };
   }
 
-  it('pokes 6–9, pins, confirms, levels the pans at 14 and locks: room 3, stage 1', () => {
+  it('pokes 6–9, pins, confirms, and the machine tests the pin at 14: room 3, stage 1', () => {
     const game = inRoomThree();
     game.act({ type: 'machine/touch' });
     expect(game.stage()?.phase).toBe('poke');
@@ -554,16 +555,29 @@ describe('predict before the dial opens (story 1.9)', () => {
     game.act({ type: 'pin/set', value: { kind: 'x', x: 13 } });
     game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
     expect(game.stage()).toMatchObject({ phase: 'pin', dialX: 9 });
+    // Story 1.14: the dial keeps turning inside its window while he pins.
     game.act({ type: 'dial/set', x: 8 });
-    expect(game.stage()?.dialX).toBe(9);
-    game.act({ type: 'pin/confirm' });
-    expect(game.stage()).toMatchObject({ phase: 'open', dialOpen: { min: 6, max: 20 } });
+    game.act({ type: 'dial/set', x: 10 });
+    expect(game.stage()?.dialX).toBe(8);
     game.seen.length = 0;
+    game.act({ type: 'pin/confirm' });
+    expect(game.stage()).toMatchObject({
+      phase: 'open',
+      dialOpen: { min: 6, max: 20 },
+      dialX: 14,
+    });
+    expect(game.seen).toEqual([{ type: 'PredictionMade', roomId: 'r03', stage: 0, right: true }]);
+    expect(game.store.getState().save.economy).toMatchObject({
+      parts: tuning.predictionParts,
+      paidPredictions: ['r03:0'],
+    });
+    game.seen.length = 0;
+    game.act({ type: 'dial/set', x: 13 });
     game.act({ type: 'dial/set', x: 14 });
     expect(game.seen).toEqual([
+      { type: 'DialNotch', x: 13 },
       { type: 'DialNotch', x: 14 },
       { type: 'PansLevel', roomId: 'r03', stage: 0, x: 14 },
-      { type: 'PredictionMade', roomId: 'r03', stage: 0, right: true },
     ]);
     game.solve('14');
     expect(game.stage()?.phase).toBe('locked');
@@ -597,27 +611,30 @@ describe('predict before the dial opens (story 1.9)', () => {
     game.act({ type: 'machine/touch' });
     game.act({ type: 'pin/set', value: { kind: 'x', x: 11 } });
     game.act({ type: 'pin/confirm' });
-    game.act({ type: 'dial/set', x: 12 });
-    game.act({ type: 'stage/reset' });
-    expect(game.stage()).toMatchObject({
-      phase: 'open',
-      dialX: 6,
-      dialOpen: { min: 6, max: 20 },
-      pin: { value: { kind: 'x', x: 11 }, locked: true, resolved: false },
-    });
-    game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
-    expect(game.stage()?.pin?.value).toEqual({ kind: 'x', x: 11 });
-    game.seen.length = 0;
-    game.act({ type: 'dial/set', x: 14 });
     expect(game.seen.at(-1)).toEqual({
       type: 'PredictionMade',
       roomId: 'r03',
       stage: 0,
       right: false,
     });
+    game.act({ type: 'dial/set', x: 12 });
+    game.act({ type: 'stage/reset' });
+    expect(game.stage()).toMatchObject({
+      phase: 'open',
+      dialX: 6,
+      dialOpen: { min: 6, max: 20 },
+      pin: { value: { kind: 'x', x: 11 }, locked: true, resolved: true },
+    });
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
+    expect(game.stage()?.pin?.value).toEqual({ kind: 'x', x: 11 });
+    game.seen.length = 0;
+    game.act({ type: 'dial/set', x: 14 });
+    expect(game.seen.map((event) => event.type)).toEqual(['DialNotch', 'PansLevel']);
+    // A wrong pin costs nothing and pays nothing.
+    expect(game.store.getState().save.economy.parts).toBe(0);
   });
 
-  it('pins a direction before the dial moves in stage 2, then resolves it on the first notch', () => {
+  it('pins a direction before the dial moves in stage 2; the machine turns it 3 notches', () => {
     const game = inRoomThree(1);
     game.act({ type: 'dial/set', x: 1 });
     expect(game.stage()?.dialX).toBe(0);
@@ -626,13 +643,42 @@ describe('predict before the dial opens (story 1.9)', () => {
     game.act({ type: 'dial/set', x: 1 });
     expect(game.stage()?.dialX).toBe(0);
     game.act({ type: 'pin/set', value: { kind: 'choice', index: 1 } });
-    game.act({ type: 'pin/confirm' });
-    game.seen.length = 0;
     game.act({ type: 'dial/set', x: 1 });
-    expect(game.seen).toEqual([
-      { type: 'DialNotch', x: 1 },
-      { type: 'PredictionMade', roomId: 'r03', stage: 1, right: true },
-    ]);
+    expect(game.stage()?.dialX).toBe(0);
+    game.seen.length = 0;
+    game.act({ type: 'pin/confirm' });
+    expect(game.seen).toEqual([{ type: 'PredictionMade', roomId: 'r03', stage: 1, right: true }]);
+    expect(game.stage()).toMatchObject({ phase: 'open', dialX: tuning.pinEffectTestNotches });
+    game.seen.length = 0;
+    game.act({ type: 'dial/set', x: 4 });
+    expect(game.seen).toEqual([{ type: 'DialNotch', x: 4 }]);
+  });
+
+  it('pays 2 parts for a right pin once per stage, and nothing for a wrong one (story 1.14)', () => {
+    const game = inRoomThree();
+    const economy = () => game.store.getState().save.economy;
+    expect(economy()).toEqual(createEconomy());
+    game.act({ type: 'machine/touch' });
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
+    game.act({ type: 'pin/confirm' });
+    expect(economy()).toMatchObject({ parts: 2, paidPredictions: ['r03:0'] });
+    // Reset keeps the locked pin, so there is nothing to pin again in this stage…
+    game.act({ type: 'stage/reset' });
+    game.act({ type: 'pin/confirm' });
+    expect(economy()).toMatchObject({ parts: 2, paidPredictions: ['r03:0'] });
+    // …and entering the stage afresh and pinning right again earns nothing more.
+    game.act({ type: 'room/enter', roomId: 'r03' });
+    game.act({ type: 'machine/touch' });
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
+    game.act({ type: 'pin/confirm' });
+    expect(economy()).toMatchObject({ parts: 2, paidPredictions: ['r03:0'] });
+    // A wrong pin in the next stage changes nothing.
+    game.act({ type: 'room/enter', roomId: 'r03', stage: 1 });
+    game.act({ type: 'machine/touch' });
+    game.act({ type: 'pin/set', value: { kind: 'choice', index: 0 } });
+    const before = game.store.getState().save;
+    game.act({ type: 'pin/confirm' });
+    expect(game.store.getState().save).toBe(before);
   });
 
   it('earns Balance when room 3 restarts, held in memory until saving arrives', () => {
@@ -675,7 +721,7 @@ describe('balance with the tray (story 1.10)', () => {
       effects: [(event) => seen.push(event)],
       initialState: {
         ...initial,
-        save: { progress: { tools: ['balance'], firstUse: ['pin'] } },
+        save: { ...initialGameState().save, progress: { tools: ['balance'], firstUse: ['pin'] } },
       },
     });
     const act = (action: Action) => store.getState().dispatch(action);
@@ -795,7 +841,10 @@ describe('split both pans (story 1.11)', () => {
       effects: [(event) => seen.push(event)],
       initialState: {
         ...initial,
-        save: { progress: { tools: ['balance'], firstUse: ['pin', 'tray'] } },
+        save: {
+          ...initialGameState().save,
+          progress: { tools: ['balance'], firstUse: ['pin', 'tray'] },
+        },
       },
     });
     const act = (action: Action) => store.getState().dispatch(action);

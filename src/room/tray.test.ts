@@ -395,8 +395,9 @@ describe('exploratory moves are free and reversible', () => {
     expect(shown(turned.room)).toBe('2x + 5 = 5');
     const level = step(setDial(turned.room, 0));
     expect(level.events).toContainEqual({ type: 'PansLevel', roomId: 'r04', stage: 0, x: 0 });
-    // Levelling elsewhere than at the stage's solution doesn't resolve the pin.
-    expect(level.room.stage.pin?.resolved).toBe(false);
+    // The pin resolved when he confirmed it (story 1.14): levelling the pans never does.
+    expect(level.events.map((event) => event.type)).not.toContain('PredictionMade');
+    expect(level.room.stage.pin).toEqual(waterWheel().stage.pin);
   });
 });
 

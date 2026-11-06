@@ -1,29 +1,35 @@
 // The prediction pin (architecture, Pattern 2: poke, pin, resolution, reset; GDD,
-// Prediction). Pure: where the pin can go, what dragging and confirming it do, and when it
-// resolves.
+// Prediction). Pure: where the pin can go, what dragging and confirming it do, and how the
+// machine tests it.
 //
 //   poke        the dial turns only over its poke window (room/room.ts); the pin waits in
 //               its holder, and the first time the game offers it, it wiggles once
 //               (room/first-use.ts)
 //   pin         his first drag puts the pin on its track (`pin/set`): the stage goes to
-//               `pin` and the dial freezes; a second drag moves it; confirming
-//               (`pin/confirm`) locks it, opens the dial's full range and turns the
-//               notebook on (`open`)
-//   resolution  once per stage: a `level-x` pin when the dial levels the pans at the stage's
-//               solution; an `effect` pin about direction on the first dial notch after it
-//               is locked (with `resolvesOn: 'level'`, as a level-x pin); and any pin still
-//               unresolved when the stage locks. `PredictionMade` says whether it was right.
+//               `pin`, and the dial keeps turning inside the poke window (room/dial.ts); a
+//               second drag moves it
+//   confirm     (`pin/confirm`) locks it, opens the dial's full range and the stage, so the
+//               notebook turns on, and resolves it at once: `PredictionMade` says whether
+//               it was right. The machine tests it: it turns the dial itself to a `level-x`
+//               pin's x (or, beyond the dial, the scene has the pans weigh that x for a
+//               moment), or up `tuning.pinEffectTestNotches` notches for an `effect` pin.
+//               A dial the machine turns fires no `DialNotch`, `PansLevel` or `WayUsed`:
+//               it is neither his exploring nor his way (story 1.14).
+//   lock        a pin still unresolved when the stage locks resolves then; a safety only,
+//               since confirming resolves every pin.
 //
 // A stage with a pin but no poke window (room 3's second stage) opens straight into `pin`,
-// so the dial doesn't move before he pins. A wrong pin costs nothing; parts for a right one
-// come in epic 3.
+// so the dial doesn't move before he pins. A wrong pin costs nothing; the root reducer pays
+// parts for a right one (store/reducer.ts), so this file knows nothing of the economy.
 
+import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
 import { stageSolution } from '@/math/check';
 import type { Equation } from '@/math/expr';
 import { formatNumber } from '@/math/format';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
+import { isOnDial } from '@/room/dial';
 import type { RoomEvent } from '@/room/events';
 import { currentStageSpec, fullDial, machineEquation, type RoomStep } from '@/room/room';
 import type {
@@ -124,9 +130,9 @@ function withStage(room: RoomState, stage: StageState): RoomState {
 
 /**
  * Puts the pin on a place of its track (`pin/set`): the first time, the stage goes from
- * `poke` to `pin` and the dial freezes; after that it moves the pin. The UI sends it once
- * per place, as he drags. Null, so the action is ignored, when the pin isn't offered, the
- * value isn't on its track, or the pin is already there.
+ * `poke` to `pin`, and the dial keeps turning inside its poke window; after that it moves
+ * the pin. The UI sends it once per place, as he drags. Null, so the action is ignored,
+ * when the pin isn't offered, the value isn't on its track, or the pin is already there.
  */
 export function setPin(room: RoomState, value: PinValue): RoomStep | null {
   if (!pinOffered(room)) return null;
@@ -141,20 +147,44 @@ export function setPin(room: RoomState, value: PinValue): RoomStep | null {
 }
 
 /**
+ * Where the machine turns the dial to test a pin he confirms (story 1.14): to a `level-x`
+ * pin's x when the dial reaches it, up `tuning.pinEffectTestNotches` notches from where it
+ * is for an `effect` pin (never past the dial's maximum), and nowhere for a pin beyond the
+ * dial, whose x the scene has the pans weigh instead (`pinRevealX`).
+ */
+export function machineTestX(stage: StageSpec, dialX: number, value: PinValue): number {
+  const { dial, pin } = stage;
+  if (dial === 'locked') return dialX;
+  if (pin?.kind === 'level-x' && value.kind === 'x') {
+    return isOnDial(dial, value.x) ? value.x : dialX;
+  }
+  if (pin?.kind === 'effect') {
+    return Math.min(dial.max, dialX + tuning.pinEffectTestNotches * dial.step);
+  }
+  return dialX;
+}
+
+/**
  * Confirms the pin where it is (`pin/confirm`): it locks, the dial's full range opens and
- * the stage opens, so the notebook turns on. Null unless the stage is in `pin` with the pin
+ * the stage opens, so the notebook turns on. The machine tests the pin at once: it turns
+ * the dial itself (`machineTestX`), which fires no dial events, and the pin resolves, with
+ * `PredictionMade`. The scene plays the test out: the knob moves there notch by notch, or
+ * the pans weigh the pin's x beyond the dial. Null unless the stage is in `pin` with the pin
  * placed.
  */
 export function confirmPin(room: RoomState): RoomStep | null {
   const { stage } = room;
   if (stage.phase !== 'pin' || !stage.pin || stage.pin.locked) return null;
+  const spec = currentStageSpec(room);
   const opened: StageState = {
     ...stage,
     phase: 'open',
     pin: { ...stage.pin, locked: true },
-    dialOpen: fullDial(currentStageSpec(room)),
+    dialOpen: fullDial(spec),
+    dialX: machineTestX(spec, stage.dialX, stage.pin.value),
   };
-  return { room: withStage(room, opened), events: [] };
+  const confirmed = withStage(room, opened);
+  return resolvePin(confirmed) ?? { room: confirmed, events: [] };
 }
 
 /**
@@ -185,32 +215,16 @@ export function pinRight(stage: StageSpec, machine: number, value: PinValue): bo
 }
 
 /**
- * What can resolve a locked pin: the dial levelling the pans at the stage's solution, a
- * dial notch, or the stage locking.
+ * Resolves the stage's pin, once: the pin shows whether it was right, and `PredictionMade`
+ * says so. Confirming the pin calls it, and so does the stage locking, as a safety for a
+ * pin that is somehow still unresolved then. Null when nothing resolves: no pin, not
+ * locked yet, or already resolved.
  */
-export type PinTrigger = 'level' | 'notch' | 'lock';
-
-function resolvesOn(pin: PinSpec, trigger: PinTrigger): boolean {
-  if (trigger === 'lock') return true;
-  if (pin.kind === 'level-x') return trigger === 'level';
-  if (pin.kind === 'effect') {
-    return trigger === (pin.resolvesOn === 'first-notch' ? 'notch' : 'level');
-  }
-  return false;
-}
-
-/**
- * Resolves the stage's pin, once, when the trigger is its own: the pin shows whether it
- * was right, and `PredictionMade` says so. Null when nothing resolves: no pin, not locked
- * yet, already resolved, or not its trigger.
- */
-export function resolvePin(room: RoomState, trigger: PinTrigger): RoomStep | null {
+export function resolvePin(room: RoomState): RoomStep | null {
   const spec = currentStageSpec(room);
   const { stage } = room;
   const { pin } = stage;
-  if (!spec.pin || !pin?.locked || pin.resolved || !resolvesOn(spec.pin, trigger)) {
-    return null;
-  }
+  if (!spec.pin || !pin?.locked || pin.resolved) return null;
   const right = pinRight(spec, stage.machine, pin.value);
   const events: RoomEvent[] = [
     { type: 'PredictionMade', roomId: room.spec.id, stage: room.stageIndex, right },
@@ -218,20 +232,35 @@ export function resolvePin(room: RoomState, trigger: PinTrigger): RoomStep | nul
   return { room: withStage(room, { ...stage, pin: { ...pin, resolved: true } }), events };
 }
 
-/** The pin's x when it is a wrong x pin that has resolved: the pans briefly show its tilt. */
+/**
+ * The pin's x when it is an x pin beyond the dial that has resolved, right or wrong: the
+ * dial can't go there, so the pans briefly weigh that x instead (story 1.14). Null for a
+ * pin the dial reaches, which the machine tests by turning the dial, and for a choice pin.
+ */
 export function pinRevealX(room: RoomState): number | null {
   const { pin } = room.stage;
-  if (!pin?.resolved || pin.value.kind !== 'x') return null;
-  return pinRight(currentStageSpec(room), room.stage.machine, pin.value) ? null : pin.value.x;
+  const { dial } = currentStageSpec(room);
+  if (!pin?.resolved || pin.value.kind !== 'x' || dial === 'locked') return null;
+  return isOnDial(dial, pin.value.x) ? null : pin.value.x;
 }
 
 function resultOf(right: boolean): 'right' | 'wrong' {
   return right ? 'right' : 'wrong';
 }
 
+/**
+ * The pin kinds the engine places so far; they are also the keys of their questions in
+ * `hr.pin.questions`.
+ */
+export type PinQuestion = Extract<PinSpec['kind'], 'level-x' | 'effect'>;
+
 /** What the pin shows. Flat, for selectors. */
 export interface PinView {
   kind: PinTrack['kind'];
+  /** Which question its tag asks (`hr.pin.questions`). */
+  question: PinQuestion;
+  /** Its tag hangs on the holder with the question: while it is offered, until confirmed. */
+  asks: boolean;
   /** How many places the track has… */
   slots: number;
   /** …and how many of them the dial reaches; the rest lie beyond it. */
@@ -262,7 +291,8 @@ export function pinView(room: RoomState | null): PinView | null {
   if (!room) return null;
   const spec = currentStageSpec(room);
   const track = pinTrack(spec);
-  if (!track) return null;
+  const question = spec.pin?.kind;
+  if (!track || (question !== 'level-x' && question !== 'effect')) return null;
   const { stage } = room;
   const offered = pinOffered(room);
   if (!offered && !stage.pin) return null;
@@ -271,6 +301,8 @@ export function pinView(room: RoomState | null): PinView | null {
   const resolved = stage.pin?.resolved ?? false;
   return {
     kind: track.kind,
+    question,
+    asks: offered,
     slots: slotCount(track),
     reach: slotsInReach(track),
     slot,

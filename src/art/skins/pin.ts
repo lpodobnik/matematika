@@ -9,6 +9,8 @@
 //   light     a right pin: a flame in its head and rays around it, like a lit lamp, because
 //             a right call is part of the machine starting
 //   holder    the cradle the pin waits in before he drags it on
+//   tag       the paper tag with the pin's question (story 1.14): a card with clipped
+//             corners and a punched hole, on a string tied to the holder or to a nail
 //   beyond    the marks of places past the dial's end, fainter than the dial's own ticks
 //
 // The pin is drawn with its origin at its x on the dial's band; y is the scene's.
@@ -21,6 +23,16 @@ export interface PinShape {
   tipY: number;
   headY: number;
   headRadius: number;
+  lineWidth: number;
+}
+
+/** The question tag's card, its hole, and where its string is tied, in scene units. */
+export interface TagShape {
+  box: { x: number; y: number; width: number; height: number };
+  hole: { x: number; y: number };
+  tie: { x: number; y: number };
+  /** Tied to a nail on the wall, not to the holder. */
+  nail: boolean;
   lineWidth: number;
 }
 
@@ -114,6 +126,35 @@ export const pinSkin = {
       color: palette.ink,
       alpha: 0.6,
     });
+  },
+
+  /** The question tag: its card, the hole punched in it, and its string to the tie. */
+  tag(g: Graphics, shape: TagShape): void {
+    g.clear();
+    const { box, hole, tie, nail, lineWidth } = shape;
+    const { x, y, width: w, height: h } = box;
+    const c = Math.min(w, h) * 0.14;
+    // The card's eight corners: a rectangle with its corners clipped.
+    const corners = [
+      [x + c, y],
+      [x + w - c, y],
+      [x + w, y + c],
+      [x + w, y + h - c],
+      [x + w - c, y + h],
+      [x + c, y + h],
+      [x, y + h - c],
+      [x, y + c],
+    ];
+    g.poly(corners.flat())
+      .fill({ color: palette.paper })
+      .stroke({ width: lineWidth, color: palette.ink });
+    g.circle(hole.x, hole.y, lineWidth * 1.75)
+      .fill({ color: palette.ink, alpha: 0.12 })
+      .stroke({ width: lineWidth * 0.75, color: palette.ink });
+    g.moveTo(hole.x, hole.y)
+      .lineTo(tie.x, tie.y)
+      .stroke({ width: lineWidth * 0.75, color: palette.ink, alpha: 0.8 });
+    if (nail) g.circle(tie.x, tie.y, lineWidth * 1.5).fill({ color: palette.ink });
   },
 
   /**

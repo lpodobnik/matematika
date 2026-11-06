@@ -15,13 +15,25 @@ export const hr = {
     reset: 'Ispočetka',
   },
   pin: {
-    /** Confirms the prediction pin where it is: it locks, and the dial opens. */
+    /** Confirms the prediction pin where it is: it locks, and the machine tests it. */
     confirm: 'Potvrdi',
+    /**
+     * The question on the tag that hangs on the pin's holder while the pin is offered (story
+     * 1.14), by pin kind: where the pans level, or what the pan holding x does as x grows.
+     */
+    questions: {
+      'level-x': 'Gdje će se vaga uravnotežiti?',
+      effect: 'Kad x raste, ide li zdjelica s x gore ili dolje?',
+    },
     /** An effect pin's options (room 3): what the pan holding x does as x grows. */
     options: {
       'pan-down': 'Kad x raste, zdjela se spušta.',
       'pan-up': 'Kad x raste, zdjela se diže.',
     },
+  },
+  parts: {
+    /** The parts counter in the scene's corner, read out with its number. */
+    label: 'Dijelovi',
   },
   notebook: {
     label: 'Bilježnica',

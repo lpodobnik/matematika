@@ -161,7 +161,7 @@ function wiredTray() {
     effects: [(event) => events.push(event)],
     initialState: {
       ...initialGameState(),
-      save: { progress: { tools: ['balance'], firstUse: [] } },
+      save: { ...initialGameState().save, progress: { tools: ['balance'], firstUse: [] } },
     },
   });
   const act = (action: Action) => store.getState().dispatch(action);

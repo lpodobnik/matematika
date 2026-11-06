@@ -192,7 +192,8 @@ export function lineProgress(verdict: Verdict): boolean {
  *   when he fills blanks, the next template comes up). The pans take the line's layout and
  *   act it out; the machine moves on; `jamsInARow` resets. The check line locks the stage
  *   (`StageLocked`), and the machine starts presenting the lock at `now` (ctx.now; see
- *   room/phases.ts). A locked pin that hasn't resolved yet resolves then (`PredictionMade`).
+ *   room/phases.ts). A locked pin that is somehow still unresolved resolves then
+ *   (`PredictionMade`); confirming it normally has (room/pin.ts).
  * Acting out never fires `PansLevel`: only the dial does. Null when the notebook is off,
  * or while the machine is jammed (only an edit clears a line jam).
  */
@@ -231,7 +232,7 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
   const committed = withStage(room, next);
   if (!locks) return { room: committed, events, verdict };
   events.push({ type: 'StageLocked', ...at });
-  const resolved = resolvePin(committed, 'lock');
+  const resolved = resolvePin(committed);
   if (!resolved) return { room: committed, events, verdict };
   return { room: resolved.room, events: [...events, ...resolved.events], verdict };
 }

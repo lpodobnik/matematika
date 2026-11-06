@@ -102,7 +102,9 @@ export type PinSpec =
   | { kind: 'story-choice' }
   | { kind: 'range'; bounds: number[] } // room 11: under 100, 100–300, over 300
   | { kind: 'next-dot' } // the drum
-  | { kind: 'effect'; options: EffectOption[]; resolvesOn: 'first-notch' | 'level' }; // options are text keys
+  // options are text keys. `resolvesOn` is no longer read: since story 1.14 every pin
+  // resolves on confirm, and the machine tests it (room/pin.ts).
+  | { kind: 'effect'; options: EffectOption[]; resolvesOn: 'first-notch' | 'level' };
 
 /** Where he put the pin: an x on the track, a line, an option, or a range's bucket. */
 export type PinValue =
@@ -113,7 +115,7 @@ export type PinValue =
 
 /**
  * The prediction pin once he has put it somewhere (Pattern 2): it moves until he confirms
- * it (`locked`), and resolves once, when its result shows or the stage locks.
+ * it (`locked`), and resolves once, as he confirms it (or, as a safety, when the stage locks).
  */
 export interface PinState {
   value: PinValue;
@@ -149,7 +151,8 @@ export type Jam = { kind: 'line' } | { kind: 'split'; parts: number };
 /**
  * The stage in play: the part of Pattern 2's `StageState` that the scale, the dial, the
  * pin, the notebook, the machine and the room's phases need so far. Epic 2 adds the rest
- * of the hints (`lastActionAt`), epic 3 paying for predictions, epic 4 the drum.
+ * of the hints (`lastActionAt`), epic 4 the drum. Paying for a right prediction is the root
+ * reducer's, in `save.economy.paidPredictions` (story 1.14).
  */
 export interface StageState {
   phase: Phase;

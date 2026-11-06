@@ -8,7 +8,7 @@ export interface Economy {
   /** Unspent parts. Parts already spent are safe from losing. */
   parts: number;
   upgrades: UpgradeId[];
-  /** Stages whose right prediction has paid, such as `"r05:1"` (epic 3, not built yet). */
+  /** Stages whose right prediction has paid, such as `"r03:0"` (economy/predictions.ts). */
   paidPredictions: string[];
   /** Parts dropped at each automaton by losing to it. */
   piles: Partial<Record<LairId, number>>;

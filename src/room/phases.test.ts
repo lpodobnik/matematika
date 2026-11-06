@@ -320,7 +320,8 @@ describe('reset with a pin (Pattern 2)', () => {
     room = step(enterLine(step(typeToken(room, '9')).room, 0)).room; // x = 9 jams
     const reset = step(resetStage(room)).room;
     expect(reset.stage.phase).toBe('open');
-    expect(reset.stage.pin).toEqual({ value: x(12), locked: true, resolved: false });
+    // It resolved as he confirmed it (story 1.14), and stays resolved.
+    expect(reset.stage.pin).toEqual({ value: x(12), locked: true, resolved: true });
     expect(reset.stage.dialOpen).toEqual({ min: 6, max: 20 });
     expect(reset.stage.dialX).toBe(6);
     expect(reset.stage.jam).toBeNull();
@@ -332,11 +333,13 @@ describe('reset with a pin (Pattern 2)', () => {
 
   it('keeps a resolved pin resolved, so it resolves only once per stage', () => {
     let room = step(confirmPin(step(setPin(poking(), x(14))).room)).room;
-    room = step(setDial(room, 14)).room;
+    room = step(setDial(room, 15)).room;
     const reset = step(resetStage(room));
     expect(reset.room.stage.pin).toEqual({ value: x(14), locked: true, resolved: true });
+    expect(reset.room.stage.dialX).toBe(6);
     const levelled = step(setDial(reset.room, 14));
     expect(levelled.events.map((event) => event.type)).toEqual(['DialNotch', 'PansLevel']);
+    expect(confirmPin(reset.room)).toBeNull();
   });
 
   it('puts a pin he had not confirmed back in its holder, and the stage back in poke', () => {

@@ -29,6 +29,15 @@ export const tuning = {
    * never reports done ends after this long, so a missed animation event never strands the
    * game. Longer than either animation (ui/scene/machine/layout.ts). */
   presentationTimeoutMs: 8000,
+  /** Architecture, Pattern 2 (Resolution; story 1.14): on confirm the machine tests the
+   * pin by turning the dial itself, one notch this often… */
+  pinTestNotchMs: 120,
+  /** …a pin beyond the dial has the pans weigh its x for this long instead… */
+  pinRevealMs: 1600,
+  /** …and a direction pin turns the dial up this many notches from where it is. */
+  pinEffectTestNotches: 3,
+  /** GDD, Prediction: a right pin pays this many parts, once per stage. */
+  predictionParts: 2,
   /** Architecture, Balance moves: the tray's weight and float are numbered 1 to this. */
   trayMaxNumber: 99,
   /** The tray's − and + repeat when held: the first repeat after this long… */

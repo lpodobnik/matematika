@@ -228,7 +228,8 @@ describe('the tablet profile (story 1.13)', () => {
     const room = state.room as RoomState;
     expect(room.spec.id).toBe('r04');
     expect(room.stage.phase).toBe('open');
-    expect(room.stage.pin).toEqual({ value: { kind: 'x', x: 9 }, locked: true, resolved: false });
+    // Since story 1.14 the pin resolves as it is confirmed, and its parts are paid.
+    expect(room.stage.pin).toEqual({ value: { kind: 'x', x: 9 }, locked: true, resolved: true });
     expect(dialView(room)).toMatchObject({ min: 0, max: 6, openMin: 0, openMax: 6, turns: true });
     expect(state.save.progress.tools).toEqual(['balance']);
     expect(state.ui.copies).toBe(3);

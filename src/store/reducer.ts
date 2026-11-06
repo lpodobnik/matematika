@@ -4,6 +4,8 @@
 
 import { castDraft, produce } from 'immer';
 import { rooms } from '@/content/rooms';
+import { createEconomy } from '@/economy/parts';
+import { payPrediction, predictionKey } from '@/economy/predictions';
 import { assert } from '@/lib/assert';
 import { setDial } from '@/room/dial';
 import { meetControls } from '@/room/first-use';
@@ -29,7 +31,7 @@ import type { GameState, Reduce, SaveState } from '@/store/types';
 
 export function initialGameState(): GameState {
   return {
-    save: { progress: { tools: [], firstUse: [] } },
+    save: { progress: { tools: [], firstUse: [] }, economy: createEconomy() },
     room: null,
     ui: { screen: 'room', notebookAside: false, quality: initialQuality, copies: 1 },
   };
@@ -144,6 +146,20 @@ function progress(step: RoomStep | null, save: SaveState): Progressed {
   };
 }
 
+/**
+ * A right prediction pays parts into `save.economy`, once per stage (GDD, Prediction; story
+ * 1.14). It is read off the room's `PredictionMade` events, so the room reducers know
+ * nothing of the economy.
+ */
+function payPredictions(events: readonly DomainEvent[], save: SaveState): SaveState {
+  let { economy } = save;
+  for (const event of events) {
+    if (event.type !== 'PredictionMade') continue;
+    economy = payPrediction(economy, predictionKey(event.roomId, event.stage), event.right);
+  }
+  return economy === save.economy ? save : { ...save, economy };
+}
+
 /** The dev panel sets the tools he has earned (architecture, Debug Tools). */
 function withTools(save: SaveState, tools: readonly ToolId[]): SaveState {
   return { ...save, progress: { ...save.progress, tools: [...new Set(tools)] } };
@@ -155,8 +171,10 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
     const before =
       action.type === 'dev/set-tools' ? withTools(state.save, action.tools) : state.save;
     const change = roomStep(state, action, ctx.now, roomList, before.progress.tools);
-    const { step, save } = progress(change, before);
+    const progressed = progress(change, before);
+    const { step } = progressed;
     const events: DomainEvent[] = step ? [...step.events] : [];
+    const save = payPredictions(events, progressed.save);
     const next = produce(state, (draft) => {
       if (step && step.room !== state.room) draft.room = castDraft(step.room);
       if (save !== state.save) draft.save = castDraft(save);

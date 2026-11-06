@@ -154,6 +154,9 @@ function SceneContent() {
   const { app, isInitialised } = useApplication();
   const sceneRef = useRef<Container>(null);
   const [sceneScale, setSceneScale] = useState(0);
+  // Where the scene's top-left corner sits in the scene area, in CSS px: the pin's question
+  // tag keeps clear of the HTML reset control in the area's corner.
+  const [sceneOrigin, setSceneOrigin] = useState<Point>({ x: 0, y: 0 });
   const dispatch = useGame((s) => s.dispatch);
   const copies = useGame((s) => s.ui.copies);
   const placements = useMemo(() => copyPlacements(copies), [copies]);
@@ -192,6 +195,9 @@ function SceneContent() {
       scene.scale.set(fit.scale);
       scene.position.set(fit.x, fit.y);
       setSceneScale(fit.scale);
+      setSceneOrigin((origin) =>
+        origin.x === fit.x && origin.y === fit.y ? origin : { x: fit.x, y: fit.y },
+      );
     };
     layout();
     renderer.on('resize', layout);
@@ -208,6 +214,7 @@ function SceneContent() {
           key={`copy-${index}`}
           placement={placement}
           sceneScale={sceneScale}
+          sceneOrigin={sceneOrigin}
           tools={placements.length === 1}
         />
       ))}
@@ -219,17 +226,20 @@ interface SceneCopyProps {
   placement: CopyPlacement;
   /** The whole scene's CSS px per scene unit. */
   sceneScale: number;
+  /** The scene's top-left corner in the scene area, in CSS px. */
+  sceneOrigin: Point;
   /** Whether the copy has the tray and the splitter: only when it is the only one. */
   tools: boolean;
 }
 
 /**
  * One copy of the scene: the paper, the machine, the scale, the dial, the pin and, when it
- * is the only copy, the tray and the splitter. Normally there is one, filling the scene. Its
- * drags and its `toScene` work in its own units, and its parts get its own CSS px per unit,
- * so a notch stays 24 CSS px in a copy drawn at a third of the size.
+ * is the only copy, the tray, the splitter and the pin's question tag. Normally there is
+ * one, filling the scene. Its drags and its `toScene` work in its own units, and its parts
+ * get its own CSS px per unit, so a notch stays 24 CSS px in a copy drawn at a third of the
+ * size.
  */
-function SceneCopy({ placement, sceneScale, tools }: SceneCopyProps) {
+function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps) {
   const copyRef = useRef<Container>(null);
   const drag = useMemo(() => createPieceDrag(), []);
   const splitterDrag = useMemo(() => createSplitterDrag(panUnder), []);
@@ -246,7 +256,9 @@ function SceneCopy({ placement, sceneScale, tools }: SceneCopyProps) {
       <Machine />
       <Scale sceneScale={copyScale} drag={drag} toScene={toScene} />
       <Dial sceneScale={copyScale} />
-      <Pin sceneScale={copyScale} />
+      {/* The pin's question tag keeps 20 CSS px text, so like the tools it is drawn only
+          when the copy is the only one. */}
+      <Pin sceneScale={copyScale} question={tools ? sceneOrigin : null} />
       {tools && <Tray sceneScale={copyScale} drag={drag} toScene={toScene} />}
       {tools && <Splitter sceneScale={copyScale} drag={splitterDrag} toScene={toScene} />}
     </pixiContainer>

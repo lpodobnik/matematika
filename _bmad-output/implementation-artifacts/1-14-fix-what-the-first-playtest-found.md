@@ -88,10 +88,10 @@ What was really happening, checked in the browser:
 - [ ] A1 door latch: `src/art/skins/machine.ts`, `src/ui/scene/machine/*`, `tuning.doorLiftBeforeLock` (AC 1)
 - [ ] A2 reducer slice: `src/art/skins/scale.ts`, `src/ui/scene/scale/Piece.tsx` and the label spots (AC 2)
 - [ ] A3 balloon: `src/art/skins/scale.ts`, the float's label (AC 3)
-- [ ] B1 question tag and clamp: `src/ui/scene/scale/Pin.tsx`, `src/art/skins/pin.ts`, `src/ui/scene/scale/Dial.tsx`, `src/art/skins/dial.ts`, `src/content/text/hr.ts` (AC 4)
-- [ ] B2 confirm beside the pin, dial in `pin`: `src/ui/common/PinConfirm.tsx`, `common.css`, `src/room/dial.ts`, `src/room/pin.ts` (AC 5)
-- [ ] B3 machine tests the pin: `src/room/pin.ts`, `src/ui/scene/scale/Scale.tsx`, `Dial.tsx`, tuning (AC 6)
-- [ ] B4 parts: `src/store/*`, a new `src/ui/common/PartsCounter.tsx`, tuning, hr.ts (AC 7)
+- [x] B1 question tag and clamp: `src/ui/scene/scale/Pin.tsx`, `src/art/skins/pin.ts`, `src/ui/scene/scale/Dial.tsx`, `src/art/skins/dial.ts`, `src/content/text/hr.ts` (AC 4)
+- [x] B2 confirm beside the pin, dial in `pin`: `src/ui/common/PinConfirm.tsx`, `common.css`, `src/room/dial.ts`, `src/room/pin.ts` (AC 5)
+- [x] B3 machine tests the pin: `src/room/pin.ts`, `src/ui/scene/scale/Scale.tsx`, `Dial.tsx`, tuning (AC 6)
+- [x] B4 parts: `src/store/*`, a new `src/ui/common/PartsCounter.tsx`, tuning, hr.ts (AC 7)
 - [ ] Merge `lane/1-14-art` into `epic-1`; checks green (AC 8)
 - [ ] One review, one fix pass
 - [ ] Browser check at 1280 × 800 and 640 × 360
@@ -123,3 +123,29 @@ What was really happening, checked in the browser:
 ## Dev Agent Record
 
 (Builders fill in Calls, the file list and check results here, one section per lane.)
+
+### Lane B (pin, parts; main checkout on `epic-1`)
+
+**Calls** (flag any for veto):
+- The question tag is placed by search, not a fixed spot: right above the holder with a short string down to its cradle when that is clear, else on the wall high on the left, hung from a nail (`pin-tag-layout.ts`). It keeps clear of the pans and readouts at every x the poke window reaches, the dial band, the pin's places and holder, the stand and needle, the machine and the reset control. Tablet: rooms 3.1 and 4 on the holder, 3.2 on the wall. 640 × 360: room 4 on the holder, rooms 3.1 and 3.2 on the wall, because 20 CSS px text has no room above the holder there.
+- The tag's text is 20 CSS px exactly (`ceil(20 / scale)` scene units), normal weight, and its width is estimated at 0.5 em a character (measured 0.39–0.48 in the browser).
+- The tag is not drawn in the dev panel's three-copy profile, like the tray and splitter: at a third of the scale, 20 CSS px text would cover the copies.
+- The tag may cross the beam (not one of the parts the AC protects); it never crosses the pans, the needle or the stand's post.
+- The holder stays drawn while the pin is offered, even with the pin placed, so the tag has something to hang on.
+- The clamp is a C-clamp with jaws above and below the track, a bar across it and a screw on top, on the first notch past the window. It lifts and fades out in 360 ms on confirm. The track past it is drawn at a quarter of its alpha.
+- Potvrdi is 132 × 56 CSS px, its bottom level with the pin head's bottom so it stays clear of the knob. An x pin's button goes on the side toward the dial's centre (clear of the readouts under the pans' outer halves); a choice pin's goes on the outer side (clear of the other option). It flips when there's no room, is clamped inside the scene area, and slides along as the pin moves place to place.
+- The machine's turn is detected in the UI by comparing the room just before and after the confirm (`pin-test.ts`), so the room state gains no presentation fields. Each consumer (knob, pans, pin, counter) runs the same timeline (`use-pin-test.ts`); frames change once per notch, never per animation frame.
+- Timeline: first notch after 120 ms, then one per 120 ms. The pin lights or dims 600 ms after the last notch (`pinTestRestMs`, a presentation constant, not tuning). A pin beyond the dial weighs its x for `pinRevealMs` and lights at 600 ms.
+- Grabbing the dial during a test dispatches `dial/set` at the knob's shown x, so his drag takes over from where the knob is and the test ends everywhere. That fires one `DialNotch` for his grab. The machine's own turn fires none.
+- An effect pin turns the dial up 3 notches clamped to the dial; with the dial already at its maximum nothing moves and the result shows at once.
+- `resolvePin` lost its trigger argument (confirm and lock both resolve). `PinSpec.effect.resolvesOn` is still in the type and room 3's data, but nothing reads it now. Main session: drop it from the architecture's PinSpec, the type and `r03` when you update Pattern 2.
+- `pinRevealMs` moved from `pin-layout.ts` into tuning. The reveal now covers any x pin beyond the dial, right or wrong. A wrong pin the dial reaches no longer reveals: the dial goes there.
+- Parts: `payPrediction` and `predictionKey` in a new `economy/predictions.ts`; the key is `${roomId}:${stageIndex}` (0-based, so room 3's first stage is `r03:0`). The root reducer reads `PredictionMade` events after the room step.
+- The counter (`PartsCounter.tsx`) shows `parts − flying`, so it ticks up only when the `+2` lands (900 ms CSS flight, rising 40 px then travelling). It has `pointer-events: none`, and is smaller on phones (44 px tall, 22 px text) to stay clear of the knob at notch 0. Under reduced motion the flight is hidden and the counter just ticks.
+- The scene's CSS-px offset (`fit.x`, `fit.y`) is now passed to Pin, so the tag can avoid the HTML reset control precisely.
+
+**Files changed:** `src/config/tuning.ts`, `src/content/text/hr.ts`, `src/room/{dial,pin,scale,notebook,phases,types,events}.ts`, `src/economy/{predictions.ts,predictions.test.ts,types.ts}`, `src/store/{reducer,types}.ts`, `src/art/skins/{pin,dial}.ts`, `src/ui/scene/SceneRoot.tsx`, `src/ui/scene/scale/{Pin,Dial,Scale}.tsx`, `src/ui/scene/scale/{pin-layout,pin-tag-layout,pin-test,use-pin-test}.ts`, `src/ui/common/{PinConfirm,PartsCounter}.tsx`, `src/ui/common/{scene-spots,use-area-size}.ts`, `src/ui/common/common.css`, `src/app/App.tsx`. Tests: new `pin-tag-layout.test.ts`, `pin-test.test.ts`, `scene-spots.test.ts`, `PartsCounter.test.tsx`, `predictions.test.ts`. Updated, with the replaced behaviour rewritten in place and commented: `room/pin.test.ts` (freezing dial, level and first-notch resolution, wrong-pin reveal), `room/dial.test.ts` (dial in `pin`), `room/phases.test.ts`, `room/tray.test.ts`, `store/store.test.ts`, `store/playthrough.test.ts` (new pin flow, no dial events on confirm, parts 0 → 4 → 6), `dev/dev-view.test.ts`, `art/skins/dial.test.ts` (clamp, faint track), `ui/common/PinConfirm.test.tsx`, `ui/scene/scale/pin-layout.test.ts`, and the `SaveState` literals in `piece-drag.test.ts` and `splitter-drag.test.ts`.
+
+**Checks:** `npm run check` clean (219 files). `npm test`: 88 files, 1652 passed, 2 skipped. `npm run build` passes (JS 0.32 MB gzipped). Browser (own server on 5310, since stopped) at 1280 × 800 and 640 × 360: rooms 3.1, 3.2 and 4. I saw the tag on the holder and on the wall, the clamp and faint track and the clamp lifting, the dial turning in `pin`, Potvrdi beside the head on both sides, the knob turning notch by notch with the pans following, the pin lighting and dimming, room 4 weighing 9, a grab mid-test taking over at the knob's x, the `+2` rising, and the counter going 0 → 2 → 4 → 6. No console errors after a fresh load.
+
+**Known, not fixed (phone only, 640 × 360):** with the pin on room 3.2's left option, Potvrdi covers the left pan's readout (there's no free spot beside the head). The counter covers the bottom of room 3.1's empty holder post (touches pass through). The phone notebook, when not pushed aside, still covers the right part of the pin track (as before this story).

@@ -1,10 +1,11 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { r03 } from '@/content/rooms/r03-sluice-gate';
 import * as q from '@/math/rational';
 import {
   type DialStep,
-  dialTurns,
+  dialTurnsIn,
   dialValue,
   dialView,
   isOnDial,
@@ -104,12 +105,24 @@ describe('dialView', () => {
     expect(dialView(roomWith('3x − 1 = 17', { dial: 'locked' }))).toBeNull();
   });
 
-  it('turns in arrive, poke and open, and holds still in pin and from locked on', () => {
-    const turning = (['arrive', 'poke', 'open'] as const).map(dialTurns);
-    const still = (['pin', 'locked', 'restart', 'done'] as const).map(dialTurns);
+  it('turns in arrive, poke and open, and holds still from locked on', () => {
+    const stage = roomOneStage;
+    const turning = (['arrive', 'poke', 'open'] as const).map((p) => dialTurnsIn(stage, p));
+    const still = (['locked', 'restart', 'done'] as const).map((p) => dialTurnsIn(stage, p));
     expect(turning).toEqual([true, true, true]);
-    expect(still).toEqual([false, false, false, false]);
-    expect(dialView(inPhase(enterRoom(r01).room, 'pin'))?.turns).toBe(false);
+    expect(still).toEqual([false, false, false]);
+  });
+
+  // Story 1.14 replaces "the pin freezes the dial": in pin the dial keeps turning inside its
+  // poke window. Only a stage with a pin and no poke window holds it still until confirm.
+  it('turns in pin inside a poke window, and holds still in pin without one', () => {
+    const [withWindow, withoutWindow] = r03.stages as [StageSpec, StageSpec];
+    expect(dialTurnsIn(withWindow, 'pin')).toBe(true);
+    expect(dialTurnsIn(withoutWindow, 'pin')).toBe(false);
+    expect(dialTurnsIn(withoutWindow, 'arrive')).toBe(false);
+    expect(dialTurnsIn(roomOneStage, 'pin')).toBe(false);
+    expect(dialView(inPhase(enterRoom(r03).room, 'pin'))?.turns).toBe(true);
+    expect(dialView(inPhase(enterRoom(r03, 1).room, 'pin'))?.turns).toBe(false);
   });
 });
 
@@ -165,14 +178,24 @@ describe('setDial', () => {
     expect(setDial(poked, 4)).toBeNull();
   });
 
-  it('holds still in pin and from locked on, and turns in arrive, poke and open', () => {
+  it('holds still from locked on, and turns in arrive, poke and open', () => {
     const room = enterRoom(r01).room;
-    for (const phase of ['pin', 'locked', 'restart', 'done'] as const) {
+    for (const phase of ['locked', 'restart', 'done'] as const) {
       expect(setDial(inPhase(room, phase), 5), phase).toBeNull();
     }
     for (const phase of ['arrive', 'poke', 'open'] as const) {
       expect(setDial(inPhase(room, phase), 5)?.room.stage.dialX, phase).toBe(5);
     }
+  });
+
+  it('turns in pin inside the poke window, firing its events as in poke (story 1.14)', () => {
+    const pinning = inPhase(enterRoom(r03).room, 'pin');
+    const step = setDial(pinning, 8);
+    expect(step?.room.stage.dialX).toBe(8);
+    expect(step?.room.stage.phase).toBe('pin');
+    expect(step?.events).toEqual([{ type: 'DialNotch', x: 8 }]);
+    expect(setDial(pinning, 10)).toBeNull();
+    expect(setDial(inPhase(enterRoom(r03, 1).room, 'pin'), 1)).toBeNull();
   });
 
   it('never moves a locked dial', () => {

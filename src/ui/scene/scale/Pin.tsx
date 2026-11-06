@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow';
 import { palette } from '@/art/palette';
 import { type PinShape, pinSkin } from '@/art/skins/pin';
+import { hr } from '@/content/text/hr';
 import { dialView, notchCount } from '@/room/dial';
 import { pinTrack, pinView, slotValue } from '@/room/pin';
 import { currentStageSpec } from '@/room/room';
@@ -21,12 +22,25 @@ import {
   pinWiggleMs,
   placeX,
 } from '@/ui/scene/scale/pin-layout';
+import {
+  type PinTagLayout,
+  pinTagLayout,
+  resetCorner,
+  tagObstacles,
+} from '@/ui/scene/scale/pin-tag-layout';
+import type { Point } from '@/ui/scene/scale/tray-layout';
+import { usePinTest } from '@/ui/scene/scale/use-pin-test';
 
 extend({ Container, Graphics, Text });
 
 interface Props {
   /** CSS px per scene unit: places and the hit area are sized in CSS px. */
   sceneScale: number;
+  /**
+   * Where the scene's top-left corner sits in the scene area, in CSS px, so the question
+   * tag keeps clear of the reset control there; null draws no tag (a copy of the scene).
+   */
+  question: Point | null;
 }
 
 /** A wrong pin fades back, with no penalty: it stays in view, dimmer than a right one. */
@@ -35,13 +49,18 @@ const wrongAlpha = 0.45;
 /**
  * The prediction pin (Pattern 2, Pin): it waits in a holder by the dial's track, he drags
  * it onto a place (an x over the dial's notches, or an option), drags it again to move it,
- * and confirms it with the confirm control (ui/common/PinConfirm.tsx). The first time the
- * game offers it, it wiggles once. Once it resolves, a right pin lights up like a lamp and
- * a wrong one dims. What it shows comes from `pinView`; the drag moves it through a ref,
- * and the store hears only a new place.
+ * and confirms it with the confirm control beside its head (ui/common/PinConfirm.tsx).
+ * While it is offered, a paper tag hangs on the holder with its question (story 1.14). The
+ * first time the game offers it, it wiggles once. When he confirms it, the machine tests it
+ * (use-pin-test.ts); once the pans come to rest, a right pin lights up like a lamp and a
+ * wrong one dims. What it shows comes from `pinView`; the drag moves it through a ref, and
+ * the store hears only a new place.
  */
-export function Pin({ sceneScale }: Props) {
+export function Pin({ sceneScale, question }: Props) {
   const view = useGame(useShallow((s) => pinView(s.room)));
+  const test = usePinTest();
+  const roomSpec = useGame((s) => s.room?.spec ?? null);
+  const stageIndex = useGame((s) => s.room?.stageIndex ?? 0);
   const track = useGame(useShallow((s) => (s.room ? pinTrack(currentStageSpec(s.room)) : null)));
   const notches = useGame((s) => {
     const dial = dialView(s.room);
@@ -164,15 +183,41 @@ export function Pin({ sceneScale }: Props) {
     return box ? new Rectangle(box.x, box.y, box.width, box.height) : null;
   }, [layout]);
 
+  const asks = (view?.asks ?? false) && question !== null;
+  const questionKey = view?.question ?? null;
+  const originX = question?.x ?? 0;
+  const originY = question?.y ?? 0;
+  const tag = useMemo(() => {
+    if (!asks || !layout || !roomSpec || !questionKey) return null;
+    const reset = resetCorner(sceneScale, { x: originX, y: originY });
+    const obstacles = tagObstacles(roomSpec, stageIndex, layout, slots, fontSize, reset);
+    return pinTagLayout(hr.pin.questions[questionKey], sceneScale, layout, obstacles);
+  }, [
+    asks,
+    layout,
+    roomSpec,
+    stageIndex,
+    questionKey,
+    slots,
+    fontSize,
+    sceneScale,
+    originX,
+    originY,
+  ]);
+
   if (!view || !layout || !shape || !handlers || !hitArea) return null;
+  // The machine is still testing the pin: its light or dimming waits until the pans rest.
+  const result = test.result ? view.result : null;
   return (
     <pixiContainer>
+      {tag && <QuestionTag tag={tag} lineWidth={layout.lineWidth} />}
       {view.kind === 'x' && <BeyondDial layout={layout} reach={view.reach} slots={view.slots} />}
       {track?.kind === 'choice' &&
         track.options.map((choice, i) => (
           <Place key={choice} layout={layout} slot={i} option={choice} />
         ))}
-      {view.slot === null && view.movable && (
+      {/* The holder stays while the pin is offered: the question tag hangs on it. */}
+      {view.movable && (
         <pixiContainer x={layout.holderX}>
           <pixiGraphics draw={drawHolder} />
         </pixiContainer>
@@ -180,7 +225,7 @@ export function Pin({ sceneScale }: Props) {
       {/* Placed through the drag controller's ref (sync settles it), never by a position prop. */}
       <pixiContainer
         ref={pinRef}
-        alpha={view.result === 'wrong' ? wrongAlpha : 1}
+        alpha={result === 'wrong' ? wrongAlpha : 1}
         eventMode={view.movable ? 'static' : 'none'}
         interactiveChildren={false}
         hitArea={hitArea}
@@ -192,12 +237,50 @@ export function Pin({ sceneScale }: Props) {
       >
         <pixiContainer ref={bodyRef}>
           <pixiGraphics draw={drawPin} />
-          {view.result === 'right' && <pixiGraphics draw={drawLight} />}
+          {result === 'right' && <pixiGraphics draw={drawLight} />}
           {view.label !== null && (
             <pixiText text={view.label} anchor={0.5} y={layout.headY} style={style} />
           )}
         </pixiContainer>
       </pixiContainer>
+    </pixiContainer>
+  );
+}
+
+interface TagProps {
+  tag: PinTagLayout;
+  lineWidth: number;
+}
+
+/**
+ * The paper tag with the pin's question, on its string (pin-tag-layout.ts): drawn once per
+ * layout, under the pin, so the pin passes over it as he drags it.
+ */
+function QuestionTag({ tag, lineWidth }: TagProps) {
+  const draw = useCallback(
+    (g: Graphics) =>
+      pinSkin.tag(g, {
+        box: tag.box,
+        hole: tag.hole,
+        tie: tag.tie,
+        nail: tag.spot === 'wall',
+        lineWidth,
+      }),
+    [tag, lineWidth],
+  );
+  const style: TextStyleOptions = useMemo(
+    () => ({
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: tag.fontSize,
+      lineHeight: tag.lineHeight,
+      fill: palette.ink,
+    }),
+    [tag],
+  );
+  return (
+    <pixiContainer eventMode="none">
+      <pixiGraphics draw={draw} />
+      <pixiText text={tag.lines.join('\n')} x={tag.text.x} y={tag.text.y} style={style} />
     </pixiContainer>
   );
 }

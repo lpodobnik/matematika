@@ -5,8 +5,9 @@
 //
 // - arrive   the stage waits, with no instruction screen, for his first touch anywhere on the
 //            machine (`machine/touch`), then opens into its opening phase.
-// - poke     the dial turns over its poke window only; pin: the pin is being placed and the
-//            dial is still (room/pin.ts). Confirming the pin opens the stage.
+// - poke     the dial turns over its poke window only; pin: the pin is being placed, and the
+//            dial still turns inside the poke window (room/pin.ts). Confirming the pin
+//            opens the stage, and the machine tests the pin.
 // - locked   the check line locked the stage (room/notebook.ts): part of the machine starts.
 //            When the UI reports the presentation done, the next stage arrives, or on the
 //            last stage the whole machine restarts.

@@ -2,6 +2,8 @@
 // the real store, reducer and content, each room from arrival to restart, then the
 // placeholder "to be continued" screen. He plays as he would on the tablet: he touches the
 // machine, pokes the dial, pins, writes his lines and, in room 4, moves weights and splits.
+// Story 1.14's pin flow: the dial keeps turning in its poke window while he pins, the
+// machine tests each pin as he confirms it, and each right pin pays 2 parts.
 
 import { describe, expect, it } from 'vitest';
 import { tokenFromChar } from '@/math/tokens';
@@ -75,20 +77,24 @@ function playRoomTwo(game: Game) {
   game.presented();
 }
 
-/** Room 3, the sluice gate: he pokes, pins where it levels, then pins a direction. */
+/**
+ * Room 3, the sluice gate: he pokes, pins where it levels and pokes again while the pin
+ * waits, confirms (the machine turns the dial to 14 itself), then pins a direction (the
+ * machine turns the dial up 3 notches) and explores from there.
+ */
 function playRoomThree(game: Game) {
   game.act({ type: 'machine/touch' });
   for (const x of [7, 8, 9]) game.act({ type: 'dial/set', x });
   game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
+  for (const x of [8, 9]) game.act({ type: 'dial/set', x });
   game.act({ type: 'pin/confirm' });
-  for (const x of [10, 12, 14]) game.act({ type: 'dial/set', x });
   game.write('14');
   game.write('14');
   game.presented();
   game.act({ type: 'machine/touch' });
   game.act({ type: 'pin/set', value: { kind: 'choice', index: 1 } });
   game.act({ type: 'pin/confirm' });
-  for (const x of [1, 5, 10, 14]) game.act({ type: 'dial/set', x });
+  for (const x of [5, 10, 14]) game.act({ type: 'dial/set', x });
   game.write('14');
   game.write('14');
   game.presented();
@@ -96,13 +102,15 @@ function playRoomThree(game: Game) {
 }
 
 /**
- * Room 4, the water wheel: the dial stops at 6, so he pins beyond it, takes 5 off both
- * pans with floats (2x = 18 is written for him), splits by 2 and writes the last two lines.
+ * Room 4, the water wheel: the dial stops at 6, so he pins beyond it (the pans weigh 9 for
+ * a moment, and the dial stays where it is), takes 5 off both pans with floats (2x = 18 is
+ * written for him), splits by 2 and writes the last two lines.
  */
 function playRoomFour(game: Game) {
   game.act({ type: 'machine/touch' });
   for (const x of [1, 2, 3]) game.act({ type: 'dial/set', x });
   game.act({ type: 'pin/set', value: { kind: 'x', x: 9 } });
+  game.act({ type: 'dial/set', x: 2 });
   game.act({ type: 'pin/confirm' });
   for (const x of [4, 5, 6]) game.act({ type: 'dial/set', x });
   for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
@@ -210,6 +218,44 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     ]);
     expect(of('MachineJammed')).toEqual([]);
     expect(of('LineWrong')).toEqual([]);
+  });
+
+  it('tests each pin as he confirms it: the machine turns the dial, firing no dial events', () => {
+    const game = freshGame();
+    playRoomOne(game);
+    playRoomTwo(game);
+    const confirms: { dialX: number; events: string[] }[] = [];
+    const confirming = (play: (game: Game) => void) => {
+      const act = game.act;
+      game.act = (action) => {
+        const from = game.seen.length;
+        act(action);
+        if (action.type !== 'pin/confirm') return;
+        const events = game.seen.slice(from).map((event) => event.type);
+        confirms.push({ dialX: game.stage().dialX, events });
+      };
+      play(game);
+      game.act = act;
+    };
+    confirming(playRoomThree);
+    confirming(playRoomFour);
+    expect(confirms).toEqual([
+      { dialX: 14, events: ['PredictionMade'] },
+      { dialX: 3, events: ['PredictionMade'] },
+      { dialX: 2, events: ['PredictionMade'] },
+    ]);
+  });
+
+  it('pays 2 parts for each right pin, once per stage, into the save', () => {
+    const game = freshGame();
+    const parts = () => game.store.getState().save.economy;
+    playRoomOne(game);
+    playRoomTwo(game);
+    expect(parts()).toMatchObject({ parts: 0, paidPredictions: [] });
+    playRoomThree(game);
+    expect(parts()).toMatchObject({ parts: 4, paidPredictions: ['r03:0', 'r03:1'] });
+    playRoomFour(game);
+    expect(parts()).toMatchObject({ parts: 6, paidPredictions: ['r03:0', 'r03:1', 'r04:0'] });
   });
 
   it('earns Balance only when room 3 restarts, so the tray and splitter wait for room 4', () => {

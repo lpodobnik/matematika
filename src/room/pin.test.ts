@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { tuning } from '@/config/tuning';
 import { r03 } from '@/content/rooms/r03-sluice-gate';
 import { parse } from '@/math/parse';
 import type { Token } from '@/math/tokens';
@@ -7,6 +8,7 @@ import { enterLine, notebookWrites, typeToken } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
 import {
   confirmPin,
+  machineTestX,
   pinOffered,
   pinRevealX,
   pinRight,
@@ -146,15 +148,21 @@ describe('poke, then pin (Pattern 2)', () => {
     expect(pinOffered(room)).toBe(true);
   });
 
-  it('goes to pin on his first drag of the pin, and the dial freezes', () => {
+  // Story 1.14 replaces "and the dial freezes": the dial keeps turning inside the poke
+  // window while he pins, and turning it never moves the pin.
+  it('goes to pin on his first drag of the pin, and the dial keeps turning in its window', () => {
     const poked = step(setDial(opened(0), 8)).room;
     const pinned = step(setPin(poked, at(12)));
     expect(pinned.events).toEqual([]);
     expect(pinned.room.stage.phase).toBe('pin');
     expect(pinned.room.stage.pin).toEqual({ value: at(12), locked: false, resolved: false });
     expect(pinned.room.stage.dialX).toBe(8);
-    expect(dialView(pinned.room)?.turns).toBe(false);
-    expect(setDial(pinned.room, 7)).toBeNull();
+    expect(dialView(pinned.room)).toMatchObject({ openMin: 6, openMax: 9, turns: true });
+    const turned = step(setDial(pinned.room, 7));
+    expect(turned.events).toEqual([{ type: 'DialNotch', x: 7 }]);
+    expect(turned.room.stage).toMatchObject({ phase: 'pin', dialX: 7 });
+    expect(turned.room.stage.pin).toEqual(pinned.room.stage.pin);
+    expect(setDial(pinned.room, 10)).toBeNull();
     expect(notebookWrites(pinned.room.stage)).toBe(false);
   });
 
@@ -177,10 +185,12 @@ describe('poke, then pin (Pattern 2)', () => {
   it('locks the pin on confirming, opens the full dial range and turns the notebook on', () => {
     const pinned = step(setPin(opened(0), at(14))).room;
     const confirmed = step(confirmPin(pinned));
-    expect(confirmed.events).toEqual([]);
+    expect(confirmed.events).toEqual([
+      { type: 'PredictionMade', roomId: 'r03', stage: 0, right: true },
+    ]);
     const { stage } = confirmed.room;
     expect(stage.phase).toBe('open');
-    expect(stage.pin).toEqual({ value: at(14), locked: true, resolved: false });
+    expect(stage.pin).toEqual({ value: at(14), locked: true, resolved: true });
     expect(stage.dialOpen).toEqual({ min: 6, max: 20 });
     expect(notebookWrites(stage)).toBe(true);
     expect(dialView(confirmed.room)).toMatchObject({ openMax: 20, turns: true });
@@ -218,106 +228,125 @@ describe('poke, then pin (Pattern 2)', () => {
     expect(pinned.stage.phase).toBe('pin');
     const confirmed = step(confirmPin(pinned)).room;
     expect(confirmed.stage.phase).toBe('open');
+    // The machine turned it up 3 notches to test the pin; now it is his.
+    expect(confirmed.stage.dialX).toBe(3);
     expect(setDial(confirmed, 1)?.room.stage.dialX).toBe(1);
   });
 });
 
-describe('resolution (Pattern 2)', () => {
-  it('resolves a right "where it levels" pin when the dial levels the pans', () => {
-    let room = lockedAt(14);
-    room = step(setDial(room, 13)).room;
-    expect(room.stage.pin?.resolved).toBe(false);
-    const levelled = step(setDial(room, 14));
-    expect(levelled.events).toEqual([
-      { type: 'DialNotch', x: 14 },
-      { type: 'PansLevel', roomId: 'r03', stage: 0, x: 14 },
+// Story 1.14 replaces the old triggers: a level-x pin no longer waits for the dial to level
+// the pans, and an effect pin no longer waits for the first notch. Every pin resolves as he
+// confirms it, and the machine tests it; the lock stays as a safety trigger only.
+describe('the machine tests the pin on confirm (Pattern 2, Resolution)', () => {
+  it('resolves a right "where it levels" pin at once, and turns the dial to it itself', () => {
+    const poked = step(setDial(opened(0), 9)).room;
+    const confirmed = step(confirmPin(step(setPin(poked, at(14))).room));
+    // No DialNotch, PansLevel or WayUsed: the machine's turn is neither exploring nor a way.
+    expect(confirmed.events).toEqual([
       { type: 'PredictionMade', roomId: 'r03', stage: 0, right: true },
     ]);
-    expect(levelled.room.stage.pin).toEqual({ value: at(14), locked: true, resolved: true });
-    expect(pinView(levelled.room)?.result).toBe('right');
-    expect(pinRevealX(levelled.room)).toBeNull();
+    const { room } = confirmed;
+    expect(room.stage).toMatchObject({ phase: 'open', dialX: 14, actingOut: false });
+    expect(room.stage.dialOpen).toEqual({ min: 6, max: 20 });
+    expect(room.stage.pin).toEqual({ value: at(14), locked: true, resolved: true });
+    expect(pinView(room)?.result).toBe('right');
+    // The pans come to rest level at the pin's x.
+    expect(scaleView(room)).toMatchObject({ x: 14, tilt: 0, level: true });
+    expect(pinRevealX(room)).toBeNull();
   });
 
-  it('resolves once: levelling the pans again fires no second PredictionMade', () => {
-    let room = step(setDial(lockedAt(14), 14)).room;
-    room = step(setDial(room, 15)).room;
-    const again = step(setDial(room, 14));
-    expect(again.events.map((event) => event.type)).toEqual(['DialNotch', 'PansLevel']);
-  });
-
-  it('resolves a wrong pin as wrong, with no penalty, and shows its own x on the pans', () => {
-    const room = lockedAt(12);
-    const levelled = step(setDial(room, 14));
-    expect(levelled.events.at(-1)).toEqual({
-      type: 'PredictionMade',
-      roomId: 'r03',
-      stage: 0,
-      right: false,
-    });
-    const after = levelled.room;
+  it('resolves a wrong pin as wrong, with no penalty: the pans come to rest tipped at its x', () => {
+    const confirmed = step(confirmPin(step(setPin(opened(0), at(12))).room));
+    expect(confirmed.events).toEqual([
+      { type: 'PredictionMade', roomId: 'r03', stage: 0, right: false },
+    ]);
+    const after = confirmed.room;
+    expect(after.stage.dialX).toBe(12);
     expect(after.stage.machineProgress).toEqual([0]);
     expect(after.stage.jam).toBeNull();
     expect(pinView(after)?.result).toBe('wrong');
-    expect(pinRevealX(after)).toBe(12);
     // x − 6 = 8 at 12: the left side weighs 6 against 8, so the right pan is lower.
-    const reveal = pinRevealView(after);
-    expect(reveal?.x).toBe(12);
-    expect(reveal?.tilt).toBe(-2);
-    expect(reveal?.readouts).toEqual({ left: '6', right: '8' });
-    expect(scaleView(after)).toMatchObject({ x: 14, tilt: 0, level: true });
+    expect(scaleView(after)).toMatchObject({ x: 12, tilt: -2, level: false });
+    expect(scaleView(after).readouts).toEqual({ left: '6', right: '8' });
+    expect(pinRevealView(after)).toBeNull();
   });
 
-  it("doesn't resolve on a notch that doesn't level the pans", () => {
-    const room = lockedAt(12);
-    for (const x of [7, 12, 20]) {
-      const turned = setDial(room, x);
-      expect(turned?.events.map((event) => event.type)).not.toContain('PredictionMade');
-      expect(turned?.room.stage.pin?.resolved).toBe(false);
+  it('then gives him the dial over its full range, and the dial never resolves it again', () => {
+    const tested = step(confirmPin(step(setPin(opened(0), at(12))).room)).room;
+    for (const x of [6, 14, 20]) {
+      const turned = step(setDial(tested, x));
+      expect(turned.events.map((event) => event.type)).not.toContain('PredictionMade');
+      expect(turned.room.stage.pin).toEqual(tested.stage.pin);
     }
-  });
-
-  it('resolves when the stage locks, if the dial never levelled the pans', () => {
-    const solved = solveWith(lockedAt(12), ['1', '4']);
-    expect(solved.events.map((event) => event.type)).toEqual([
-      'LineAccepted',
-      'StageLocked',
-      'PredictionMade',
+    expect(step(setDial(tested, 14)).events).toEqual([
+      { type: 'DialNotch', x: 14 },
+      { type: 'PansLevel', roomId: 'r03', stage: 0, x: 14 },
     ]);
-    expect(solved.events.at(-1)).toMatchObject({ right: false });
-    expect(solved.room.stage.pin?.resolved).toBe(true);
-    // The pans hold the check line, with no x: the reveal weighs the stage's equation.
-    expect(pinRevealView(solved.room)).toMatchObject({ x: 12, tilt: -2 });
   });
 
-  it('fires nothing more on the lock once the pin has resolved', () => {
-    const levelled = step(setDial(lockedAt(14), 14)).room;
-    const solved = solveWith(levelled, ['1', '4']);
-    expect(solved.events.map((event) => event.type)).toEqual(['LineAccepted', 'StageLocked']);
-  });
-
-  it('resolves a direction pin on the first notch after it is locked: up is right for 20 − x', () => {
-    const right = step(setDial(lockedOn(1), 1));
+  it('weighs a pin beyond the dial at its own x, right or wrong, and leaves the dial where it is', () => {
+    const room4: RoomSpec = {
+      ...r03,
+      stages: [
+        {
+          ...levelStage,
+          machines: [{ equation: '2x + 5 = 23' }],
+          dial: { min: 0, max: 6, step: 1 },
+          pokeNotches: 4,
+          pin: { kind: 'level-x', beyondDial: true },
+        },
+      ],
+    };
+    const poking = step(setDial(step(touchMachine(enterRoom(room4).room)).room, 2)).room;
+    const right = step(confirmPin(step(setPin(poking, at(9))).room));
     expect(right.events).toEqual([
-      { type: 'DialNotch', x: 1 },
+      { type: 'PredictionMade', roomId: 'r03', stage: 0, right: true },
+    ]);
+    expect(right.room.stage.dialX).toBe(2);
+    expect(pinRevealX(right.room)).toBe(9);
+    expect(pinRevealView(right.room)).toMatchObject({ x: 9, tilt: 0, level: true });
+    const wrong = step(confirmPin(step(setPin(poking, at(11))).room));
+    expect(wrong.events.at(-1)).toMatchObject({ right: false });
+    expect(wrong.room.stage.dialX).toBe(2);
+    expect(pinRevealView(wrong.room)).toMatchObject({ x: 11, level: false });
+    expect(scaleView(wrong.room).x).toBe(2);
+  });
+
+  it('turns the dial up 3 notches for a direction pin: up is right for 20 − x', () => {
+    expect(tuning.pinEffectTestNotches).toBe(3);
+    const right = step(confirmPin(step(setPin(opened(1), choice(1))).room));
+    expect(right.events).toEqual([
       { type: 'PredictionMade', roomId: 'r03', stage: 1, right: true },
     ]);
+    expect(right.room.stage.dialX).toBe(3);
     expect(pinView(right.room)?.result).toBe('right');
-    const wrong = step(setDial(lockedOn(0), 3));
+    const wrong = step(confirmPin(step(setPin(opened(1), choice(0))).room));
     expect(wrong.events.at(-1)).toMatchObject({ type: 'PredictionMade', right: false });
     expect(pinView(wrong.room)?.result).toBe('wrong');
     expect(pinRevealX(wrong.room)).toBeNull();
     expect(pinRevealView(wrong.room)).toBeNull();
-    const next = step(setDial(right.room, 2));
-    expect(next.events).toEqual([{ type: 'DialNotch', x: 2 }]);
+    const next = step(setDial(right.room, 4));
+    expect(next.events).toEqual([{ type: 'DialNotch', x: 4 }]);
   });
 
-  it("raises x's spring pan: the left pan rises on the first notch of 20 − x = 6", () => {
-    const before = scaleView(lockedOn(1)).tilt;
-    const after = scaleView(step(setDial(lockedOn(1), 1)).room).tilt;
-    expect(after).toBeLessThan(before);
+  it("raises x's spring pan as the machine turns the dial: 20 − x = 6", () => {
+    const pinned = step(setPin(opened(1), choice(1))).room;
+    const after = step(confirmPin(pinned)).room;
+    expect(scaleView(after).tilt).toBeLessThan(scaleView(pinned).tilt);
   });
 
-  it('resolves an effect pin that waits for the level when the pans level', () => {
+  it('turns a direction pin only as far as the dial goes', () => {
+    const spec = effectStage;
+    expect(machineTestX(spec, 0, choice(0))).toBe(3);
+    expect(machineTestX(spec, 18, choice(1))).toBe(20);
+    expect(machineTestX(spec, 20, choice(1))).toBe(20);
+    const division: StageSpec = { ...spec, dial: { min: 0, max: 30, step: 3 } };
+    expect(machineTestX(division, 6, choice(0))).toBe(15);
+    expect(machineTestX(levelStage, 7, at(14))).toBe(14);
+    expect(machineTestX({ ...levelStage, dial: { min: 0, max: 6, step: 1 } }, 2, at(9))).toBe(2);
+  });
+
+  it('resolves an effect pin that once waited for the level on confirm too', () => {
     const levelEffect: RoomSpec = {
       ...r03,
       stages: [
@@ -327,20 +356,38 @@ describe('resolution (Pattern 2)', () => {
         },
       ],
     };
-    let room = step(touchMachine(enterRoom(levelEffect).room)).room;
-    room = step(confirmPin(step(setPin(room, choice(1))).room)).room;
-    room = step(setDial(room, 1)).room;
-    expect(room.stage.pin?.resolved).toBe(false);
-    const levelled = step(setDial(room, 14));
-    expect(levelled.events.at(-1)).toMatchObject({ type: 'PredictionMade', right: true });
+    const room = step(touchMachine(enterRoom(levelEffect).room)).room;
+    const confirmed = step(confirmPin(step(setPin(room, choice(1))).room));
+    expect(confirmed.events).toEqual([
+      { type: 'PredictionMade', roomId: 'r03', stage: 0, right: true },
+    ]);
   });
 
-  it('resolves nothing without a locked pin, or on a trigger that is not its own', () => {
-    expect(resolvePin(opened(0), 'lock')).toBeNull();
-    expect(resolvePin(step(setPin(opened(0), at(14))).room, 'lock')).toBeNull();
-    expect(resolvePin(lockedAt(14), 'notch')).toBeNull();
-    expect(resolvePin(lockedOn(1), 'level')).toBeNull();
-    expect(resolvePin(lockedAt(14), 'lock')?.events).toHaveLength(1);
+  it('fires nothing more when the stage locks, since the pin resolved on confirm', () => {
+    const tested = step(confirmPin(step(setPin(opened(0), at(12))).room)).room;
+    const solved = solveWith(tested, ['1', '4']);
+    expect(solved.events.map((event) => event.type)).toEqual(['LineAccepted', 'StageLocked']);
+  });
+
+  it('still resolves a pin left unresolved when the stage locks, as a safety', () => {
+    const tested = step(confirmPin(step(setPin(opened(0), at(12))).room)).room;
+    const pin = tested.stage.pin;
+    if (!pin) throw new Error('no pin');
+    const unresolved = { ...tested, stage: { ...tested.stage, pin: { ...pin, resolved: false } } };
+    const solved = solveWith(unresolved, ['1', '4']);
+    expect(solved.events.map((event) => event.type)).toEqual([
+      'LineAccepted',
+      'StageLocked',
+      'PredictionMade',
+    ]);
+    expect(solved.events.at(-1)).toMatchObject({ right: false });
+  });
+
+  it('resolves nothing without a locked pin, or once it has resolved', () => {
+    expect(resolvePin(opened(0))).toBeNull();
+    expect(resolvePin(step(setPin(opened(0), at(14))).room)).toBeNull();
+    expect(resolvePin(lockedAt(14))).toBeNull();
+    expect(resolvePin(lockedOn(1))).toBeNull();
   });
 });
 
@@ -376,6 +423,8 @@ describe('pinView', () => {
     const room = opened(0);
     expect(pinView(room)).toEqual({
       kind: 'x',
+      question: 'level-x',
+      asks: true,
       slots: 15,
       reach: 15,
       slot: null,
@@ -395,6 +444,7 @@ describe('pinView', () => {
     expect(pinView(pinned)).toMatchObject({
       slot: 6,
       label: '12',
+      asks: true,
       movable: true,
       confirmable: true,
     });
@@ -402,10 +452,11 @@ describe('pinView', () => {
     expect(pinView(locked)).toMatchObject({
       slot: 6,
       label: '12',
+      asks: false,
       movable: false,
       confirmable: false,
       locked: true,
-      result: null,
+      result: 'wrong',
       wiggle: false,
     });
   });
@@ -414,6 +465,8 @@ describe('pinView', () => {
     const pinned = step(setPin(opened(1), choice(1))).room;
     expect(pinView(pinned)).toMatchObject({
       kind: 'choice',
+      question: 'effect',
+      asks: true,
       slots: 2,
       slot: 1,
       label: null,

@@ -147,6 +147,3 @@ export function pinWiggle(t: number, reach: number): number {
   const clamped = Math.max(0, Math.min(1, t));
   return Math.sin(clamped * Math.PI * 6) * (1 - clamped) * reach;
 }
-
-/** How long the pans show a wrong x pin's own tilt before they go back to the dial's x. */
-export const pinRevealMs = 1600;

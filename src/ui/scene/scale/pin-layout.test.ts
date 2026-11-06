@@ -6,7 +6,6 @@ import { labelFontSize, scaleGeometry } from '@/ui/scene/scale/layout';
 import {
   pinGeometry,
   pinLayout,
-  pinRevealMs,
   pinWiggle,
   pinWiggleMs,
   placeX,
@@ -122,8 +121,9 @@ describe('the wiggle and the reveal', () => {
     expect(pinWiggleMs).toBeGreaterThan(0);
   });
 
-  it('shows a wrong pin briefly, well under the time a stage lock plays', () => {
-    expect(pinRevealMs).toBeGreaterThan(500);
-    expect(pinRevealMs).toBeLessThan(tuning.presentationTimeoutMs);
+  it('weighs a pin beyond the dial briefly, well under the time a stage lock plays', () => {
+    // Story 1.14: the reveal is now `tuning.pinRevealMs`, for right pins beyond the dial too.
+    expect(tuning.pinRevealMs).toBeGreaterThan(500);
+    expect(tuning.pinRevealMs).toBeLessThan(tuning.presentationTimeoutMs);
   });
 });

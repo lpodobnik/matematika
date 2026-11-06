@@ -7,8 +7,8 @@
 //   acting out a written line          the stage's solution, `?` on the gears, no readouts
 // A committed line acted out is level. A wrong line is acted out while the machine is
 // jammed on it, and tips by at least `tuning.jamMinTilt`. Acting out never moves the dial.
-// When a wrong x pin resolves, the pans briefly show its own x (`pinRevealView`): the
-// scene decides how long, and nothing here changes.
+// When an x pin beyond the dial resolves, the pans briefly weigh its x (`pinRevealView`):
+// the scene decides how long, and nothing here changes.
 
 import { tuning } from '@/config/tuning';
 import { stageSolution } from '@/math/check';
@@ -129,12 +129,21 @@ export function scaleView(room: RoomState): ScaleView {
 }
 
 /**
- * The pans at a wrong x pin's own x, once it has resolved (Pattern 2, Resolution: "a wrong
- * pin briefly shows its own value's tilt on the pans"): the pans as he explores them, with
- * his x on the gears and the readouts, so he sees what his idea causes. When the stage
- * locked it, the pans hold the check line, which has no x, so the stage's equation is
- * weighed instead. Null for a right pin, a choice pin, or one that hasn't resolved. The
- * scene shows it briefly; it costs nothing.
+ * The pans with the dial at x instead of where the store has it, as he explores them: the
+ * scene shows the machine turning the dial notch by notch to test a pin (story 1.14), while
+ * the store already has the dial at the end of the turn.
+ */
+export function scaleViewAt(room: RoomState, x: number): ScaleView {
+  return viewOf(room, { equation: room.stage.pans, x, actingOut: false, jammed: false });
+}
+
+/**
+ * The pans at the x of a pin beyond the dial, once it has resolved (Pattern 2, Resolution:
+ * the dial can't go there, so the pans weigh its x for a moment): the pans as he explores
+ * them, with its x on the gears and the readouts, level for a right pin and tipped for a
+ * wrong one. When the stage locked it (a safety only), the pans hold the check line, which
+ * has no x, so the stage's equation is weighed instead. Null for a pin the dial reaches, a
+ * choice pin, or one that hasn't resolved. The scene shows it briefly; it costs nothing.
  */
 export function pinRevealView(room: RoomState): ScaleView | null {
   const x = pinRevealX(room);
