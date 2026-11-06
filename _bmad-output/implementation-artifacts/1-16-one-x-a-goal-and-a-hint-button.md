@@ -78,7 +78,7 @@ Story 1.15 weighed the scale at the true x during Balance and showed `x = ?` on 
 
 - [x] Lane A: AC 1–4
 - [x] Lane B: AC 5–7
-- [ ] Merge; checks green (AC 8)
+- [x] Merge; checks green (AC 8)
 - [ ] One review, one fix pass
 - [ ] Headless play-through, rooms 1–4
 
@@ -100,55 +100,6 @@ Story 1.15 weighed the scale at the true x during Balance and showed `x = ?` on 
 
 (Each lane adds its own section: Calls, files, checks.)
 
-<<<<<<< HEAD
-### Lane B (`epic-1`): the goal card, the hint button, next-move ghosts (AC 5–7)
-
-**Calls** (flag for veto):
-- The hint's presses live in `ui.hint` (`{ level, presses }`), set by a new `hint/press` action that changes nothing in the room or the save and fires no event. Pure rules are in `room/hint.ts`.
-- "Any action of his ends the hint" means an action of his that changes the room, the same rule the idle clock uses. A tap that does nothing keeps it. `room/enter`, a new stage or a locked stage end it too.
-- The tray's and the splitter's steppers keep the hint, so he can set the number the tag names (`Skini 5 …`) while the ghost still shows. They are settings, not moves (as `resetStage` treats them).
-- The clock and the phone's notebook slide keep the hint. Each press after the second replays the ghost.
-- The first press always pops its tag in, so a press visibly answers even when the same handover tag was already up. While a hint shows, it takes the handover tag's place in the scene and at the notebook, so only one tag shows at a time.
-- Where no handover step applies (a jam, or a line acted out), the first press shows the step the next move belongs to: slide → `dial`, tray → `tray` or `balance-goal`, split → `splitter`, answer → `write` (Try) or `answer` (Balance, once lane A adds it), check → `check`.
-- The way for the next move is Try when the stage lists it and the dial reaches the solution, else Balance once earned. Balance before the tray is offered says "slide right", toward the dial's end where the tray comes.
-- Balance moves are read off the pans, not the canonical lines: `2x + 2 = 20` says take 2; a splitter set to 3 still says split by 2. A number over 99 is capped at the tray's maximum.
-- Answer step: keyed off "the pans hold x alone at the solution, no answer line" (`isAnswerLine(pans, n)`). Lane A's `answer` id is used when `handoverOrder` has it, else `write`; the tests accept either.
-- A weight move says `Dodaj 5 na obje strane: stavi uteg 5 na vagu.`. Before 6 and 7 the split tag says "sa" (`sa 6`, `sa 7`).
-- Goal card: label on two lines (`Cilj:` / `x sam`) beside a level miniature scale, in the scene's bottom-right corner, under the right pan and right of the dial. The picture is as big as fits there: 4 label-ems on the tablet, 2.3 at 640 × 360.
-- In the miniature, `x` and `?` are 0.58 of the picture's em: about 20 CSS px on the tablet and about 12 at 640 × 360. They are part of a picture, not numbers on weights.
-- Matched means one small, undivided x-gear alone against one number piece or nothing, on `stage.pans`. A jam never lights the card.
-- Lit, the card shows a 2.2× frame and a tick in a ring over the miniature's pivot (shape), with a lamp-coloured glow, rays and a one-off bump (colour). There is no bump under reduced motion.
-- The card's layout never covers the pans (every dial x and every tilt), the beam, the stand, the dial (track, knob and plate at every notch), the pin flag, the tray, the splitter (whenever Balance is earned, so the card doesn't move), the reset and hint corner, the parts counter or the phone's notebook handle. The handover tags and the hint's tags take it as a hard obstacle (`handover-tag-layout.ts`).
-- With today's room 4 pin at 9 at 640 × 360, no corner spot is free, so the card stands over the machine. Lane A's pinless room 4 puts it in the corner.
-- `resetCorner` (pin-tag-layout.ts) now covers the hint button too: 72 × 136 CSS px. Its test is updated; every pin and handover tag test still passes.
-- Hint button: 56 px at (8, 72) on the tablet and 48 px on a phone, with a heavier ring while a hint shows. It is left-aligned on the phone, because centred it touched the left pan's sweep at −10° tilt.
-- Ghosts: the knob goes two notches the right way and back. The tray piece rises, glides over the scale, splits to both pans and fades. The splitter frame glides over the beam's middle and fades. Each runs for 2.4 s with a 1.2 s pause while the hint shows, at 0.55 alpha, and takes no touches. Under reduced motion each holds still at its end.
-- Dial.tsx's own nudge (lane A's file) is untouched, so during a `dial` handover it can run beside the knob ghost.
-- The pin's question tag pops on a press while the pin is offered (`Pin.tsx`).
-- The notebook's tag is a new `HintNote` reusing the handover note's CSS. `Notebook.tsx` gained the `hint` prop, and its phone aside logic treats a scene hint like a scene handover, one press at a time.
-
-**Files:**
-- New pure rules: `src/room/{hint,goal}.ts` and their tests.
-- Store: `src/store/{actions,types,reducer}.ts`, new `store/hint.test.ts`, and `store.test.ts` (`ui.hint`).
-- Shared: `src/content/text/hr.ts` with new `hr.test.ts`, and `src/config/tuning.ts`.
-- New skin: `src/art/skins/goal.ts` and its test.
-- New common UI: `src/ui/common/{HintButton.tsx,hint-button.css,hint-text.ts}` and tests.
-- Notebook: new `src/ui/notebook/{HintNote.tsx,hint-note.css}` and test; `Notebook.tsx`.
-- New scene parts: `src/ui/scene/scale/{GoalCard.tsx,HintTag.tsx,HintGhost.tsx,goal-card-layout.ts,hint-ghost.ts}` and tests.
-- Changed: `SceneRoot.tsx`, `Pin.tsx`, `pin-tag-layout.ts` and its test, `handover-tag-layout.ts`, and `src/app/App.tsx`.
-
-**Checks:**
-- `npm run check` is clean.
-- `npm test`: 106 files, 1847 passed, 2 skipped.
-- `npm run build` passes (JS 0.34 MB gzipped).
-- Headless Edge on port 5350, at 1280 × 800 and 640 × 360, through the real button, with no console errors:
-  - Room 1: `?` shows the dial tag, then `Pomiči klizač udesno.` with the knob ghost. At x = 5 the notebook pulses with `Upiši x = 5.`
-  - Room 3: `?` pops the pin's question.
-  - Room 4, today's version and a pinless copy: the card appears once the tray is offered. `?` shows the tray tag, then the −5 balloon ghost with `Skini 5 …`.
-  - A tray step keeps the hint; the drop ends it.
-  - After the drop, `?`, `?` shows the frame ghost with `Podijeli obje strane s 2.` After the split the card lights, and `?`, `?` gives `Upiši x = 9.` at the notebook.
-- Server stopped.
-=======
 ### Lane A (`lane/1-16-rules`): one x, simplify first, room 4 blanks
 
 **Calls** (flag any for veto):
@@ -205,4 +156,51 @@ Story 1.15 weighed the scale at the true x during Balance and showed `x = ?` on 
   - Room 1's plate still reads `x = 5` after the answer line.
   - The only console error is the existing 404 for a resource.
 - On the phone, the upcoming check template is partly hidden above the tag, as with 1.15's write tag; the draft stays in view.
->>>>>>> lane/1-16-rules
+
+### Lane B (`epic-1`): the goal card, the hint button, next-move ghosts (AC 5–7)
+
+**Calls** (flag for veto):
+- The hint's presses live in `ui.hint` (`{ level, presses }`), set by a new `hint/press` action that changes nothing in the room or the save and fires no event. Pure rules are in `room/hint.ts`.
+- "Any action of his ends the hint" means an action of his that changes the room, the same rule the idle clock uses. A tap that does nothing keeps it. `room/enter`, a new stage or a locked stage end it too.
+- The tray's and the splitter's steppers keep the hint, so he can set the number the tag names (`Skini 5 …`) while the ghost still shows. They are settings, not moves (as `resetStage` treats them).
+- The clock and the phone's notebook slide keep the hint. Each press after the second replays the ghost.
+- The first press always pops its tag in, so a press visibly answers even when the same handover tag was already up. While a hint shows, it takes the handover tag's place in the scene and at the notebook, so only one tag shows at a time.
+- Where no handover step applies (a jam, or a line acted out), the first press shows the step the next move belongs to: slide → `dial`, tray → `tray` or `balance-goal`, split → `splitter`, answer → `write` (Try) or `answer` (Balance, once lane A adds it), check → `check`.
+- The way for the next move is Try when the stage lists it and the dial reaches the solution, else Balance once earned. Balance before the tray is offered says "slide right", toward the dial's end where the tray comes.
+- Balance moves are read off the pans, not the canonical lines: `2x + 2 = 20` says take 2; a splitter set to 3 still says split by 2. A number over 99 is capped at the tray's maximum.
+- Answer step: keyed off "the pans hold x alone at the solution, no answer line" (`isAnswerLine(pans, n)`). Lane A's `answer` id is used when `handoverOrder` has it, else `write`; the tests accept either.
+- A weight move says `Dodaj 5 na obje strane: stavi uteg 5 na vagu.`. Before 6 and 7 the split tag says "sa" (`sa 6`, `sa 7`).
+- Goal card: label on two lines (`Cilj:` / `x sam`) beside a level miniature scale, in the scene's bottom-right corner, under the right pan and right of the dial. The picture is as big as fits there: 4 label-ems on the tablet, 2.3 at 640 × 360.
+- In the miniature, `x` and `?` are 0.58 of the picture's em: about 20 CSS px on the tablet and about 12 at 640 × 360. They are part of a picture, not numbers on weights.
+- Matched means one small, undivided x-gear alone against one number piece or nothing, on `stage.pans`. A jam never lights the card.
+- Lit, the card shows a 2.2× frame and a tick in a ring over the miniature's pivot (shape), with a lamp-coloured glow, rays and a one-off bump (colour). There is no bump under reduced motion.
+- The card's layout never covers the pans (every dial x and every tilt), the beam, the stand, the dial (track, knob and plate at every notch), the pin flag, the tray, the splitter (whenever Balance is earned, so the card doesn't move), the reset and hint corner, the parts counter or the phone's notebook handle. The handover tags and the hint's tags take it as a hard obstacle (`handover-tag-layout.ts`).
+- With today's room 4 pin at 9 at 640 × 360, no corner spot is free, so the card stands over the machine. Lane A's pinless room 4 puts it in the corner.
+- `resetCorner` (pin-tag-layout.ts) now covers the hint button too: 72 × 136 CSS px. Its test is updated; every pin and handover tag test still passes.
+- Hint button: 56 px at (8, 72) on the tablet and 48 px on a phone, with a heavier ring while a hint shows. It is left-aligned on the phone, because centred it touched the left pan's sweep at −10° tilt.
+- Ghosts: the knob goes two notches the right way and back. The tray piece rises, glides over the scale, splits to both pans and fades. The splitter frame glides over the beam's middle and fades. Each runs for 2.4 s with a 1.2 s pause while the hint shows, at 0.55 alpha, and takes no touches. Under reduced motion each holds still at its end.
+- Dial.tsx's own nudge (lane A's file) is untouched, so during a `dial` handover it can run beside the knob ghost.
+- The pin's question tag pops on a press while the pin is offered (`Pin.tsx`).
+- The notebook's tag is a new `HintNote` reusing the handover note's CSS. `Notebook.tsx` gained the `hint` prop, and its phone aside logic treats a scene hint like a scene handover, one press at a time.
+
+**Files:**
+- New pure rules: `src/room/{hint,goal}.ts` and their tests.
+- Store: `src/store/{actions,types,reducer}.ts`, new `store/hint.test.ts`, and `store.test.ts` (`ui.hint`).
+- Shared: `src/content/text/hr.ts` with new `hr.test.ts`, and `src/config/tuning.ts`.
+- New skin: `src/art/skins/goal.ts` and its test.
+- New common UI: `src/ui/common/{HintButton.tsx,hint-button.css,hint-text.ts}` and tests.
+- Notebook: new `src/ui/notebook/{HintNote.tsx,hint-note.css}` and test; `Notebook.tsx`.
+- New scene parts: `src/ui/scene/scale/{GoalCard.tsx,HintTag.tsx,HintGhost.tsx,goal-card-layout.ts,hint-ghost.ts}` and tests.
+- Changed: `SceneRoot.tsx`, `Pin.tsx`, `pin-tag-layout.ts` and its test, `handover-tag-layout.ts`, and `src/app/App.tsx`.
+
+**Checks:**
+- `npm run check` is clean.
+- `npm test`: 106 files, 1847 passed, 2 skipped.
+- `npm run build` passes (JS 0.34 MB gzipped).
+- Headless Edge on port 5350, at 1280 × 800 and 640 × 360, through the real button, with no console errors:
+  - Room 1: `?` shows the dial tag, then `Pomiči klizač udesno.` with the knob ghost. At x = 5 the notebook pulses with `Upiši x = 5.`
+  - Room 3: `?` pops the pin's question.
+  - Room 4, today's version and a pinless copy: the card appears once the tray is offered. `?` shows the tray tag, then the −5 balloon ghost with `Skini 5 …`.
+  - A tray step keeps the hint; the drop ends it.
+  - After the drop, `?`, `?` shows the frame ghost with `Podijeli obje strane s 2.` After the split the card lights, and `?`, `?` gives `Upiši x = 9.` at the notebook.
+- Server stopped.
