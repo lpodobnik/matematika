@@ -9,6 +9,15 @@ function withS(n: string): string {
   return n === '6' || n === '7' ? `sa ${n}` : `s ${n}`;
 }
 
+/** "udarac", "udarca" or "udaraca", as Croatian counts blows: 1, 2–4, else (with 21, 22…). */
+function blowsWord(n: number): string {
+  const ten = n % 10;
+  const hundred = n % 100;
+  if (ten === 1 && hundred !== 11) return 'udarac';
+  if (ten >= 2 && ten <= 4 && (hundred < 12 || hundred > 14)) return 'udarca';
+  return 'udaraca';
+}
+
 export const hr = {
   app: {
     turnToLandscape: 'Okreni uređaj vodoravno.',
@@ -226,10 +235,11 @@ export const hr = {
       r11: 'Veliki kotač',
       r12: 'Raskrižje',
       r13: 'Toranj sa satom',
-      'lair-20': 'Automat',
-      'lair-30': 'Automat',
-      'lair-45': 'Automat',
-      'lair-60': 'Automat',
+      // Each lair is named by its automaton's armour, so he can choose which to take on.
+      'lair-20': 'Automat 20',
+      'lair-30': 'Automat 30',
+      'lair-45': 'Automat 45',
+      'lair-60': 'Automat 60',
       workshop: 'Radionica',
       foundry: 'Ljevaonica',
     },
@@ -329,6 +339,49 @@ export const hr = {
       what: 'Stroj je zapeo: ovaj redak ne vrijedi.',
       fix: 'Obriši ga tipkom ⌫ i napiši ponovno.',
     },
+  },
+  /**
+   * Epic 3: automaton fights (GDD, Automaton fights). He rolls dice, places them as blade
+   * `a`, charge `b` and reach, sets his blows `x` and sees `a · x + b`, never the total.
+   */
+  fight: {
+    /** The fight screen's name, for screen readers: the lair's automaton. */
+    title: (armour: number) => `Automat s oklopom ${armour}`,
+    armour: 'Oklop',
+    hull: 'Trup',
+    steam: 'Para',
+    /** For screen readers: what is left of his hull and steam. */
+    left: (what: string, n: number, of: number) => `${what}: ${n} od ${of}`,
+    roll: 'Baci kocke',
+    /** For screen readers: a die and its number; a die already in a slot says so. */
+    die: (n: number) => `Kocka ${n}`,
+    dieIn: (n: number, slot: string) => `Kocka ${n}, u utoru ${slot}`,
+    slots: {
+      blade: 'Oštrica',
+      charge: 'Naboj',
+      reach: 'Doseg',
+    },
+    /** Under each slot's name: what it does in a · x + b. */
+    slotHints: {
+      blade: 'a',
+      charge: 'b',
+      reach: 'najviše udaraca',
+    },
+    /** For screen readers: an empty slot. */
+    emptySlot: 'prazno',
+    /** The tag before the dice are placed: tap a die, then a slot. */
+    placeTag: 'Dodirni kocku, pa utor.',
+    blows: 'Udarci',
+    /** For screen readers: the blows dial's notch. */
+    blowsNotch: (x: number) => `${x} ${blowsWord(x)}`,
+    strike: 'Udari',
+    /** Leaving: free before the first strike, a loss after it (story 3.2). */
+    leave: 'Odlazak',
+    leaveLoses: 'Ako sada odeš, automat pobjeđuje i dio tvojih dijelova ostaje ovdje.',
+    leaveConfirm: 'Ipak idem',
+    stay: 'Ostajem',
+    /** The round in play. */
+    round: (n: number) => `Krug ${n}`,
   },
   parts: {
     /** The parts counter in the scene's corner, read out with its number. */

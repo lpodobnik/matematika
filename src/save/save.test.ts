@@ -34,6 +34,7 @@ const sample: SaveV1 = {
     onMap: false,
     told: [],
     ideasSeen: [],
+    tornPages: [],
     firstUse: ['pin', 'handover-dial'],
     room: {
       id: 'r03',
@@ -43,7 +44,8 @@ const sample: SaveV1 = {
       splitterSeen: false,
     },
   },
-  economy: { parts: 2, upgrades: [], paidPredictions: ['r03:0'], piles: {}, lairs: {} },
+  economy: { parts: 2, upgrades: [], paidPredictions: ['r03:0'], piles: {}, lairs: {}, seeds: {} },
+  fight: null,
   settings: { muted: false, quality: 'medium' },
 };
 
@@ -70,8 +72,10 @@ describe('decodeSave', () => {
         onMap: false,
         told: [],
         ideasSeen: [],
+        tornPages: [],
       },
-      economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {} },
+      economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {}, seeds: {} },
+      fight: null,
       settings: { muted: false, quality: null },
     });
   });
@@ -316,7 +320,7 @@ describe('the save storage', () => {
     const later = {
       ...sample,
       cityLog: [{ at: now, roomId: 'r01' }],
-      fight: { lairId: 'lair-20' },
+      workshop: { rooms: [] },
       progress: { ...sample.progress, seen: ['lair-20'], at: 'r03' },
       settings: { ...sample.settings, volume: 0.4 },
     };
@@ -328,7 +332,7 @@ describe('the save storage', () => {
     const written = JSON.parse(store.getItem(saveKey) ?? '');
     expect(written).toMatchObject({
       cityLog: later.cityLog,
-      fight: later.fight,
+      workshop: later.workshop,
       progress: { seen: ['lair-20'], at: 'r03', roomsDone: ['r01'] },
       settings: { volume: 0.4, quality: 'medium' },
     });

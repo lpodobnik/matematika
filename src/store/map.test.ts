@@ -65,7 +65,7 @@ describe('the map (story 2.2)', () => {
 
   it('travels at once to a room he can reach, and ignores the rest', () => {
     const g = game();
-    for (const node of ['r04', 'r05', 'lair-20', 'workshop', 'foundry'] as const) {
+    for (const node of ['r04', 'r05', 'lair-30', 'workshop', 'foundry'] as const) {
       g.act({ type: 'map/travel', node });
       expect(g.store.getState().ui.screen, node).toBe('map');
     }

@@ -2,7 +2,7 @@ import type { Economy } from './types';
 
 /** The economy of a new game: no parts, no upgrades, no piles, every lair awake. */
 export function createEconomy(): Economy {
-  return { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {} };
+  return { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {}, seeds: {} };
 }
 
 function requireCount(n: number, what: string): void {

@@ -6,6 +6,7 @@
 
 import type { LookId } from '@/city/character';
 import type { Economy } from '@/economy/types';
+import type { FightState, PageId } from '@/fight/types';
 import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, IdeaId, RoomId, ToolId } from '@/room/types';
 
@@ -55,6 +56,8 @@ export interface SaveProgress {
   told: RoomId[];
   /** Ideas whose explanation card he has seen, in that order (story 2.6). */
   ideasSeen: IdeaId[];
+  /** Torn logbook pages returned by fights, in the order he won them (story 3.4). */
+  tornPages: PageId[];
 }
 
 export interface SaveV1 {
@@ -64,5 +67,10 @@ export interface SaveV1 {
   character: Character;
   progress: SaveProgress;
   economy: Economy;
+  /**
+   * The fight in progress (story 3.1; ADR-8): saved as it starts, after each roll and after
+   * each strike, and resumed on reload. Null on the map, in a room, and once a fight ends.
+   */
+  fight: FightState | null;
   settings: Settings;
 }

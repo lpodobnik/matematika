@@ -38,6 +38,9 @@ function savingGame() {
 describe('the save effect', () => {
   it('writes for the events that change what is kept, and nothing else', () => {
     expect([...SAVE_TRIGGERS].sort()).toEqual([
+      'DiceRolled',
+      'FightLeft',
+      'FightStarted',
       'LineAccepted',
       'PredictionMade',
       'RoomLeft',
@@ -46,6 +49,7 @@ describe('the save effect', () => {
       'StageArrived',
       'StageLocked',
       'StageReset',
+      'StrikeLanded',
     ]);
   });
 
@@ -173,6 +177,7 @@ describe('a new game from the dev panel', () => {
       onMap: false,
       told: [],
       ideasSeen: [],
+      tornPages: [],
     });
     expect(state.save.settings).toEqual({ muted: true, quality: 'medium' });
     expect(g.written.at(-1)?.progress.room?.id).toBe('r01');

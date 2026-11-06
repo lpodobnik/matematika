@@ -33,6 +33,8 @@ describe('the store', () => {
       quality: { measured: null, measuredMs: null, forced: null },
       copies: 1,
       hint: null,
+      fightEnd: null,
+      fightSeed: null,
     });
   });
 
@@ -74,7 +76,12 @@ describe('the store', () => {
     const reduceSpy = vi.fn(reduce);
     const store = createGameStore({ reduce: reduceSpy });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
-    expect(Object.keys(reduceSpy.mock.calls[0]?.[0] ?? {}).sort()).toEqual(['room', 'save', 'ui']);
+    expect(Object.keys(reduceSpy.mock.calls[0]?.[0] ?? {}).sort()).toEqual([
+      'fight',
+      'room',
+      'save',
+      'ui',
+    ]);
     expect(typeof store.getState().dispatch).toBe('function');
   });
 
@@ -777,6 +784,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
             onMap: false,
             told: [],
             ideasSeen: [],
+            tornPages: [],
             tools: ['balance'],
             firstUse,
           },
@@ -937,6 +945,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
       onMap: false,
       told: [],
       ideasSeen: [],
+      tornPages: [],
       tools: ['balance'],
       firstUse: [],
     });
@@ -950,6 +959,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
       onMap: false,
       told: [],
       ideasSeen: [],
+      tornPages: [],
       tools: ['balance'],
       firstUse: ['tray'],
     });
@@ -985,6 +995,7 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
             onMap: false,
             told: [],
             ideasSeen: [],
+            tornPages: [],
             tools: ['balance'],
             firstUse: ['pin', 'tray'],
           },

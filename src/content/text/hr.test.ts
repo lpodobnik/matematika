@@ -38,3 +38,21 @@ describe('the hint button’s and the goal card’s words (story 1.16)', () => {
     ]);
   });
 });
+
+describe('the fight’s words (story 3.1)', () => {
+  it('counts blows as Croatian does', () => {
+    const notch = [1, 2, 3, 4, 5, 6, 11, 12, 21, 22].map(hr.fight.blowsNotch);
+    expect(notch).toEqual([
+      '1 udarac',
+      '2 udarca',
+      '3 udarca',
+      '4 udarca',
+      '5 udaraca',
+      '6 udaraca',
+      '11 udaraca',
+      '12 udaraca',
+      '21 udarac',
+      '22 udarca',
+    ]);
+  });
+});

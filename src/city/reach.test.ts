@@ -204,11 +204,11 @@ describe('what the map shows (mapView)', () => {
     expect(node(v, 'lair-20')?.state).toBe('closed');
   });
 
-  it('after room 2: the bridge shows locked with Balance’s weights, and the lair shows (FR29, FR31)', () => {
+  it('after room 2: the bridge shows locked with Balance’s weights, and the lair opens (FR29, FR31; story 3.1)', () => {
     const v = view(['r01', 'r02']);
     expect(node(v, 'r03')?.state).toBe('open');
     expect(node(v, 'r05')).toMatchObject({ state: 'locked', lock: 'weights' });
-    expect(node(v, 'lair-20')).toMatchObject({ state: 'seen', lock: null });
+    expect(node(v, 'lair-20')).toMatchObject({ state: 'open', lock: null });
     expect(node(v, 'lair-30')?.state).toBe('closed');
   });
 
@@ -253,7 +253,8 @@ describe('what the map shows (mapView)', () => {
   it('draws a road in full only between places he can travel to', () => {
     const v = view(['r01', 'r02']);
     const travelled = v.roads.filter((road) => road.travelled);
-    expect(travelled).toHaveLength(2);
+    // Rooms 1–2, rooms 2–3 and the road to the lair beside room 2 (story 3.1).
+    expect(travelled).toHaveLength(3);
     expect(travelled[0]?.from).toEqual({ x: 150, y: 830 });
   });
 

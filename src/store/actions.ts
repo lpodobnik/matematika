@@ -2,6 +2,7 @@
 
 import type { LookId } from '@/city/character';
 import type { NodeId } from '@/city/types';
+import type { FightAction, FightState } from '@/fight/types';
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
 import type { SavedRoom } from '@/room/resume';
@@ -14,9 +15,15 @@ export type Action =
   | { type: 'boot/progress'; loaded: number }
   /**
    * The save is read and the assets are loaded: the game starts from the save, or new with
-   * null, back in the room in progress (`room`) or at the next room he hasn't done.
+   * null, back in the room in progress (`room`) or at the next room he hasn't done, or in
+   * the fight in progress (`fight`, story 3.1), which resumes on the fight screen.
    */
-  | { type: 'boot/start'; save: SaveState | null; room: SavedRoom | null }
+  | {
+      type: 'boot/start';
+      save: SaveState | null;
+      room: SavedRoom | null;
+      fight?: FightState | null;
+    }
   /**
    * The map control in a room (story 2.2): he leaves for the map, any time before the stage
    * locks. The room keeps its committed lines for when he comes back.
@@ -81,6 +88,17 @@ export type Action =
    * the exact next move (room/hint.ts). Free, never recorded: it changes nothing in the room.
    */
   | { type: 'hint/press' }
+  /**
+   * The fight screen (story 3.1): roll, place a die, take one back, set blows, strike, and
+   * leave (free before the first strike, a loss after it). See fight/types.ts.
+   */
+  | FightAction
+  /** Off the end of a fight, back to the map (story 3.2). */
+  | { type: 'fight/close' }
+  /** The dev panel only: sets his parts (architecture, Debug Tools). */
+  | { type: 'dev/set-parts'; parts: number }
+  /** The dev panel only: fixes the seed of the next fights' dice, or null for random. */
+  | { type: 'dev/fight-seed'; seed: number | null }
   /** The dev panel only: a new game, from room 1; the settings stay. */
   | { type: 'dev/new-game' }
   /** The dev panel only (architecture, Debug Tools): sets the tools he has earned. */

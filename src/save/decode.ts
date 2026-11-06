@@ -11,7 +11,7 @@ import { rooms } from '@/content/rooms';
 import { createEconomy } from '@/economy/parts';
 import type { Economy } from '@/economy/types';
 import { UPGRADE_IDS } from '@/economy/upgrades';
-import type { LairId } from '@/fight/types';
+import type { LairId, PageId } from '@/fight/types';
 import { ideasByRoom } from '@/room/ideas';
 import { isRoomId, type SavedLine, type SavedRoom } from '@/room/resume';
 import {
@@ -24,6 +24,7 @@ import {
   toolIds,
   wayIds,
 } from '@/room/types';
+import { decodeFight } from '@/save/decode-fight';
 import {
   type Character,
   currentVersion,
@@ -75,6 +76,7 @@ const isFirstUse = inList<FirstUseId>(firstUseIds);
 const isIdea = inList<IdeaId>(ideaIds);
 const isUpgrade = inList(UPGRADE_IDS);
 const isLair = inList<LairId>(LAIR_ORDER);
+const isPage = inList<PageId>(['page-1', 'page-2', 'page-3']);
 const isQuality = inList<QualityPick>(qualityPicks);
 const isSource = inList<SavedLine['source']>(['typed', ...wayIds]);
 /** A paid prediction's key: room and stage, `r03:0` (economy/predictions.ts). */
@@ -89,6 +91,14 @@ function decodeEconomy(value: unknown): Economy {
   if (isObject(value.piles)) {
     for (const [lair, parts] of Object.entries(value.piles)) {
       if (isLair(lair) && count(parts) > 0) piles[lair] = count(parts);
+    }
+  }
+  const seeds: Economy['seeds'] = {};
+  if (isObject(value.seeds)) {
+    for (const [lair, seed] of Object.entries(value.seeds)) {
+      if (isLair(lair) && typeof seed === 'number' && Number.isInteger(seed) && seed >= 0) {
+        seeds[lair] = seed >>> 0;
+      }
     }
   }
   if (isObject(value.lairs)) {
@@ -108,6 +118,7 @@ function decodeEconomy(value: unknown): Economy {
     ],
     piles,
     lairs,
+    seeds,
   };
 }
 
@@ -215,8 +226,10 @@ export function decodeSave(value: unknown, now: string): SaveV1 | null {
       ideasSeen: Array.isArray(progress.ideasSeen)
         ? known(progress.ideasSeen, isIdea)
         : toldIdeas(known(progress.told, isRoomId)),
+      tornPages: known(progress.tornPages, isPage),
     },
     economy: decodeEconomy(value.economy),
+    fight: decodeFight(value.fight),
     settings: decodeSettings(value.settings),
   };
 }

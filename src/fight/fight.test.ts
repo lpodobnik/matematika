@@ -262,6 +262,12 @@ describe('setting blows on the dial', () => {
     expect(blowRange(placing)).toBeNull();
   });
 
+  it('has no range after a strike, though the slots still hold the dice', () => {
+    const struck = act(set, { type: 'fight/strike' });
+    expect(struck.slots.reach).not.toBeNull();
+    expect(blowRange(struck)).toBeNull();
+  });
+
   it('counts blows against steam one for one', () => {
     expect(blowsAffordable(10)).toBe(10);
     expect(blowsAffordable(0)).toBe(0);

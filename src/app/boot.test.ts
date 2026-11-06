@@ -15,10 +15,12 @@ const save: SaveV1 = {
     onMap: false,
     told: [],
     ideasSeen: [],
+    tornPages: [],
     firstUse: [],
     room: { id: 'r02', stage: 0, lines: [], pin: null, splitterSeen: false },
   },
-  economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {} },
+  economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {}, seeds: {} },
+  fight: null,
   settings: { muted: false, quality: null },
 };
 
@@ -59,7 +61,7 @@ describe('boot (story 2.1)', () => {
     await boot({ load: () => ({ save: null, status: 'fresh', saving: true }) }, (action) =>
       actions.push(action),
     );
-    expect(actions.at(-1)).toEqual({ type: 'boot/start', save: null, room: null });
+    expect(actions.at(-1)).toEqual({ type: 'boot/start', save: null, room: null, fight: null });
   });
 
   it('starts at the next room when the room in progress throws as it resumes', async () => {

@@ -61,6 +61,11 @@ export function startFight(
   };
 }
 
+/** A fight still being fought: not yet won or lost. */
+export function fightInProgress(state: FightState | null): state is FightState {
+  return state !== null && state.phase !== 'won' && state.phase !== 'lost';
+}
+
 /** `a · x + b`: blade times blows plus charge. */
 export function strikeDamage(blade: number, blows: number, charge: number): number {
   return blade * blows + charge;
@@ -82,9 +87,11 @@ export function placedValues(state: FightState): Record<Slot, number | null> {
 
 /**
  * The dial's range for blows: from 1 to the reach die, and never more than the steam left
- * pays for. Null until a die is on reach.
+ * pays for. Null outside phase `set`, where the dial takes no blows (the slots can still
+ * hold the last round's dice after a strike).
  */
 export function blowRange(state: FightState): { min: number; max: number } | null {
+  if (state.phase !== 'set') return null;
   const reach = placedValues(state).reach;
   if (reach === null) return null;
   return { min: 1, max: Math.min(reach, blowsAffordable(state.steam)) };

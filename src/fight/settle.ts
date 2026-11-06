@@ -41,11 +41,14 @@ export function rewindsAt(now: number): string {
 
 /**
  * A lair can be fought unless its automaton is still winding down after a win. An
- * unreadable time counts as rewound, so a damaged save can never lock a lair for good.
+ * unreadable time counts as rewound, so a damaged save can never lock a lair for good, and
+ * so does a time further off than a whole rewind, which only a clock set back can give.
  */
 export function lairAwake(economy: Economy, lairId: LairId, now: number): boolean {
   const lair = economy.lairs[lairId];
-  return lair === undefined || !(Date.parse(lair.rewindsAt) > now);
+  if (lair === undefined) return true;
+  const at = Date.parse(lair.rewindsAt);
+  return !(at > now) || at - now > tuning.fight.lairRewindMinutes * minute;
 }
 
 export function settleFight(
@@ -98,7 +101,7 @@ export function settleFight(
         };
   return {
     ledger: { economy: next, tornPages: ledger.tornPages },
-    events: [{ type: 'FightEnded', lairId: lair.id, won: false, parts: -dropped }],
+    events: [{ type: 'FightEnded', lairId: lair.id, won: false, parts: 0 - dropped }],
     reward: 0,
     recovered: 0,
     dropped,

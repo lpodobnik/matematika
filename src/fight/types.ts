@@ -105,6 +105,10 @@ export type FightAction =
  * in his parts: reward plus recovered pile on a win, minus the dropped parts on a loss.
  */
 export type FightEvent =
+  /** He walked into a lair and a fight began (story 3.1). */
+  | { type: 'FightStarted'; lairId: LairId }
+  /** He left before his first strike, which is free (story 3.1). */
+  | { type: 'FightLeft'; lairId: LairId }
   | { type: 'DiceRolled'; lairId: LairId; dice: number[] }
   | { type: 'StrikeLanded'; lairId: LairId; strike: StrikeRecord }
   | { type: 'FightEnded'; lairId: LairId; won: boolean; parts: number }

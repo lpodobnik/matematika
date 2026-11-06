@@ -117,6 +117,8 @@ describe('losing', () => {
     const empty = settleFight(ledger({ parts: 3 }), lost(lair), lair, now);
     expect(empty.dropped).toBe(0);
     expect(empty.ledger.economy).toEqual(ledger({ parts: 3 }).economy);
+    // +0, never −0, which a Croatian number format shows as "−0".
+    expect(Object.is((empty.events[0] as { parts: number }).parts, 0)).toBe(true);
     const withPile = settleFight(
       ledger({ parts: 0, piles: { 'lair-60': 6 } }),
       lost(lair),
@@ -162,6 +164,16 @@ describe('lairs rewinding (ADR-13)', () => {
     expect(lairAwake(economy, 'lair-20', now + 15 * minute - 1)).toBe(false);
     expect(lairAwake(economy, 'lair-20', now + 15 * minute)).toBe(true);
     expect(lairAwake(economy, 'lair-30', now)).toBe(true);
+  });
+
+  it('counts a rewind further off than a whole rewind as rewound (a clock set back)', () => {
+    const later = new Date(now + 15 * minute + 1).toISOString();
+    const economy = { ...createEconomy(), lairs: { 'lair-30': { rewindsAt: later } } };
+    expect(lairAwake(economy, 'lair-30', now)).toBe(true);
+    const soon = new Date(now + 15 * minute).toISOString();
+    expect(
+      lairAwake({ ...economy, lairs: { 'lair-30': { rewindsAt: soon } } }, 'lair-30', now),
+    ).toBe(false);
   });
 
   it('counts an unreadable rewind time as rewound', () => {

@@ -2,7 +2,8 @@
 // Structure). Pure: the map, what he has finished and earned, and the rooms that exist come
 // in. A node shows once a room beside it is finished (room 1 from the start). It opens when
 // its gate is met (tools and finished rooms, never parts: FR32) and it is a room that is
-// authored. Lairs and the workshop show but don't take him anywhere until their epics.
+// authored. A lair opens once seen and takes him into a fight (story 3.1); the workshop
+// shows but takes him nowhere until its story.
 
 import type { LockKind, MapSpec, NodeId, NodeKind, NodeSpec } from '@/city/types';
 
@@ -76,6 +77,8 @@ export function nodeState(map: MapSpec, node: NodeSpec, reach: Reach): NodeState
   if (reach.done.includes(node.id)) return 'restored';
   if (roomOpen(map, node.id, reach)) return 'open';
   if (!nodeSeen(map, node.id, reach)) return 'closed';
+  // A lair is open once seen (GDD, Level Structure); fights never need a tool (story 3.1).
+  if (node.kind === 'lair') return 'open';
   return gateMet(node, reach) ? 'seen' : 'locked';
 }
 

@@ -9,6 +9,7 @@ describe('parts', () => {
       paidPredictions: [],
       piles: {},
       lairs: {},
+      seeds: {},
     });
   });
 

@@ -59,8 +59,8 @@ describe('the map screen (story 2.2)', () => {
     expect(bridge).toContain('data-state="locked"');
     expect(html).toContain(`>${hr.map.nodes.r05}<`);
     expect(html).toContain('map__lock');
-    // The lair beside room 2 shows, named, and waits for epic 3.
-    expect(html).toContain(`aria-label="${hr.map.nodes['lair-20']}, ${hr.map.states.seen}"`);
+    // The lair beside room 2 shows, named, and opens into a fight (story 3.1).
+    expect(html).toContain(`aria-label="${hr.map.nodes['lair-20']}, ${hr.map.states.open}"`);
   });
 
   it('pulses the next room and blooms the one just restored', () => {

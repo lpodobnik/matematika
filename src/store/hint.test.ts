@@ -29,6 +29,7 @@ function playing(tools: ToolId[] = []) {
           onMap: false,
           told: [],
           ideasSeen: [],
+          tornPages: [],
           tools,
           firstUse: [],
         },

@@ -37,7 +37,12 @@ export async function boot(
   }
   const from = result.save ? fromSaveV1(result.save) : null;
   try {
-    dispatch({ type: 'boot/start', save: from?.save ?? null, room: from?.room ?? null });
+    dispatch({
+      type: 'boot/start',
+      save: from?.save ?? null,
+      room: from?.room ?? null,
+      fight: from?.fight ?? null,
+    });
   } catch (error) {
     // A room in progress that throws as it resumes must not stop every launch: he starts at
     // the next room instead, and the save keeps the rest (story 2.1 review).

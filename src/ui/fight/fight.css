@@ -1,0 +1,463 @@
+/* Epic 3: the fight screen. The automaton and its armour on the left, his bench on the
+   right: gauges, dice, the three slots, a · x + b and the blows dial. Grey ink on paper
+   (NFR12); every control is a real button, at least 48 CSS px, acting on release. */
+.fight {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 16px;
+  padding: 16px;
+  background:
+    linear-gradient(var(--rule) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--paper);
+  color: var(--ink);
+}
+
+:where(.fight) button {
+  font: inherit;
+  color: inherit;
+  touch-action: manipulation;
+}
+
+.fight__foe {
+  position: relative;
+  display: flex;
+  flex: 0 0 38%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.fight__leave {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 14px 0 6px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 18px;
+}
+
+.fight__leave svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fight__round {
+  position: absolute;
+  top: 10px;
+  right: 0;
+  margin: 0;
+  font-size: 18px;
+  opacity: 0.8;
+}
+
+.fight__automaton {
+  width: min(100%, 300px);
+  height: auto;
+  max-height: 52vh;
+}
+
+.automaton {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.automaton__eye,
+.automaton__plate {
+  fill: var(--sheet);
+}
+
+.automaton__pupil,
+.automaton__rivet {
+  fill: var(--ink);
+  stroke: none;
+}
+
+.fight__armour {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px 12px;
+  width: min(100%, 300px);
+}
+
+.fight__armour-label {
+  font-size: 20px;
+}
+
+.fight__armour-number {
+  font-size: 44px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fight__armour-bar {
+  grid-column: 1 / -1;
+  height: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.fight__armour-bar span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transition: width 400ms ease-out;
+}
+
+.fight__bench {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.fight__gauges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.fight__gauge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fight__gauge-label {
+  margin-right: 4px;
+  font-size: 18px;
+}
+
+.fight__plate {
+  width: 26px;
+  height: 22px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--ink);
+}
+
+.fight__plate[data-dented] {
+  background:
+    linear-gradient(135deg, transparent 45%, var(--ink) 45%, var(--ink) 55%, transparent 55%),
+    var(--paper);
+}
+
+.fight__pips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 260px;
+}
+
+.fight__pip {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.fight__pip[data-spent] {
+  background: transparent;
+  opacity: 0.45;
+}
+
+.fight__dice {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-height: 76px;
+}
+
+.fight__roll {
+  min-height: 64px;
+  padding: 0 28px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 24px;
+}
+
+.fight__die {
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border: none;
+  border-radius: 14px;
+  background: none;
+}
+
+.fight__die[data-placed] {
+  opacity: 0.35;
+}
+
+.fight__die[data-held] {
+  opacity: 1;
+  transform: translateY(-6px);
+  filter: drop-shadow(0 6px 0 var(--rule));
+}
+
+.die {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.die__body {
+  fill: var(--sheet);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+[data-held] .die__body {
+  stroke-width: 5;
+}
+
+.die__pip {
+  fill: var(--ink);
+}
+
+.fight__tag {
+  margin: -4px 0 0;
+  font-size: 18px;
+}
+
+.fight__slots {
+  display: flex;
+  gap: 12px;
+}
+
+.fight__slot {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 6px;
+  border: 2px dashed var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.fight__slot[data-filled] {
+  border-style: solid;
+}
+
+.fight__slot[data-ready] {
+  background: var(--sheet);
+  border-width: 3px;
+}
+
+.fight__slot:disabled {
+  opacity: 1;
+}
+
+.fight__slot-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.fight__slot-die {
+  width: 56px;
+  height: 56px;
+}
+
+.fight__slot-empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 2px dotted var(--rule);
+  border-radius: 10px;
+}
+
+.fight__slot-hint {
+  font-size: 16px;
+  font-style: italic;
+}
+
+.fight__formula {
+  margin: 0;
+  font-size: 40px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.fight__formula var {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.fight__blows {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.fight__blows-label {
+  margin-right: 6px;
+  font-size: 18px;
+}
+
+.fight__notch {
+  width: 52px;
+  height: 52px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fight__notch[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.fight__notch:disabled {
+  opacity: 0.35;
+}
+
+.fight__notch[data-unaffordable] {
+  border-style: dashed;
+}
+
+/* A phone in landscape: the same two columns, tighter. */
+@media (max-height: 499.98px) {
+  .fight {
+    gap: 10px;
+    padding: 8px;
+  }
+
+  .fight__foe {
+    flex-basis: 34%;
+    gap: 4px;
+  }
+
+  .fight__leave {
+    font-size: 15px;
+  }
+
+  .fight__round {
+    display: none;
+  }
+
+  .fight__automaton {
+    max-height: 46vh;
+    margin-top: 40px;
+  }
+
+  .fight__armour-label {
+    font-size: 15px;
+  }
+
+  .fight__armour-number {
+    font-size: 28px;
+  }
+
+  .fight__bench {
+    gap: 6px;
+  }
+
+  .fight__gauge-label,
+  .fight__blows-label {
+    font-size: 14px;
+  }
+
+  .fight__plate {
+    width: 18px;
+    height: 15px;
+  }
+
+  .fight__pip {
+    width: 11px;
+    height: 11px;
+  }
+
+  .fight__dice {
+    gap: 10px;
+    min-height: 52px;
+  }
+
+  .fight__roll {
+    min-height: 48px;
+    font-size: 18px;
+  }
+
+  .fight__die {
+    width: 52px;
+    height: 52px;
+  }
+
+  .fight__tag {
+    display: none;
+  }
+
+  .fight__slot {
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    padding: 2px 4px;
+  }
+
+  .fight__slot-name {
+    font-size: 14px;
+  }
+
+  .fight__slot-die {
+    width: 42px;
+    height: 42px;
+  }
+
+  .fight__slot-hint {
+    display: none;
+  }
+
+  .fight__formula {
+    font-size: 26px;
+  }
+
+  .fight__notch {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fight__armour-bar span {
+    transition: none;
+  }
+
+  .fight__die[data-held] {
+    transform: none;
+  }
+}

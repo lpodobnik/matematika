@@ -108,6 +108,7 @@ describe('one tag at a time with the refusal’s (story 1.16 review)', () => {
             onMap: false,
             told: [],
             ideasSeen: [],
+            tornPages: [],
             tools: ['balance'],
             firstUse: [],
           },

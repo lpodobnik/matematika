@@ -2,6 +2,8 @@
 // events its reducers return, since it can't import the store; this file joins them.
 // Effects (saving, audio, the play log) listen to these and never to raw state changes.
 
+import type { UpgradeEvent } from '@/economy/upgrades';
+import type { FightEvent } from '@/fight/types';
 import type { RoomEvent } from '@/room/events';
 import type { RoomSpec } from '@/room/types';
 
@@ -12,10 +14,23 @@ import type { RoomSpec } from '@/room/types';
  */
 export type StoreEvent = { type: 'SaveChanged' } | { type: 'RoomLeft'; roomId: RoomSpec['id'] };
 
-export type DomainEvent = RoomEvent | StoreEvent;
+export type DomainEvent = RoomEvent | StoreEvent | FightEvent | UpgradeEvent;
 export type DomainEventType = DomainEvent['type'];
 
-/** Whether an event is the room's own rather than the store's (`SaveChanged`). */
+/** Events that are not the room's own: the store's, the fights' and the upgrades'. */
+const notRoom: ReadonlySet<DomainEventType> = new Set<DomainEventType>([
+  'SaveChanged',
+  'RoomLeft',
+  'FightStarted',
+  'FightLeft',
+  'DiceRolled',
+  'StrikeLanded',
+  'FightEnded',
+  'TornPageReturned',
+  'UpgradeBought',
+]);
+
+/** Whether an event is the room's own rather than the store's, a fight's or an upgrade's. */
 export function isRoomEvent(event: DomainEvent): event is RoomEvent {
-  return event.type !== 'SaveChanged' && event.type !== 'RoomLeft';
+  return !notRoom.has(event.type);
 }

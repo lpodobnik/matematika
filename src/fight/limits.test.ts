@@ -16,4 +16,9 @@ describe('fightLimits', () => {
   it('counts each upgrade once', () => {
     expect(fightLimits(['steam', 'steam'])).toEqual({ dice: 3, hull: 3, steam: 13 });
   });
+
+  it('skips an id it does not know, such as one from a damaged save', () => {
+    const unknown = ['wings', 'toString', 'steam'] as unknown as Parameters<typeof fightLimits>[0];
+    expect(fightLimits(unknown)).toEqual({ dice: 3, hull: 3, steam: 13 });
+  });
 });

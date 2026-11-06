@@ -24,6 +24,11 @@ export const SAVE_TRIGGERS: ReadonlySet<DomainEventType> = new Set<DomainEventTy
   'RoomRestarted',
   'RoomLeft',
   'SaveChanged',
+  // Fights (story 3.1, ADR-8): as one starts, after each roll and strike, and as it is left.
+  'FightStarted',
+  'DiceRolled',
+  'StrikeLanded',
+  'FightLeft',
 ]);
 
 /**

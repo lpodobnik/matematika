@@ -10,6 +10,7 @@ import { MapButton } from '@/ui/common/MapButton';
 import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
+import { FightScreen } from '@/ui/fight/FightScreen';
 import { MapScreen } from '@/ui/map/MapScreen';
 import { NamingScreen } from '@/ui/naming/NamingScreen';
 import { Notebook } from '@/ui/notebook/Notebook';
@@ -31,7 +32,7 @@ const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : nu
 // assets are loaded (story 2.1); the city map after every restart and whenever he leaves a
 // room (story 2.2), when the scene unmounts until he travels into a room again; and, once,
 // the naming after room 1 (story 2.4); and a room's story card the first time its restart
-// ends (story 2.5).
+// ends (story 2.5); and an automaton fight, entered from a lair on the map (story 3.1).
 export function App() {
   const dispatch = useGame((s) => s.dispatch);
   const screen = useGame((s) => s.ui.screen);
@@ -47,6 +48,7 @@ function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
   if (screen === 'map') return <MapScreen />;
   if (screen === 'naming') return <NamingScreen />;
   if (screen === 'story') return <StoryScreen />;
+  if (screen === 'fight') return <FightScreen />;
   return <RoomScreen />;
 }
 

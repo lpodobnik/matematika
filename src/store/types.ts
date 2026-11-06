@@ -2,12 +2,14 @@
 // every change goes through dispatch, which calls the pure root reducer with ctx.
 
 import type { Economy } from '@/economy/types';
+import type { FightState, PageId } from '@/fight/types';
 import type { HintState } from '@/room/hint';
 import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, IdeaId, RoomId, RoomState, ToolId } from '@/room/types';
 import type { Character, Settings } from '@/save/schema';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
+import type { FightEnd } from '@/store/fight-end';
 import type { QualityState } from '@/store/quality';
 
 /** A source of uniform numbers in [0, 1). */
@@ -26,9 +28,10 @@ export interface Ctx {
  * save is read and the assets are loaded (story 2.1). `map` is the city map (story 2.2),
  * where he goes after every restart and whenever he leaves a room; it replaced story 1.13's
  * "to be continued" screen. `naming` comes once, after room 1's restart (story 2.4).
- * `story` tells a room's lines the first time its restart ends (story 2.5).
+ * `story` tells a room's lines the first time its restart ends (story 2.5). `fight` is an
+ * automaton fight, entered from a lair on the map and left back to it (story 3.1).
  */
-export type Screen = 'loading' | 'room' | 'map' | 'naming' | 'story';
+export type Screen = 'loading' | 'room' | 'map' | 'naming' | 'story' | 'fight';
 
 /**
  * How many copies of the scene the scene area draws side by side: 3 only for the tablet
@@ -60,6 +63,10 @@ export interface UiState {
    * ends them (room/hint.ts). In memory only: hints are never recorded.
    */
   hint: HintState | null;
+  /** How the fight on screen ended and what it paid or cost (store/fight-end.ts), or null. */
+  fightEnd: FightEnd | null;
+  /** The dev panel only: the seed every new fight's dice start from, or null for random. */
+  fightSeed: number | null;
 }
 
 /**
@@ -90,6 +97,8 @@ export interface SaveState {
     told: RoomId[];
     /** Ideas whose explanation card he has seen, in order (story 2.6). */
     ideasSeen: IdeaId[];
+    /** Torn logbook pages returned by fights, in the order he won them (story 3.4). */
+    tornPages: PageId[];
   };
   /**
    * Parts, upgrades and piles (`createEconomy()`). From story 1.14 a right prediction pays
@@ -100,13 +109,15 @@ export interface SaveState {
   settings: Settings;
 }
 
-/**
- * The game's state. The architecture's four slices are `save`, `room`, `fight` and `ui`;
- * `fight` joins in epic 3.
- */
+/** The game's state: the architecture's four slices, `save`, `room`, `fight` and `ui`. */
 export interface GameState {
   save: SaveState;
   room: RoomState | null;
+  /**
+   * The fight in play (story 3.1), or null. Saved while in progress (`SaveV1.fight`); once it
+   * ends it is settled at once and stays here only to show how it ended.
+   */
+  fight: FightState | null;
   ui: UiState;
 }
 

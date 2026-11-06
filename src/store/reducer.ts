@@ -34,6 +34,7 @@ import { dropOnScale, rememberTray, stepTray, takeOffPan } from '@/room/tray';
 import type { RoomSpec, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
+import { withFights } from '@/store/fight-reducer';
 import { newSave } from '@/store/persist';
 import { initialQuality, type QualityState, reduceQuality } from '@/store/quality';
 import type { GameState, Reduce, SaveState } from '@/store/types';
@@ -43,6 +44,7 @@ export function initialGameState(): GameState {
   return {
     save: newSave(),
     room: null,
+    fight: null,
     ui: {
       screen: 'loading',
       loaded: 0,
@@ -51,6 +53,8 @@ export function initialGameState(): GameState {
       quality: initialQuality,
       copies: 1,
       hint: null,
+      fightEnd: null,
+      fightSeed: null,
     },
   };
 }
@@ -266,6 +270,9 @@ function roomStep(
       // The room is unchanged, but what it offers may not be (the tray and the splitter), so
       // first use runs.
       return { room, events: [] };
+    default:
+      // The fights' actions (store/fight-reducer.ts) never reach the room.
+      return null;
   }
 }
 
@@ -567,7 +574,10 @@ function namedCharacter(state: GameState, action: Action): SaveState['character'
 /** The save keeps whether he is on the map, so a launch comes back there (story 2.2). */
 function withOnMap(save: SaveState, screen: GameState['ui']['screen']): SaveState {
   // The card and the naming come between; where he was stays as it was.
-  if (screen === 'loading' || screen === 'story' || screen === 'naming') return save;
+  // A fight is entered from the map and left back to it, so he stays on the map.
+  if (screen === 'loading' || screen === 'story' || screen === 'naming' || screen === 'fight') {
+    return save;
+  }
   const onMap = screen === 'map';
   return save.progress.onMap === onMap ? save : { ...save, progress: { ...save.progress, onMap } };
 }
@@ -605,8 +615,15 @@ function leavingRoom(state: GameState, action: Action): RoomState | null {
   return resetWorks(state.room.stage.phase) ? state.room : null;
 }
 
-/** The root reducer, over a given list of rooms so tests can bring their own. */
+/**
+ * The root reducer, over a given list of rooms so tests can bring their own, with the
+ * fights over it (store/fight-reducer.ts).
+ */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
+  return withFights(createRoomReducer(roomList), roomList);
+}
+
+function createRoomReducer(roomList: readonly RoomSpec[]): Reduce {
   return (state, action, ctx) => {
     const character = namedCharacter(state, action);
     const saved = saveBefore(state.save, action, ctx.now);

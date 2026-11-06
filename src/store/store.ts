@@ -27,7 +27,7 @@ function realCtx(): Ctx {
 }
 
 function stateOf(store: GameStore): GameState {
-  return { save: store.save, room: store.room, ui: store.ui };
+  return { save: store.save, room: store.room, fight: store.fight, ui: store.ui };
 }
 
 export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameStore> {

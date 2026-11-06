@@ -1021,14 +1021,156 @@ So that the city is ready for my son's next real play.
 
 ## Epic 3: Automaton fights
 
-Give him a reason to practise that is decided by maths, not by a quiz. **Stories are detailed before the epic starts.** From the GDD:
+Give him a reason to practise that is decided by maths, not by a quiz. Detailed on 2026-11-06, after epic 2. The rules (dice, placement, blows, strikes, dents, clean cuts, piles, torn pages, upgrades, rewind) were built and balance-tested as pure logic ahead of the epic (`ahead-fight-rules.md`, `src/fight/`, `src/economy/`), so this epic builds the screen, the store, the save and the map around them.
 
-1. A round rolls dice, and he places them and commits blows without seeing the total.
-2. A strike resolves armour, clean cuts and the automaton's dent.
-3. Winning pays parts and winds the automaton down, and losing drops a recoverable pile.
-4. The first win in the armour 30, 45 and 60 lairs returns a torn page to his notebook.
-5. Upgrades change the fight's limits.
-6. Right predictions in rooms pay parts, once per stage.
+Rules for every story:
+- fights never open the way forward, and parts are the only reward signal: no stars, scores or praise (NFR13);
+- the fight is HTML and SVG over the scene area, like the map: real buttons he can tap, readable by a screen reader and by the browser test;
+- each story ends with a headless play of its screen at 1280 × 800 and 640 × 360, and its screenshots are looked at, not only the tests.
+
+Only the armour 20 and 30 lairs can be seen with rooms 1–7: the armour 45 and 60 lairs hang off rooms 8 and 12, which come in epic 4. The dev panel can open them.
+
+### Story 3.1: Enter a lair, roll, place and set blows
+
+As Luka's son,
+I want to walk into an automaton's lair and set up a strike with my dice,
+So that I can plan how hard to hit before I see the total.
+
+**Covers:** FR38 (roll, place, set); FR40 (leaving); FR41 (lairs open once seen); ADR-8.
+
+**Acceptance Criteria:**
+
+**Given** the map with a lair he has seen and whose automaton is awake
+**When** he taps it
+**Then** a fight starts there with his upgrades' limits, seeded from `ctx.rng`, and the fight screen shows the automaton with its armour, his hull, his steam and a roll button
+
+**When** he rolls
+**Then** 3 dice show, and he places each as blade `a`, charge `b` or reach by tapping a die and then a slot; a die can be moved or taken back
+
+**Given** all three slots filled
+**Then** the blows dial opens at 1 and runs to the reach die (never past the steam left), and the screen shows `a · x + b` with his numbers, such as `6 · 3 + 2`, but never the total
+
+**Given** a fight before his first strike
+**When** he leaves
+**Then** he is back on the map with nothing changed
+
+**Given** a fight in progress
+**When** the page reloads
+**Then** it resumes exactly where it was, and rolling gives the same dice, so a reload is never a free re-roll (ADR-8)
+
+### Story 3.2: Strike: armour, clean cuts and dents
+
+As Luka's son,
+I want my strike to land and show the sum,
+So that I see whether my plan was right.
+
+**Covers:** FR38 (strike, banner, dent); FR39; FR40 (losing, leaving after a strike).
+
+**Acceptance Criteria:**
+
+**When** he strikes
+**Then** the banner shows the sum, such as `6 · 3 + 2 = 20`, the armour drops by it (never below 0), and steam drops by one per blow
+
+**Given** armour left after the strike
+**Then** the automaton dents his hull and the next round starts with a roll
+
+**Given** armour brought to exactly 0
+**Then** it is a clean cut, shown as such, and he wins; armour below 0 also wins, without the clean cut
+
+**Given** armour left and his hull or steam at 0
+**Then** he loses; armour is checked first, so winning on the last steam counts
+
+**Given** a fight after his first strike
+**When** he leaves
+**Then** it counts as losing, and the leave button says so before he confirms
+
+**And** the fight is saved after every strike
+
+### Story 3.3: Parts, winding down and piles
+
+As Luka's son,
+I want a win to pay parts and a loss to cost some,
+So that fights matter and I can win my parts back.
+
+**Covers:** FR39 (reward); FR40 (piles); FR41 (wind down, rewind); ADR-13; the play log's fights.
+
+**Acceptance Criteria:**
+
+**Given** a win
+**Then** he is paid base parts plus unspent steam, doubled on a clean cut, plus any pile at that automaton, and the parts fly to the counter; the automaton winds down, drops its punched tape, and its lair shows as winding down on the map until it rewinds 15 minutes later
+
+**Given** a loss
+**Then** a quarter of his unspent parts, rounded down, drops in a pile at that automaton, shown on its lair; another loss adds to it; parts already spent are safe
+
+**And** the fight is settled once, in the same step that clears it from the save, so a reload never pays or drops twice
+
+**And** each fight writes a `fight` entry to the play log, and Luka's view shows fights per lair, wins, parts won and lost, and fights at armour 45 or more after a loss
+
+### Story 3.4: Torn logbook pages
+
+As Luka's son,
+I want the stronger automatons to carry something more than parts,
+So that beating them tells me more about Kristijan.
+
+**Covers:** FR42; narrative design, Found Documents.
+
+**Acceptance Criteria:**
+
+**Given** his first win against the armour 30, 45 or 60 automaton
+**Then** its torn page is returned: the page shows as a card in Kristijan's hand, and is then kept
+
+**And** pages he has can be read again from the map, in story order, and later wins return nothing more
+
+**And** the three pages' text is in `hr.ts`, placeholder until epic 6, and hints at why the First Automaton wants to know why
+
+### Story 3.5: Upgrades at the old mechanic's counter
+
+As Luka's son,
+I want to spend my parts on better equipment,
+So that the strongest automatons become beatable.
+
+**Covers:** FR43; narrative design, the old mechanic.
+
+**Acceptance Criteria:**
+
+**Given** the workshop node, open after room 6
+**When** he taps it
+**Then** the old mechanic's counter shows the three upgrades with their costs: 4th die, roll 4 and discard 1 (40 parts); +3 steam (20); +1 hull (30)
+
+**When** he buys one he can afford
+**Then** his parts drop by its cost, it shows as owned, and it can't be bought again; one he can't afford can't be bought
+
+**And** the next fight starts with the new limits; with the 4th die he rolls 4 and the die left out of the slots is discarded
+
+### Story 3.6: Prediction parts, and parts everywhere
+
+As Luka's son,
+I want right predictions in rooms to pay into the same parts I fight for,
+So that thinking ahead in rooms helps me in fights.
+
+**Covers:** FR7 (the payment); the GDD's economy.
+
+**Acceptance Criteria:**
+
+**Given** a right prediction in rooms 3–7
+**Then** it pays 2 parts once per stage (built in story 1.14), into the same parts fights pay and upgrades spend
+
+**And** the parts counter shows on the map, the fight screen and the counter as well as in rooms, once he has any
+
+### Story 3.7: Play the fights on the tablet
+
+As Luka,
+I want the fights playable from the map on the tablet,
+So that my son has somewhere to go between rooms.
+
+**Covers:** epic 3's playable result.
+
+**Acceptance Criteria:**
+
+**Given** a game with room 2 done
+**Then** a headless test at 1280 × 800 and 640 × 360 enters the armour 20 lair, plays a fight to a win and one to a loss, recovers the pile, buys an upgrade after room 6, and reads a torn page, tapping every control for real
+
+**And** Luka's son plays fights on the tablet, and what he runs into becomes the next story
 
 ## Epic 4: The whole district
 

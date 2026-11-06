@@ -3,6 +3,8 @@
 // is read off `room` as it is written (room/resume.ts), never kept twice in the store.
 
 import { createEconomy } from '@/economy/parts';
+import { fightInProgress } from '@/fight/fight';
+import type { FightState } from '@/fight/types';
 import { type SavedRoom, savedRoomOf } from '@/room/resume';
 import { currentVersion, type SaveV1 } from '@/save/schema';
 import type { GameState, SaveState } from '@/store/types';
@@ -20,6 +22,7 @@ export function newSave(createdAt: string | null = null): SaveState {
       onMap: false,
       told: [],
       ideasSeen: [],
+      tornPages: [],
     },
     economy: createEconomy(),
     settings: { muted: false, quality: null },
@@ -35,12 +38,18 @@ export function toSaveV1(state: GameState, now: string): SaveV1 {
     character: save.character,
     progress: { ...save.progress, room: savedRoomOf(state.room) },
     economy: save.economy,
+    // A fight that has ended is settled in the same step, so it is never saved (ADR-8).
+    fight: fightInProgress(state.fight) ? state.fight : null,
     settings: save.settings,
   };
 }
 
-/** A save read from the device, as the store's slice and the room to resume. */
-export function fromSaveV1(save: SaveV1): { save: SaveState; room: SavedRoom | null } {
+/** A save read from the device, as the store's slice and the room and fight to resume. */
+export function fromSaveV1(save: SaveV1): {
+  save: SaveState;
+  room: SavedRoom | null;
+  fight: FightState | null;
+} {
   const { room, ...progress } = save.progress;
   return {
     save: {
@@ -51,5 +60,6 @@ export function fromSaveV1(save: SaveV1): { save: SaveState; room: SavedRoom | n
       settings: save.settings,
     },
     room,
+    fight: save.fight,
   };
 }
