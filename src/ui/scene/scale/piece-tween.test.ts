@@ -11,6 +11,7 @@ import {
   planMoves,
   planTween,
 } from '@/ui/scene/scale/piece-tween';
+import { isHidden } from '@/ui/scene/scale/use-piece-tween';
 
 function placed(key: string, identity: string, x: number, y = 0, alpha = 1): PlacedPiece {
   return { key, identity, at: { x, y, alpha } };
@@ -134,5 +135,23 @@ describe('planMoves and placementAt', () => {
   it('takes under half a second', () => {
     expect(pieceTweenMs).toBeGreaterThan(0);
     expect(pieceTweenMs).toBeLessThanOrEqual(500);
+  });
+});
+
+describe('isHidden (a piece he carries off the pan)', () => {
+  const weight = (value: bigint): PieceView => ({
+    key: 'left-weight-0',
+    kind: 'weight',
+    value: { n: value, d: 1n },
+    label: String(value),
+    divisorLabel: null,
+  });
+
+  it('hides the piece with the carried key that is still the same kind and number', () => {
+    const hidden = { key: 'left-weight-0', identity: pieceIdentity(weight(5n)) };
+    expect(isHidden(weight(5n), hidden)).toBe(true);
+    expect(isHidden(weight(3n), hidden)).toBe(false);
+    expect(isHidden({ ...weight(5n), key: 'left-weight-1' }, hidden)).toBe(false);
+    expect(isHidden(weight(5n), null)).toBe(false);
   });
 });

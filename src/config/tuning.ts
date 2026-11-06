@@ -29,4 +29,10 @@ export const tuning = {
    * never reports done ends after this long, so a missed animation event never strands the
    * game. Longer than either animation (ui/scene/machine/layout.ts). */
   presentationTimeoutMs: 8000,
+  /** Architecture, Balance moves: the tray's weight and float are numbered 1 to this. */
+  trayMaxNumber: 99,
+  /** The tray's − and + repeat when held: the first repeat after this long… */
+  trayRepeatDelayMs: 450,
+  /** …then one step this often, until he lets go. */
+  trayRepeatMs: 110,
 } as const;

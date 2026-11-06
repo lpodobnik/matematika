@@ -640,9 +640,9 @@ describe('predict before the dial opens (story 1.9)', () => {
     expect(game.stage()?.phase).toBe('restart');
     expect(game.store.getState().save.progress.tools).toEqual(['balance']);
     game.presented();
-    // Room 3 is the last room for now (room 4 joins in story 1.10), so it stays done.
-    expect(game.store.getState().room?.spec.id).toBe('r03');
-    expect(game.stage()?.phase).toBe('done');
+    // Room 4, the water wheel, loads next, with Balance kept.
+    expect(game.store.getState().room?.spec.id).toBe('r04');
+    expect(game.stage()?.phase).toBe('arrive');
     expect(game.store.getState().save.progress.tools).toEqual(['balance']);
   });
 
@@ -653,6 +653,123 @@ describe('predict before the dial opens (story 1.9)', () => {
     game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
     expect(game.store.getState().room).toBe(before.room);
     expect(game.store.getState().save).toBe(before.save);
+  });
+});
+
+describe('balance with the tray (story 1.10)', () => {
+  /** Room 4 with Balance earned (as room 3 earns it), the pin locked at 9, so it is open. */
+  function inRoomFour() {
+    const seen: DomainEvent[] = [];
+    const initial = initialGameState();
+    const store = createGameStore({
+      makeCtx: () => fixedCtx,
+      effects: [(event) => seen.push(event)],
+      initialState: {
+        ...initial,
+        save: { progress: { tools: ['balance'], firstUse: ['pin'] } },
+      },
+    });
+    const act = (action: Action) => store.getState().dispatch(action);
+    const stage = () => store.getState().room?.stage;
+    const lines = () => stage()?.lines.map((line) => line.tokens.join('')) ?? [];
+    const type = (text: string) => {
+      for (const char of text) {
+        const token = tokenFromChar(char);
+        if (token) act({ type: 'notebook/type', token });
+      }
+      act({ type: 'notebook/enter' });
+    };
+    act({ type: 'room/enter', roomId: 'r04' });
+    act({ type: 'machine/touch' });
+    act({ type: 'pin/set', value: { kind: 'x', x: 9 } });
+    act({ type: 'pin/confirm' });
+    return { store, seen, act, stage, lines, type };
+  }
+
+  it('offers the tray once the stage opens, and wiggles it on first use', () => {
+    const game = inRoomFour();
+    expect(game.stage()?.phase).toBe('open');
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray']);
+    expect(game.stage()?.hintLevel).toBe(1);
+    game.act({ type: 'stage/reset' });
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin', 'tray']);
+  });
+
+  it('plays room 4: a float of 5 on the left writes nothing, and on the right writes 2x = 18', () => {
+    const game = inRoomFour();
+    for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
+    expect(game.stage()?.tray).toEqual({ weight: 1, float: 5 });
+    game.seen.length = 0;
+    game.act({ type: 'tray/drop', side: 'left', kind: 'float' });
+    expect(game.lines()).toEqual(['2x+5=23']);
+    expect(game.seen).toEqual([]);
+    const tipped = game.store.getState().room as RoomState;
+    expect(scaleView(tipped)).toMatchObject({ x: 0, actingOut: false, tilt: -15 });
+    game.act({ type: 'tray/drop', side: 'right', kind: 'float' });
+    expect(game.lines()).toEqual(['2x+5=23', '2x=18']);
+    expect(game.seen).toEqual([
+      { type: 'WayUsed', roomId: 'r04', stage: 0, way: 'balance' },
+      { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: true },
+    ]);
+    game.type('x=9');
+    game.type('2·9+5=23');
+    expect(game.stage()?.phase).toBe('locked');
+  });
+
+  it("locks when he types x = 9 and the check line, though the dial can't reach 9", () => {
+    const game = inRoomFour();
+    game.act({ type: 'dial/set', x: 6 });
+    game.act({ type: 'dial/set', x: 7 });
+    expect(game.stage()?.dialX).toBe(6);
+    game.type('x=9');
+    game.type('2·9+5=23');
+    expect(game.stage()?.phase).toBe('locked');
+  });
+
+  it('takes a piece off a pan, and slides back (ignores) a drop it refuses', () => {
+    const game = inRoomFour();
+    game.act({ type: 'tray/take', side: 'left', key: 'left-weight-0' });
+    expect(
+      scaleView(game.store.getState().room as RoomState).left.pieces.map((p) => p.kind),
+    ).toEqual(['gear', 'gear']);
+    const before = game.store.getState().room;
+    game.act({ type: 'tray/take', side: 'left', key: 'left-gear-0' });
+    for (let i = 0; i < 30; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
+    const stepped = game.store.getState().room;
+    expect(stepped?.stage.tray.float).toBe(31);
+    game.act({ type: 'tray/drop', side: 'right', kind: 'float' });
+    expect(game.store.getState().room).toBe(stepped);
+    expect(before?.stage.pans).toBe(stepped?.stage.pans);
+  });
+
+  it('keeps the tray away without Balance, and the dev panel can grant it', () => {
+    const game = inRoomFour();
+    game.act({ type: 'dev/set-tools', tools: [] });
+    expect(game.store.getState().save.progress.tools).toEqual([]);
+    const before = game.store.getState().room;
+    game.act({ type: 'tray/drop', side: 'left', kind: 'weight' });
+    expect(game.store.getState().room).toBe(before);
+    game.act({ type: 'dev/set-tools', tools: ['balance', 'balance'] });
+    expect(game.store.getState().save.progress.tools).toEqual(['balance']);
+    game.act({ type: 'tray/drop', side: 'left', kind: 'weight' });
+    expect(game.store.getState().room?.stage.pans).not.toBe(before?.stage.pans);
+  });
+
+  it('wiggles the tray when the dev panel grants Balance in an open stage he has not met it in', () => {
+    const store = createGameStore({ makeCtx: () => fixedCtx });
+    const act = (action: Action) => store.getState().dispatch(action);
+    act({ type: 'room/enter', roomId: 'r01' });
+    act({ type: 'machine/touch' });
+    act({ type: 'dev/set-tools', tools: ['balance'] });
+    expect(store.getState().save.progress).toEqual({ tools: ['balance'], firstUse: ['tray'] });
+    expect(store.getState().room?.stage.hintLevel).toBe(1);
+    const empty = reduce(
+      initialGameState(),
+      { type: 'dev/set-tools', tools: ['balance'] },
+      fixedCtx,
+    );
+    expect(empty.state.save.progress.tools).toEqual(['balance']);
+    expect(empty.state.room).toBeNull();
   });
 });
 

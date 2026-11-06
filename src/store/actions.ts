@@ -2,7 +2,7 @@
 
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
-import type { PinValue, RoomId } from '@/room/types';
+import type { PinValue, RoomId, Side, ToolId, TrayKind } from '@/room/types';
 
 export type Action =
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */
@@ -21,6 +21,12 @@ export type Action =
   | { type: 'pin/set'; value: PinValue }
   /** He confirmed the pin where it is: it locks and the stage opens. */
   | { type: 'pin/confirm' }
+  /** The tray's − or + for its weight or float; the UI repeats it while the button is held. */
+  | { type: 'tray/step'; kind: TrayKind; by: 1 | -1 }
+  /** He dropped the tray's weight or float, with its number, on a pan. */
+  | { type: 'tray/drop'; side: Side; kind: TrayKind }
+  /** He dragged a weight or float off a pan into the tray; `key` is its key on the scale. */
+  | { type: 'tray/take'; side: Side; key: string }
   /** A pad key (or its keyboard stand-in) typed at the end of the draft line. */
   | { type: 'notebook/type'; token: Token }
   /** Delete: the draft's last token. */
@@ -28,4 +34,6 @@ export type Action =
   /** Enter: the draft is judged. */
   | { type: 'notebook/enter' }
   /** On a phone, the notebook slides over the scale; this pushes it aside or brings it back. */
-  | { type: 'notebook/slide'; aside: boolean };
+  | { type: 'notebook/slide'; aside: boolean }
+  /** The dev panel only (architecture, Debug Tools): sets the tools he has earned. */
+  | { type: 'dev/set-tools'; tools: ToolId[] };

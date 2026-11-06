@@ -4,8 +4,9 @@ import {
   type FederatedPointerEvent,
   Graphics,
   type Application as PixiApplication,
+  type PointData,
 } from 'pixi.js';
-import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { palette } from '@/art/palette';
 import { useGame } from '@/store/store';
 import { watchContextLoss } from '@/ui/scene/context-loss';
@@ -15,7 +16,10 @@ import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
 import { Dial } from '@/ui/scene/scale/Dial';
 import { Pin } from '@/ui/scene/scale/Pin';
+import { createPieceDrag } from '@/ui/scene/scale/piece-drag';
 import { Scale } from '@/ui/scene/scale/Scale';
+import { Tray } from '@/ui/scene/scale/Tray';
+import type { Point } from '@/ui/scene/scale/tray-layout';
 
 extend({ Container, Graphics });
 
@@ -117,12 +121,23 @@ function drawPaper(g: Graphics): void {
  * is the machine, and the first touch ends the stage's arrive (Pattern 2). Presses bubble up
  * to the stage from the dial too, after the dial has started its drag, so grabbing the dial
  * is a touch like any other.
+ *
+ * The scale and the tray share one piece drag (story 1.10): a weight or float can be carried
+ * from the tray to a pan, or off a pan into the tray. The tray, drawn last, draws the piece
+ * he carries above everything else.
  */
 function SceneContent() {
   const { app, isInitialised } = useApplication();
   const sceneRef = useRef<Container>(null);
   const [sceneScale, setSceneScale] = useState(0);
   const dispatch = useGame((s) => s.dispatch);
+  const drag = useMemo(() => createPieceDrag(), []);
+  const toScene = useCallback((point: PointData): Point => {
+    const scene = sceneRef.current;
+    if (!scene) return { x: point.x, y: point.y };
+    const local = scene.toLocal(point);
+    return { x: local.x, y: local.y };
+  }, []);
 
   useEffect(() => {
     if (!isInitialised) return;
@@ -161,9 +176,10 @@ function SceneContent() {
     <pixiContainer ref={sceneRef}>
       <pixiGraphics draw={drawPaper} />
       <Machine />
-      <Scale sceneScale={sceneScale} />
+      <Scale sceneScale={sceneScale} drag={drag} toScene={toScene} />
       <Dial sceneScale={sceneScale} />
       <Pin sceneScale={sceneScale} />
+      <Tray sceneScale={sceneScale} drag={drag} toScene={toScene} />
     </pixiContainer>
   );
 }

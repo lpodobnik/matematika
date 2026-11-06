@@ -3,12 +3,17 @@
 // (architecture, Animation); React state changes only when pieces that fade out start and
 // stop being drawn. Pieces get their place only from here, so a piece's container never
 // shows anywhere but where the tween puts it.
+//
+// A piece he is carrying off the pan (story 1.10) is hidden on it. If the pan's layout
+// changes while it is hidden (he dropped it into the tray), the piece that fades out in
+// its place stays hidden too, so it doesn't show twice.
 
 import { animate } from 'motion';
 import type { Container } from 'pixi.js';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PieceView } from '@/room/scale';
 import type { PieceBox } from '@/ui/scene/scale/layout';
+import type { HiddenPiece } from '@/ui/scene/scale/piece-drag';
 import {
   type PieceMotion,
   type PlacedPiece,
@@ -25,6 +30,13 @@ export interface Ghost {
   key: string;
   piece: PieceView;
   box: PieceBox;
+  /** It was the piece he carried off: it fades out unseen. */
+  hidden: boolean;
+}
+
+/** Whether a piece is the one he is carrying: the same key, and the same kind and number. */
+export function isHidden(piece: PieceView, hidden: HiddenPiece | null | undefined): boolean {
+  return !!hidden && piece.key === hidden.key && pieceIdentity(piece) === hidden.identity;
 }
 
 interface Shown {
@@ -47,8 +59,14 @@ export interface PieceTween {
 export function usePieceTween(
   pieces: readonly PieceView[],
   boxes: readonly PieceBox[],
+  hidden: HiddenPiece | null = null,
 ): PieceTween {
   const [ghosts, setGhosts] = useState<Ghost[]>([]);
+  const hiddenRef = useRef(hidden);
+  // Before the tween below plans a new layout in the same commit.
+  useLayoutEffect(() => {
+    hiddenRef.current = hidden;
+  });
   const nodes = useRef(new Map<string, Container>());
   const refs = useRef(new Map<string, (node: Container | null) => void>());
   /** Where each piece and ghost is drawn now, by key. */
@@ -110,7 +128,8 @@ export function usePieceTween(
       const was = old.get(exit.key);
       if (!was) return [];
       const key = `${tag}-${exit.key}`;
-      return [{ key, piece: was.piece, box: was.box, motion: { ...exit, key } }];
+      const unseen = isHidden(was.piece, hiddenRef.current);
+      return [{ key, piece: was.piece, box: was.box, hidden: unseen, motion: { ...exit, key } }];
     });
     const motions = [...plan.pieces, ...exits.map((exit) => exit.motion)];
 
@@ -136,7 +155,9 @@ export function usePieceTween(
       return;
     }
     apply(0);
-    setGhosts(exits.map(({ key, piece, box }) => ({ key, piece, box })));
+    setGhosts(
+      exits.map(({ key, piece, box, hidden: unseen }) => ({ key, piece, box, hidden: unseen })),
+    );
     const controls = animate(0, 1, {
       duration: pieceTweenMs / 1000,
       ease: 'easeInOut',

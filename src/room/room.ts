@@ -15,6 +15,7 @@ import type {
   RoomState,
   StageSpec,
   StageState,
+  TrayNumbers,
 } from '@/room/types';
 
 export interface RoomStep {
@@ -87,12 +88,15 @@ export function openingDial(stage: StageSpec): { min: number; max: number } {
   return { min, max: Math.min(full.max, min + (Math.max(1, notches) - 1) * step) };
 }
 
+/** The tray's numbers as a stage arrives: its weight and its float both show 1. */
+export const trayStart: Readonly<TrayNumbers> = { weight: 1, float: 1 };
+
 /**
  * A stage as it arrives: the first machine's equation on the pans and as the notebook's
  * line 0, an empty draft (or, with Try values `blanks`, the lines to fill), every machine
- * stopped, no pin placed, and the dial at its minimum, exploring, with its poke window
- * open if it has one. It waits in `arrive` for his first touch on the machine
- * (room/phases.ts).
+ * stopped, no pin placed, the tray at 1 and 1, and the dial at its minimum, exploring, with
+ * its poke window open if it has one. It waits in `arrive` for his first touch on the
+ * machine (room/phases.ts).
  */
 export function arriveAtStage(stage: StageSpec): StageState {
   const dialX = fullDial(stage).min;
@@ -107,6 +111,7 @@ export function arriveAtStage(stage: StageSpec): StageState {
     jamsInARow: 0,
     machineProgress: stage.machines.map(() => 0),
     pans: machineEquation(stage, 0),
+    tray: { ...trayStart },
     actingOut: false,
     dialX,
     dialOpen: openingDial(stage),

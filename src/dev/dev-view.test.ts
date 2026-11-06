@@ -8,6 +8,8 @@ import {
   jumpTargets,
   opensOnLoad,
   pinText,
+  toggledBalance,
+  trayText,
   tupleText,
   verdictText,
 } from '@/dev/dev-view';
@@ -51,6 +53,7 @@ describe('jumpTargets', () => {
       { roomId: 'r02', stage: 1, label: 'r02 · 2' },
       { roomId: 'r03', stage: 0, label: 'r03 · 1' },
       { roomId: 'r03', stage: 1, label: 'r03 · 2' },
+      { roomId: 'r04', stage: 0, label: 'r04 · 1' },
     ]);
   });
 
@@ -66,7 +69,21 @@ describe('devReadout', () => {
     expect(readout.progress).toBe('0');
     expect(readout.jam).toBe('none');
     expect(readout.pin).toBe('none');
+    expect(readout.pans).toBe('x : 3 = 5');
+    expect(readout.tray).toBe('off');
     expect(readout.draft).toBeNull();
+  });
+
+  it('shows the tray in an open stage once Balance is earned, and switches Balance', () => {
+    const room = opened(freeRoomOne);
+    expect(trayText(room, [])).toBe('off');
+    expect(trayText(room, ['balance'])).toBe('weight 1, float 1');
+    const jammed = enterLine(typed(room, 'x = 6'), 0)?.room;
+    if (!jammed) throw new Error('enter was ignored');
+    expect(trayText(jammed, ['balance'])).toBe('weight 1, float 1, jammed');
+    expect(devReadout(room, ['balance']).tray).toBe('weight 1, float 1');
+    expect(toggledBalance([])).toEqual(['balance']);
+    expect(toggledBalance(['balance', 'chain'])).toEqual(['chain']);
   });
 
   it('shows the prediction pin: where it is, and whether it is locked and resolved', () => {

@@ -1,24 +1,29 @@
 // Content tests for every room (architecture, Room Data). Story 1.4 checks what room 1
 // needs; later stories add the GDD-table checks (dial ranges, poke windows, the tilt clamp,
 // fading, ways that can finish, paper-test equations) as their rooms arrive. Story 1.9 adds
-// room 3 and the checks for poke windows and pins.
+// room 3 and the checks for poke windows and pins; story 1.10 room 4, the fading matrix
+// and the ways that can finish.
 
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
 import { check, stageSolution } from '@/math/check';
+import { formatEquation } from '@/math/format';
 import { solve } from '@/math/linear';
+import { classifyMove } from '@/math/moves';
 import { parse } from '@/math/parse';
 import * as q from '@/math/rational';
+import { canonicalSolution } from '@/math/steps';
 import { fillBlanks, tokenize } from '@/math/tokens';
-import { dialValue, notchCount } from '@/room/dial';
+import { dialValue, isOnDial, notchCount } from '@/room/dial';
 import { openingTemplates } from '@/room/fading';
 import { panPieces } from '@/room/pieces';
 import { pinSupported, pinTrack, slotCount, slotValue, xPanMotion } from '@/room/pin';
 import { openingDial } from '@/room/room';
 import { isLevel, sideValues, tiltFor } from '@/room/tilt';
-import type { DialSpec, StageSpec } from '@/room/types';
+import { trayMinNumber } from '@/room/tray';
+import type { DialSpec, FadingMode, StageSpec, WayId } from '@/room/types';
 
 function stageEquation(stage: StageSpec | undefined) {
   const parsed = parse(stage?.machines[0]?.equation ?? '');
@@ -62,8 +67,81 @@ describe('rooms', () => {
     expect(rooms[0]?.stages[0]?.readouts).toBe(true);
   });
 
-  it('lists the rooms in play order: rooms 1, 2 and 3', () => {
-    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03']);
+  it('lists the rooms in play order: rooms 1, 2, 3 and 4', () => {
+    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03', 'r04']);
+  });
+
+  describe("room 4, the water wheel (GDD's Puzzle Progression tables)", () => {
+    const room = rooms[3];
+    const stage = room?.stages[0] as StageSpec;
+
+    it('is 2x + 5 = 23 on a dial of 0–6, at 0.75° per unit, finished by Balance', () => {
+      expect(room?.id).toBe('r04');
+      expect(room?.machine).toBe('water-wheel');
+      expect(room?.stages).toHaveLength(1);
+      expect(stage.type).toBe('solve');
+      expect(stage.machines.map((m) => m.equation)).toEqual(['2x + 5 = 23']);
+      expect(stage.dial).toEqual({ min: 0, max: 6, step: 1 });
+      expect(stage.tiltPerUnit).toBe(0.75);
+      expect(stage.readouts).toBe(true);
+      expect(stage.ways).toEqual(['balance']);
+      expect(stage.fading).toEqual({ try: 'blank', balance: 'auto' });
+      expect(room?.earns).toBeNull();
+    });
+
+    it('opens a poke window over 0–3 and a "where it levels" pin beyond the dial, on 0–12', () => {
+      expect(stage.pokeNotches).toBe(4);
+      expect(pokeValues(stage)).toEqual([0, 1, 2, 3]);
+      expect(stage.pin).toEqual({ kind: 'level-x', beyondDial: true });
+      expect(pinTrack(stage)).toEqual({ kind: 'x', min: 0, max: 12, step: 1, reach: 6 });
+    });
+
+    it("answers 9, which the dial can't reach", () => {
+      const answer = stageSolution(stageEquation(stage));
+      expect(answer).toBe(9);
+      expect(isOnDial(stage.dial as DialSpec, answer)).toBe(false);
+    });
+
+    it('still locks when he types x = 9 and the check line: any correct method is accepted', () => {
+      const lines = [stageEquation(stage)];
+      const verdicts = ['x = 9', '2 · 9 + 5 = 23'].map((line) => {
+        const verdict = check(lines, line);
+        const parsed = parse(line);
+        if (parsed.ok) lines.push(parsed.equation);
+        return verdict.kind;
+      });
+      expect(verdicts).toEqual(['answer', 'check']);
+    });
+
+    it('is balanced by a float of 5 on both pans, then a split by 2', () => {
+      const lines = canonicalSolution(stageEquation(stage), 'balance');
+      expect(lines?.map((line) => formatEquation(line))).toEqual([
+        '2x = 18',
+        'x = 9',
+        '2 · 9 + 5 = 23',
+      ]);
+    });
+  });
+
+  // GDD, Notebook, Fading: Try values gives blanks in rooms 1–3 and a blank page from
+  // room 4; Balance writes its lines in rooms 4–5, gives blanks in rooms 6–7 and a blank
+  // page from room 8.
+  it('fades each way as the GDD table says, room by room', () => {
+    const fadingFor = (index: number): Partial<Record<WayId, FadingMode>> => {
+      const number = index + 1;
+      return {
+        try: number <= 3 ? 'blanks' : 'blank',
+        // Balance is earned at the end of room 3, so rooms 1–3 have no Balance mode.
+        balance: number <= 3 ? undefined : number <= 5 ? 'auto' : number <= 7 ? 'blanks' : 'blank',
+      };
+    };
+    rooms.forEach((room, index) => {
+      const expected = fadingFor(index);
+      for (const stage of room.stages) {
+        expect(stage.fading.try, room.id).toBe(expected.try);
+        expect(stage.fading.balance, room.id).toBe(expected.balance);
+      }
+    });
   });
 
   describe("room 3, the sluice gate (GDD's Puzzle Progression tables)", () => {
@@ -232,6 +310,39 @@ describe('rooms', () => {
         expect(isLevel(values), `x = ${x}`).toBe(false);
         const tilt = tiltFor(values, stage.tiltPerUnit ?? tuning.tiltPerUnit);
         expect(Math.abs(tilt), `x = ${x}`).toBeLessThan(tuning.tiltMax);
+      }
+    });
+
+    it('can be finished by every way it lists, within the dial, the tray and the splitter', () => {
+      const equation = stageEquation(stage);
+      const answer = stageSolution(equation);
+      for (const way of stage.ways) {
+        if (way === 'try') {
+          expect(
+            stage.dial !== 'locked' && isOnDial(stage.dial, answer),
+            'the dial reaches x',
+          ).toBe(true);
+        }
+        if (way === 'balance') {
+          const lines = canonicalSolution(equation, 'balance');
+          expect(lines, 'Balance finishes').not.toBeNull();
+          let previous = equation;
+          for (const line of lines ?? []) {
+            const move = classifyMove(previous, line);
+            if (move.kind === 'add-both') {
+              expect(move.term.kind).toBe('num');
+              if (move.term.kind === 'num') {
+                expect(move.term.value).toBeGreaterThanOrEqual(trayMinNumber);
+                expect(move.term.value).toBeLessThanOrEqual(tuning.trayMaxNumber);
+              }
+            }
+            if (move.kind === 'split-both') {
+              expect(move.parts).toBeGreaterThanOrEqual(2);
+              expect(move.parts).toBeLessThanOrEqual(9);
+            }
+            previous = line;
+          }
+        }
       }
     });
 

@@ -98,6 +98,20 @@ export function pieceSize(piece: PieceView, fontSize: number): PieceSize {
   return { width: diameter, height: diameter + dividerHeight, dividerHeight };
 }
 
+/**
+ * Where a piece can be grabbed, from its bottom centre: its own box, grown to at least
+ * `minSize` each way (48 CSS px, architecture Gesture sizes).
+ */
+export function grabArea(
+  width: number,
+  height: number,
+  minSize: number,
+): { x: number; y: number; width: number; height: number } {
+  const w = Math.max(width, minSize);
+  const h = Math.max(height, minSize);
+  return { x: -w / 2, y: -height - (h - height) / 2, width: w, height: h };
+}
+
 export interface PieceBox extends PieceSize {
   key: string;
   /** Centre, from the pan's centre. */

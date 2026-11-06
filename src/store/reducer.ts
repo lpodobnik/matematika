@@ -18,7 +18,8 @@ import {
 } from '@/room/phases';
 import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
-import type { RoomSpec } from '@/room/types';
+import { dropOnPan, stepTray, takeOffPan } from '@/room/tray';
+import type { RoomSpec, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import type { GameState, Reduce, SaveState } from '@/store/types';
@@ -51,13 +52,15 @@ function moveOn(step: RoomStep | null, roomList: readonly RoomSpec[]): RoomStep 
 
 /**
  * What an action does to the room in play, or null when it leaves the room alone: with no
- * room, in a phase where the action does nothing, or for an action outside the room.
+ * room, in a phase where the action does nothing, or for an action outside the room. The
+ * tray takes the tools he has earned, since it needs Balance.
  */
 function roomStep(
   state: GameState,
   action: Action,
   now: number,
   roomList: readonly RoomSpec[],
+  tools: readonly ToolId[],
 ): RoomStep | null {
   if (action.type === 'room/enter') {
     return enterRoom(findRoom(action.roomId, roomList), action.stage ?? 0);
@@ -79,6 +82,12 @@ function roomStep(
       return setPin(room, action.value);
     case 'pin/confirm':
       return confirmPin(room);
+    case 'tray/step':
+      return stepTray(room, tools, action.kind, action.by);
+    case 'tray/drop':
+      return dropOnPan(room, tools, action.side, action.kind);
+    case 'tray/take':
+      return takeOffPan(room, tools, action.side, action.key);
     case 'notebook/type':
       return typeToken(room, action.token);
     case 'notebook/delete':
@@ -87,6 +96,9 @@ function roomStep(
       return enterLine(room, now);
     case 'notebook/slide':
       return null;
+    case 'dev/set-tools':
+      // The room is unchanged, but what it offers may not be (the tray), so first use runs.
+      return { room, events: [] };
   }
 }
 
@@ -97,37 +109,42 @@ interface Progressed {
 }
 
 /**
- * What a room step means beyond the room: the first time the stage offers a control he
- * hasn't met, it wiggles once and counts as met (room/first-use.ts); a room that restarts
- * earns its tool (room 3: Balance), held in memory until saving arrives in epic 2.
+ * What a room step means beyond the room: a room that restarts earns its tool (room 3:
+ * Balance), held in memory until saving arrives in epic 2; and the first time the stage
+ * offers a control he hasn't met, it wiggles once and counts as met (room/first-use.ts).
  */
 function progress(step: RoomStep | null, save: SaveState): Progressed {
   if (!step) return { step, save };
   const { tools, firstUse } = save.progress;
-  const met = meetControls(step.room, firstUse);
   const tool = toolEarned(step);
   const earned = tool !== null && !tools.includes(tool);
+  const toolsNow = earned ? [...tools, tool] : tools;
+  const met = meetControls(step.room, firstUse, toolsNow);
   if (!met && !earned) return { step, save };
   return {
     step: met ? { ...step, room: met.room } : step,
     save: {
       ...save,
-      progress: {
-        ...save.progress,
-        tools: earned ? [...tools, tool] : tools,
-        firstUse: met ? met.met : firstUse,
-      },
+      progress: { ...save.progress, tools: toolsNow, firstUse: met ? met.met : firstUse },
     },
   };
+}
+
+/** The dev panel sets the tools he has earned (architecture, Debug Tools). */
+function withTools(save: SaveState, tools: readonly ToolId[]): SaveState {
+  return { ...save, progress: { ...save.progress, tools: [...new Set(tools)] } };
 }
 
 /** The root reducer, over a given list of rooms so tests can bring their own. */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
-    const { step, save } = progress(roomStep(state, action, ctx.now, roomList), state.save);
+    const before =
+      action.type === 'dev/set-tools' ? withTools(state.save, action.tools) : state.save;
+    const change = roomStep(state, action, ctx.now, roomList, before.progress.tools);
+    const { step, save } = progress(change, before);
     const events: DomainEvent[] = step ? [...step.events] : [];
     const next = produce(state, (draft) => {
-      if (step) draft.room = castDraft(step.room);
+      if (step && step.room !== state.room) draft.room = castDraft(step.room);
       if (save !== state.save) draft.save = castDraft(save);
       if (action.type === 'room/enter') draft.ui.screen = 'room';
       if (action.type === 'notebook/slide') draft.ui.notebookAside = action.aside;

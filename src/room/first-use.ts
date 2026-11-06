@@ -2,14 +2,19 @@
 // the splitter, it wiggles once (hint level 1, "the piece he can move wiggles"). What he
 // has met is kept beside the room, in the store's progress, so a control wiggles in the
 // first stage that offers it and never again, even after a reset. Saving it (epic 2) keeps
-// it across sessions. The tray and the splitter join in stories 1.10 and 1.11.
+// it across sessions. The tray needs Balance, so it takes the tools he has earned; the
+// splitter joins in story 1.11.
 
 import { pinOffered } from '@/room/pin';
-import type { FirstUseId, HintLevel, RoomState } from '@/room/types';
+import { trayOffered } from '@/room/tray';
+import type { FirstUseId, HintLevel, RoomState, ToolId } from '@/room/types';
 
 /** The controls the stage offers now that have a first-use wiggle. */
-export function offeredControls(room: RoomState): FirstUseId[] {
-  return pinOffered(room) ? ['pin'] : [];
+export function offeredControls(room: RoomState, tools: readonly ToolId[] = []): FirstUseId[] {
+  const offered: FirstUseId[] = [];
+  if (pinOffered(room)) offered.push('pin');
+  if (trayOffered(room, tools)) offered.push('tray');
+  return offered;
 }
 
 export interface FirstUseStep {
@@ -23,8 +28,12 @@ export interface FirstUseStep {
  * the new control wiggles once, and it counts as met from now on. Null when the stage
  * offers nothing new.
  */
-export function meetControls(room: RoomState, met: readonly FirstUseId[]): FirstUseStep | null {
-  const fresh = offeredControls(room).filter((control) => !met.includes(control));
+export function meetControls(
+  room: RoomState,
+  met: readonly FirstUseId[],
+  tools: readonly ToolId[] = [],
+): FirstUseStep | null {
+  const fresh = offeredControls(room, tools).filter((control) => !met.includes(control));
   if (fresh.length === 0) return null;
   const hintLevel = Math.max(1, room.stage.hintLevel) as HintLevel;
   return {

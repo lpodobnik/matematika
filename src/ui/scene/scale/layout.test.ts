@@ -9,6 +9,7 @@ import { dialLayout } from '@/ui/scene/scale/dial-layout';
 import {
   baseLabelSize,
   beamPose,
+  grabArea,
   labelFontSize,
   labelWidth,
   layoutPan,
@@ -221,5 +222,12 @@ describe('readoutBox', () => {
         }
       }
     }
+  });
+});
+
+describe('grabArea', () => {
+  it('is the piece’s own box, from its bottom centre, grown to the smallest grab size', () => {
+    expect(grabArea(100, 88, 60)).toEqual({ x: -50, y: -88, width: 100, height: 88 });
+    expect(grabArea(40, 40, 90)).toEqual({ x: -45, y: -65, width: 90, height: 90 });
   });
 });

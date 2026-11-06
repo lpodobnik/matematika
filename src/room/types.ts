@@ -124,6 +124,12 @@ export interface PinState {
 /** The controls that wiggle once, the first time the game offers them (Pattern 2, First use). */
 export type FirstUseId = 'pin' | 'tray' | 'splitter';
 
+/** What the tray holds (Pattern 1, Balance moves): weights and floats only, never gears or springs. */
+export type TrayKind = 'weight' | 'float';
+
+/** The numbers set on the tray's weight and float, each 1–`tuning.trayMaxNumber`. */
+export type TrayNumbers = Record<TrayKind, number>;
+
 /** Pattern 2's hint ladder: 0 is none; 1 wiggles the piece he can move. Levels 2–4 come in epic 2. */
 export type HintLevel = 0 | 1 | 2 | 3 | 4;
 
@@ -169,10 +175,13 @@ export interface StageState {
   /** 0–1 per machine: 0 is stopped, 1 is running; the skin shows it. */
   machineProgress: number[];
   /**
-   * The last committed line plus exploratory moves. Writing a line replaces it with the
-   * line's layout. While a line jam is set the scale acts out the jammed draft instead.
+   * The last committed line plus exploratory moves (the tray, from story 1.10). Writing a
+   * line replaces it with the line's layout. While a line jam is set the scale acts out the
+   * jammed draft instead.
    */
   pans: Equation;
+  /** The numbers on the tray's weight and float (room/tray.ts); kept by reset. */
+  tray: TrayNumbers;
   /**
    * True from a committed line until the next exploring action (dial, tray, splitter):
    * the pans are weighed at the stage's solution, with `?` on the gears and no readouts.

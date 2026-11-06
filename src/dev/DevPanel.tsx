@@ -9,6 +9,7 @@ import {
   jumpTargets,
   type LineReadout,
   opensOnLoad,
+  toggledBalance,
 } from '@/dev/dev-view';
 import { useGame } from '@/store/store';
 
@@ -37,16 +38,19 @@ export default function DevPanel() {
 /** The open panel, reading the store. */
 function DevPanelLive({ onClose }: { onClose(): void }) {
   const room = useGame((s) => s.room);
+  const tools = useGame((s) => s.save.progress.tools);
   const dispatch = useGame((s) => s.dispatch);
-  const readout = useMemo(() => (room ? devReadout(room) : null), [room]);
+  const readout = useMemo(() => (room ? devReadout(room, tools) : null), [room, tools]);
   const targets = useMemo(() => jumpTargets(rooms), []);
   return (
     <DevPanelView
       readout={readout}
       targets={targets}
+      balance={tools.includes('balance')}
       onJump={(target) =>
         dispatch({ type: 'room/enter', roomId: target.roomId, stage: target.stage })
       }
+      onToggleBalance={() => dispatch({ type: 'dev/set-tools', tools: toggledBalance(tools) })}
       onClose={onClose}
     />
   );
@@ -55,12 +59,22 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
 export interface DevPanelViewProps {
   readout: DevReadout | null;
   targets: readonly JumpTarget[];
+  /** Whether Balance is earned: the tray shows in open stages. */
+  balance: boolean;
   onJump(target: JumpTarget): void;
+  onToggleBalance(): void;
   onClose(): void;
 }
 
 /** The panel from props only. */
-export function DevPanelView({ readout, targets, onJump, onClose }: DevPanelViewProps) {
+export function DevPanelView({
+  readout,
+  targets,
+  balance,
+  onJump,
+  onToggleBalance,
+  onClose,
+}: DevPanelViewProps) {
   return (
     <section className="dev-panel" aria-label="dev panel">
       <header className="dev-panel__header">
@@ -78,6 +92,12 @@ export function DevPanelView({ readout, targets, onJump, onClose }: DevPanelView
           <dd>{readout.jam}</dd>
           <dt>pin</dt>
           <dd>{readout.pin}</dd>
+          <dt>pans</dt>
+          <dd>
+            <span className="dev-panel__line">{readout.pans}</span>
+          </dd>
+          <dt>tray</dt>
+          <dd>{readout.tray}</dd>
           <dt>last line</dt>
           <dd>
             <Line line={readout.last} />
@@ -86,6 +106,16 @@ export function DevPanelView({ readout, targets, onJump, onClose }: DevPanelView
           <dd>{readout.draft ? <Line line={readout.draft} /> : '—'}</dd>
         </dl>
       )}
+      <div className="dev-panel__jumps">
+        <button
+          type="button"
+          className="dev-panel__button"
+          aria-pressed={balance}
+          onClick={onToggleBalance}
+        >
+          balance {balance ? 'on' : 'off'}
+        </button>
+      </div>
       <nav className="dev-panel__jumps" aria-label="jump to a room and stage">
         {targets.map((target) => (
           <button

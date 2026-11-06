@@ -11,6 +11,11 @@ export type RoomEvent =
   /** The dial levelled the pans (audio: a thunk). Never fired by acting out a line. */
   | { type: 'PansLevel'; roomId: RoomSpec['id']; stage: number; x: number }
   /**
+   * A move on the machine completed (the play log's ways used): with Balance, the pans'
+   * equation has the stage's solution again after a change to both pans.
+   */
+  | { type: 'WayUsed'; roomId: RoomSpec['id']; stage: number; way: WayId }
+  /**
    * A line was committed to the notebook (saving from epic 2; the play log). `progress` is
    * whether it moves the machine: a valid line's own progress, and always for the answer
    * and check lines.

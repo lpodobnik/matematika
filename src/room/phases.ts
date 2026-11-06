@@ -175,7 +175,8 @@ export function resetWorks(phase: Phase): boolean {
  * its holder, and the stage to its opening phase (`openingPhase`). Earlier stages stay
  * solved: the room stays at this stage. `jamsInARow` and `hintLevel` are kept, since only a
  * committed line resets the jam count (hints from epic 2), and so is `refused`, the
- * notebook's wiggle count. Null, so the action is ignored, from locked on.
+ * notebook's wiggle count; the tray keeps its numbers, which are a setting of the tool, not
+ * a move. Null, so the action is ignored, from locked on.
  */
 export function resetStage(room: RoomState): RoomStep | null {
   const { stage } = room;
@@ -191,6 +192,7 @@ export function resetStage(room: RoomState): RoomStep | null {
     jamsInARow: stage.jamsInARow,
     refused: stage.refused,
     hintLevel: stage.hintLevel,
+    tray: stage.tray,
   };
   const events: RoomEvent[] = [
     { type: 'StageReset', roomId: room.spec.id, stage: room.stageIndex },

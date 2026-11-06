@@ -156,6 +156,33 @@ function progressFor(stage: StageState, verdict: Verdict): number[] {
 }
 
 /**
+ * The stage with a correct line committed, however it was written (typed, or by a way on
+ * the machine): the line joins `lines`, read-only; the machine moves on by its verdict;
+ * `jamsInARow` resets; and the pans take the line's layout. What else changes (the draft,
+ * the blanks, acting out, the lock) is up to the caller.
+ */
+export function commitLine(
+  stage: StageState,
+  tokens: Token[],
+  source: NotebookLine['source'],
+  verdict: Verdict,
+): StageState {
+  assert(isCommitted(verdict), `a ${verdict.kind} line is never committed`);
+  return {
+    ...stage,
+    lines: [...stage.lines, { tokens, source, verdict }],
+    jamsInARow: 0,
+    machineProgress: progressFor(stage, verdict),
+    pans: equationOf(tokens, 'a committed line'),
+  };
+}
+
+/** Whether the progress a committed line reports moves the machine (`LineAccepted.progress`). */
+export function lineProgress(verdict: Verdict): boolean {
+  return verdict.kind === 'valid' ? verdict.progress : true;
+}
+
+/**
  * Judges the line the draft stands for (`notebook/enter`, story 1.3's checker):
  * - `incomplete`, `nonlinear`, `aside`: refused; the draft stays and `refused` counts up,
  *   so the notebook wiggles. Nothing is acted out.
@@ -190,21 +217,16 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
     ];
     return { room: withStage(room, jammed), events, verdict };
   }
-  const line: NotebookLine = { tokens, source: 'typed', verdict };
   const locks = verdict.kind === 'check';
   const next: StageState = {
-    ...stage,
+    ...commitLine(stage, tokens, 'typed', verdict),
     phase: locks ? 'locked' : stage.phase,
-    lines: [...stage.lines, line],
     draft: [],
     templates: stage.templates.slice(1),
-    jamsInARow: 0,
-    machineProgress: progressFor(stage, verdict),
-    pans: equationOf(tokens, 'a committed line'),
     actingOut: true,
     presentedAt: locks ? now : stage.presentedAt,
   };
-  const progress = verdict.kind === 'valid' ? verdict.progress : true;
+  const progress = lineProgress(verdict);
   const events: RoomEvent[] = [{ type: 'LineAccepted', ...at, source: 'typed', progress }];
   const committed = withStage(room, next);
   if (!locks) return { room: committed, events, verdict };

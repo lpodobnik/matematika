@@ -1,13 +1,21 @@
 import { extend } from '@pixi/react';
-import { Container, Graphics, Text, type TextStyleOptions } from 'pixi.js';
+import {
+  Container,
+  type FederatedPointerEvent,
+  Graphics,
+  Text,
+  type TextStyleOptions,
+} from 'pixi.js';
 import { type RefObject, useCallback, useMemo } from 'react';
 import { palette } from '@/art/palette';
 import { scaleSkin } from '@/art/skins/scale';
-import type { PanView } from '@/room/scale';
+import { isNumberPiece } from '@/room/pieces';
+import type { PanView, PieceView } from '@/room/scale';
 import type { Side } from '@/room/types';
 import { layoutPan, readoutBox, scaleGeometry } from '@/ui/scene/scale/layout';
 import { Piece } from '@/ui/scene/scale/Piece';
-import { usePieceTween } from '@/ui/scene/scale/use-piece-tween';
+import type { HiddenPiece } from '@/ui/scene/scale/piece-drag';
+import { isHidden, usePieceTween } from '@/ui/scene/scale/use-piece-tween';
 
 extend({ Container, Graphics, Text });
 
@@ -19,15 +27,24 @@ interface Props {
   fontSize: number;
   /** The scale moves the pan through this ref as the beam tips; no position props here. */
   containerRef: RefObject<Container | null>;
+  /**
+   * Grabbing a weight or float starts carrying it off (story 1.10), while the tray works;
+   * null otherwise. Gears and springs can never be grabbed.
+   */
+  onGrab: ((piece: PieceView, event: FederatedPointerEvent) => void) | null;
+  /** The piece he is carrying off this pan, hidden on it, or null. */
+  hidden: HiddenPiece | null;
+  /** The smallest grab area, in scene units (48 CSS px). */
+  minHit: number;
 }
 
 /**
  * One pan, level at its beam end, with its pieces stacked on it and its readout under it.
  * When the pan takes a new layout, its pieces move and fade with one generic tween.
  */
-export function Pan({ side, pan, readout, fontSize, containerRef }: Props) {
+export function Pan({ side, pan, readout, fontSize, containerRef, onGrab, hidden, minHit }: Props) {
   const boxes = useMemo(() => layoutPan(pan.pieces, fontSize), [pan.pieces, fontSize]);
-  const { ghosts, refFor } = usePieceTween(pan.pieces, boxes);
+  const { ghosts, refFor } = usePieceTween(pan.pieces, boxes, hidden);
   const drawPan = useCallback(
     (g: Graphics) => scaleSkin.pan(g, scaleGeometry.panWidth, scaleGeometry.postHeight),
     [],
@@ -44,6 +61,9 @@ export function Pan({ side, pan, readout, fontSize, containerRef }: Props) {
             box={box}
             fontSize={fontSize}
             nodeRef={refFor(piece.key)}
+            hidden={isHidden(piece, hidden)}
+            onGrab={onGrab && isNumberPiece(piece) ? (event) => onGrab(piece, event) : null}
+            minHit={minHit}
           />
         ) : null;
       })}
@@ -54,6 +74,7 @@ export function Pan({ side, pan, readout, fontSize, containerRef }: Props) {
           box={ghost.box}
           fontSize={fontSize}
           nodeRef={refFor(ghost.key)}
+          hidden={ghost.hidden}
         />
       ))}
       {readout !== null && <Readout side={side} label={readout} fontSize={fontSize} />}
