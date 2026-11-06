@@ -5,6 +5,7 @@ import { tokenFromChar } from '@/math/tokens';
 import { dialView } from '@/room/dial';
 import { machineView } from '@/room/machine';
 import { panPieces } from '@/room/pieces';
+import { pinView } from '@/room/pin';
 import { scaleView } from '@/room/scale';
 import type { RoomSpec, RoomState, StageSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
@@ -61,7 +62,7 @@ describe('the store', () => {
     const reduceSpy = vi.fn(reduce);
     const store = createGameStore({ reduce: reduceSpy });
     store.getState().dispatch({ type: 'room/enter', roomId: 'r01' });
-    expect(Object.keys(reduceSpy.mock.calls[0]?.[0] ?? {}).sort()).toEqual(['room', 'ui']);
+    expect(Object.keys(reduceSpy.mock.calls[0]?.[0] ?? {}).sort()).toEqual(['room', 'save', 'ui']);
     expect(typeof store.getState().dispatch).toBe('function');
   });
 
@@ -385,7 +386,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     expect(game.seen).toEqual([{ type: 'StageArrived', roomId: 'r02', stage: 0 }]);
   });
 
-  it('plays room 2: the first lamp lights, the second stage arrives, then the machine restarts', () => {
+  it('plays room 2: the first lamp lights, the second stage arrives, the machine restarts, then room 3', () => {
     const game = playing();
     game.act({ type: 'room/enter', roomId: 'r02' });
     game.act({ type: 'machine/touch' });
@@ -402,12 +403,11 @@ describe('a room from arrival to restart (story 1.8)', () => {
     game.act({ type: 'dial/set', x: 15 });
     game.solve('15');
     game.presented();
+    expect(game.store.getState().room?.stage.phase).toBe('restart');
     game.presented();
     room = game.store.getState().room as RoomState;
-    // Room 2 is the last room in content for now, so it stays done (story 1.13 adds the
-    // "to be continued" screen after room 4).
-    expect(room.spec.id).toBe('r02');
-    expect(room.stage.phase).toBe('done');
+    expect(room.spec.id).toBe('r03');
+    expect(room.stage.phase).toBe('arrive');
     expect(game.seen.filter((event) => event.type !== 'DialNotch')).toEqual([
       { type: 'StageArrived', roomId: 'r02', stage: 0 },
       { type: 'PansLevel', roomId: 'r02', stage: 0, x: 4 },
@@ -420,6 +420,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
       { type: 'LineAccepted', roomId: 'r02', stage: 1, source: 'typed', progress: true },
       { type: 'StageLocked', roomId: 'r02', stage: 1 },
       { type: 'RoomRestarted', roomId: 'r02' },
+      { type: 'StageArrived', roomId: 'r03', stage: 0 },
     ]);
   });
 
@@ -503,6 +504,155 @@ describe('a room from arrival to restart (story 1.8)', () => {
     expect(game.phases).toEqual(['r02.1:arrive']);
     expect(game.seen).toEqual([{ type: 'StageArrived', roomId: 'r02', stage: 1 }]);
     expect(machineView(game.store.getState().room)?.partsStarted).toBe(1);
+  });
+});
+
+describe('predict before the dial opens (story 1.9)', () => {
+  function inRoomThree(stage = 0) {
+    const seen: DomainEvent[] = [];
+    const store = createGameStore({
+      makeCtx: () => fixedCtx,
+      effects: [(event) => seen.push(event)],
+    });
+    const act = (action: Action) => store.getState().dispatch(action);
+    const solve = (answer: string) => {
+      for (let line = 0; line < 2; line += 1) {
+        for (const char of answer) {
+          const token = tokenFromChar(char);
+          if (token) act({ type: 'notebook/type', token });
+        }
+        act({ type: 'notebook/enter' });
+      }
+    };
+    const presented = () => {
+      const room = store.getState().room as RoomState;
+      const { phase } = room.stage;
+      if (phase !== 'locked' && phase !== 'restart') throw new Error(`nothing plays in ${phase}`);
+      act({ type: 'presentation/done', roomId: room.spec.id, stage: room.stageIndex, phase });
+    };
+    act({ type: 'room/enter', roomId: 'r03', stage });
+    return { store, seen, act, solve, presented, stage: () => store.getState().room?.stage };
+  }
+
+  it('pokes 6–9, pins, confirms, levels the pans at 14 and locks: room 3, stage 1', () => {
+    const game = inRoomThree();
+    game.act({ type: 'machine/touch' });
+    expect(game.stage()?.phase).toBe('poke');
+    for (const x of [7, 8, 9, 10, 14]) game.act({ type: 'dial/set', x });
+    expect(game.stage()?.dialX).toBe(9);
+    game.act({ type: 'notebook/type', token: '1' });
+    expect(game.stage()?.draft).toEqual([]);
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 13 } });
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
+    expect(game.stage()).toMatchObject({ phase: 'pin', dialX: 9 });
+    game.act({ type: 'dial/set', x: 8 });
+    expect(game.stage()?.dialX).toBe(9);
+    game.act({ type: 'pin/confirm' });
+    expect(game.stage()).toMatchObject({ phase: 'open', dialOpen: { min: 6, max: 20 } });
+    game.seen.length = 0;
+    game.act({ type: 'dial/set', x: 14 });
+    expect(game.seen).toEqual([
+      { type: 'DialNotch', x: 14 },
+      { type: 'PansLevel', roomId: 'r03', stage: 0, x: 14 },
+      { type: 'PredictionMade', roomId: 'r03', stage: 0, right: true },
+    ]);
+    game.solve('14');
+    expect(game.stage()?.phase).toBe('locked');
+    game.presented();
+    expect(game.store.getState().room?.stageIndex).toBe(1);
+  });
+
+  it('wiggles the pin once, the first time the game offers it, and never again', () => {
+    const game = inRoomThree();
+    expect(game.store.getState().save.progress.firstUse).toEqual([]);
+    expect(game.stage()?.hintLevel).toBe(0);
+    game.act({ type: 'machine/touch' });
+    expect(game.stage()?.hintLevel).toBe(1);
+    expect(pinView(game.store.getState().room)?.wiggle).toBe(true);
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin']);
+    game.act({ type: 'stage/reset' });
+    expect(game.store.getState().save.progress.firstUse).toEqual(['pin']);
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
+    game.act({ type: 'pin/confirm' });
+    expect(pinView(game.store.getState().room)?.wiggle).toBe(false);
+    game.act({ type: 'dial/set', x: 14 });
+    game.solve('14');
+    game.presented();
+    game.act({ type: 'machine/touch' });
+    expect(game.stage()).toMatchObject({ phase: 'pin', hintLevel: 0 });
+    expect(pinView(game.store.getState().room)?.wiggle).toBe(false);
+  });
+
+  it('keeps a locked pin on reset and opens the full dial, so he is never left with a short dial', () => {
+    const game = inRoomThree();
+    game.act({ type: 'machine/touch' });
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 11 } });
+    game.act({ type: 'pin/confirm' });
+    game.act({ type: 'dial/set', x: 12 });
+    game.act({ type: 'stage/reset' });
+    expect(game.stage()).toMatchObject({
+      phase: 'open',
+      dialX: 6,
+      dialOpen: { min: 6, max: 20 },
+      pin: { value: { kind: 'x', x: 11 }, locked: true, resolved: false },
+    });
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
+    expect(game.stage()?.pin?.value).toEqual({ kind: 'x', x: 11 });
+    game.seen.length = 0;
+    game.act({ type: 'dial/set', x: 14 });
+    expect(game.seen.at(-1)).toEqual({
+      type: 'PredictionMade',
+      roomId: 'r03',
+      stage: 0,
+      right: false,
+    });
+  });
+
+  it('pins a direction before the dial moves in stage 2, then resolves it on the first notch', () => {
+    const game = inRoomThree(1);
+    game.act({ type: 'dial/set', x: 1 });
+    expect(game.stage()?.dialX).toBe(0);
+    game.act({ type: 'machine/touch' });
+    expect(game.stage()?.phase).toBe('pin');
+    game.act({ type: 'dial/set', x: 1 });
+    expect(game.stage()?.dialX).toBe(0);
+    game.act({ type: 'pin/set', value: { kind: 'choice', index: 1 } });
+    game.act({ type: 'pin/confirm' });
+    game.seen.length = 0;
+    game.act({ type: 'dial/set', x: 1 });
+    expect(game.seen).toEqual([
+      { type: 'DialNotch', x: 1 },
+      { type: 'PredictionMade', roomId: 'r03', stage: 1, right: true },
+    ]);
+  });
+
+  it('earns Balance when room 3 restarts, held in memory until saving arrives', () => {
+    const game = inRoomThree(1);
+    game.act({ type: 'machine/touch' });
+    game.act({ type: 'pin/set', value: { kind: 'choice', index: 0 } });
+    game.act({ type: 'pin/confirm' });
+    game.solve('14');
+    expect(game.seen.filter((event) => event.type === 'PredictionMade')).toEqual([
+      { type: 'PredictionMade', roomId: 'r03', stage: 1, right: false },
+    ]);
+    expect(game.store.getState().save.progress.tools).toEqual([]);
+    game.presented();
+    expect(game.stage()?.phase).toBe('restart');
+    expect(game.store.getState().save.progress.tools).toEqual(['balance']);
+    game.presented();
+    // Room 3 is the last room for now (room 4 joins in story 1.10), so it stays done.
+    expect(game.store.getState().room?.spec.id).toBe('r03');
+    expect(game.stage()?.phase).toBe('done');
+    expect(game.store.getState().save.progress.tools).toEqual(['balance']);
+  });
+
+  it('leaves the state alone on a pin action that does nothing', () => {
+    const game = inRoomThree();
+    const before = game.store.getState();
+    game.act({ type: 'pin/confirm' });
+    game.act({ type: 'pin/set', value: { kind: 'x', x: 14 } });
+    expect(game.store.getState().room).toBe(before.room);
+    expect(game.store.getState().save).toBe(before.save);
   });
 });
 

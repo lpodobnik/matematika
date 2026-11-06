@@ -40,3 +40,60 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+/* The pin's confirm control, in the scene area's bottom-left corner while the pin is placed
+   and not yet locked: on the tablet in the margin under the scene, and on a phone left of
+   the dial's window. It appears with a short rise so it is noticed. */
+.pin-confirm {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-width: 56px;
+  height: 56px;
+  padding: 0 16px 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 28px;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: 20px;
+  touch-action: manipulation;
+  animation: pin-confirm-rise 240ms ease-out;
+}
+
+.pin-confirm:active {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.pin-confirm__icon {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes pin-confirm-rise {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin-confirm {
+    animation: none;
+  }
+}

@@ -4,7 +4,7 @@ import { TOKENS } from '@/math/tokens';
 import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
 import type { RoomSpec, StageSpec } from '@/room/types';
-import { reduce } from '@/store/reducer';
+import { initialGameState, reduce } from '@/store/reducer';
 import type { GameState } from '@/store/types';
 import { keyFromKeyboard } from '@/ui/notebook/keyboard';
 import { keyAction, keyKind, PAD_ROWS, primaryPress, tokenLabel } from '@/ui/notebook/pad-keys';
@@ -68,8 +68,8 @@ describe('the pad and the keyboard write the same line', () => {
 
   function play(keys: readonly Parameters<typeof keyAction>[0][]): GameState {
     let state: GameState = {
+      ...initialGameState(),
       room: touchMachine(enterRoom(freeRoom).room)?.room ?? null,
-      ui: { screen: 'room', notebookAside: false },
     };
     for (const key of keys) state = reduce(state, keyAction(key), ctx).state;
     return state;

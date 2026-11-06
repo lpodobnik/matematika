@@ -6,16 +6,29 @@ import { castDraft, produce } from 'immer';
 import { rooms } from '@/content/rooms';
 import { assert } from '@/lib/assert';
 import { setDial } from '@/room/dial';
+import { meetControls } from '@/room/first-use';
 import { deleteToken, enterLine, typeToken } from '@/room/notebook';
-import { finishPresentation, nextRoom, resetStage, tickClock, touchMachine } from '@/room/phases';
+import {
+  finishPresentation,
+  nextRoom,
+  resetStage,
+  tickClock,
+  toolEarned,
+  touchMachine,
+} from '@/room/phases';
+import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
 import type { RoomSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
-import type { GameState, Reduce } from '@/store/types';
+import type { GameState, Reduce, SaveState } from '@/store/types';
 
 export function initialGameState(): GameState {
-  return { room: null, ui: { screen: 'room', notebookAside: false } };
+  return {
+    save: { progress: { tools: [], firstUse: [] } },
+    room: null,
+    ui: { screen: 'room', notebookAside: false },
+  };
 }
 
 function findRoom(id: RoomSpec['id'], list: readonly RoomSpec[]): RoomSpec {
@@ -62,6 +75,10 @@ function roomStep(
       return moveOn(tickClock(room, now), roomList);
     case 'dial/set':
       return setDial(room, action.x);
+    case 'pin/set':
+      return setPin(room, action.value);
+    case 'pin/confirm':
+      return confirmPin(room);
     case 'notebook/type':
       return typeToken(room, action.token);
     case 'notebook/delete':
@@ -73,13 +90,45 @@ function roomStep(
   }
 }
 
+/** A room step, then what it means for his progress (held in `save`). */
+interface Progressed {
+  step: RoomStep | null;
+  save: SaveState;
+}
+
+/**
+ * What a room step means beyond the room: the first time the stage offers a control he
+ * hasn't met, it wiggles once and counts as met (room/first-use.ts); a room that restarts
+ * earns its tool (room 3: Balance), held in memory until saving arrives in epic 2.
+ */
+function progress(step: RoomStep | null, save: SaveState): Progressed {
+  if (!step) return { step, save };
+  const { tools, firstUse } = save.progress;
+  const met = meetControls(step.room, firstUse);
+  const tool = toolEarned(step);
+  const earned = tool !== null && !tools.includes(tool);
+  if (!met && !earned) return { step, save };
+  return {
+    step: met ? { ...step, room: met.room } : step,
+    save: {
+      ...save,
+      progress: {
+        ...save.progress,
+        tools: earned ? [...tools, tool] : tools,
+        firstUse: met ? met.met : firstUse,
+      },
+    },
+  };
+}
+
 /** The root reducer, over a given list of rooms so tests can bring their own. */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
-    const step = roomStep(state, action, ctx.now, roomList);
+    const { step, save } = progress(roomStep(state, action, ctx.now, roomList), state.save);
     const events: DomainEvent[] = step ? [...step.events] : [];
     const next = produce(state, (draft) => {
       if (step) draft.room = castDraft(step.room);
+      if (save !== state.save) draft.save = castDraft(save);
       if (action.type === 'room/enter') draft.ui.screen = 'room';
       if (action.type === 'notebook/slide') draft.ui.notebookAside = action.aside;
     });

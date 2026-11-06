@@ -17,6 +17,7 @@ import { parse } from '@/math/parse';
 import { fillBlanks, isDigit, type Token } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
 import { progressAfter } from '@/room/machine';
+import { resolvePin } from '@/room/pin';
 import type { NotebookLine, Phase, RoomState, StageState } from '@/room/types';
 
 /** A key on the number pad, or its stand-in on a computer keyboard. */
@@ -24,8 +25,8 @@ export type NotebookKey = Token | 'delete' | 'enter';
 
 /**
  * Phases in which he writes (Pattern 2): only `open`. The notebook is off while the stage
- * waits in `arrive` for his first touch on the machine, in `poke` and `pin` (story 1.9), and
- * once the stage locks.
+ * waits in `arrive` for his first touch on the machine, in `poke` and `pin`, until he
+ * confirms the pin, and once the stage locks.
  */
 const writingPhases: ReadonlySet<Phase> = new Set<Phase>(['open']);
 
@@ -164,7 +165,7 @@ function progressFor(stage: StageState, verdict: Verdict): number[] {
  *   when he fills blanks, the next template comes up). The pans take the line's layout and
  *   act it out; the machine moves on; `jamsInARow` resets. The check line locks the stage
  *   (`StageLocked`), and the machine starts presenting the lock at `now` (ctx.now; see
- *   room/phases.ts).
+ *   room/phases.ts). A locked pin that hasn't resolved yet resolves then (`PredictionMade`).
  * Acting out never fires `PansLevel`: only the dial does. Null when the notebook is off,
  * or while the machine is jammed (only an edit clears a line jam).
  */
@@ -205,8 +206,12 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
   };
   const progress = verdict.kind === 'valid' ? verdict.progress : true;
   const events: RoomEvent[] = [{ type: 'LineAccepted', ...at, source: 'typed', progress }];
-  if (locks) events.push({ type: 'StageLocked', ...at });
-  return { room: withStage(room, next), events, verdict };
+  const committed = withStage(room, next);
+  if (!locks) return { room: committed, events, verdict };
+  events.push({ type: 'StageLocked', ...at });
+  const resolved = resolvePin(committed, 'lock');
+  if (!resolved) return { room: committed, events, verdict };
+  return { room: resolved.room, events: [...events, ...resolved.events], verdict };
 }
 
 /** A committed line ready to show: its number (0 is the stage equation) and its text. */

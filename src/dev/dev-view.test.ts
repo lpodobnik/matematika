@@ -7,6 +7,7 @@ import {
   isToggleKey,
   jumpTargets,
   opensOnLoad,
+  pinText,
   tupleText,
   verdictText,
 } from '@/dev/dev-view';
@@ -48,6 +49,8 @@ describe('jumpTargets', () => {
       { roomId: 'r01', stage: 0, label: 'r01 · 1' },
       { roomId: 'r02', stage: 0, label: 'r02 · 1' },
       { roomId: 'r02', stage: 1, label: 'r02 · 2' },
+      { roomId: 'r03', stage: 0, label: 'r03 · 1' },
+      { roomId: 'r03', stage: 1, label: 'r03 · 2' },
     ]);
   });
 
@@ -62,7 +65,18 @@ describe('devReadout', () => {
     expect(readout.place).toBe('r02 · stage 2 of 2 · arrive');
     expect(readout.progress).toBe('0');
     expect(readout.jam).toBe('none');
+    expect(readout.pin).toBe('none');
     expect(readout.draft).toBeNull();
+  });
+
+  it('shows the prediction pin: where it is, and whether it is locked and resolved', () => {
+    expect(pinText(null)).toBe('none');
+    const x = { kind: 'x', x: 12 } as const;
+    expect(pinText({ value: x, locked: false, resolved: false })).toBe('x = 12, moving');
+    expect(pinText({ value: x, locked: true, resolved: false })).toBe('x = 12, locked');
+    expect(pinText({ value: x, locked: true, resolved: true })).toBe('x = 12, locked, resolved');
+    const choice = { kind: 'choice', index: 1 } as const;
+    expect(pinText({ value: choice, locked: false, resolved: false })).toBe('choice 1, moving');
   });
 
   it('shows the last committed line with its verdict and progress tuple', () => {

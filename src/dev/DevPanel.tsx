@@ -76,6 +76,8 @@ export function DevPanelView({ readout, targets, onJump, onClose }: DevPanelView
           <dd>{readout.progress}</dd>
           <dt>jam</dt>
           <dd>{readout.jam}</dd>
+          <dt>pin</dt>
+          <dd>{readout.pin}</dd>
           <dt>last line</dt>
           <dd>
             <Line line={readout.last} />

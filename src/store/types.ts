@@ -1,7 +1,7 @@
 // The store's shapes (architecture, State Management). One store holds the whole game;
 // every change goes through dispatch, which calls the pure root reducer with ctx.
 
-import type { RoomState } from '@/room/types';
+import type { FirstUseId, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 
@@ -26,10 +26,24 @@ export interface UiState {
 }
 
 /**
+ * The part of the architecture's `save` slice (`SaveV1`) that epic 1 needs. It is held in
+ * memory only, until saving arrives in epic 2 and writes it to the device.
+ */
+export interface SaveState {
+  progress: {
+    /** Tools earned at the end of rooms (room 3 earns Balance). */
+    tools: ToolId[];
+    /** Controls he has met, so each wiggles only the first time (Pattern 2, First use). */
+    firstUse: FirstUseId[];
+  };
+}
+
+/**
  * The game's state. The architecture's four slices are `save`, `room`, `fight` and `ui`;
- * `save` joins in epic 2 and `fight` in epic 3.
+ * `fight` joins in epic 3.
  */
 export interface GameState {
+  save: SaveState;
   room: RoomState | null;
   ui: UiState;
 }

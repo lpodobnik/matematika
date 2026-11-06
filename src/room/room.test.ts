@@ -55,6 +55,8 @@ describe('enterRoom', () => {
       actingOut: false,
       dialX: 0,
       dialOpen: { min: 0, max: 10 },
+      pin: null,
+      hintLevel: 0,
       presentedAt: null,
     });
     expect(events).toEqual([{ type: 'StageArrived', roomId: 'r01', stage: 0 }]);

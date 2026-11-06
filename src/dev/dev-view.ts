@@ -9,7 +9,7 @@ import { complexity, type ProgressTuple } from '@/math/moves';
 import { parse } from '@/math/parse';
 import type { Token } from '@/math/tokens';
 import { committedEquations, lineTokens } from '@/room/notebook';
-import type { RoomId, RoomSpec, RoomState } from '@/room/types';
+import type { PinState, RoomId, RoomSpec, RoomState } from '@/room/types';
 
 /** A place the panel can jump to: an authored room at one of its stages. */
 export interface JumpTarget {
@@ -62,6 +62,8 @@ export interface DevReadout {
   /** The stage's machines' progress, 0–1 each. */
   progress: string;
   jam: string;
+  /** The prediction pin: where it is and its state, e.g. `x = 12, locked, resolved`. */
+  pin: string;
   /** The last committed line, with the verdict it was committed with (line 0 is given). */
   last: LineReadout;
   /**
@@ -69,6 +71,14 @@ export interface DevReadout {
    * refuses a line or jams on it, the line stays in the draft, so this is its verdict.
    */
   draft: LineReadout | null;
+}
+
+export function pinText(pin: PinState | null): string {
+  if (!pin) return 'none';
+  const { value } = pin;
+  const place = value.kind === 'x' ? `x = ${value.x}` : `${value.kind} ${value.index}`;
+  const state = pin.resolved ? 'locked, resolved' : pin.locked ? 'locked' : 'moving';
+  return `${place}, ${state}`;
 }
 
 export function devReadout(room: RoomState): DevReadout {
@@ -79,6 +89,7 @@ export function devReadout(room: RoomState): DevReadout {
     place: `${room.spec.id} · stage ${room.stageIndex + 1} of ${room.spec.stages.length} · ${stage.phase}`,
     progress: stage.machineProgress.join(', '),
     jam: stage.jam ? stage.jam.kind : 'none',
+    pin: pinText(stage.pin),
     last: lastLine
       ? lineReadout(lastLine.tokens, lastLine.verdict)
       : { text: '', verdict: 'none', tuple: null },

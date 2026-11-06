@@ -2,7 +2,7 @@
 
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
-import type { RoomId } from '@/room/types';
+import type { PinValue, RoomId } from '@/room/types';
 
 export type Action =
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */
@@ -17,6 +17,10 @@ export type Action =
   | { type: 'clock/tick' }
   /** The dial landed on a new notch; the UI sends it once per notch, never per frame. */
   | { type: 'dial/set'; x: number }
+  /** He dragged the prediction pin onto a place of its track; once per place, never per frame. */
+  | { type: 'pin/set'; value: PinValue }
+  /** He confirmed the pin where it is: it locks and the stage opens. */
+  | { type: 'pin/confirm' }
   /** A pad key (or its keyboard stand-in) typed at the end of the draft line. */
   | { type: 'notebook/type'; token: Token }
   /** Delete: the draft's last token. */

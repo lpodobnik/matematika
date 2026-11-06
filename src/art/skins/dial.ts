@@ -2,6 +2,7 @@
 // Management). Epic 6 replaces it.
 //
 //   track    a line from notch 0 to the last, a tick on each notch, a stop at both ends
+//   stop     the end of the poke window: a bar the knob comes up against until the pin is locked
 //   knob     a handle centred on its notch, with an index line down its middle
 
 import type { Graphics } from 'pixi.js';
@@ -30,6 +31,14 @@ export const dialSkin = {
         color: palette.ink,
       });
     }
+  },
+
+  /** The poke window's stop, centred on the track's line at its origin. */
+  stop(g: Graphics, tickHeight: number, lineWidth: number): void {
+    g.clear();
+    g.rect(-lineWidth * 1.5, -tickHeight * 0.9, lineWidth * 3, tickHeight * 1.8).fill({
+      color: palette.ink,
+    });
   },
 
   /** The knob, centred on its notch. */

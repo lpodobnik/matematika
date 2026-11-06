@@ -14,6 +14,7 @@ import { Machine } from '@/ui/scene/machine/Machine';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
 import { Dial } from '@/ui/scene/scale/Dial';
+import { Pin } from '@/ui/scene/scale/Pin';
 import { Scale } from '@/ui/scene/scale/Scale';
 
 extend({ Container, Graphics });
@@ -162,6 +163,7 @@ function SceneContent() {
       <Machine />
       <Scale sceneScale={sceneScale} />
       <Dial sceneScale={sceneScale} />
+      <Pin sceneScale={sceneScale} />
     </pixiContainer>
   );
 }

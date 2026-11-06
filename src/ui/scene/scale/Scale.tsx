@@ -1,11 +1,13 @@
 import { extend } from '@pixi/react';
 import { Container, Graphics } from 'pixi.js';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { scaleSkin } from '@/art/skins/scale';
-import { type PanView, scaleView } from '@/room/scale';
+import { type PanView, pinRevealView, type ScaleView, scaleView } from '@/room/scale';
+import type { RoomState } from '@/room/types';
 import { useGame } from '@/store/store';
 import { beamPose, labelFontSize, scaleGeometry } from '@/ui/scene/scale/layout';
 import { Pan } from '@/ui/scene/scale/Pan';
+import { pinRevealMs } from '@/ui/scene/scale/pin-layout';
 import { createTiltSpring, type TiltSpring } from '@/ui/scene/scale/tilt-spring';
 
 extend({ Container, Graphics });
@@ -19,13 +21,39 @@ interface Props {
 }
 
 /**
+ * A wrong x pin's own tilt, shown briefly when it resolves (Pattern 2, Resolution): the
+ * reveal plays for `pinRevealMs` from the moment the pin resolves, and the next notch of
+ * the dial (exploring) ends it early. A pin that had already resolved when the scale
+ * mounted doesn't play again.
+ */
+function usePinReveal(room: RoomState | null): ScaleView | null {
+  const reveal = useMemo(() => (room ? pinRevealView(room) : null), [room]);
+  const key = reveal && room ? `${room.spec.id}.${room.stageIndex}.${reveal.x}` : null;
+  const dialX = room?.stage.dialX ?? null;
+  const dialXRef = useRef(dialX);
+  dialXRef.current = dialX;
+  const seen = useRef(key);
+  const [playing, setPlaying] = useState<{ key: string; dialX: number | null } | null>(null);
+  useEffect(() => {
+    if (key === seen.current) return;
+    seen.current = key;
+    if (key === null) return;
+    setPlaying({ key, dialX: dialXRef.current });
+    const timer = setTimeout(() => setPlaying(null), pinRevealMs);
+    return () => clearTimeout(timer);
+  }, [key]);
+  return playing && playing.key === key && playing.dialX === dialX ? reveal : null;
+}
+
+/**
  * The scale: the stage's equation as pieces on two pans that tip toward the heavier side.
- * What it shows comes from `scaleView`; the tilt springs there through refs, frame by frame,
- * without React renders.
+ * What it shows comes from `scaleView` (or briefly `pinRevealView`, when a wrong x pin
+ * resolves); the tilt springs there through refs, frame by frame, without React renders.
  */
 export function Scale({ sceneScale }: Props) {
   const room = useGame((s) => s.room);
-  const view = useMemo(() => (room ? scaleView(room) : null), [room]);
+  const live = useMemo(() => (room ? scaleView(room) : null), [room]);
+  const view = usePinReveal(room) ?? live;
   const fontSize = labelFontSize(sceneScale);
   const target = view?.tilt ?? 0;
 

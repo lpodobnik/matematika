@@ -114,11 +114,15 @@ export interface DialPointerEvent {
   global: { x: number };
 }
 
+/** The part of a drag controller the pointer handlers drive (the dial's, and the pin's). */
+export type PointerDrag = Pick<DialDrag, 'start' | 'move' | 'end'>;
+
 /**
  * The dial's Pixi pointer handlers: down, then `onGlobalPointerMove` for the drag, ending
  * on up, up outside and cancel. Nothing reacts to hover. Only the main button starts it.
+ * The pin's drag uses them too.
  */
-export function dialPointerHandlers(drag: DialDrag) {
+export function dialPointerHandlers(drag: PointerDrag) {
   const end = (event: DialPointerEvent) => drag.end(event.pointerId);
   return {
     onPointerDown: (event: DialPointerEvent) => {
@@ -144,7 +148,7 @@ interface Listenable {
 export function watchDragCancel(
   win: Listenable,
   doc: Listenable & { visibilityState: string },
-  drag: DialDrag,
+  drag: Pick<DialDrag, 'end' | 'cancel'>,
 ): () => void {
   const onCancel = (event: Event) => {
     const { pointerId } = event as Event & { pointerId?: number };

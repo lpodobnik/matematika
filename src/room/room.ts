@@ -8,7 +8,14 @@ import { parse } from '@/math/parse';
 import { tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
 import { openingTemplates } from '@/room/fading';
-import type { NotebookLine, RoomSpec, RoomState, StageSpec, StageState } from '@/room/types';
+import type {
+  DialSpec,
+  NotebookLine,
+  RoomSpec,
+  RoomState,
+  StageSpec,
+  StageState,
+} from '@/room/types';
 
 export interface RoomStep {
   room: RoomState;
@@ -44,16 +51,51 @@ export function givenLine(stage: StageSpec, machine: number): NotebookLine {
   };
 }
 
+/** Whether the stage has a prediction pin, so it opens into poke or pin (Pattern 2). */
+export function hasPin(stage: StageSpec): boolean {
+  return stage.pin !== undefined;
+}
+
+/**
+ * The poke window's notches (Pattern 2, Poke): a stage with a pin and `pokeNotches` opens
+ * only that many positions of its dial, from the minimum, until the pin is locked; 'all'
+ * opens them all. Null for a stage with no poke window: a poke window without a pin would
+ * never open, so it counts only with one (content tests keep the two together).
+ */
+export function pokeNotches(stage: StageSpec): number | 'all' | null {
+  if (!hasPin(stage) || stage.pokeNotches === undefined) return null;
+  return stage.pokeNotches;
+}
+
+/** The dial's whole range, or just its x for a locked dial, which never moves. */
+export function fullDial(stage: StageSpec): { min: number; max: number } {
+  const { dial } = stage;
+  // A locked dial (room 7) never moves; its x is decided with the find-the-mistake rules.
+  if (dial === 'locked') return { min: 0, max: 0 };
+  return { min: dial.min, max: dial.max };
+}
+
+/**
+ * The part of the dial he can reach as the stage opens: the poke window, min, min + step,
+ * …, min + (pokeNotches − 1)·step (never past the maximum), or the full range.
+ */
+export function openingDial(stage: StageSpec): { min: number; max: number } {
+  const full = fullDial(stage);
+  const notches = pokeNotches(stage);
+  if (stage.dial === 'locked' || notches === null || notches === 'all') return full;
+  const { min, step }: DialSpec = stage.dial;
+  return { min, max: Math.min(full.max, min + (Math.max(1, notches) - 1) * step) };
+}
+
 /**
  * A stage as it arrives: the first machine's equation on the pans and as the notebook's
  * line 0, an empty draft (or, with Try values `blanks`, the lines to fill), every machine
- * stopped, and the dial at its minimum, exploring. It waits in `arrive` for his first touch
- * on the machine (room/phases.ts).
+ * stopped, no pin placed, and the dial at its minimum, exploring, with its poke window
+ * open if it has one. It waits in `arrive` for his first touch on the machine
+ * (room/phases.ts).
  */
 export function arriveAtStage(stage: StageSpec): StageState {
-  // A locked dial (room 7) never moves; its x is decided with the find-the-mistake rules.
-  const { dial } = stage;
-  const dialX = dial === 'locked' ? 0 : dial.min;
+  const dialX = fullDial(stage).min;
   return {
     phase: 'arrive',
     machine: 0,
@@ -67,8 +109,9 @@ export function arriveAtStage(stage: StageSpec): StageState {
     pans: machineEquation(stage, 0),
     actingOut: false,
     dialX,
-    // The whole range for now; story 1.9 narrows it to the poke window.
-    dialOpen: dial === 'locked' ? { min: dialX, max: dialX } : { min: dial.min, max: dial.max },
+    dialOpen: openingDial(stage),
+    pin: null,
+    hintLevel: 0,
     presentedAt: null,
   };
 }

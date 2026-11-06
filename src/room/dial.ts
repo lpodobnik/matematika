@@ -3,10 +3,12 @@
 // the dial takes, and what turning it does to the stage. The drag itself (24 CSS px per
 // notch) is input handling, in ui/scene/scale/.
 
+import { stageSolution } from '@/math/check';
 import * as q from '@/math/rational';
 import type { RoomEvent } from '@/room/events';
-import { touchMachine } from '@/room/phases';
-import { currentStageSpec } from '@/room/room';
+import { openingPhase, touchMachine } from '@/room/phases';
+import { resolvePin } from '@/room/pin';
+import { currentStageSpec, machineEquation } from '@/room/room';
 import { isLevel, sideValues } from '@/room/tilt';
 import type { DialSpec, Phase, RoomState } from '@/room/types';
 
@@ -33,12 +35,24 @@ export function isOnDial(dial: DialSpec, x: number): boolean {
 /**
  * Phases in which the dial turns (Pattern 2). In `pin` the pin has frozen it, and from
  * `locked` on the stage is solved. In `arrive` it can be grabbed: the dial is part of the
- * machine, so grabbing it is the first touch that ends arrive, and the drag goes on.
+ * machine, so grabbing it is the first touch that ends arrive, and the drag goes on, unless
+ * the stage opens into `pin` (see `dialTurnsNow`).
  */
 const turningPhases: ReadonlySet<Phase> = new Set<Phase>(['arrive', 'poke', 'open']);
 
 export function dialTurns(phase: Phase): boolean {
   return turningPhases.has(phase);
+}
+
+/**
+ * Whether the dial of the stage in play turns now: in a turning phase, and not while the
+ * machine is jammed. In `arrive` it turns only if the stage opens into a phase where it
+ * turns, so a stage that wants a pin first (room 3's second) never moves before he pins.
+ */
+export function dialTurnsNow(room: RoomState): boolean {
+  const { stage } = room;
+  if (stage.jam !== null || !dialTurns(stage.phase)) return false;
+  return stage.phase !== 'arrive' || dialTurns(openingPhase(currentStageSpec(room)));
 }
 
 /**
@@ -66,7 +80,7 @@ export function dialView(room: RoomState | null): DialView | null {
     openMin: stage.dialOpen.min,
     openMax: stage.dialOpen.max,
     x: stage.dialX,
-    turns: dialTurns(stage.phase) && stage.jam === null,
+    turns: dialTurnsNow(room),
   };
 }
 
@@ -79,23 +93,32 @@ export interface DialStep {
  * Turns the dial to x (`dial/set`): the pans are weighed at x, `DialNotch` fires, and
  * `PansLevel` too when the sides are equal there. Turning the dial is exploring, so it ends
  * acting out a written line: the pans go back to the dial's x, in the last committed
- * line's layout (Pattern 1). Null, so the action is ignored, when x is where the dial
- * already is, isn't one of its reachable notches, the phase holds the dial still, or the
- * machine is jammed (Pattern 2: while jammed he can only edit the draft, drag the splitter
- * off, reset or leave). The store only changes when the notch does. A notch in `arrive` is
- * a touch on the machine, so it ends arrive too (the scene reports the touch first, so this
- * only matters if that report is ever missed).
+ * line's layout (Pattern 1). A locked pin may resolve on the notch (room/pin.ts): an x pin
+ * when the pans level at the stage's solution, a direction pin on its first notch; then
+ * `PredictionMade` follows. Null, so the action is ignored, when x is where the dial
+ * already is, isn't one of its reachable notches (the poke window, before the pin is
+ * locked), the phase holds the dial still, or the machine is jammed (Pattern 2: while
+ * jammed he can only edit the draft, drag the splitter off, reset or leave). The store only
+ * changes when the notch does. A notch in `arrive` is a touch on the machine, so it ends
+ * arrive too (the scene reports the touch first, so this only matters if that report is
+ * ever missed).
  */
 export function setDial(room: RoomState, x: number): DialStep | null {
-  const { dial } = currentStageSpec(room);
+  const spec = currentStageSpec(room);
+  const { dial } = spec;
   const { stage } = room;
-  if (dial === 'locked' || !dialTurns(stage.phase) || stage.jam !== null) return null;
+  if (dial === 'locked' || !dialTurnsNow(room)) return null;
   if (x === stage.dialX || !isOnDial(dial, x)) return null;
   if (x < stage.dialOpen.min || x > stage.dialOpen.max) return null;
   const events: RoomEvent[] = [{ type: 'DialNotch', x }];
-  if (isLevel(sideValues(stage.pans, q.rational(x)))) {
+  const level = isLevel(sideValues(stage.pans, q.rational(x)));
+  if (level) {
     events.push({ type: 'PansLevel', roomId: room.spec.id, stage: room.stageIndex, x });
   }
   const touched = touchMachine(room)?.room.stage ?? stage;
-  return { room: { ...room, stage: { ...touched, dialX: x, actingOut: false } }, events };
+  const turned: RoomState = { ...room, stage: { ...touched, dialX: x, actingOut: false } };
+  const solved = level && x === stageSolution(machineEquation(spec, stage.machine));
+  const resolved = (solved ? resolvePin(turned, 'level') : null) ?? resolvePin(turned, 'notch');
+  if (!resolved) return { room: turned, events };
+  return { room: resolved.room, events: [...events, ...resolved.events] };
 }

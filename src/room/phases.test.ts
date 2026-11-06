@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { r02 } from '@/content/rooms/r02-street-lamps';
+import { r03 } from '@/content/rooms/r03-sluice-gate';
 import type { Equation } from '@/math/expr';
 import { parse } from '@/math/parse';
 import { setDial } from '@/room/dial';
@@ -17,8 +18,10 @@ import {
   resetStage,
   resetWorks,
   tickClock,
+  toolEarned,
   touchMachine,
 } from '@/room/phases';
+import { confirmPin, pinOffered, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
 import type { Phase, RoomSpec, RoomState, StageSpec } from '@/room/types';
 
@@ -78,8 +81,18 @@ describe('arrive (Pattern 2)', () => {
     }
   });
 
-  it('opens into open until the poke window and the pin arrive (story 1.9)', () => {
+  it('opens into open with no pin, poke with a poke window, and pin with a pin alone', () => {
     for (const stage of [...r01.stages, ...r02.stages]) expect(openingPhase(stage)).toBe('open');
+    const [first, second] = r03.stages as readonly StageSpec[];
+    expect(openingPhase(first as StageSpec)).toBe('poke');
+    expect(openingPhase(second as StageSpec)).toBe('pin');
+    // A poke window without a pin would never open, so it doesn't count.
+    expect(openingPhase({ ...(first as StageSpec), pin: undefined })).toBe('open');
+  });
+
+  it('opens room 3 into poke on his first touch, and its second stage into pin', () => {
+    expect(step(touchMachine(enterRoom(r03).room)).room.stage.phase).toBe('poke');
+    expect(step(touchMachine(enterRoom(r03, 1).room)).room.stage.phase).toBe('pin');
   });
 
   it('also ends when the dial is turned, since the dial is part of the machine', () => {
@@ -292,6 +305,84 @@ describe('reset (Pattern 2)', () => {
   it('opens a stage reset in arrive', () => {
     const reset = step(resetStage(enterRoom(r02).room));
     expect(reset.room.stage.phase).toBe('open');
+  });
+});
+
+describe('reset with a pin (Pattern 2)', () => {
+  const poking = (): RoomState => opened(enterRoom(r03).room);
+  const x = (value: number) => ({ kind: 'x', x: value }) as const;
+
+  it('keeps a locked pin, offers it no more, and opens the full dial range', () => {
+    let room = step(setDial(poking(), 8)).room;
+    room = step(confirmPin(step(setPin(room, x(12))).room)).room;
+    room = step(setDial(room, 17)).room;
+    room = step(enterLine(step(typeToken(room, '9')).room, 0)).room; // x = 9 jams
+    const reset = step(resetStage(room)).room;
+    expect(reset.stage.phase).toBe('open');
+    expect(reset.stage.pin).toEqual({ value: x(12), locked: true, resolved: false });
+    expect(reset.stage.dialOpen).toEqual({ min: 6, max: 20 });
+    expect(reset.stage.dialX).toBe(6);
+    expect(reset.stage.jam).toBeNull();
+    expect(reset.stage.lines).toHaveLength(1);
+    expect(pinOffered(reset)).toBe(false);
+    expect(notebookWrites(reset.stage)).toBe(true);
+    expect(setDial(reset, 20)?.room.stage.dialX).toBe(20);
+  });
+
+  it('keeps a resolved pin resolved, so it resolves only once per stage', () => {
+    let room = step(confirmPin(step(setPin(poking(), x(14))).room)).room;
+    room = step(setDial(room, 14)).room;
+    const reset = step(resetStage(room));
+    expect(reset.room.stage.pin).toEqual({ value: x(14), locked: true, resolved: true });
+    const levelled = step(setDial(reset.room, 14));
+    expect(levelled.events.map((event) => event.type)).toEqual(['DialNotch', 'PansLevel']);
+  });
+
+  it('puts a pin he had not confirmed back in its holder, and the stage back in poke', () => {
+    const pinned = step(setPin(step(setDial(poking(), 9)).room, x(12))).room;
+    const reset = step(resetStage(pinned)).room;
+    expect(reset.stage.phase).toBe('poke');
+    expect(reset.stage.pin).toBeNull();
+    expect(reset.stage.dialOpen).toEqual({ min: 6, max: 9 });
+    expect(reset.stage.dialX).toBe(6);
+    expect(pinOffered(reset)).toBe(true);
+  });
+
+  it('returns a stage with a pin but no poke window to pin, not open, until the pin is locked', () => {
+    const second = opened(enterRoom(r03, 1).room);
+    const pinned = step(setPin(second, { kind: 'choice', index: 0 })).room;
+    expect(step(resetStage(pinned)).room.stage).toMatchObject({ phase: 'pin', pin: null });
+    const locked = step(confirmPin(pinned)).room;
+    expect(step(resetStage(locked)).room.stage.phase).toBe('open');
+  });
+
+  it('keeps the hint level, so the first-use wiggle does not come back', () => {
+    const room = poking();
+    const hinted = { ...room, stage: { ...room.stage, hintLevel: 1 as const } };
+    expect(step(resetStage(hinted)).room.stage.hintLevel).toBe(1);
+  });
+});
+
+describe('toolEarned', () => {
+  it("is the room's tool when its whole machine restarts", () => {
+    const second = opened(enterRoom(r03, 1).room);
+    let room = step(confirmPin(step(setPin(second, { kind: 'choice', index: 1 })).room)).room;
+    room = step(setDial(room, 14)).room;
+    const locked = solve(room, '14');
+    expect(toolEarned(locked)).toBeNull();
+    const restart = step(
+      finishPresentation(locked.room, { roomId: 'r03', stage: 1, phase: 'locked' }, 0),
+    );
+    expect(restart.events).toEqual([{ type: 'RoomRestarted', roomId: 'r03' }]);
+    expect(toolEarned(restart)).toBe('balance');
+  });
+
+  it('is null for a room that earns nothing', () => {
+    const locked = solve(opened(enterRoom(r01).room), '5');
+    const restart = step(
+      finishPresentation(locked.room, { roomId: 'r01', stage: 0, phase: 'locked' }, 0),
+    );
+    expect(toolEarned(restart)).toBeNull();
   });
 });
 

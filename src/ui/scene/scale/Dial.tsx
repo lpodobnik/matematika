@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow';
 import { dialSkin } from '@/art/skins/dial';
 import { tuning } from '@/config/tuning';
-import { dialView, notchCount } from '@/room/dial';
+import { dialView, notchCount, notchOf } from '@/room/dial';
 import { useGame } from '@/store/store';
 import {
   createDialDrag,
@@ -26,6 +26,7 @@ interface Props {
  * The x dial: a horizontal track under the scale, dragged left and right, one notch per
  * 24 CSS px, with a tick on each notch (architecture, The dial). The knob and the track's
  * scroll follow the finger through refs on every move; the store hears only a new notch.
+ * While the poke window holds it short, a stop stands just past the window's last notch.
  */
 export function Dial({ sceneScale }: Props) {
   const dial = useGame(useShallow((s) => dialView(s.room)));
@@ -100,6 +101,13 @@ export function Dial({ sceneScale }: Props) {
     },
     [layout],
   );
+  const drawStop = useCallback(
+    (g: Graphics) => {
+      if (!layout) return;
+      dialSkin.stop(g, layout.tickHeight, layout.lineWidth);
+    },
+    [layout],
+  );
   const drawMask = useCallback(
     (g: Graphics) => {
       if (!layout) return;
@@ -111,6 +119,7 @@ export function Dial({ sceneScale }: Props) {
   );
 
   if (!layout || !dial || !hitArea) return null;
+  const stopNotch = dial.openMax < dial.max ? notchOf(dial, dial.openMax) + 0.5 : null;
   return (
     <pixiContainer
       eventMode="static"
@@ -125,6 +134,7 @@ export function Dial({ sceneScale }: Props) {
       {layout.scrolls && <pixiGraphics ref={maskRef} draw={drawMask} />}
       <pixiContainer ref={trackRef} y={layout.trackY}>
         <pixiGraphics draw={drawTrack} />
+        {stopNotch !== null && <pixiGraphics draw={drawStop} x={stopNotch * layout.spacing} />}
         <pixiContainer ref={knobRef}>
           <pixiGraphics draw={drawKnob} />
         </pixiContainer>

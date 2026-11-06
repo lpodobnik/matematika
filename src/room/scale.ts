@@ -7,14 +7,17 @@
 //   acting out a written line          the stage's solution, `?` on the gears, no readouts
 // A committed line acted out is level. A wrong line is acted out while the machine is
 // jammed on it, and tips by at least `tuning.jamMinTilt`. Acting out never moves the dial.
+// When a wrong x pin resolves, the pans briefly show its own x (`pinRevealView`): the
+// scene decides how long, and nothing here changes.
 
 import { tuning } from '@/config/tuning';
 import { stageSolution } from '@/math/check';
-import type { Equation } from '@/math/expr';
+import { type Equation, equationHasX } from '@/math/expr';
 import { formatNumber } from '@/math/format';
 import * as q from '@/math/rational';
 import { jammedLine } from '@/room/notebook';
 import { countLabel, isNumberPiece, numberLabel, type Piece, panPieces } from '@/room/pieces';
+import { pinRevealX } from '@/room/pin';
 import { currentStageSpec, machineEquation } from '@/room/room';
 import { isLevel, jamTilt, sideValues, tiltFor } from '@/room/tilt';
 import type { RoomState, StageSpec } from '@/room/types';
@@ -100,9 +103,8 @@ function weighing(room: RoomState): Weighing {
   return { equation: stage.pans, x: stage.dialX, actingOut: false, jammed: false };
 }
 
-export function scaleView(room: RoomState): ScaleView {
+function viewOf(room: RoomState, { equation, x, actingOut, jammed }: Weighing): ScaleView {
   const spec = currentStageSpec(room);
-  const { equation, x, actingOut, jammed } = weighing(room);
   const values = sideValues(equation, q.rational(x));
   const pieces = panPieces(equation);
   const xLabel = actingOut ? hiddenXLabel : formatNumber(x);
@@ -120,4 +122,24 @@ export function scaleView(room: RoomState): ScaleView {
         ? { left: readoutLabel(values.left), right: readoutLabel(values.right) }
         : null,
   };
+}
+
+export function scaleView(room: RoomState): ScaleView {
+  return viewOf(room, weighing(room));
+}
+
+/**
+ * The pans at a wrong x pin's own x, once it has resolved (Pattern 2, Resolution: "a wrong
+ * pin briefly shows its own value's tilt on the pans"): the pans as he explores them, with
+ * his x on the gears and the readouts, so he sees what his idea causes. When the stage
+ * locked it, the pans hold the check line, which has no x, so the stage's equation is
+ * weighed instead. Null for a right pin, a choice pin, or one that hasn't resolved. The
+ * scene shows it briefly; it costs nothing.
+ */
+export function pinRevealView(room: RoomState): ScaleView | null {
+  const x = pinRevealX(room);
+  if (x === null) return null;
+  const { pans, machine } = room.stage;
+  const equation = equationHasX(pans) ? pans : machineEquation(currentStageSpec(room), machine);
+  return viewOf(room, { equation, x, actingOut: false, jammed: false });
 }

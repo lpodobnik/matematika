@@ -89,6 +89,12 @@ export interface StageSpec {
   drum?: true;
 }
 
+/**
+ * What an `effect` pin's options say will happen as x grows: the pan that holds x goes
+ * down, or up. They are also the keys of their text in `hr.pin.options`.
+ */
+export type EffectOption = 'pan-down' | 'pan-up';
+
 export type PinSpec =
   | { kind: 'level-x'; beyondDial?: true } // where it levels
   | { kind: 'x-hidden' } // compare: x before anything moves
@@ -96,7 +102,30 @@ export type PinSpec =
   | { kind: 'story-choice' }
   | { kind: 'range'; bounds: number[] } // room 11: under 100, 100–300, over 300
   | { kind: 'next-dot' } // the drum
-  | { kind: 'effect'; options: string[]; resolvesOn: 'first-notch' | 'level' }; // options are text keys
+  | { kind: 'effect'; options: EffectOption[]; resolvesOn: 'first-notch' | 'level' }; // options are text keys
+
+/** Where he put the pin: an x on the track, a line, an option, or a range's bucket. */
+export type PinValue =
+  | { kind: 'x'; x: number }
+  | { kind: 'line'; index: number }
+  | { kind: 'choice'; index: number }
+  | { kind: 'bucket'; index: number };
+
+/**
+ * The prediction pin once he has put it somewhere (Pattern 2): it moves until he confirms
+ * it (`locked`), and resolves once, when its result shows or the stage locks.
+ */
+export interface PinState {
+  value: PinValue;
+  locked: boolean;
+  resolved: boolean;
+}
+
+/** The controls that wiggle once, the first time the game offers them (Pattern 2, First use). */
+export type FirstUseId = 'pin' | 'tray' | 'splitter';
+
+/** Pattern 2's hint ladder: 0 is none; 1 wiggles the piece he can move. Levels 2–4 come in epic 2. */
+export type HintLevel = 0 | 1 | 2 | 3 | 4;
 
 /** Pattern 2: arrive → poke (if pokeNotches) → pin (if pin) → open → locked → restart → done. */
 export type Phase = 'arrive' | 'poke' | 'pin' | 'open' | 'locked' | 'restart' | 'done';
@@ -113,8 +142,8 @@ export type Jam = { kind: 'line' } | { kind: 'split'; parts: number };
 
 /**
  * The stage in play: the part of Pattern 2's `StageState` that the scale, the dial, the
- * notebook, the machine and the room's phases need so far. Later stories add the pin and
- * hints.
+ * pin, the notebook, the machine and the room's phases need so far. Epic 2 adds the rest
+ * of the hints (`lastActionAt`), epic 3 paying for predictions, epic 4 the drum.
  */
 export interface StageState {
   phase: Phase;
@@ -150,8 +179,12 @@ export interface StageState {
    */
   actingOut: boolean;
   dialX: number;
-  /** The part of the dial he can reach: the poke window (story 1.9), then the full range. */
+  /** The part of the dial he can reach: the poke window until the pin is locked, then the full range. */
   dialOpen: { min: number; max: number };
+  /** The prediction pin, once he has put it somewhere; null before (room/pin.ts). */
+  pin: PinState | null;
+  /** Pattern 2's hint level. Only the first-use wiggle sets it in epic 1 (room/first-use.ts). */
+  hintLevel: HintLevel;
   /**
    * ctx.now when the machine began presenting the stage's lock or the room's restart (the
    * `locked` and `restart` phases); null in every other phase. The clock ends a presentation

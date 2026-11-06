@@ -26,6 +26,11 @@ export type RoomEvent =
   | { type: 'LineWrong'; roomId: RoomSpec['id']; stage: number; line: string }
   /** The machine jammed: on a wrong line, or (story 1.11) a split that doesn't divide (audio: a hiss). */
   | { type: 'MachineJammed'; roomId: RoomSpec['id']; kind: 'line' | 'split' }
+  /**
+   * A locked prediction pin resolved, once per stage: right or wrong (the play log's
+   * predictions; parts for a right one from epic 3).
+   */
+  | { type: 'PredictionMade'; roomId: RoomSpec['id']; stage: number; right: boolean }
   /** The check line locked the stage's machine. */
   | { type: 'StageLocked'; roomId: RoomSpec['id']; stage: number }
   /** He reset the stage to line 0 (the play log's room `reset`). Earlier stages stay solved. */
