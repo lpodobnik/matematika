@@ -9,9 +9,10 @@
 // check line locks it. The pans are weighed at the slider's x throughout (story 1.16).
 //
 // Simplify first (story 1.16): in a stage Try values can't finish (room 4), the answer line
-// `x = n` is refused until the pans are simplified, by Balance or by lines he typed: one
-// pan holding only x, the other a single number (`answerAllowed`). The refusal is like an
-// incomplete line's, with a tag (`refusal`).
+// `x = n`, and any line that would leave x alone (`x = 3 · 3`), is refused until the pans
+// are simplified, by Balance or by lines he typed: one pan holding only x, the other a
+// single number (`answerAllowed`; room/pieces.ts). The refusal is like an incomplete
+// line's, with a tag (`refusal`), which his next action takes down.
 
 import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
@@ -23,7 +24,7 @@ import { fillBlanks, isDigit, type Token, tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
 import { withLastLines } from '@/room/fading';
 import { progressAfter } from '@/room/machine';
-import { isNumberPiece, type Piece, panPieces } from '@/room/pieces';
+import { simplified, xAlone } from '@/room/pieces';
 import { resolvePin } from '@/room/pin';
 import { currentStageSpec } from '@/room/room';
 import type {
@@ -85,22 +86,10 @@ export function isCommitted(verdict: Verdict): boolean {
 }
 
 /**
- * The pans are simplified (story 1.16): one pan holds only x pieces and the other a single
- * number piece, or nothing. `2x = 18`, `18 = 2x` and `x = 9` are; `2x + 5 = 23` isn't, nor
- * `2x = 23 − 5` (a weight and a balloon). Judged on the pieces the scale shows, so a split's
- * line, `2x : 2 = 18 : 2` (one gear against a 9), is simplified too.
- */
-export function simplified(pans: Equation): boolean {
-  const { left, right } = panPieces(pans);
-  const onlyX = (pieces: Piece[]) => pieces.length > 0 && !pieces.some(isNumberPiece);
-  const oneNumber = (pieces: Piece[]) => pieces.length <= 1 && pieces.every(isNumberPiece);
-  return (onlyX(left) && oneNumber(right)) || (onlyX(right) && oneNumber(left));
-}
-
-/**
- * Whether the answer line `x = n` may be written now, typed or filled into a blank (story
- * 1.16, simplify first): always in a stage Try values can finish; otherwise only once the
- * pans are simplified, where the last committed line or Balance's moves left them.
+ * Whether the answer line `x = n`, or any line that leaves x alone, may be written now,
+ * typed or filled into a blank (story 1.16, simplify first): always in a stage Try values
+ * can finish; otherwise only once the pans are simplified (room/pieces.ts, `simplified`),
+ * where the last committed line or Balance's moves left them.
  */
 export function answerAllowed(stage: StageSpec, pans: Equation): boolean {
   return stage.ways.includes('try') || simplified(pans);
@@ -113,6 +102,17 @@ export function answerAllowed(stage: StageSpec, pans: Equation): boolean {
 export function refusalView(room: RoomState | null): Refusal | null {
   if (!room || room.stage.refusal === null) return null;
   return answerAllowed(currentStageSpec(room), room.stage.pans) ? null : room.stage.refusal;
+}
+
+/**
+ * The room with the refusal's tag taken down (story 1.16 review): it stays up only until
+ * his next action, so only one tag shows (the scene's tags wait while it does). An edit
+ * and enter set or clear it here; the root reducer calls this for any other action of his
+ * that does something to the room. The same room when there is no refusal.
+ */
+export function withoutRefusal(room: RoomState): RoomState {
+  if (room.stage.refusal === null) return room;
+  return { ...room, stage: { ...room.stage, refusal: null } };
 }
 
 function equationOf(tokens: readonly Token[], what: string): Equation {
@@ -261,13 +261,27 @@ export function writeWayLine(
 }
 
 /**
- * Whether the line is refused with a wiggle, not stored, and with which tag: none for what
- * the checker refuses (`isRefused`), `simplify` for an answer line before the pans are
- * simplified in a stage Try values can't finish (story 1.16). Null when it isn't refused.
+ * A line that would leave x alone on the pans (room/pieces.ts, `xAlone`): the answer line,
+ * or a valid line such as `x = 3 · 3`, `x = 18 : 2` or `x = 9 + 0` (story 1.16 review).
  */
-function refusalOf(room: RoomState, verdict: Verdict): { refusal: Refusal | null } | null {
+function leavesXAlone(verdict: Verdict, tokens: readonly Token[]): boolean {
+  if (verdict.kind === 'answer') return true;
+  return verdict.kind === 'valid' && xAlone(equationOf(tokens, 'a valid line'));
+}
+
+/**
+ * Whether the line is refused with a wiggle, not stored, and with which tag: none for what
+ * the checker refuses (`isRefused`); `simplify` for a line that would leave x alone (the
+ * answer line, or `x = 3 · 3`) before the pans are simplified, in a stage Try values can't
+ * finish (story 1.16). Null when it isn't refused.
+ */
+function refusalOf(
+  room: RoomState,
+  verdict: Verdict,
+  tokens: readonly Token[],
+): { refusal: Refusal | null } | null {
   if (isRefused(verdict)) return { refusal: null };
-  if (verdict.kind !== 'answer') return null;
+  if (!leavesXAlone(verdict, tokens)) return null;
   return answerAllowed(currentStageSpec(room), room.stage.pans) ? null : { refusal: 'simplify' };
 }
 
@@ -275,9 +289,10 @@ function refusalOf(room: RoomState, verdict: Verdict): { refusal: Refusal | null
  * Judges the line the draft stands for (`notebook/enter`, story 1.3's checker):
  * - `incomplete`, `nonlinear`, `aside`: refused; the draft stays and `refused` counts up,
  *   so the notebook wiggles. Nothing is acted out.
- * - `answer` before the pans are simplified, in a stage Try values can't finish (story
- *   1.16, `answerAllowed`): refused the same way, and `refusal` is set, so its tag shows.
- *   The returned verdict is still the checker's `answer`; nothing is stored.
+ * - `answer`, or a `valid` line that would leave x alone (`x = 3 · 3`), before the pans
+ *   are simplified, in a stage Try values can't finish (story 1.16, `answerAllowed`):
+ *   refused the same way, and `refusal` is set, so its tag shows. The returned verdict is
+ *   still the checker's; nothing is stored.
  * - `wrong`: the draft stays, marked by a line jam. The machine shows it on the pans, at
  *   the dial's x, tipped, and jams (`MachineJammed`); `jamsInARow` counts up.
  * - `valid`, `answer`, `check`: appended to `lines`, read-only, and the draft empties (and,
@@ -297,7 +312,7 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
   const tokens = lineTokens(stage);
   const verdict = check(committedEquations(stage.lines), tokens);
   const at = { roomId: room.spec.id, stage: room.stageIndex };
-  const refused = refusalOf(room, verdict);
+  const refused = refusalOf(room, verdict, tokens);
   if (refused) {
     const next: StageState = { ...stage, refused: stage.refused + 1, refusal: refused.refusal };
     return { room: withStage(room, next), events: [], verdict };

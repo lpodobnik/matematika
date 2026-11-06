@@ -79,7 +79,7 @@ Story 1.15 weighed the scale at the true x during Balance and showed `x = ?` on 
 - [x] Lane A: AC 1–4
 - [x] Lane B: AC 5–7
 - [x] Merge; checks green (AC 8)
-- [ ] One review, one fix pass
+- [x] One review, one fix pass
 - [ ] Headless play-through, rooms 1–4
 
 ## Dev Notes
@@ -204,3 +204,37 @@ Story 1.15 weighed the scale at the true x during Balance and showed `x = ?` on 
   - A tray step keeps the hint; the drop ends it.
   - After the drop, `?`, `?` shows the frame ghost with `Podijeli obje strane s 2.` After the split the card lights, and `?`, `?` gives `Upiši x = 9.` at the notebook.
 - Server stopped.
+
+### Fix pass (`epic-1`): the one review's findings
+
+**Calls** (flag any for veto):
+- One rule for "x alone", on the pieces the scale shows: `room/pieces.ts` `aloneAgainst` / `xAlone` (one small gear, not divided, against one number piece or nothing) and `simplified` (only x pieces on one pan, one number piece or nothing on the other). The blanks (`fading.ts`), the `answer` handover and the hint (`handover.ts` `answerOnPans`, now exported), the goal card (`goal.ts`) and simplify first (`notebook.ts`) all use them. `xAlone` implies `simplified`, so a blank that shows always takes its number.
+- So `x = 23 − 14` is an ordinary valid line now: no blanks, no `answer` tag, and `x = 9` from there is refused (the scale shows a weight and a balloon). The hint leads him out with the tray: weight 14 (any tray move combines each pan's numbers), then balloon 14, then `x = ☐`. With weights only (`x = 4 + 5`) it takes the smallest off as a balloon. He can also type `2x = 18` first.
+- The splitter's handover now needs a side with more than one x (`readyToSplit`), not just "not x alone", so it doesn't come at `x = 23 − 14` or `x : 3 = 5`, where there is nothing to split.
+- Simplify first refuses any valid line that would leave x alone (`x = 3 · 3`, `x = 18 : 2`, `x = 9 + 0`, `3 · 3 = x`) unless the pans before it were simplified. Same wiggle, same tag. Balance's own lines aren't gated; they are the simplifying moves.
+- The jam is its own hint step (`HintStep` gains `jam`, `HintMove` gains `{ kind: 'jam' }`), checked before the pin's question. Both presses hang at the notebook, pulse the draft and the delete key (`data-pulse` on the pad key, its own `key-pulse` ring, a blink under reduced motion) and show no scene ghost. Texts: `hr.hint.jam.what` and `hr.hint.jam.fix`.
+- The refusal's tag stays up only until his next action. Any action of his that changes the room takes it down (root reducer, `withoutRefusal`); the clock doesn't. A hint press doesn't change the room: its tag takes the refusal's place at the notebook (`notebookRefusal`), which is safe because the refused enter ends any hint, so a hint showing with a refusal was pressed after it. The scene hangs no tag while the refusal's shows (`sceneTag`).
+- The dial's track scroll is a ref shared per scene copy (`DialScroll`, from `SceneCopy` to `Dial` and `HintGhost`); the knob's ghost reads it every frame (`knobAt`).
+- New blanks always start empty. When the blanks go, a number in the old blank still comes out as free text, as before.
+- The check move carries `template`; with a template the second press says `Upiši 9 umjesto x.` (`hr.hint.checkBlank`), on a blank page it still says `Prepiši prvu jednadžbu, a umjesto x upiši 9.`
+
+**Files:**
+- Rules: `src/room/{pieces,fading,goal,handover,notebook,hint}.ts`, `src/store/reducer.ts`, `src/content/text/hr.ts`.
+- UI: `src/ui/common/hint-text.ts`, `src/ui/notebook/{Notebook,NumberPad}.tsx`, `src/ui/notebook/notebook.css`, `src/ui/scene/SceneRoot.tsx`, `src/ui/scene/scale/{Dial,HintGhost}.tsx`, `src/ui/scene/scale/dial-layout.ts`.
+- Tests rewritten in place, each with a comment naming the old behaviour: `room/fading.test.ts` and `room/tray.test.ts` (no carried draft), `store/playthrough.test.ts` (he fills the 9 himself), `room/hint.test.ts` (the jam step, the check's `template`), `ui/common/hint-text.test.ts` (check on a blank page).
+- New tests: `room/pieces.test.ts` (the one rule), `room/notebook.test.ts` (`x = 3 · 3` and the others refused; `x = 23 − 14` brings no blanks), `room/handover.test.ts` (no `answer` or splitter tag at `x = 23 − 14`), `room/hint.test.ts` (answer after a deleted jam on the split's line, never a split under 2, the jam in rooms 1 and 4 and on a jammed blank, the way out of `x = 23 − 14`, the check template), `store/hint.test.ts` (the refusal goes on his next action, not on the clock or a press), `ui/common/hint-text.test.ts` (jam spots, check text, one tag with the refusal), `content/text/hr.test.ts`, `ui/notebook/Notebook.test.tsx` (the delete key pulses), `ui/scene/scale/dial-layout.test.ts` (`knobAt` on a scrolled track), `ui/scene/scale/hint-ghost.test.ts` (the wiring).
+- Each fix was reverted in turn with its tests run: every one failed without its fix (bugs 1–8).
+
+**Checks:**
+- `npm run check`: clean (260 files).
+- `npm test`: 106 files, 1903 passed, 2 skipped.
+- `npm run build`: passes, 0.34 MB of JavaScript gzipped.
+- Headless Edge (Playwright, `channel: 'msedge'`) on my own Vite server, port 5360, since stopped; 5173 untouched. At 1280 × 800 and 640 × 360, through the real `?` button and keyboard, the store only setting up positions:
+  - Bug 1: room 4, −5, split, 6 in `x = ☐` jams, delete: `?`, `?` says `Upiši x = 9.`
+  - Bug 2: room 1 with 4 jammed, room 4 after `x = 8`, and room 4 with 8 jammed in the blank: the first press says `Stroj je zapeo: ovaj redak ne vrijedi.`, the second `Obriši ga tipkom ⌫ i napiši ponovno.`; the draft and the delete key pulse, and the blank still holds only the 8.
+  - Bug 4: room 4, `x = 3 · 3` first is refused with `Prvo pojednostavi vagu.`, nothing stored, and no scene tag shows. After −5 the tag goes, and enter takes `x = 3 · 3`; an empty `x = ☐` appears.
+  - The only console error is the existing 404 for `/favicon.ico`.
+
+**Not done:**
+- Still open from lane A: an edit after a jam puts the pans back to the last committed line, which would lose moves with Balance `blank` (no room yet).
+- The headless play-through of rooms 1–4 (the story's last task) is not part of this pass.

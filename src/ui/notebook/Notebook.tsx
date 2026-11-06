@@ -10,12 +10,11 @@ import {
   lineDisplays,
   type NotebookKey,
   notebookWrites,
-  refusalView,
 } from '@/room/notebook';
 import { pinOffered } from '@/room/pin';
 import type { NotebookLine, Refusal } from '@/room/types';
 import { useGame } from '@/store/store';
-import { hintOf, hintPlace, notebookHint } from '@/ui/common/hint-text';
+import { hintKey, hintOf, hintPlace, notebookHint, notebookRefusal } from '@/ui/common/hint-text';
 import {
   HandoverNote,
   isNotebookHandover,
@@ -46,7 +45,9 @@ const noTemplates: LineToken[][] = [];
  * notebook, with the draft pulsing, when it is about writing; else in the scene, with the
  * phone's notebook pushed aside again on each press. When enter refuses an answer before
  * the pans are simplified (story 1.16), the refusal's tag hangs in the same place, ahead
- * of both.
+ * of a handover's; the scene hangs none while it does, and it stays up only until his next
+ * action, a press of the hint button included: a hint pressed after it takes its place
+ * (story 1.16 review). While the machine is jammed, the hint's tag pulses the delete key.
  */
 export function Notebook() {
   const lines = useGame((s) => s.room?.stage.lines ?? noLines);
@@ -54,7 +55,7 @@ export function Notebook() {
   const templates = useGame((s) => s.room?.stage.templates ?? noTemplates);
   const wrong = useGame((s) => s.room?.stage.jam?.kind === 'line');
   const refused = useGame((s) => s.room?.stage.refused ?? 0);
-  const refusal = useGame((s) => refusalView(s.room));
+  const refusal = useGame(notebookRefusal);
   const writes = useGame((s) => (s.room ? notebookWrites(s.room.stage) : false));
   const choice = useGame((s) => s.ui.notebookAside);
   const step = useGame((s) =>
@@ -64,6 +65,7 @@ export function Notebook() {
   const pinWaits = useGame((s) => (s.room ? pinOffered(s.room) : false));
   const hinting = useGame((s) => hintOf(s) !== null);
   const hintNote = useGame(notebookHint);
+  const hintPadKey = useGame(hintKey);
   const hintOnScene = useGame((s) => hintPlace(s) === 'scene');
   const presses = useGame((s) => s.ui.hint?.presses ?? 0);
   const onScene = hinting ? hintOnScene : step !== null && !isNotebookHandover(step);
@@ -97,7 +99,7 @@ export function Notebook() {
       writes={writes}
       aside={aside}
       handover={!hinting && isNotebookHandover(step) ? step : null}
-      hint={hintNote === null ? null : { text: hintNote, presses }}
+      hint={hintNote === null ? null : { text: hintNote, presses, key: hintPadKey }}
       refusal={refusal}
       onKey={send}
       onSlide={slide}
@@ -126,9 +128,10 @@ export interface NotebookPageProps {
   handover?: NotebookHandover | null;
   /**
    * Story 1.16: the hint button's tag at the notebook, in the handover's place: its text,
-   * and the presses so far, so each press pops it in again. The draft line pulses with it.
+   * and the presses so far, so each press pops it in again. The draft line pulses with it,
+   * and the pad key it names, if any (the delete key while the machine is jammed).
    */
-  hint?: { text: string; presses: number } | null;
+  hint?: { text: string; presses: number; key?: 'delete' | null } | null;
   /**
    * Why enter refused the line, with a tag (story 1.16, `refusalView`): it hangs where a
    * handover's would, in its place; nothing pulses.
@@ -223,7 +226,7 @@ export function NotebookPage({
         ) : (
           handover && <HandoverNote step={handover} />
         )}
-        <NumberPad writes={writes} blank={blank} onKey={onKey} />
+        <NumberPad writes={writes} blank={blank} pulse={hint?.key ?? null} onKey={onKey} />
       </div>
     </aside>
   );

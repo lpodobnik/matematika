@@ -7,6 +7,8 @@ interface Props {
   writes: boolean;
   /** He is filling a blank: only digits, delete and enter work, and the rest show as off. */
   blank: boolean;
+  /** A key the hint points at, which pulses (story 1.16 review: delete, while jammed). */
+  pulse?: NotebookKey | null;
   onKey(key: NotebookKey): void;
 }
 
@@ -15,7 +17,7 @@ interface Props {
  * (rule 8). Each key acts on `pointerdown` and is at least 48 CSS px (notebook.css). The
  * keys are never focused, so a computer's Enter goes only to the notebook's keyboard watch.
  */
-export function NumberPad({ writes, blank, onKey }: Props) {
+export function NumberPad({ writes, blank, pulse = null, onKey }: Props) {
   return (
     <div className="pad">
       {PAD_ROWS.flat().map((key) => (
@@ -25,6 +27,7 @@ export function NumberPad({ writes, blank, onKey }: Props) {
           tabIndex={-1}
           className={`pad__key pad__key--${keyKind(key)}`}
           disabled={!keyWorks(key, writes, blank)}
+          data-pulse={key === pulse || undefined}
           aria-label={keyName(key)}
           onPointerDown={(event) => primaryPress(event, () => onKey(key))}
         >

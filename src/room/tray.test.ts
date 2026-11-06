@@ -498,10 +498,11 @@ describe('the pans stay at the slider’s x during Balance (story 1.16)', () => 
     expect(shown(plusThree)).toBe('x + 3 = 12');
     expect(plusThree.stage.templates).toEqual([]);
     expect(formatTokens(plusThree.stage.draft)).toBe('x = 9');
-    // Back to x alone: the blanks return, with his 9 in the first.
+    // Back to x alone: the blanks return, empty. (Story 1.16 review: 1.16 carried his
+    // `x = 9` into the new blank; new blanks now start empty.)
     const back = drop(plusThree, 'float', 3).room;
     expect(back.stage.templates).toHaveLength(2);
-    expect(back.stage.draft).toEqual(['9']);
+    expect(back.stage.draft).toEqual([]);
   });
 
   it('is replaced by the layout of a line he writes, still at the dial’s x', () => {

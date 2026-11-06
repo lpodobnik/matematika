@@ -6,37 +6,13 @@
 //
 //   shown    while the tray is offered (room/tray.ts, `trayOffered`)
 //   matched  the pans hold one x piece of count 1 (a small x-gear, not divided) on one side
-//            and a single number piece, or nothing, on the other: `x = 9`, `9 = x`. Not
-//            while the machine is jammed on a wrong line, which the scale acts out instead
+//            and a single number piece, or nothing, on the other: `x = 9`, `9 = x`, by the
+//            one rule for x alone (room/pieces.ts, `xAlone`). Not while the machine is
+//            jammed on a wrong line, which the scale acts out instead
 
-import type { Equation } from '@/math/expr';
-import { isNumberPiece, type Piece, panPieces } from '@/room/pieces';
+import { xAlone } from '@/room/pieces';
 import { trayOffered } from '@/room/tray';
 import type { RoomState, ToolId } from '@/room/types';
-
-function loneX(pieces: readonly Piece[]): boolean {
-  const [piece] = pieces;
-  return (
-    pieces.length === 1 &&
-    piece !== undefined &&
-    piece.kind === 'gear' &&
-    piece.count === 1n &&
-    piece.divisor === null
-  );
-}
-
-function numberOrNothing(pieces: readonly Piece[]): boolean {
-  const [piece] = pieces;
-  return (
-    pieces.length === 0 || (pieces.length === 1 && piece !== undefined && isNumberPiece(piece))
-  );
-}
-
-/** The pans match the card's picture: a single x on one side, one number piece or none on the other. */
-export function xAlone(pans: Equation): boolean {
-  const { left, right } = panPieces(pans);
-  return (loneX(left) && numberOrNothing(right)) || (loneX(right) && numberOrNothing(left));
-}
 
 /** What the goal card shows. Flat, for selectors. */
 export interface GoalView {

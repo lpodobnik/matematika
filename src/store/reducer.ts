@@ -11,7 +11,7 @@ import { setDial } from '@/room/dial';
 import { meetControls } from '@/room/first-use';
 import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } from '@/room/handover';
 import { type HintAction, hintAfter } from '@/room/hint';
-import { deleteToken, enterLine, typeToken } from '@/room/notebook';
+import { deleteToken, enterLine, typeToken, withoutRefusal } from '@/room/notebook';
 import {
   finishPresentation,
   nextRoom,
@@ -195,6 +195,24 @@ function hintAction(action: Action, changed: boolean): HintAction {
   return his && changed ? 'ends' : 'other';
 }
 
+/**
+ * Story 1.16 review: the refusal's tag (`Prvo pojednostavi vagu.`) stays up only until his
+ * next action, so only one tag shows; the scene's tags wait while it does. Enter sets or
+ * clears it itself, and an edit clears it (room/notebook.ts); any other action of his that
+ * does something to the room takes it down here. A press of the hint button changes
+ * nothing in the room: its tag takes the refusal's place at the notebook instead.
+ */
+function withRefusalDown(
+  step: RoomStep | null,
+  before: RoomState | null,
+  action: Action,
+): RoomStep | null {
+  if (!step || step.room === before) return step;
+  if (notHis.has(action.type) || action.type === 'notebook/enter') return step;
+  const room = withoutRefusal(step.room);
+  return room === step.room ? step : { ...step, room };
+}
+
 /** His action as the handovers name it (room/handover.ts). */
 function handoverMove(action: Action): HandoverMove {
   switch (action.type) {
@@ -258,9 +276,10 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
     const before =
       action.type === 'dev/set-tools' ? withTools(state.save, action.tools) : state.save;
-    const change = withToolMemory(
-      roomStep(state, action, ctx.now, roomList, before.progress.tools),
-      before,
+    const change = withRefusalDown(
+      withToolMemory(roomStep(state, action, ctx.now, roomList, before.progress.tools), before),
+      state.room,
+      action,
     );
     const progressed = handOver(state.room, action, ctx.now, progress(change, before));
     const { step } = progressed;

@@ -27,6 +27,7 @@ import {
 import {
   clampNotch,
   type DialLayout,
+  type DialScroll,
   dialLayout,
   followScroll,
 } from '@/ui/scene/scale/dial-layout';
@@ -37,6 +38,11 @@ extend({ Container, Graphics, Text });
 interface Props {
   /** CSS px per scene unit: notches are 24 CSS px apart, whatever the screen. */
   sceneScale: number;
+  /**
+   * Where the track's scroll is kept, shared with the knob's ghost (story 1.16 review);
+   * the dial keeps its own when none is given.
+   */
+  scroll?: DialScroll;
 }
 
 /** How long the poke window's clamp takes to lift away when the pin is confirmed. */
@@ -64,7 +70,7 @@ const clampWidth = 0.6;
  * its plate nudge one notch over and back by themselves every `tuning.dialNudgeMs`, with no
  * store change; under reduced motion the knob blinks instead.
  */
-export function Dial({ sceneScale }: Props) {
+export function Dial({ sceneScale, scroll }: Props) {
   const dial = useGame(useShallow((s) => dialView(s.room)));
   const dispatch = useGame((s) => s.dispatch);
   const test = usePinTest();
@@ -87,7 +93,8 @@ export function Dial({ sceneScale }: Props) {
   const layoutRef = useRef<DialLayout | null>(layout);
   const dialRef = useRef(dial);
   const testXRef = useRef(test.dialX);
-  const scrollRef = useRef(0);
+  const ownScroll = useRef(0);
+  const scrollRef = scroll ?? ownScroll;
 
   const drag = useMemo(
     () =>
@@ -107,7 +114,7 @@ export function Dial({ sceneScale }: Props) {
           if (view) dispatch(notchAction(view, notch));
         },
       }),
-    [dispatch],
+    [dispatch, scrollRef],
   );
   const handlers = useMemo(() => {
     const base = dialPointerHandlers(drag);

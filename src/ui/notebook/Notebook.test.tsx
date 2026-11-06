@@ -317,6 +317,26 @@ describe('the handover tags at the notebook (story 1.15)', () => {
     expect(both).not.toContain(hr.handover.check);
   });
 
+  // Story 1.16 review: while the machine is jammed, the hint points at the delete key.
+  it('pulses the delete key with the hint’s tag while the machine is jammed, and no other', () => {
+    const jammed = page(opened(r01), {
+      wrong: true,
+      hint: { text: hr.hint.jam.fix, presses: 2, key: 'delete' },
+    });
+    expect(jammed).toContain(hr.hint.jam.fix);
+    expect(jammed).toContain('class="line line--draft line--wrong line--pulse"');
+    const pulsing = [...jammed.matchAll(/<button[^>]*data-pulse="true"[^>]*>/g)].map((m) => m[0]);
+    const keys = pulsing.filter((tag) => tag.includes('pad__key'));
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toContain(`aria-label="${hr.notebook.delete}"`);
+    // A hint with no key pulses none.
+    const plain = page(opened(r01), { hint: { text: hr.hint.answer('x = 5'), presses: 2 } });
+    expect(plain).not.toMatch(/pad__key[^>]*data-pulse="true"/);
+    expect(rule(css, '.pad__key[data-pulse="true"]')).toMatch(/animation:\s*key-pulse/);
+    const reduced = css.slice(css.lastIndexOf('@media (prefers-reduced-motion: reduce)'));
+    expect(reduced).toContain('.pad__key[data-pulse="true"]');
+  });
+
   it('sets the tag’s text at least 20 CSS px, and blinks instead of moving under reduced motion', () => {
     expect(px(rule(css, '.handover-note__card'), 'font-size')).toBeGreaterThanOrEqual(20);
     expect(rule(css, '.line--pulse')).toMatch(/animation:\s*line-pulse/);

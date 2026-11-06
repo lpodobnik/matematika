@@ -8,6 +8,7 @@ import {
   dialGeometry,
   dialLayout,
   followScroll,
+  knobAt,
   minHitCssPx,
 } from '@/ui/scene/scale/dial-layout';
 import { scaleGeometry } from '@/ui/scene/scale/layout';
@@ -129,6 +130,33 @@ describe('dialLayout', () => {
     expect(() => dialLayout(0, 10)).toThrow(/laid out/);
     expect(() => dialLayout(Number.NaN, 10)).toThrow(/laid out/);
     expect(() => dialLayout(0.5, 2.5)).toThrow(/notch count/);
+  });
+});
+
+// Story 1.16 review: the knob's ghost worked the scroll out as if the track hadn't
+// scrolled yet, so on a track he had scrolled it stood off the knob.
+describe('knobAt', () => {
+  it('stands where the dial draws the knob, on the track as it has scrolled', () => {
+    const layout = dialLayout(smallBeside, 30);
+    expect(layout.scrolls).toBe(true);
+    // He drags the knob to the end, then back to notch 20: the track stays scrolled.
+    let scroll = 0;
+    for (let notch = 0; notch <= 30; notch += 1) {
+      scroll = followScroll(layout, scroll, notch * layout.spacing);
+    }
+    for (let notch = 30; notch >= 20; notch -= 1) {
+      scroll = followScroll(layout, scroll, notch * layout.spacing);
+    }
+    const offset = 20 * layout.spacing;
+    expect(knobAt(layout, 20, scroll)).toEqual({
+      x: knobSceneX(layout, offset, scroll),
+      y: layout.trackY,
+    });
+    // Worked out from an unscrolled track, it would stand elsewhere.
+    const fresh = followScroll(layout, 0, offset);
+    expect(Math.abs(knobAt(layout, 20, fresh).x - knobAt(layout, 20, scroll).x)).toBeGreaterThan(
+      layout.spacing,
+    );
   });
 });
 

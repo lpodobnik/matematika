@@ -271,9 +271,10 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     balanceRoomFour(game);
     const alone = game.store.getState().room as RoomState;
     expect(refusalView(alone)).toBeNull();
-    // The refused x = 9 came along into the blank, so enter is enough.
-    expect(alone.stage.draft).toEqual(['9']);
-    game.act({ type: 'notebook/enter' });
+    // The blank starts empty: he fills 9 himself. (Story 1.16 review: 1.16 carried the
+    // refused x = 9 into the blank, so enter was enough.)
+    expect(alone.stage.draft).toEqual([]);
+    game.write('9');
     expect(formatTokens(game.stage().lines.at(-1)?.tokens ?? [])).toBe('x = 9');
   });
 

@@ -179,6 +179,59 @@ export function panPieces(equation: Equation): PanPieces {
   return { left: sidePieces(equation.left, 'left'), right: sidePieces(equation.right, 'right') };
 }
 
+/** A simplified pan pair: one pan's x pieces, and the other's one number piece or none. */
+interface SimplifiedPans {
+  xs: XPiece[];
+  number: NumberPiece | null;
+}
+
+function simplifiedPans(pans: Equation): SimplifiedPans | null {
+  const { left, right } = panPieces(pans);
+  const onlyX = (pieces: Piece[]) => pieces.length > 0 && !pieces.some(isNumberPiece);
+  const read = (xs: Piece[], other: Piece[]): SimplifiedPans | null => {
+    const [number, ...more] = other;
+    if (!onlyX(xs) || more.length > 0 || (number && !isNumberPiece(number))) return null;
+    return {
+      xs: xs.filter((piece): piece is XPiece => !isNumberPiece(piece)),
+      number: number ?? null,
+    };
+  };
+  return read(left, right) ?? read(right, left);
+}
+
+/**
+ * The pans are simplified (story 1.16, simplify first): judged on the pieces the scale
+ * shows, one pan holds only x pieces and the other a single number piece, or nothing.
+ * `2x = 18`, `18 = 2x` and `x = 9` are; `2x + 5 = 23` isn't, nor `2x = 23 − 5` (a weight and
+ * a balloon). So a split's line, `2x : 2 = 18 : 2` (one gear against a 9), is simplified.
+ */
+export function simplified(pans: Equation): boolean {
+  return simplifiedPans(pans) !== null;
+}
+
+/**
+ * What x stands alone against on the pans, or null when it isn't alone (story 1.16 review:
+ * the one rule for "x alone", for the notebook's blanks, the `answer` handover, the hint,
+ * the goal card and simplify first). On the pieces the scale shows: simplified pans whose
+ * x pieces are one small gear, not divided (x with coefficient 1), against a single number
+ * piece, or nothing (0). `x = 9`, `9 = x`, `2x : 2 = 18 : 2` and `x = 2 · 9` are alone;
+ * `x = 23 − 14` isn't (a weight and a balloon), nor `2x = 18` or `x : 3 = 5`.
+ */
+export function aloneAgainst(pans: Equation): q.Rational | null {
+  const sides = simplifiedPans(pans);
+  const [gear, ...more] = sides?.xs ?? [];
+  if (!sides || !gear || more.length > 0) return null;
+  if (gear.kind !== 'gear' || gear.count !== 1n || gear.divisor !== null) return null;
+  const { number } = sides;
+  if (!number) return q.zero;
+  return number.kind === 'weight' ? number.value : q.neg(number.value);
+}
+
+/** x is alone on the pans (`aloneAgainst`): one x by itself against one number, or nothing. */
+export function xAlone(pans: Equation): boolean {
+  return aloneAgainst(pans) !== null;
+}
+
 /**
  * A number on a piece: `18` for a whole number, otherwise the reduced fraction as a
  * division (`9 : 2`), which only a wrong line acted out can produce. A fraction too big for

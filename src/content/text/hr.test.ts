@@ -15,6 +15,15 @@ describe('the hint button’s and the goal card’s words (story 1.16)', () => {
     expect(hr.goal.label).toBe('Cilj: x sam');
   });
 
+  // Story 1.16 review: the jam's two presses, and the check line as a template.
+  it('says what a jam means and how to go on, and what goes in the check line’s blank', () => {
+    expect(hr.hint.jam).toEqual({
+      what: 'Stroj je zapeo: ovaj redak ne vrijedi.',
+      fix: 'Obriši ga tipkom ⌫ i napiši ponovno.',
+    });
+    expect(hr.hint.checkBlank('9')).toBe('Upiši 9 umjesto x.');
+  });
+
   it('says "sa" before the splitter’s parts whose word starts with s or š', () => {
     const says = (n: number) => hr.hint.split(String(n)).replace('Podijeli obje strane ', '');
     expect([2, 3, 4, 5, 6, 7, 8, 9].map(says)).toEqual([

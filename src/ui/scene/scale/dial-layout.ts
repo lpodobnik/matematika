@@ -10,7 +10,7 @@
 import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
 import { type DialView, notchOf } from '@/room/dial';
-import { scaleGeometry } from '@/ui/scene/scale/layout';
+import { type Point, scaleGeometry } from '@/ui/scene/scale/layout';
 
 export const dialGeometry = {
   centerX: 800,
@@ -116,6 +116,24 @@ export function dialLayout(
     tickHeight: Math.max(geometry.tickHeight, minTickCssPx * unitsPerPx),
     lineWidth,
   };
+}
+
+/**
+ * The track's scroll now, in scene units, held by the dial (Dial.tsx) as he drags and read
+ * by the knob's ghost (HintGhost.tsx) on every frame, so the ghost stands on the knob on a
+ * scrolled track (story 1.16 review). A ref, as a per-frame value (rule 6); one per copy of
+ * the scene.
+ */
+export interface DialScroll {
+  current: number;
+}
+
+/**
+ * Where the knob stands on the track, in scene units: notch `notch` on a track scrolled by
+ * `scroll` (DialScroll). The knob's ghost starts there.
+ */
+export function knobAt(layout: DialLayout, notch: number, scroll: number): Point {
+  return { x: layout.originX - scroll + notch * layout.spacing, y: layout.trackY };
 }
 
 /**

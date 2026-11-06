@@ -188,6 +188,22 @@ describe('which handover applies (story 1.15)', () => {
     expect(handoverView(alone, allMet, balance)).toBeNull();
   });
 
+  // Story 1.16 review: x alone is judged on the pans' pieces, the rule the blanks and
+  // simplify first use, so `x = 23 − 14` (a weight and a balloon) doesn't ask for x; and
+  // the splitter's tag doesn't come where x is already single, with nothing to split.
+  it('asks neither for x nor for the splitter at x = 23 − 14', () => {
+    const twoX = write(waterWheel(), '2x = 18');
+    const typed = write(twoX, 'x = 23 − 14');
+    expect(typed.stage.lines).toHaveLength(3);
+    expect(splitterOffered(typed, balance)).toBe(true);
+    expect(handoverApplies('answer', typed, balance)).toBe(false);
+    expect(handoverApplies('splitter', typed, balance)).toBe(false);
+    expect(handoverApplies('splitter', twoX, balance)).toBe(true);
+    // The split's own line is one gear against a 9: x alone.
+    const split = balancedTo(twoX, '2x : 2 = 18 : 2');
+    expect(handoverApplies('answer', split, balance)).toBe(true);
+  });
+
   it('has the answer step in its place, after write and before check (story 1.16)', () => {
     expect(handoverOrder).toEqual([
       'dial',

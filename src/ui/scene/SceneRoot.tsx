@@ -17,7 +17,7 @@ import {
 } from 'react';
 import { palette } from '@/art/palette';
 import { useGame } from '@/store/store';
-import { hintOf } from '@/ui/common/hint-text';
+import { sceneTag } from '@/ui/common/hint-text';
 import { watchContextLoss } from '@/ui/scene/context-loss';
 import { type CopyPlacement, copyPlacements } from '@/ui/scene/copies';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
@@ -26,6 +26,7 @@ import { Machine } from '@/ui/scene/machine/Machine';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
 import { Dial } from '@/ui/scene/scale/Dial';
+import type { DialScroll } from '@/ui/scene/scale/dial-layout';
 import { GoalCard } from '@/ui/scene/scale/GoalCard';
 import { HandoverTag } from '@/ui/scene/scale/HandoverTag';
 import { HintGhost } from '@/ui/scene/scale/HintGhost';
@@ -242,9 +243,11 @@ interface SceneCopyProps {
  * One copy of the scene: the paper, the machine, the scale, the dial, the pin and, when it
  * is the only copy, the goal card, the tray, the splitter, the hint's ghosts and the pin's
  * question tag, then the handover tag or, while the hint button's hint shows, its tag in
- * its place (story 1.16: only one tag at a time). Normally there is one, filling the scene. Its drags and its `toScene` work in its own units, and its parts
- * get its own CSS px per unit, so a notch stays 24 CSS px in a copy drawn at a third of the
- * size.
+ * its place (story 1.16: only one tag at a time; none while the refusal's tag hangs at the
+ * notebook, until his next action). Normally there is one, filling the scene. Its drags and
+ * its `toScene` work in its own units, and its parts get its own CSS px per unit, so a notch
+ * stays 24 CSS px in a copy drawn at a third of the size. The dial shares its track's
+ * scroll with the knob's ghost, so the ghost stands on the knob on a scrolled track.
  */
 function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps) {
   const copyRef = useRef<Container>(null);
@@ -258,13 +261,14 @@ function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps
     return { x: local.x, y: local.y };
   }, []);
   const copyScale = sceneScale * placement.scale;
-  const hinting = useGame((s) => hintOf(s) !== null);
+  const tag = useGame(sceneTag);
+  const dialScroll = useRef<DialScroll>({ current: 0 }).current;
   return (
     <pixiContainer ref={copyRef} x={placement.x} y={placement.y} scale={placement.scale}>
       <pixiGraphics draw={drawPaper} />
       <Machine />
       <Scale sceneScale={copyScale} drag={drag} toScene={toScene} splitShow={splitShow} />
-      <Dial sceneScale={copyScale} />
+      <Dial sceneScale={copyScale} scroll={dialScroll} />
       {/* The pin's question tag keeps 20 CSS px text, so like the tools it is drawn only
           when the copy is the only one. */}
       <Pin sceneScale={copyScale} question={tools ? sceneOrigin : null} />
@@ -275,15 +279,12 @@ function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps
         <Splitter sceneScale={copyScale} drag={splitterDrag} toScene={toScene} show={splitShow} />
       )}
       {/* Story 1.16: the hint's ghost of the next move, over the tools. */}
-      {tools && <HintGhost sceneScale={copyScale} />}
+      {tools && <HintGhost sceneScale={copyScale} dialScroll={dialScroll} />}
       {/* Story 1.15: the next step's handover tag, over the tools; like them, only in the
-          only copy, as its text keeps 20 CSS px. While the hint shows, its tag instead. */}
-      {tools &&
-        (hinting ? (
-          <HintTag sceneScale={copyScale} origin={sceneOrigin} />
-        ) : (
-          <HandoverTag sceneScale={copyScale} origin={sceneOrigin} />
-        ))}
+          only copy, as its text keeps 20 CSS px. While the hint shows, its tag instead;
+          while the refusal's tag hangs at the notebook, neither (story 1.16 review). */}
+      {tools && tag === 'hint' && <HintTag sceneScale={copyScale} origin={sceneOrigin} />}
+      {tools && tag === 'handover' && <HandoverTag sceneScale={copyScale} origin={sceneOrigin} />}
     </pixiContainer>
   );
 }

@@ -371,9 +371,26 @@
   }
 }
 
+/* Story 1.16 review: while the machine is jammed, the hint points at the delete key, which
+   pulses with the draft line: a ring that swells and fades inside the key. */
+.pad__key[data-pulse="true"] {
+  animation: key-pulse 1600ms ease-in-out infinite;
+}
+
+@keyframes key-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 0 rgb(61 75 92 / 0);
+  }
+  50% {
+    box-shadow: inset 0 0 0 4px rgb(61 75 92 / 0.55);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .line--pulse,
   .line--pulse.line--wiggle,
+  .pad__key[data-pulse="true"],
   .notebook-area[data-aside="true"] .notebook__handle[data-pulse="true"] {
     animation: pulse-blink 1600ms steps(2, jump-none) infinite;
   }

@@ -13,7 +13,7 @@ import { scaleView } from '@/room/scale';
 import { trayPiece } from '@/room/tray';
 import type { RoomState, TrayKind } from '@/room/types';
 import { useGame } from '@/store/store';
-import { dialLayout, followScroll } from '@/ui/scene/scale/dial-layout';
+import { type DialScroll, dialLayout, knobAt } from '@/ui/scene/scale/dial-layout';
 import {
   frameGhost,
   type GhostCopy,
@@ -40,6 +40,8 @@ extend({ Container, Graphics, Text });
 interface Props {
   /** CSS px per scene unit. */
   sceneScale: number;
+  /** The dial track's scroll now, as the dial keeps it (Dial.tsx), for the knob's ghost. */
+  dialScroll: DialScroll;
 }
 
 /**
@@ -50,7 +52,7 @@ interface Props {
  * only: no store change, no event, and it takes no touches. Each press starts it again.
  * Under reduced motion it stands still where the move ends.
  */
-export function HintGhost({ sceneScale }: Props) {
+export function HintGhost({ sceneScale, dialScroll }: Props) {
   const room = useGame((s) => s.room);
   const tools = useGame((s) => s.save.progress.tools);
   const hint = useGame((s) => s.ui.hint);
@@ -65,6 +67,7 @@ export function HintGhost({ sceneScale }: Props) {
           room={room}
           direction={move.direction}
           sceneScale={sceneScale}
+          scroll={dialScroll}
         />
       );
     case 'tray':
@@ -127,23 +130,29 @@ interface KnobProps {
   room: RoomState;
   direction: 1 | -1;
   sceneScale: number;
+  /** The track's scroll, read on every frame: the ghost stands on the knob as the dial shows it. */
+  scroll: DialScroll;
 }
 
-/** The knob's ghost, two notches the right way and back, over the real knob. */
-function KnobGhost({ room, direction, sceneScale }: KnobProps) {
+/**
+ * The knob's ghost, two notches the right way and back, over the real knob: on the track as
+ * it has scrolled (story 1.16 review; it used to assume a track that hadn't).
+ */
+function KnobGhost({ room, direction, sceneScale, scroll }: KnobProps) {
   const ref = useRef<Container>(null);
   const { dial } = currentStageSpec(room);
   const notches = dial === 'locked' ? 0 : notchCount(dial);
   const layout = useMemo(() => dialLayout(sceneScale, notches), [sceneScale, notches]);
   const at = dial === 'locked' ? 0 : notchOf(dial, room.stage.dialX);
-  const offset = at * layout.spacing;
-  const home = { x: layout.originX - followScroll(layout, 0, offset) + offset, y: layout.trackY };
   const reach = slideReach(direction, at, notches, tuning.hintSlideNotches) * layout.spacing;
   const draw = useCallback(
     (g: Graphics) => dialSkin.knob(g, layout.knob.width, layout.knob.height, layout.lineWidth),
     [layout],
   );
-  useGhostClock((t) => place(ref.current, t === null ? null : knobGhost(t, reach), home), 0.5);
+  useGhostClock((t) => {
+    const home = knobAt(layout, at, scroll.current);
+    place(ref.current, t === null ? null : knobGhost(t, reach), home);
+  }, 0.5);
   if (dial === 'locked' || reach === 0) return null;
   return (
     <pixiContainer ref={ref} eventMode="none" interactiveChildren={false} alpha={0}>

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { tokenFromChar } from '@/math/tokens';
 import { hintView } from '@/room/hint';
+import { refusalView } from '@/room/notebook';
 import type { RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
@@ -117,6 +118,40 @@ describe('the hint button through the store (story 1.16)', () => {
     expect(game.hint()).toBe(pressed);
     game.act({ type: 'tray/drop', kind: 'float' });
     expect(game.hint()).toBeNull();
+  });
+
+  // Story 1.16 review: the refusal's tag at the notebook and a tag in the scene showed at
+  // once. The refusal now stays up only until his next action (ui/common/hint-text.ts
+  // hangs the scene's tags again then).
+  it('takes the refusal down on his next action that does something, not on the clock', () => {
+    const game = playing(['balance']);
+    game.act({ type: 'room/enter', roomId: 'r04' });
+    game.act({ type: 'machine/touch' });
+    for (let x = 1; x <= 6; x += 1) game.act({ type: 'dial/set', x });
+    game.write('x=9');
+    expect(refusalView(game.room())).toBe('simplify');
+    // The clock is not his action, and a press of the hint button changes nothing in the room.
+    game.clock.now += tuning.hintIdleMs + 1000;
+    game.act({ type: 'clock/tick' });
+    const room = game.room();
+    game.act({ type: 'hint/press' });
+    expect(game.room()).toBe(room);
+    expect(game.room().stage.refusal).toBe('simplify');
+    // A dial notch takes it down.
+    game.act({ type: 'dial/set', x: 5 });
+    expect(game.room().stage.refusal).toBeNull();
+    // Refused again, then a tray stepper (a setting, but his action): it goes too.
+    for (let i = 0; i < 3; i += 1) game.act({ type: 'notebook/delete' });
+    game.write('x=9');
+    expect(game.room().stage.refusal).toBe('simplify');
+    game.act({ type: 'tray/step', kind: 'float', by: 1 });
+    expect(game.room().stage.refusal).toBeNull();
+    // An action that does nothing leaves it: a tray step past the tray's end.
+    for (let i = 0; i < 3; i += 1) game.act({ type: 'notebook/delete' });
+    game.write('x=9');
+    expect(game.room().stage.refusal).toBe('simplify');
+    game.act({ type: 'tray/step', kind: 'weight', by: -1 });
+    expect(game.room().stage.refusal).toBe('simplify');
   });
 
   it('does nothing once the stage locks', () => {

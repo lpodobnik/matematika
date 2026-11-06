@@ -10,7 +10,8 @@
 //   check         after the answer line, before the check line
 //   tray          the tray is offered, before his first Balance move in the stage
 //   balance-goal  after a Balance move, until a side holds only x and the other no x
-//   splitter      the splitter is offered and a side holds only x, not yet x alone
+//   splitter      the splitter is offered and a side holds only x, more than one x (story
+//                 1.16 review: not `x = 23 − 14`, where x is single but not yet alone)
 //
 // Only one tag shows at a time: the earliest step that applies and that he hasn't met
 // (`save.progress.firstUse` holds `handover-<id>`). Once he takes the step it is met, and
@@ -25,11 +26,12 @@ import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
 import { dialTurnsNow } from '@/room/dial';
 import { answerAllowed, notebookWrites } from '@/room/notebook';
+import { aloneAgainst } from '@/room/pieces';
 import { pinOffered } from '@/room/pin';
 import { currentStageSpec } from '@/room/room';
 import { scaleView, stageX } from '@/room/scale';
 import { splitterOffered } from '@/room/splitter';
-import { trayOffered } from '@/room/tray';
+import { readyToSplit, trayOffered } from '@/room/tray';
 import type { FirstUseId, HandoverId, Phase, RoomState, ToolId } from '@/room/types';
 
 /** The handover steps in the order he meets them; the earliest that applies comes first. */
@@ -93,11 +95,15 @@ export function xIsolated(pans: Equation): boolean {
   return isolatedSides(pans) !== null;
 }
 
-/** The pans hold the answer: x alone against the stage's solution, `x = 9` or `9 = x`. */
-function answerOnPans(room: RoomState): boolean {
-  const sides = isolatedSides(room.stage.pans);
-  if (!sides || !q.equals(sides.xs.a, q.one)) return false;
-  return q.equals(sides.other.b, q.rational(stageX(room)));
+/**
+ * The pans hold the answer: x alone against the stage's solution, `x = 9`, `9 = x` or a
+ * split's `2x : 2 = 18 : 2`, by the one rule for x alone on the pans' pieces (story 1.16
+ * review; room/pieces.ts, `aloneAgainst`), the rule the notebook's blanks and simplify
+ * first use too. The hint reads it for its answer move (room/hint.ts).
+ */
+export function answerOnPans(room: RoomState): boolean {
+  const against = aloneAgainst(room.stage.pans);
+  return against !== null && q.equals(against, q.rational(stageX(room)));
 }
 
 /** What the steps ask of the stage, worked out once for all of them. */
@@ -109,6 +115,8 @@ interface Situation {
   checked: boolean;
   balanced: boolean;
   isolated: boolean;
+  /** A side holds only x pieces, more than one x: the splitter has something to split. */
+  splittable: boolean;
   answerOnPans: boolean;
   /**
    * He has written a line himself. Story 1.15 kept the dial's tag away while a written line
@@ -134,6 +142,7 @@ function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
     checked: hasLine(room, 'check'),
     balanced: balanced(room),
     isolated: xIsolated(stage.pans),
+    splittable: readyToSplit(stage.pans),
     answerOnPans: answerOnPans(room),
     wrote: stage.lines.some((line) => line.source === 'typed'),
     levelAtDial: scaleView(room).level,
@@ -161,7 +170,7 @@ function applies(id: HandoverId, s: Situation): boolean {
     case 'balance-goal':
       return s.open && !s.answered && s.balanced && !s.isolated;
     case 'splitter':
-      return s.splitter && !s.answered && s.isolated && !s.answerOnPans;
+      return s.splitter && !s.answered && s.isolated && s.splittable;
   }
 }
 

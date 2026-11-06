@@ -5,6 +5,7 @@ import { toLinear, valueAt } from '@/math/linear';
 import { parse, parseExpr } from '@/math/parse';
 import * as q from '@/math/rational';
 import {
+  aloneAgainst,
   countLabel,
   divisorLabel,
   isNumberPiece,
@@ -14,6 +15,8 @@ import {
   type Piece,
   panPieces,
   sidePieces,
+  simplified,
+  xAlone,
 } from '@/room/pieces';
 
 function equation(text: string): Equation {
@@ -296,5 +299,56 @@ describe('minusLabel (story 1.15)', () => {
     expect(minusLabel('?')).toBe('\u2212?');
     // The minus is format.ts's own sign, never a hyphen.
     expect(minusLabel('x').charCodeAt(0)).toBe(0x2212);
+  });
+});
+
+// Story 1.16 review: three rules judged "x alone" differently (the blanks and the `answer`
+// tag on the linear form, simplify first on the pieces), so `x = 23 − 14` brought the
+// blanks and then refused the 9 filled into them. One rule now, on the pieces.
+describe('x alone and simplified: one rule, on the pieces the scale shows (story 1.16 review)', () => {
+  it('finds x alone against one number piece, or nothing, either way round', () => {
+    const alone: [string, number][] = [
+      ['x = 9', 9],
+      ['9 = x', 9],
+      ['2x : 2 = 18 : 2', 9],
+      ['x = 3 · 3', 9],
+      ['x = 18 : 2', 9],
+      ['x = 9 + 0', 9],
+      ['x + 5 − 5 = 9', 9],
+      ['x = 0', 0],
+    ];
+    for (const [text, value] of alone) {
+      expect(aloneAgainst(equation(text)), text).toEqual(q.rational(value));
+      expect(xAlone(equation(text)), text).toBe(true);
+    }
+  });
+
+  it('does not find it where a pan holds two number pieces, more x, or a divided x', () => {
+    for (const text of ['x = 23 − 14', '2x = 18', 'x : 3 = 5', 'x + 5 = 14', '9 = 9', 'x = x']) {
+      expect(aloneAgainst(equation(text)), text).toBeNull();
+      expect(xAlone(equation(text)), text).toBe(false);
+    }
+    // `x = 23 − 14` is not simplified either: a weight and a balloon on one pan.
+    expect(simplified(equation('x = 23 − 14'))).toBe(false);
+  });
+
+  it('calls x alone only pans that are simplified, so a blank that shows always takes its number', () => {
+    const texts = [
+      'x = 9',
+      '9 = x',
+      '2x : 2 = 18 : 2',
+      'x = 23 − 14',
+      '2x = 18',
+      '2x = 23 − 5',
+      'x + 5 − 5 = 9',
+      'x = 3 · 3',
+      '2x + 5 = 23',
+      'x : 3 = 5',
+      '20 − x = 6',
+      '3x = x + 8',
+    ];
+    for (const text of texts) {
+      if (xAlone(equation(text))) expect(simplified(equation(text)), text).toBe(true);
+    }
   });
 });

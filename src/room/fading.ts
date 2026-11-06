@@ -3,22 +3,13 @@
 // (`☐ + 4 = 9`), and pad input fills only the current blank. With `blank` he writes every
 // line. With Balance `auto` the lines appear as he moves and he writes the last two (GDD,
 // Fading): story 1.16 gives him those two as blanks once x is alone on the pans, `x = ☐`
-// and then the check line (`lastLines`). Balance and Undo blanks (`2x = ☐` after a move)
+// and then the check line (`lastLines`); x is alone by the one rule on the pans' pieces
+// (room/pieces.ts, `xAlone`). Balance and Undo blanks (`2x = ☐` after a move)
 // join with their ways.
 
 import { assert } from '@/lib/assert';
-import type { Equation } from '@/math/expr';
-import { toLinear } from '@/math/linear';
-import * as q from '@/math/rational';
-import {
-  BLANK,
-  blankOutX,
-  fillBlanks,
-  isDigit,
-  type LineToken,
-  type Token,
-  tokenize,
-} from '@/math/tokens';
+import { BLANK, blankOutX, fillBlanks, type LineToken, type Token, tokenize } from '@/math/tokens';
+import { xAlone } from '@/room/pieces';
 import type { StageSpec, StageState } from '@/room/types';
 
 /** The answer line to fill: `x = ☐`. */
@@ -40,20 +31,6 @@ export function checkTemplate(stage: StageSpec, machine: number): LineToken[] {
 export function openingTemplates(stage: StageSpec, machine: number): LineToken[][] {
   if (stage.fading.try !== 'blanks') return [];
   return [[...answerTemplate], checkTemplate(stage, machine)];
-}
-
-/**
- * x is alone on the pans (story 1.16): one side is a single x with nothing else on it, and
- * the other holds no x: `x = 9`, `9 = x`, or a split's line, `2x : 2 = 18 : 2`, which the
- * scale shows as one gear against a 9.
- */
-export function xAlone(pans: Equation): boolean {
-  const left = toLinear(pans.left);
-  const right = toLinear(pans.right);
-  if (left.kind !== 'linear' || right.kind !== 'linear') return false;
-  const alone = (side: { a: q.Rational; b: q.Rational }) =>
-    q.equals(side.a, q.one) && q.isZero(side.b);
-  return (alone(left) && q.isZero(right.a)) || (alone(right) && q.isZero(left.a));
 }
 
 /**
@@ -90,27 +67,10 @@ function sameLines(
 }
 
 /**
- * What fills a template's one blank in a whole line: the numerals there, when the line is
- * the template with only numerals in the blank; null otherwise.
- */
-function blankIn(template: readonly LineToken[], line: readonly Token[]): Token[] | null {
-  const at = template.indexOf(BLANK);
-  if (at < 0) return null;
-  const after = template.length - at - 1;
-  const fill = line.slice(at, line.length - after);
-  const fits =
-    fill.length > 0 &&
-    fill.every(isDigit) &&
-    template.slice(0, at).every((token, i) => token === line[i]) &&
-    template.slice(at + 1).every((token, i) => token === line[line.length - after + i]);
-  return fits ? fill : null;
-}
-
-/**
- * The draft when the lines to fill change from `before` to `after`: what he had written,
- * as a whole line, carried into the new blank when it fits there (a refused `x = 9`
- * becomes the 9 in `x = ☐`), or out of the old blank as free text (`x = ☐` with 9 in it
- * becomes `x = 9` when x is no longer alone); otherwise cleared.
+ * The draft when the lines to fill change from `before` to `after`. New blanks start empty
+ * (story 1.16 review: a refused `x = 9` is no longer carried into `x = ☐`, so the blank
+ * that appears is his to fill). When the blanks go, what he had in the old blank comes out
+ * as free text (`x = ☐` with 9 in it becomes `x = 9` when x is no longer alone).
  */
 function carriedDraft(
   draft: readonly Token[],
@@ -118,10 +78,8 @@ function carriedDraft(
   after: readonly (readonly LineToken[])[],
 ): Token[] {
   const [from] = before;
-  const [to] = after;
-  const line = from ? (draft.length > 0 ? fillBlanks(from, draft) : []) : [...draft];
-  if (!to) return line;
-  return blankIn(to, line) ?? [];
+  if (after.length > 0) return [];
+  return from ? (draft.length > 0 ? fillBlanks(from, draft) : []) : [...draft];
 }
 
 /**

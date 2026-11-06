@@ -26,10 +26,10 @@ import {
   type NotebookStep,
   notebookWrites,
   refusalView,
-  simplified,
   typeToken,
 } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
+import { simplified } from '@/room/pieces';
 import { enterRoom } from '@/room/room';
 import { scaleView } from '@/room/scale';
 import type { Phase, RoomSpec, RoomState, StageSpec } from '@/room/types';
@@ -685,6 +685,41 @@ describe('simplify first (story 1.16)', () => {
     expect(result.room.stage.lines).toHaveLength(1);
     expect(result.room.stage.refusal).toBe('simplify');
     expect(result.room.stage.templates).toHaveLength(2);
+  });
+
+  // Story 1.16 review: the gate looked only at the checker's `answer` verdict, so a valid
+  // line that leaves x alone the same way slipped past it.
+  it('refuses any line that would leave x alone before the pans are simplified: x = 3 · 3', () => {
+    for (const line of ['x = 3 · 3', 'x = 18 : 2', 'x = 9 + 0', '3 · 3 = x']) {
+      const result = written(balanceOnly('2x + 5 = 23'), line);
+      expect(result.verdict.kind, line).toBe('valid');
+      expect(result.room.stage.lines, line).toHaveLength(1);
+      expect(result.room.stage.refused, line).toBe(1);
+      expect(result.room.stage.jam, line).toBeNull();
+      expect(result.room.stage.refusal, line).toBe('simplify');
+      expect(result.events, line).toEqual([]);
+      expect(result.room.stage.draft, line).toEqual(tokens(line));
+    }
+    // Once the pans are simplified it is taken, and x stands alone (the blanks come).
+    const simpler = written(balanceOnly('2x + 5 = 23'), '2x = 18').room;
+    const alone = written(simpler, 'x = 18 : 2');
+    expect(alone.verdict.kind).toBe('valid');
+    expect(alone.room.stage.lines).toHaveLength(3);
+    expect(alone.room.stage.refusal).toBeNull();
+    expect(alone.room.stage.templates).toHaveLength(2);
+    // Where Try values can finish, nothing changes.
+    expect(written(roomWith('2x + 5 = 23'), 'x = 3 · 3').room.stage.lines).toHaveLength(2);
+  });
+
+  // Story 1.16 review: `x = 23 − 14` brought `x = ☐` and the `answer` tag (x alone on the
+  // linear form), and then refused the 9 filled in (not simplified on the pieces).
+  it('takes x = 23 − 14 as a line, with no blanks, since x isn’t alone on the pans', () => {
+    const room = written(balanceOnly('2x + 5 = 23'), 'x = 23 − 14').room;
+    expect(room.stage.lines).toHaveLength(2);
+    expect(room.stage.refusal).toBeNull();
+    expect(room.stage.templates).toEqual([]);
+    // The answer still waits for simplified pans, as the scale shows a weight and a balloon.
+    expect(written(room, 'x = 9').room.stage.refusal).toBe('simplify');
   });
 
   it('leaves stages Try values can finish as they were, and other lines alone', () => {

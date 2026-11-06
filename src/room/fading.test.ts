@@ -12,8 +12,8 @@ import {
   lastLines,
   openingTemplates,
   withLastLines,
-  xAlone,
 } from '@/room/fading';
+import { xAlone } from '@/room/pieces';
 import { arriveAtStage } from '@/room/room';
 import type { NotebookLine, StageSpec } from '@/room/types';
 
@@ -108,7 +108,9 @@ describe('the last two lines as blanks once x is alone (story 1.16)', () => {
     expect(at('9 = 9', line('x = 9', 'answer'), line('2 · 9 + 5 = 23', 'check'))).toEqual([]);
   });
 
-  it('brings the blanks up as x comes alone, carrying a refused x = 9 into the blank', () => {
+  // Story 1.16 review: 1.16 carried a refused `x = 9` into the new blank (`9`); the blanks
+  // that appear now start empty, whatever was in the draft.
+  it('brings the blanks up as x comes alone, empty, whatever the draft held', () => {
     const arrived = arriveAtStage(wheel);
     const alone = { ...arrived, pans: equation('x = 9') };
     expect(withLastLines(wheel, arrived)).toBe(arrived);
@@ -120,8 +122,8 @@ describe('the last two lines as blanks once x is alone (story 1.16)', () => {
       if (!tokenized.ok) throw new Error(text);
       return tokenized.tokens;
     };
-    expect(withLastLines(wheel, { ...alone, draft: typed('x = 9') }).draft).toEqual(['9']);
-    expect(withLastLines(wheel, { ...alone, draft: typed('x = 12') }).draft).toEqual(['1', '2']);
+    expect(withLastLines(wheel, { ...alone, draft: typed('x = 9') }).draft).toEqual([]);
+    expect(withLastLines(wheel, { ...alone, draft: typed('x = 12') }).draft).toEqual([]);
     expect(withLastLines(wheel, { ...alone, draft: typed('2x = 1') }).draft).toEqual([]);
     expect(withLastLines(wheel, { ...alone, draft: typed('x =') }).draft).toEqual([]);
     // Already up to date: the same stage.

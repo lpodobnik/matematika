@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import {
@@ -70,5 +71,21 @@ describe('the hint’s ghosts (story 1.16)', () => {
     expect(frameGhost(0, from, to)).toMatchObject({ x: 150, y: 40, alpha: 0 });
     expect(frameGhost(0.7, from, to)).toMatchObject({ x: 680, y: 400, alpha: ghostAlpha });
     expect(frameGhost(1, from, to).alpha).toBe(0);
+  });
+});
+
+// Story 1.16 review: the knob's ghost assumed the track hadn't scrolled. It now reads the
+// track's scroll as the dial keeps it, shared through the scene copy, on every frame.
+describe('the knob’s ghost on a scrolled track (story 1.16 review)', () => {
+  const ghost = readFileSync(new URL('./HintGhost.tsx', import.meta.url), 'utf8');
+  const dial = readFileSync(new URL('./Dial.tsx', import.meta.url), 'utf8');
+  const scene = readFileSync(new URL('../SceneRoot.tsx', import.meta.url), 'utf8');
+
+  it('stands on the knob as the dial has scrolled the track', () => {
+    expect(ghost).toContain('knobAt(layout, at, scroll.current)');
+    expect(ghost).not.toContain('followScroll(layout, 0');
+    expect(dial).toContain('const scrollRef = scroll ?? ownScroll;');
+    expect(scene).toContain('<Dial sceneScale={copyScale} scroll={dialScroll} />');
+    expect(scene).toContain('<HintGhost sceneScale={copyScale} dialScroll={dialScroll} />');
   });
 });

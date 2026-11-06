@@ -83,8 +83,18 @@ export const hr = {
     split: (n: string) => `Podijeli obje strane ${withS(n)}.`,
     /** At the notebook: the answer line, `x = 9`. */
     answer: (line: string) => `Upiši ${line}.`,
-    /** At the notebook: the check line. */
+    /** At the notebook: the check line, on a blank page. */
     check: (n: string) => `Prepiši prvu jednadžbu, a umjesto x upiši ${n}.`,
+    /** At the notebook: the check line as a template with x blanked (rooms 1–4). */
+    checkBlank: (n: string) => `Upiši ${n} umjesto x.`,
+    /**
+     * At the notebook while the machine is jammed on a wrong line (story 1.16 review): the
+     * first press says what happened, the second how to go on; the delete key pulses.
+     */
+    jam: {
+      what: 'Stroj je zapeo: ovaj redak ne vrijedi.',
+      fix: 'Obriši ga tipkom ⌫ i napiši ponovno.',
+    },
   },
   parts: {
     /** The parts counter in the scene's corner, read out with its number. */

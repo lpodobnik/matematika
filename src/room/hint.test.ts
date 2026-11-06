@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { r03 } from '@/content/rooms/r03-sluice-gate';
+import { formatEquation } from '@/math/format';
 import { tokenize } from '@/math/tokens';
 import { setDial } from '@/room/dial';
 import { handoverOrder } from '@/room/handover';
@@ -14,12 +15,12 @@ import {
   nextMove,
   pressHint,
 } from '@/room/hint';
-import { enterLine, typeToken } from '@/room/notebook';
+import { deleteToken, enterLine, typeToken } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { splitBothPans, stepSplitter } from '@/room/splitter';
 import { dropOnScale, stepTray, trayOffered } from '@/room/tray';
-import type { RoomSpec, RoomState, StageSpec, ToolId } from '@/room/types';
+import type { RoomSpec, RoomState, StageSpec, ToolId, TrayKind } from '@/room/types';
 
 const balance: ToolId[] = ['balance'];
 
@@ -70,14 +71,19 @@ function write(room: RoomState, text: string): RoomState {
   return step(enterLine(typed, 0)).room;
 }
 
+/** The tray's piece set to n and dropped over the scale. */
+function dropPiece(room: RoomState, kind: TrayKind, n: number): RoomState {
+  let current = room;
+  while (current.stage.tray[kind] !== n) {
+    const by = current.stage.tray[kind] < n ? 1 : -1;
+    current = step(stepTray(current, balance, kind, by)).room;
+  }
+  return step(dropOnScale(current, balance, kind)).room;
+}
+
 /** The tray's float set to n and dropped over the scale. */
 function dropFloat(room: RoomState, n: number): RoomState {
-  let current = room;
-  while (current.stage.tray.float !== n) {
-    const by = current.stage.tray.float < n ? 1 : -1;
-    current = step(stepTray(current, balance, 'float', by)).room;
-  }
-  return step(dropOnScale(current, balance, 'float')).room;
+  return dropPiece(room, 'float', n);
 }
 
 /** The balance room opened, with the dial at its end so the tray is offered. */
@@ -93,7 +99,8 @@ describe('the next move (story 1.16)', () => {
     const level = dialTo(room, 5);
     expect(nextMove(level, [])).toEqual({ kind: 'answer', x: 5 });
     const answered = write(level, '5');
-    expect(nextMove(answered, [])).toEqual({ kind: 'check', x: 5 });
+    // Room 1's check line is a template, `☐ + 4 = 9` (story 1.16 review: `template`).
+    expect(nextMove(answered, [])).toEqual({ kind: 'check', x: 5, template: true });
     expect(nextMove(write(answered, '5'), [])).toBeNull();
   });
 
@@ -142,7 +149,8 @@ describe('the next move (story 1.16)', () => {
 
   it('puts the answer and the check line in the notebook, the rest in the scene', () => {
     expect(inNotebook({ kind: 'answer', x: 9 })).toBe(true);
-    expect(inNotebook({ kind: 'check', x: 9 })).toBe(true);
+    expect(inNotebook({ kind: 'check', x: 9, template: true })).toBe(true);
+    expect(inNotebook({ kind: 'jam' })).toBe(true);
     expect(inNotebook({ kind: 'split', parts: 2 })).toBe(false);
     expect(inNotebook({ kind: 'slide', direction: 1 })).toBe(false);
   });
@@ -167,10 +175,12 @@ describe('the first press’s step (story 1.16)', () => {
     expect(['write', answer]).toContain(hintStep(alone, balance));
   });
 
-  it('is the step of the next move where no handover applies: a jam', () => {
+  // Story 1.16 review: 1.16 showed the step of the next move during a jam (`write`, or
+  // the slider's), whose control is frozen then; a jam is its own step now.
+  it('is the jam while the machine is jammed', () => {
     const jammed = write(dialTo(opened(enterRoom(r01).room), 5), '4');
     expect(jammed.stage.jam).toEqual({ kind: 'line' });
-    expect(hintStep(jammed, [])).toBe('write');
+    expect(hintStep(jammed, [])).toBe('jam');
     expect(hintWorks(jammed, [])).toBe(true);
   });
 
@@ -220,5 +230,83 @@ describe('the presses (story 1.16)', () => {
     expect(hintAfter(first, 'other', room, locked, [])).toBeNull();
     // A press where the button does nothing changes nothing.
     expect(hintAfter(null, 'press', locked, locked, [])).toBeNull();
+  });
+});
+
+describe('the hint after the review of story 1.16', () => {
+  /** The balance room after −5 and the split: `x = ☐` waits. */
+  const split = () => step(splitBothPans(dropFloat(wheel(), 5), balance)).room;
+
+  // Bug: it decided the answer on the literal `x = 9`, so the split's own line,
+  // `2x : 2 = 18 : 2` (one gear against a 9), asked to split by 1.
+  it('asks for x once x is alone on the pans, also on the split’s line after a deleted jam', () => {
+    const jammed = write(split(), '6');
+    expect(jammed.stage.jam).toEqual({ kind: 'line' });
+    const deleted = step(deleteToken(jammed)).room;
+    expect(deleted.stage.jam).toBeNull();
+    expect(formatEquation(deleted.stage.pans)).toBe('2x : 2 = 18 : 2');
+    expect(nextMove(deleted, balance)).toEqual({ kind: 'answer', x: 9 });
+    expect(hintStep(deleted, balance)).toBe('answer');
+  });
+
+  it('never splits by fewer than 2 parts', () => {
+    const deleted = step(deleteToken(write(split(), '6'))).room;
+    const typed = write(write(wheel(), '2x = 18'), 'x = 23 − 14');
+    const rooms = [wheel(), dropFloat(wheel(), 5), split(), deleted, typed];
+    for (const room of rooms) {
+      const move = nextMove(room, balance);
+      if (move?.kind === 'split') expect(move.parts).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  // Bug: during a jam the hint named a frozen control (the slider, the tray) or a line
+  // that his blank, still holding the jammed number, would have read as 89.
+  it('is the jam while the machine is jammed: in room 1, in room 4, and on a jammed blank', () => {
+    const roomOne = write(opened(enterRoom(r01).room), '4');
+    const roomFour = write(wheel(), 'x = 8');
+    const blank = write(split(), '8');
+    for (const jammed of [roomOne, roomFour, blank]) {
+      expect(jammed.stage.jam).toEqual({ kind: 'line' });
+      expect(hintStep(jammed, balance)).toBe('jam');
+      expect(nextMove(jammed, balance)).toEqual({ kind: 'jam' });
+      expect(hintView(jammed, balance, { level: 1, presses: 1 })).toEqual({
+        level: 1,
+        step: 'jam',
+        move: null,
+        presses: 1,
+      });
+      expect(hintView(jammed, balance, { level: 2, presses: 2 })?.move).toEqual({ kind: 'jam' });
+      // Deleting the line ends the jam, and the hint goes back to the way he was on.
+      expect(hintStep(step(deleteToken(jammed)).room, balance)).not.toBe('jam');
+    }
+  });
+
+  // Bug 3's other half: with one rule for x alone, `x = 23 − 14` is not alone, and no split
+  // is left. The hint clears a number piece off with the tray until the pans are simple.
+  it('leads from x = 23 − 14 to x alone with the tray, as any tray move combines the numbers', () => {
+    const typed = write(wheel(), 'x = 23 − 14');
+    expect(typed.stage.templates).toEqual([]);
+    expect(nextMove(typed, balance)).toEqual({ kind: 'tray', piece: 'weight', amount: 14 });
+    const plus = dropPiece(typed, 'weight', 14);
+    expect(nextMove(plus, balance)).toEqual({ kind: 'tray', piece: 'float', amount: 14 });
+    const alone = dropFloat(plus, 14);
+    expect(alone.stage.templates).toHaveLength(2);
+    expect(nextMove(alone, balance)).toEqual({ kind: 'answer', x: 9 });
+    // Weights only: the smallest comes off as a balloon.
+    const weights = write(wheel(), 'x = 4 + 5');
+    expect(nextMove(weights, balance)).toEqual({ kind: 'tray', piece: 'float', amount: 4 });
+  });
+
+  // Bug: the check hint said "copy the first equation" also where the check line is a
+  // template with x blanked, as in every room 1–4.
+  it('says only what goes in the blank when the check line is a template', () => {
+    const answered = write(dialTo(opened(enterRoom(r01).room), 5), '5');
+    expect(nextMove(answered, [])).toEqual({ kind: 'check', x: 5, template: true });
+    const balanced = write(split(), '9');
+    expect(nextMove(balanced, balance)).toEqual({ kind: 'check', x: 9, template: true });
+    const first = r01.stages[0] as StageSpec;
+    const blankPage: RoomSpec = { ...r01, stages: [{ ...first, fading: { try: 'blank' } }] };
+    const free = write(dialTo(opened(enterRoom(blankPage).room), 5), 'x = 5');
+    expect(nextMove(free, [])).toEqual({ kind: 'check', x: 5, template: false });
   });
 });

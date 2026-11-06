@@ -8,7 +8,9 @@ import { num, xVar } from '@/math/expr';
 import { formatEquation, formatNumber } from '@/math/format';
 import * as q from '@/math/rational';
 import { type HintMove, type HintView, hintView } from '@/room/hint';
+import { refusalView } from '@/room/notebook';
 import { numberPieceLabel } from '@/room/pieces';
+import type { Refusal } from '@/room/types';
 import type { GameState } from '@/store/types';
 import { isSceneHandover, type SceneHandover } from '@/ui/scene/scale/handover-tag-layout';
 
@@ -16,8 +18,11 @@ import { isSceneHandover, type SceneHandover } from '@/ui/scene/scale/handover-t
 export type HintSpot =
   /** In the scene, as the handover tag about `about` hangs (handover-tag-layout.ts). */
   | { place: 'scene'; about: SceneHandover; text: string }
-  /** At the notebook, where the line to write pulses. */
-  | { place: 'notebook'; text: string }
+  /**
+   * At the notebook, where the line to write pulses; `key` names a pad key that pulses
+   * with it (the delete key while the machine is jammed, story 1.16 review).
+   */
+  | { place: 'notebook'; text: string; key?: 'delete' }
   /** The pin's own question tag, again. */
   | { place: 'pin' };
 
@@ -43,10 +48,14 @@ function moveSpot(move: HintMove): HintSpot {
         place: 'notebook',
         text: hr.hint.answer(formatEquation({ left: xVar(), right: num(move.x) })),
       };
-    case 'check':
-      return { place: 'notebook', text: hr.hint.check(formatNumber(move.x)) };
+    case 'check': {
+      const n = formatNumber(move.x);
+      return { place: 'notebook', text: move.template ? hr.hint.checkBlank(n) : hr.hint.check(n) };
+    }
     case 'pin':
       return { place: 'pin' };
+    case 'jam':
+      return { place: 'notebook', text: hr.hint.jam.fix, key: 'delete' };
   }
 }
 
@@ -54,6 +63,7 @@ function moveSpot(move: HintMove): HintSpot {
 export function hintSpot(view: HintView): HintSpot {
   if (view.move) return moveSpot(view.move);
   if (view.step === 'pin') return { place: 'pin' };
+  if (view.step === 'jam') return { place: 'notebook', text: hr.hint.jam.what, key: 'delete' };
   const text = hr.handover[view.step];
   return isSceneHandover(view.step)
     ? { place: 'scene', about: view.step, text }
@@ -79,4 +89,35 @@ export function notebookHint(state: Pick<GameState, 'room' | 'save' | 'ui'>): st
   if (!view) return null;
   const spot = hintSpot(view);
   return spot.place === 'notebook' ? spot.text : null;
+}
+
+/** The pad key the hint pulses now, or null: a primitive, for a selector. */
+export function hintKey(state: Pick<GameState, 'room' | 'save' | 'ui'>): 'delete' | null {
+  const view = hintOf(state);
+  if (!view) return null;
+  const spot = hintSpot(view);
+  return spot.place === 'notebook' ? (spot.key ?? null) : null;
+}
+
+/**
+ * The refusal whose tag hangs at the notebook now, or null (story 1.16 review): none while
+ * the hint shows, since a hint can only be pressed after the refusal (the refused enter
+ * ends any hint), and its tag takes the refusal's place.
+ */
+export function notebookRefusal(state: Pick<GameState, 'room' | 'save' | 'ui'>): Refusal | null {
+  return hintOf(state) === null ? refusalView(state.room) : null;
+}
+
+/**
+ * Which tag the scene hangs now (story 1.16: one tag at a time): the hint's while it shows;
+ * else none while the refusal's tag hangs at the notebook, which stays up only until his
+ * next action (story 1.16 review; room/notebook.ts, `withoutRefusal`); else the handover's
+ * (HandoverTag.tsx decides whether one applies). A hint pressed after a refusal takes its
+ * place at the notebook too (Notebook.tsx).
+ */
+export function sceneTag(
+  state: Pick<GameState, 'room' | 'save' | 'ui'>,
+): 'hint' | 'handover' | null {
+  if (hintOf(state) !== null) return 'hint';
+  return refusalView(state.room) === null ? 'handover' : null;
 }
