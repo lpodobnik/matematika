@@ -125,3 +125,26 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/math/lines.table.ts`, `lines.table.test.ts` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (1.13 to review)
 - This story file
+
+## Review
+
+Reviewed once; the fix pass ran once on branch `epic-1`, with no second review.
+
+### Findings
+
+The review raised no findings to fix, so no code changed in the fix pass. Acceptance criteria 1, 2 and 4 are met and tested; AC 3 waits on the tablet profile above.
+
+### Minor notes (not fixed, for Luka)
+
+- **AC 3 is still open, as planned.** The tablet profile table in `C:\Users\lpodobnik\Claude\matematika\_bmad-output\implementation-artifacts\1-13-play-rooms-1-4-on-the-tablet.md` stays empty until you measure on the tablet, so the story and `sprint-status.yaml` correctly stay at `review`.
+- **The copies' header comment overstates what each copy holds.** `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\copies.ts` says each copy includes the tray and the splitter, but `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\SceneRoot.tsx` draws them only when there is one copy (the Calls Made above say why).
+- **The `xMeaning` check matches substrings.** In `C:\Users\lpodobnik\Claude\matematika\src\content\rooms\rooms.test.ts`, short GDD words such as "to" or "per" pass on any text that contains those letters anywhere.
+- **The epic 1 coverage test checks rows, not verdicts.** `C:\Users\lpodobnik\Claude\matematika\src\math\lines.table.test.ts` only checks that each AC line has a row in the table. It never compares the row's verdict with the verdict the AC states. A spot check found all of them correct today.
+- **Room 3's stage types copy the content, not the GDD.** The GDD table test lists room 3's stage types as `['solve', 'predict']`, as the content has them, while the GDD calls room 3 a Predict room. The test's comment explains why, but it checks the content's choice rather than the GDD's.
+
+### Checks after the review
+
+- `npm run check`: 181 files, no errors.
+- `npm test`: 70 files, 1,455 tests passing (unchanged).
+- `npm run build`: `tsc --noEmit` clean; 1.06 MB in 9 files, JavaScript 0.32 MB gzipped (unchanged).
+- `sprint-status.yaml`: `1-13-play-rooms-1-4-on-the-tablet` stays at `review` (it already was), for the tablet profile.
