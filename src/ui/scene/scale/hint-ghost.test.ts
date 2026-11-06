@@ -85,7 +85,9 @@ describe('the knob’s ghost on a scrolled track (story 1.16 review)', () => {
     expect(ghost).toContain('knobAt(layout, at, scroll.current)');
     expect(ghost).not.toContain('followScroll(layout, 0');
     expect(dial).toContain('const scrollRef = scroll ?? ownScroll;');
-    expect(scene).toContain('<Dial sceneScale={copyScale} scroll={dialScroll} />');
+    expect(scene).toContain(
+      '<Dial sceneScale={copyScale} scroll={dialScroll} plateLayer={plateLayer} />',
+    );
     expect(scene).toContain('<HintGhost sceneScale={copyScale} dialScroll={dialScroll} />');
   });
 });
