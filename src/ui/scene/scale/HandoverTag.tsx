@@ -7,7 +7,6 @@ import { hr } from '@/content/text/hr';
 import { formatEquation } from '@/math/format';
 import { handoverView } from '@/room/handover';
 import { pinView } from '@/room/pin';
-import { scaleView } from '@/room/scale';
 import { splitterOffered } from '@/room/splitter';
 import { trayOffered } from '@/room/tray';
 import type { RoomState, ToolId } from '@/room/types';
@@ -45,7 +44,6 @@ function layoutKey(id: SceneHandover, room: RoomState, tools: readonly ToolId[])
     room.spec.id,
     room.stageIndex,
     formatEquation(stage.pans),
-    scaleView(room).actingOut,
     `${stage.dialOpen.min}-${stage.dialOpen.max}`,
     trayOffered(room, tools),
     splitterOffered(room, tools),

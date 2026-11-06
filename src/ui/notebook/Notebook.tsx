@@ -10,14 +10,16 @@ import {
   lineDisplays,
   type NotebookKey,
   notebookWrites,
+  refusalView,
 } from '@/room/notebook';
 import { pinOffered } from '@/room/pin';
-import type { NotebookLine } from '@/room/types';
+import type { NotebookLine, Refusal } from '@/room/types';
 import { useGame } from '@/store/store';
 import {
   HandoverNote,
   isNotebookHandover,
   type NotebookHandover,
+  RefusalNote,
 } from '@/ui/notebook/HandoverNote';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
 import { LineView, textLine } from '@/ui/notebook/LineView';
@@ -34,10 +36,12 @@ const noTemplates: LineToken[][] = [];
  * the draft and the number pad. It reads the stage through selectors and acts only through
  * dispatch; what a key does is decided in `room/notebook.ts`. A computer's keys work too.
  * On a phone it shows pushed aside while a pin waits to be confirmed (notebook-aside.ts).
- * When the next step is in the notebook (story 1.15: `write` or `check`,
+ * When the next step is in the notebook (story 1.15: `write` or `check`; 1.16: `answer`;
  * room/handover.ts), the line to write pulses and its handover tag hangs under the lines.
  * When it is on the scene, with its tag there, the phone's notebook shows pushed aside
- * as for a waiting pin, so it never hides the tag; he can bring it back as then.
+ * as for a waiting pin, so it never hides the tag; he can bring it back as then. When
+ * enter refuses an answer before the pans are simplified (story 1.16), the refusal's tag
+ * hangs in the same place.
  */
 export function Notebook() {
   const lines = useGame((s) => s.room?.stage.lines ?? noLines);
@@ -45,6 +49,7 @@ export function Notebook() {
   const templates = useGame((s) => s.room?.stage.templates ?? noTemplates);
   const wrong = useGame((s) => s.room?.stage.jam?.kind === 'line');
   const refused = useGame((s) => s.room?.stage.refused ?? 0);
+  const refusal = useGame((s) => refusalView(s.room));
   const writes = useGame((s) => (s.room ? notebookWrites(s.room.stage) : false));
   const choice = useGame((s) => s.ui.notebookAside);
   const step = useGame((s) =>
@@ -82,6 +87,7 @@ export function Notebook() {
       writes={writes}
       aside={aside}
       handover={isNotebookHandover(step) ? step : null}
+      refusal={refusal}
       onKey={send}
       onSlide={slide}
     />
@@ -107,6 +113,11 @@ export interface NotebookPageProps {
    * under the lines, and on a phone the handle pulses while the notebook is pushed aside.
    */
   handover?: NotebookHandover | null;
+  /**
+   * Why enter refused the line, with a tag (story 1.16, `refusalView`): it hangs where a
+   * handover's would, in its place; nothing pulses.
+   */
+  refusal?: Refusal | null;
   onKey(key: NotebookKey): void;
   onSlide(aside: boolean): void;
 }
@@ -127,10 +138,13 @@ export function NotebookPage({
   writes,
   aside,
   handover = null,
+  refusal = null,
   onKey,
   onSlide,
 }: NotebookPageProps) {
   const listRef = useRef<HTMLOListElement>(null);
+  // A tag hangs under the lines: the refusal's, else the handover's (data-handover lays it out).
+  const tagged = refusal !== null || handover !== null;
 
   // The draft stays in view as lines are added, as it grows, and as a handover tag takes
   // room: the list scrolls to its end, but never so far that the draft's top is cut off.
@@ -143,7 +157,7 @@ export function NotebookPage({
     if (!line) return;
     const cut = list.getBoundingClientRect().top - line.getBoundingClientRect().top;
     if (cut > 0) list.scrollTop -= cut;
-  }, [lines, draft, handover]);
+  }, [lines, draft, handover, refusal]);
 
   return (
     <aside className="notebook-area" data-aside={aside} aria-label={hr.notebook.label}>
@@ -160,7 +174,7 @@ export function NotebookPage({
           <path d={aside ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
         </svg>
       </button>
-      <div className="notebook" data-handover={handover !== null}>
+      <div className="notebook" data-handover={tagged}>
         <ol className="notebook__lines" ref={listRef}>
           {lines.map((line) => (
             <LineView
@@ -183,7 +197,7 @@ export function NotebookPage({
             <LineView key={`upcoming-${i}`} segments={segments} kind="upcoming" />
           ))}
         </ol>
-        {handover && <HandoverNote step={handover} />}
+        {refusal ? <RefusalNote refusal={refusal} /> : handover && <HandoverNote step={handover} />}
         <NumberPad writes={writes} blank={blank} onKey={onKey} />
       </div>
     </aside>

@@ -112,10 +112,10 @@ export interface DialStep {
 }
 
 /**
- * Turns the dial to x (`dial/set`): the pans are weighed at x, `DialNotch` fires, and
- * `PansLevel` too when the sides are equal there. Turning the dial is exploring, so it ends
- * acting out a written line: the pans go back to the dial's x, in the last committed
- * line's layout (Pattern 1). It never resolves the pin: the pin resolves when he confirms
+ * Turns the dial to x (`dial/set`): the pans are weighed at x, in the last committed line's
+ * layout or where Balance left them (Pattern 1; story 1.16: the pans are always weighed at
+ * the dial's x), `DialNotch` fires, and `PansLevel` too when the sides are equal there. It
+ * never resolves the pin: the pin resolves when he confirms
  * it, and the machine tests it then (room/pin.ts; story 1.14). Null, so the action is
  * ignored, when x is where the dial already is, isn't one of its reachable notches (the
  * poke window, until the pin is locked), the phase holds the dial still, or the machine is
@@ -136,7 +136,7 @@ export function setDial(room: RoomState, x: number): DialStep | null {
   }
   const touched = touchMachine(room)?.room.stage ?? stage;
   const balance = dialMaxedAt(touched, dial, x);
-  return { room: { ...room, stage: { ...touched, dialX: x, actingOut: false, balance } }, events };
+  return { room: { ...room, stage: { ...touched, dialX: x, balance } }, events };
 }
 
 /**

@@ -99,3 +99,60 @@ Story 1.15 weighed the scale at the true x during Balance and showed `x = ?` on 
 ## Dev Agent Record
 
 (Each lane adds its own section: Calls, files, checks.)
+
+### Lane A (`lane/1-16-rules`): one x, simplify first, room 4 blanks
+
+**Calls** (flag any for veto):
+- Acting out is gone from the state: `StageState.actingOut` and `ScaleView.actingOut` are removed. The pans are always weighed at `dialX`, readouts always show unless the stage hides them, and a jammed line is weighed at the dial's x too, keeping the jam's minimum tilt.
+- The slider's plate shows the x the pans are weighed at: the dial's x, the machine's test x while a pin test turns the dial, and the pin's x while a pin beyond the dial is weighed (no room 1–4 has one now). It is never dimmed. `dialLabelState` and `dimmedLabelAlpha` are replaced by `dialLabelX`, and `dialLabelText` takes a number.
+- "Simplified" is judged on the pieces the scale shows, not on the line's text. One pan holds only x pieces; the other holds one number piece or nothing. So the split line `2x : 2 = 18 : 2` (one gear against a 9) counts, while `2x = 23 − 5` (a weight and a balloon) doesn't.
+- The rule reads `stage.pans`, which holds the last committed line or the result of Balance's moves. So after a split it reads `x = 9`, and with Balance `blank`, where no line is written, it still works.
+- The rule applies wherever `ways` doesn't include `try`. It sits in `enterLine` (`answerAllowed`): the verdict stays the checker's `answer`, but nothing is stored, `refused` counts up and no event fires.
+- The tag is `StageState.refusal: 'simplify' | null` (type `Refusal`). It is set on that refusal and cleared by any edit or enter. `refusalView` also hides it as soon as the pans are simplified, for example by a Balance move.
+- The tag hangs at the notebook where the handover tags hang (`RefusalNote`, the same paper). Nothing pulses, and it takes the place of a notebook handover. Text: `hr.refusal.simplify`.
+- The blanks come from the fading rule, not per room. A stage with Balance `auto` whose Try values isn't `blanks` gets `x = ☐` and the check template once x is alone on the pans (linear form `x` against no x). After the answer only the check template is left, and after the check line nothing (`room/fading.ts`, `lastLines`/`withLastLines`). They are applied after every typed line and every Balance move.
+- If a later move leaves x not alone before the answer, the blanks go again. A number in the blank comes out as the free line `x = 9`. A free `x = 9` (for example a refused one) is carried into the blank when the blanks appear. Any other draft is cleared.
+- `answer` is met only when the answer line is written while the step applied. Room 1's answer doesn't meet it, so room 4 still shows it once.
+- `write` ("Vaga je u ravnoteži…") now needs the dial's x to level the pans and the answer to be allowed. It no longer fires on Balance's `x = n`, because the scale isn't level there at a wrong x; `answer` takes that case.
+- The dial's handover used to stay away while a line was acted out. It now stays away once he has written a line himself (`wrote`).
+- Room 4 keeps its 0–6 dial and `tiltPerUnit` 0.75, so no notch of any Balance line hits the 15° clamp (content test).
+- Tests of pin rules that used room 4's pin (beyond-dial weighing, the tray offered by a pin test at the dial's end, the pin tag, Potvrdi on the phone) now use a local "pinned wheel" spec: room 4 as it was. This keeps the later-room behaviour covered.
+- The dev panel's tablet profile no longer sets or confirms room 4's pin (`dev/dev-view.ts`).
+- Files outside lane A's table, changed only because the types changed: `room/room.ts` (the arrival fields), `ui/scene/scale/HandoverTag.tsx` (layout key), `ui/scene/scale/handover-tag-layout.ts` (`answer` is a notebook handover), `ui/notebook/HandoverNote.tsx` and `Notebook.tsx` (the `answer` tag and the refusal tag), `dev/dev-view.ts`.
+
+**For the merge with lane B:**
+- `HandoverId` gains `answer`, between `write` and `check`. A `Record<HandoverId, …>` or an exhaustive switch in `room/hint.ts` needs an entry. `handoverView`'s signature is unchanged, and `math/steps.ts` is untouched.
+- `actingOut` is gone from `StageState` and `ScaleView`. A goal card or hint that reads it should use `scaleView(room).level` and `stage.pans`.
+- `SceneHandover` now excludes `answer` too.
+
+**For the main session (planning documents not edited):**
+- `project-context.md` rule 4, and the architecture's matching text, still describe acting out at the solution and `x = ?`.
+- The GDD's room 4 row (pin: none) and its fading row (blanks for the last two lines) are for the main session, as the story says.
+- The `balance-goal` text, `Vaga zna koliki je x.`, was written for the level, true-x scale. At a wrong slider value the scale now tips while it shows. Worth a second look.
+- Not fixed, from 1.15: an edit after a jam puts the pans back to the last committed line (`edited`). With Balance `blank` (no room yet) that would lose moves that wrote no line. With `auto` the split line and its result look the same on the pans, so room 4 is unaffected.
+
+**Files:**
+- Changed: `src/room/{types,scale,notebook,fading,tray,splitter,dial,handover,room}.ts`, `src/content/rooms/r04-water-wheel.ts`, `src/content/text/hr.ts` (`handover.answer`, `refusal.simplify`), `src/ui/scene/scale/{Dial,HandoverTag}.tsx`, `src/ui/scene/scale/{dial-label,handover-tag-layout}.ts`, `src/ui/notebook/{Notebook,HandoverNote}.tsx`, `src/dev/dev-view.ts`.
+- Tests rewritten in place, each with a comment naming what 1.16 replaced: `room/{scale,notebook,tray,splitter,handover,room,pin}.test.ts`, `content/rooms/rooms.test.ts` (room 4's GDD row and its own tests), `store/{store,playthrough}.test.ts`, `ui/scene/scale/{dial-label,piece-tween,pin-tag-layout,pin-test,handover-tag-layout}.test.ts`, `ui/notebook/notebook-aside.test.ts`, `dev/dev-view.test.ts`.
+- New tests:
+  - Simplify first: `notebook.test.ts`.
+  - `xAlone`, `lastLines`, `withLastLines`: `fading.test.ts`.
+  - The blanks through Balance moves: `tray.test.ts`.
+  - The `answer` step, its order and when it is met, plus `write`'s new guard: `handover.test.ts`.
+  - Content (`rooms.test.ts`): every Try-less stage keeps x off its dial; every blanks-once-alone stage finishes by filling both blanks; room 4 stays out of balance at every notch through its Balance lines.
+  - The tags at the notebook: `Notebook.test.tsx`.
+  - `playthrough.test.ts` (AC 8): room 4 plays −5, split by 2, 9 into `x = ☐`, then 9 into `2 · ☐ + 5 = 23`. It also covers the refused early `x = 9`, the 17/23, 12/18, 6/9 readouts at 6, and the blanks with the `answer` tag.
+
+**Checks:**
+- `npm run check`: clean (237 files).
+- `npm test`: 96 files, 1823 passed, 2 skipped.
+- `npm run build`: passes, 0.33 MB of JavaScript gzipped.
+- Browser: headless Edge (Playwright) on my own Vite server, port 5340, since stopped; 5173 untouched. Room 4 at 1280 × 800 and 640 × 360:
+  - No pin, and the dial is free at once.
+  - Typing `x = 9` first is refused with `Prvo pojednostavi vagu.` under the draft, and no line is written.
+  - The plate reads `x = 6`, with readouts 17/23, then 12/18 after −5, then 6/9 after the split. The scale tips each time.
+  - After the split the notebook shows `x = ☐` pulsing with `x je sam na vagi. Upiši koliko je x.` and `2 · ☐ + 5 = 23` below it.
+  - 9 then 9 locks the room.
+  - Room 1's plate still reads `x = 5` after the answer line.
+  - The only console error is the existing 404 for a resource.
+- On the phone, the upcoming check template is partly hidden above the tag, as with 1.15's write tag; the draft stays in view.

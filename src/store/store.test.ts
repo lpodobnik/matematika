@@ -264,7 +264,11 @@ describe('written lines drive the machine (story 1.7)', () => {
     dispatch({ type: 'notebook/type', token: '+' }); // only digits fill the blank
     dispatch({ type: 'notebook/type', token: '6' });
     dispatch({ type: 'notebook/enter' });
-    expect(scaleView(store.getState().room as RoomState).readouts).toBeNull();
+    // Story 1.16: the jammed line shows at the dial's 6, with readouts (1.7–1.15 hid them
+    // and weighed it at the solution); it still tips, by at least the jam's tilt.
+    const jammed = scaleView(store.getState().room as RoomState);
+    expect(jammed).toMatchObject({ x: 6, level: false, readouts: { left: '6', right: '6' } });
+    expect(Math.abs(jammed.tilt)).toBeGreaterThanOrEqual(tuning.jamMinTilt);
     dispatch({ type: 'notebook/delete' });
     dispatch({ type: 'dial/set', x: 5 });
     dispatch({ type: 'notebook/type', token: '5' });
@@ -721,7 +725,10 @@ describe('predict before the dial opens (story 1.9)', () => {
 });
 
 describe('balance with the tray (story 1.10; both sides at once, story 1.15)', () => {
-  /** Room 4 with Balance earned (as room 3 earns it), the pin locked at 9, so it is open. */
+  /**
+   * Room 4 with Balance earned (as room 3 earns it), open after his touch. Story 1.16 took
+   * its pin away (until then this locked the pin at 9 first).
+   */
   function inRoomFour(firstUse: FirstUseId[] = ['pin']) {
     const seen: DomainEvent[] = [];
     const initial = initialGameState();
@@ -745,8 +752,6 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     };
     act({ type: 'room/enter', roomId: 'r04' });
     act({ type: 'machine/touch' });
-    act({ type: 'pin/set', value: { kind: 'x', x: 9 } });
-    act({ type: 'pin/confirm' });
     return { store, seen, act, stage, lines, type };
   }
 
@@ -779,7 +784,8 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     expect(game.store.getState().room).not.toBe(before);
   });
 
-  it('plays room 4: a float of 5 writes the move, then 2x = 18, and the scale stays level', () => {
+  // Story 1.16 rewrote the scale's part: 1.15 weighed it at the true x, level, no readouts.
+  it('plays room 4: a float of 5 writes the move, then 2x = 18, and the scale stays at 6', () => {
     const game = inRoomFour();
     game.act({ type: 'dial/set', x: 6 });
     for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
@@ -793,22 +799,39 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
       { type: 'LineAccepted', roomId: 'r04', stage: 0, source: 'balance', progress: true },
     ]);
     const room = game.store.getState().room as RoomState;
-    expect(scaleView(room)).toMatchObject({ x: 9, actingOut: true, tilt: 0, readouts: null });
+    expect(scaleView(room)).toMatchObject({
+      x: 6,
+      level: false,
+      readouts: { left: '12', right: '18' },
+    });
     expect(
       game.store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
     ).toEqual(['pin', 'tray', 'splitter']);
+    // 2x = 18 is simplified, so he may write x = 9; the check line is then a blank (1.16).
     game.type('x=9');
-    game.type('2·9+5=23');
+    game.type('9');
+    expect(game.lines().at(-1)).toBe('2·9+5=23');
     expect(game.stage()?.phase).toBe('locked');
   });
 
-  it("locks when he types x = 9 and the check line, though the dial can't reach 9", () => {
+  // Story 1.16 rewrote this test: until then he could lock room 4 by typing x = 9 and the
+  // check line at once. Now the answer waits for the pans to be simplified.
+  it('refuses x = 9 until the pans are simplified, though he knows it; then it locks', () => {
     const game = inRoomFour();
     game.act({ type: 'dial/set', x: 6 });
     game.act({ type: 'dial/set', x: 7 });
     expect(game.stage()?.dialX).toBe(6);
+    game.seen.length = 0;
     game.type('x=9');
-    game.type('2·9+5=23');
+    expect(game.lines()).toEqual(['2x+5=23']);
+    expect(game.stage()).toMatchObject({ refused: 1, refusal: 'simplify', jam: null });
+    expect(game.seen).toEqual([]);
+    game.act({ type: 'tray/take', side: 'left', key: 'left-weight-0' });
+    expect(game.lines().at(-1)).toBe('2x=18');
+    // The draft kept x = 9, and the pans are simplified now.
+    game.act({ type: 'notebook/enter' });
+    expect(game.lines().at(-1)).toBe('x=9');
+    game.type('9');
     expect(game.stage()?.phase).toBe('locked');
   });
 
@@ -869,7 +892,10 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
 });
 
 describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => {
-  /** Room 4 with Balance earned and the pin and tray met, open; the splitter is new. */
+  /**
+   * Room 4 with Balance earned and the pin and tray met, open after his touch (no pin since
+   * story 1.16); the splitter is new.
+   */
   function inRoomFour() {
     const seen: DomainEvent[] = [];
     const initial = initialGameState();
@@ -896,8 +922,6 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
     };
     act({ type: 'room/enter', roomId: 'r04' });
     act({ type: 'machine/touch' });
-    act({ type: 'pin/set', value: { kind: 'x', x: 9 } });
-    act({ type: 'pin/confirm' });
     return { store, seen, act, stage, lines, type };
   }
 
@@ -961,8 +985,12 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
     expect(panPieces(room.stage.pans).right).toEqual([
       { key: 'right-weight-0', kind: 'weight', value: { n: 9n, d: 1n } },
     ]);
-    game.type('x=9');
-    game.type('2·9+5=23');
+    // Story 1.16: x alone brings up x = ☐, then 2 · ☐ + 5 = 23; he fills in 9 each time.
+    expect(room.stage.templates).toHaveLength(2);
+    game.type('9');
+    expect(game.lines().at(-1)).toBe('x=9');
+    game.type('9');
+    expect(game.lines().at(-1)).toBe('2·9+5=23');
     expect(game.stage()?.phase).toBe('locked');
   });
 

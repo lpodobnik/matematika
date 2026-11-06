@@ -1,9 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { r04 } from '@/content/rooms/r04-water-wheel';
+import type { Equation } from '@/math/expr';
 import { formatLine } from '@/math/format';
-import { BLANK } from '@/math/tokens';
-import { answerTemplate, checkTemplate, openingTemplates } from '@/room/fading';
-import type { StageSpec } from '@/room/types';
+import { parse } from '@/math/parse';
+import { BLANK, type LineToken, tokenize } from '@/math/tokens';
+import {
+  answerTemplate,
+  blanksOnceAlone,
+  checkTemplate,
+  lastLines,
+  openingTemplates,
+  withLastLines,
+  xAlone,
+} from '@/room/fading';
+import { arriveAtStage } from '@/room/room';
+import type { NotebookLine, StageSpec } from '@/room/types';
 
 const roomOne = r01.stages[0] as StageSpec;
 
@@ -47,5 +59,81 @@ describe('Try values blanks', () => {
 
   it('refuses a machine the stage does not have', () => {
     expect(() => checkTemplate(roomOne, 1)).toThrow(/no machine 1/);
+  });
+});
+
+describe('the last two lines as blanks once x is alone (story 1.16)', () => {
+  const wheel = r04.stages[0] as StageSpec;
+  const equation = (text: string): Equation => {
+    const parsed = parse(text);
+    if (!parsed.ok) throw new Error(text);
+    return parsed.equation;
+  };
+  const line = (text: string, kind: 'valid' | 'answer' | 'check'): NotebookLine => {
+    const tokenized = tokenize(text);
+    if (!tokenized.ok) throw new Error(text);
+    const verdict =
+      kind === 'valid' ? { kind, move: { kind: 'none' as const }, progress: true } : { kind };
+    return { tokens: tokenized.tokens, source: 'typed', verdict };
+  };
+  const given = line('2x + 5 = 23', 'valid');
+  const shown = (lines: LineToken[][] | null) => lines?.map((each) => text(formatLine(each)));
+
+  it('knows x alone: a single x against a number, either way round, as a split leaves it', () => {
+    for (const each of ['x = 9', '9 = x', '2x : 2 = 18 : 2', 'x + 5 − 5 = 9', 'x = 0']) {
+      expect(xAlone(equation(each)), each).toBe(true);
+    }
+    for (const each of ['2x = 18', 'x + 5 = 14', 'x = x : 2 + 9', 'x : 3 = 5', '9 = 9']) {
+      expect(xAlone(equation(each)), each).toBe(false);
+    }
+  });
+
+  it('gives them where Balance writes the lines (auto) and Try values opens with none', () => {
+    expect(blanksOnceAlone(wheel)).toBe(true);
+    expect(blanksOnceAlone(roomOne)).toBe(false);
+    expect(blanksOnceAlone({ ...wheel, fading: { try: 'blanks', balance: 'auto' } })).toBe(false);
+    expect(blanksOnceAlone({ ...wheel, fading: { try: 'blank', balance: 'blank' } })).toBe(false);
+    expect(lastLines(roomOne, { machine: 0, pans: equation('x = 5'), lines: [] })).toBeNull();
+  });
+
+  it('room 4: none until x is alone, then x = ☐ and 2 · ☐ + 5 = 23, then the check line alone', () => {
+    const at = (pans: string, ...lines: NotebookLine[]) =>
+      shown(lastLines(wheel, { machine: 0, pans: equation(pans), lines: [given, ...lines] }));
+    expect(at('2x + 5 = 23')).toEqual([]);
+    expect(at('2x = 18')).toEqual([]);
+    expect(at('x = 9')).toEqual(['x = ☐', '2 · ☐ + 5 = 23']);
+    expect(at('x = 9', line('x = 9', 'answer'))).toEqual(['2 · ☐ + 5 = 23']);
+    // After his answer the check line stays, wherever more moves take the pans.
+    expect(at('x + 3 = 12', line('x = 9', 'answer'))).toEqual(['2 · ☐ + 5 = 23']);
+    expect(at('9 = 9', line('x = 9', 'answer'), line('2 · 9 + 5 = 23', 'check'))).toEqual([]);
+  });
+
+  it('brings the blanks up as x comes alone, carrying a refused x = 9 into the blank', () => {
+    const arrived = arriveAtStage(wheel);
+    const alone = { ...arrived, pans: equation('x = 9') };
+    expect(withLastLines(wheel, arrived)).toBe(arrived);
+    const fresh = withLastLines(wheel, alone);
+    expect(shown(fresh.templates)).toEqual(['x = ☐', '2 · ☐ + 5 = 23']);
+    expect(fresh.draft).toEqual([]);
+    const typed = (text: string) => {
+      const tokenized = tokenize(text);
+      if (!tokenized.ok) throw new Error(text);
+      return tokenized.tokens;
+    };
+    expect(withLastLines(wheel, { ...alone, draft: typed('x = 9') }).draft).toEqual(['9']);
+    expect(withLastLines(wheel, { ...alone, draft: typed('x = 12') }).draft).toEqual(['1', '2']);
+    expect(withLastLines(wheel, { ...alone, draft: typed('2x = 1') }).draft).toEqual([]);
+    expect(withLastLines(wheel, { ...alone, draft: typed('x =') }).draft).toEqual([]);
+    // Already up to date: the same stage.
+    expect(withLastLines(wheel, fresh)).toBe(fresh);
+  });
+
+  it('takes them away if a move leaves x not alone before his answer, the blank’s number as text', () => {
+    const filling = withLastLines(wheel, { ...arriveAtStage(wheel), pans: equation('x = 9') });
+    const moved = withLastLines(wheel, { ...filling, draft: ['9'], pans: equation('x + 3 = 12') });
+    expect(moved.templates).toEqual([]);
+    expect(formatLine(moved.draft).map((segment) => segment.text)).toEqual(['x = 9']);
+    const empty = withLastLines(wheel, { ...filling, pans: equation('x + 3 = 12') });
+    expect(empty.draft).toEqual([]);
   });
 });

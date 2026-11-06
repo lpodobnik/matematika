@@ -49,13 +49,14 @@ describe('enterRoom', () => {
       ],
       jam: null,
       refused: 0,
+      // Story 1.16: no refusal's tag; and no acting out, which 1.7–1.15 started false.
+      refusal: null,
       jamsInARow: 0,
       machineProgress: [0],
       pans: equation('x + 4 = 9'),
       tray: { weight: 1, float: 1 },
       splitter: 2,
       balance: { moves: 0, dialMaxed: false, trayMet: false, splitterSeen: false },
-      actingOut: false,
       dialX: 0,
       dialOpen: { min: 0, max: 10 },
       pin: null,
@@ -100,10 +101,11 @@ describe('arriveAtStage', () => {
     expect(arriveAtStage({ ...stage, dial: 'locked' }).dialOpen).toEqual({ min: 0, max: 0 });
   });
 
-  it('starts every machine stopped, exploring, with no jams counted (story 1.7)', () => {
+  // Story 1.16: "exploring" was `actingOut: false`; the pans now always weigh the dial's x.
+  it('starts every machine stopped, with no jams counted and no refusal (story 1.7)', () => {
     const arrived = arriveAtStage(stage);
     expect(arrived.machineProgress).toEqual([0]);
-    expect(arrived.actingOut).toBe(false);
+    expect(arrived.refusal).toBeNull();
     expect(arrived.jamsInARow).toBe(0);
     const linked = {
       ...stage,

@@ -19,13 +19,15 @@
 //              the same move as dropping a float (or a weight) of that number
 //   refused    a move that would leave a side with no x pieces below 0 is refused, and the
 //              piece slides back
-//   true x     from his first Balance move the scale acts out: the pans are weighed at the
-//              stage's solution, so they stay level, with no readouts, until he turns the
-//              dial (room/scale.ts)
+//   one x      the pans stay weighed at the slider's x, with readouts (story 1.16; 1.15
+//              weighed them at the stage's solution). A move acts on both sides, so at a
+//              wrong x the scale stays out of balance through every move (room/scale.ts)
 //   lines      with Balance `auto` the move is written as done, then its result, both from
 //              `balance`: `2x + 5 − 5 = 23 − 5`, then `2x = 18`. A result `x = n` is left for
-//              him to write. `WayUsed` fires once per move. Balance `blanks` arrives in epic
-//              2; until then, as with `blank`, the pans move and nothing is written
+//              him to write, and once x is alone the notebook gives him `x = ☐` and the
+//              check line as blanks (room/fading.ts, `withLastLines`). `WayUsed` fires once
+//              per move. Balance `blanks` arrives in epic 2; until then, as with `blank`,
+//              the pans move and nothing is written
 //
 // The splitter (room/splitter.ts) moves the same way (`balanceMove`).
 
@@ -36,6 +38,7 @@ import { add, div, type Equation, type Expr, maxNumber, mul, num, sub, xVar } fr
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
 import type { RoomEvent } from '@/room/events';
+import { withLastLines } from '@/room/fading';
 import { writeWayLine } from '@/room/notebook';
 import { isNumberPiece, numberPieceLabel, sidePieces } from '@/room/pieces';
 import { currentStageSpec, machineEquation, type RoomStep } from '@/room/room';
@@ -231,12 +234,13 @@ export function onBothSides(pans: Equation, delta: q.Rational): BalanceChange | 
 
 /**
  * The stage after a Balance move (a tray drop, a drag-off, or an even split:
- * room/splitter.ts). The pans take the move's result, and the scale acts out, weighed at
- * the stage's solution. `WayUsed` fires. With Balance `auto` the move is written as done,
- * then its result, unless that is the answer line. Each goes through the checker like any
- * line, against the lines before the move, so the move and its result are one step: the
- * result of `2x + 5 = 23` minus 5 makes progress, of plus 3 doesn't. A line the checker
- * wouldn't commit as valid stops the writing.
+ * room/splitter.ts). The pans take the move's result, still weighed at the dial's x (story
+ * 1.16). `WayUsed` fires. With Balance `auto` the move is written as done, then its result,
+ * unless that is the answer line; once x is alone, the last two lines' blanks appear
+ * (`withLastLines`). Each line goes through the checker like any line, against the lines
+ * before the move, so the move and its result are one step: the result of `2x + 5 = 23`
+ * minus 5 makes progress, of plus 3 doesn't. A line the checker wouldn't commit as valid
+ * stops the writing.
  */
 export function balanceMove(room: RoomState, change: BalanceChange): RoomStep {
   const { stage } = room;
@@ -248,7 +252,7 @@ export function balanceMove(room: RoomState, change: BalanceChange): RoomStep {
     moves: stage.balance.moves + 1,
     splitterSeen: stage.balance.splitterSeen || readyToSplit(change.pans),
   };
-  let next: StageState = { ...stage, actingOut: true, balance };
+  let next: StageState = { ...stage, balance };
   if (balanceFading(spec) === 'auto') {
     const n = stageSolution(machineEquation(spec, stage.machine));
     const lines = isAnswerLine(change.pans, n) ? [change.line] : [change.line, change.pans];
@@ -259,7 +263,7 @@ export function balanceMove(room: RoomState, change: BalanceChange): RoomStep {
       events.push({ type: 'LineAccepted', ...at, source: 'balance', progress: written.progress });
     }
   }
-  return { room: withStage(room, { ...next, pans: change.pans }), events };
+  return { room: withStage(room, withLastLines(spec, { ...next, pans: change.pans })), events };
 }
 
 /**

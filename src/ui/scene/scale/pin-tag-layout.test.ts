@@ -5,7 +5,7 @@ import { notchCount } from '@/room/dial';
 import { touchMachine } from '@/room/phases';
 import { pinTrack, pinView, slotCount } from '@/room/pin';
 import { enterRoom } from '@/room/room';
-import type { RoomSpec } from '@/room/types';
+import type { RoomSpec, StageSpec } from '@/room/types';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import { type Box, dialLayout } from '@/ui/scene/scale/dial-layout';
 import { labelFontSize } from '@/ui/scene/scale/layout';
@@ -27,11 +27,29 @@ const tablet = tabletFit.scale;
 const phone = phoneFit.scale;
 const fitOf = (scale: number) => (scale === tablet ? tabletFit : phoneFit);
 
-/** Every stage of rooms 1–4 with a pin, and its tag at a scale. */
+/**
+ * Room 4 as it was until story 1.16, with its "where it levels" pin beyond the dial: no
+ * room 1–4 has one now, but later rooms do (GDD: room 8), so its tag stays checked.
+ */
+const pinnedWheel: RoomSpec = {
+  ...(rooms[3] as RoomSpec),
+  stages: [
+    {
+      ...((rooms[3] as RoomSpec).stages[0] as StageSpec),
+      pokeNotches: 4,
+      pin: { kind: 'level-x', beyondDial: true },
+    },
+  ],
+};
+
+/** Every stage of rooms 1–4 with a pin, then the pinned wheel, and its tag at a scale. */
 function stagesWithPins(): { spec: RoomSpec; stage: number }[] {
-  return rooms.flatMap((spec) =>
-    spec.stages.flatMap((stage, index) => (stage.pin ? [{ spec, stage: index }] : [])),
-  );
+  return [
+    ...rooms.flatMap((spec) =>
+      spec.stages.flatMap((stage, index) => (stage.pin ? [{ spec, stage: index }] : [])),
+    ),
+    { spec: pinnedWheel, stage: 0 },
+  ];
 }
 
 function tagFor(spec: RoomSpec, stage: number, scale: number) {
@@ -80,11 +98,13 @@ describe('pinTagLayout (story 1.14)', () => {
     ['640 × 360', phone],
   ])('never covers the pans, the dial, the pin or the machine in rooms 1–4 on %s', (_, scale) => {
     const stages = stagesWithPins();
+    // Story 1.16: room 4 has no pin; r04.0 is the pinned wheel, as room 4 was.
     expect(stages.map(({ spec, stage }) => `${spec.id}.${stage}`)).toEqual([
       'r03.0',
       'r03.1',
       'r04.0',
     ]);
+    expect(rooms[3]?.stages[0]?.pin).toBeUndefined();
     for (const { spec, stage } of stages) {
       const { tag, obstacles } = tagFor(spec, stage, scale);
       const hits = obstacles.filter((o) => overlaps(tag.box, o));
@@ -121,10 +141,10 @@ describe('pinTagLayout (story 1.14)', () => {
   });
 
   it('hangs on the holder on the tablet where the pans are up, and on the wall where x sinks', () => {
-    const [, , r03, r04] = rooms as RoomSpec[];
-    if (!r03 || !r04) throw new Error('rooms 3 and 4');
+    const [, , r03] = rooms as RoomSpec[];
+    if (!r03) throw new Error('room 3');
     expect(tagFor(r03, 0, tablet).tag.spot).toBe('holder');
-    expect(tagFor(r04, 0, tablet).tag.spot).toBe('holder');
+    expect(tagFor(pinnedWheel, 0, tablet).tag.spot).toBe('holder');
     // Room 3, stage 2: 20 − x weighs 20 at x = 0, so the left pan hangs down over the holder.
     expect(tagFor(r03, 1, tablet).tag.spot).toBe('wall');
   });

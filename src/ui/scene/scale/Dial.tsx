@@ -8,7 +8,6 @@ import { dialSkin } from '@/art/skins/dial';
 import { tuning } from '@/config/tuning';
 import { dialView, notchCount, notchOf } from '@/room/dial';
 import { handoverView } from '@/room/handover';
-import { scaleView } from '@/room/scale';
 import { useGame } from '@/store/store';
 import {
   createDialDrag,
@@ -20,9 +19,9 @@ import {
 } from '@/ui/scene/scale/dial-drag';
 import {
   dialLabelLayout,
-  dialLabelState,
+  dialLabelText,
   dialLabelTop,
-  dimmedLabelAlpha,
+  dialLabelX,
   nudgeOffset,
 } from '@/ui/scene/scale/dial-label';
 import {
@@ -58,9 +57,8 @@ const clampWidth = 0.6;
  * test, his drag takes over from where the knob is: the dial is set there, and the test
  * ends.
  *
- * A plate above the knob shows its x, `x = 9`, and follows it; while the scale acts out a
- * line (or Balance), or the pans weigh a pin's x beyond the dial, it reads `x = ?`, dimmed
- * (story 1.15; dial-label.ts). It is drawn
+ * A plate above the knob shows its x, `x = 9`, and follows it: always the x the pans are
+ * weighed at, the only x (story 1.16; dial-label.ts; 1.15's `x = ?` is gone). It is drawn
  * outside the track's mask, so a scrolling track never clips it, and a drag can start on it
  * too. Until he first turns a dial (the `dial` handover, room/handover.ts), the knob and
  * its plate nudge one notch over and back by themselves every `tuning.dialNudgeMs`, with no
@@ -70,7 +68,6 @@ export function Dial({ sceneScale }: Props) {
   const dial = useGame(useShallow((s) => dialView(s.room)));
   const dispatch = useGame((s) => s.dispatch);
   const test = usePinTest();
-  const actingOut = useGame((s) => (s.room ? scaleView(s.room).actingOut : false));
   const nudging = useGame(
     (s) => handoverView(s.room, s.save.progress.firstUse, s.save.progress.tools) === 'dial',
   );
@@ -223,11 +220,12 @@ export function Dial({ sceneScale }: Props) {
     };
   }, [nudging, turns, spacing, drag]);
 
-  // The plate's text: the test's x while the machine turns the dial, `x = ?` (dimmed) while
-  // the pans weigh a pin's x beyond the dial or the scale acts out, else the dial's x.
-  const { text: labelText, dimmed } = dialLabelState(test, actingOut, dial?.x ?? null);
+  // The plate's text: the x the pans are weighed at, the dial's (story 1.16), or the
+  // machine's pin test's while it runs.
+  const labelX = dialLabelX(test, dial?.x ?? null);
+  const labelText = labelX === null ? null : dialLabelText(labelX);
   const label = useMemo(
-    () => (layout ? dialLabelLayout(layout, labelText, sceneScale) : null),
+    () => (layout && labelText !== null ? dialLabelLayout(layout, labelText, sceneScale) : null),
     [layout, labelText, sceneScale],
   );
   const labelStyle: TextStyleOptions = useMemo(
@@ -318,11 +316,11 @@ export function Dial({ sceneScale }: Props) {
       </pixiContainer>
       {/* Placed through its ref with the knob (onKnob), outside the track's mask. */}
       {label && (
-        <pixiContainer ref={labelRef} y={layout.trackY} alpha={dimmed ? dimmedLabelAlpha : 1}>
+        <pixiContainer ref={labelRef} y={layout.trackY}>
           <pixiContainer ref={labelNudgeRef}>
             <pixiGraphics draw={drawLabel} />
             <pixiText
-              text={labelText}
+              text={labelText ?? ''}
               anchor={0.5}
               y={(label.top + label.bottom) / 2}
               style={labelStyle}
