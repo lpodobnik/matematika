@@ -19,7 +19,13 @@ import { watchDragCancel } from '@/ui/scene/scale/dial-drag';
 import { minHitCssPx } from '@/ui/scene/scale/dial-layout';
 import { labelFontSize, type PieceBox, pieceSize } from '@/ui/scene/scale/layout';
 import { Piece } from '@/ui/scene/scale/Piece';
-import { type Carry, type PieceDrag, releaseAction, storeTakes } from '@/ui/scene/scale/piece-drag';
+import {
+  type Carry,
+  cancelWatch,
+  type PieceDrag,
+  releaseAction,
+  storeTakes,
+} from '@/ui/scene/scale/piece-drag';
 import { pinWiggle } from '@/ui/scene/scale/pin-layout';
 import { createRepeat } from '@/ui/scene/scale/stepper-repeat';
 import {
@@ -95,7 +101,8 @@ export function Tray({ sceneScale, drag, toScene }: Props) {
   }, [drag, dispatch]);
 
   // A drag can start on the tray or on a pan, so it is followed on the stage: every move,
-  // and up or up outside wherever the finger was let go.
+  // and up or up outside wherever the finger was let go. A cancelled pointer (the DOM's
+  // pointercancel), blur or a hidden page is not a drop: the piece slides back.
   useEffect(() => {
     if (!isInitialised) return;
     const { stage } = app;
@@ -105,7 +112,7 @@ export function Tray({ sceneScale, drag, toScene }: Props) {
     stage.on('globalpointermove', onMove);
     stage.on('pointerup', onUp);
     stage.on('pointerupoutside', onUp);
-    const stopWatching = watchDragCancel(window, document, drag);
+    const stopWatching = watchDragCancel(window, document, cancelWatch(drag));
     return () => {
       stage.off('globalpointermove', onMove);
       stage.off('pointerup', onUp);

@@ -8,9 +8,11 @@ import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import { initialGameState } from '@/store/reducer';
 import { createGameStore } from '@/store/store';
+import { watchDragCancel } from '@/ui/scene/scale/dial-drag';
 import { labelFontSize } from '@/ui/scene/scale/layout';
 import {
   type Carry,
+  cancelWatch,
   createPieceDrag,
   type DragSource,
   releaseAction,
@@ -67,6 +69,22 @@ describe('createPieceDrag', () => {
     drag.cancel();
     expect(drag.carry()?.phase).toBe('returning');
     expect(release).not.toHaveBeenCalled();
+  });
+
+  it('slides back a cancelled pointer’s piece without asking, wherever the finger was', () => {
+    const drag = createPieceDrag();
+    const release = vi.fn(() => true);
+    drag.setReleaseHandler(release);
+    drag.start(3, fromTray, piece, home, home);
+    drag.move(3, { x: 1300, y: 450 });
+    drag.abort(4);
+    expect(drag.carry()?.phase).toBe('held');
+    drag.abort(3);
+    expect(drag.carry()?.phase).toBe('returning');
+    expect(release).not.toHaveBeenCalled();
+    drag.end(3);
+    expect(release).not.toHaveBeenCalled();
+    expect(drag.carry()?.phase).toBe('returning');
   });
 
   it('follows only the pointer that grabbed it, and one piece at a time', () => {
@@ -154,15 +172,16 @@ function wiredTray() {
   for (let i = 0; i < 4; i += 1) act({ type: 'tray/step', kind: 'float', by: 1 });
   const layout = trayLayout(0.54, labelFontSize(0.54));
   const drag = createPieceDrag();
-  drag.setReleaseHandler((held, at) => {
+  const release = vi.fn((held: Carry, at: { x: number; y: number }) => {
     const { room, save } = store.getState();
     const action = releaseAction(held.source, dropTarget(at, layout));
     if (!action || !storeTakes(room, save.progress.tools, action)) return false;
     act(action);
     return true;
   });
+  drag.setReleaseHandler(release);
   const room = () => store.getState().room as RoomState;
-  return { store, events, drag, layout, room };
+  return { store, events, drag, layout, room, release };
 }
 
 describe('the piece drag, wired to the store', () => {
@@ -231,6 +250,51 @@ describe('the piece drag, wired to the store', () => {
     expect(room()).toBe(before);
   });
 
+  it('slides back a piece held over a pan when the DOM cancels its pointer: nothing is written', () => {
+    const { drag, layout, room, events, release } = wiredTray();
+    const win = new EventTarget();
+    const doc = Object.assign(new EventTarget(), { visibilityState: 'visible' });
+    const stop = watchDragCancel(win, doc, cancelWatch(drag));
+    const slot = layout.slots[1];
+    if (!slot) throw new Error('no float slot');
+    const before = room();
+    const float5 = trayPiece('float', before.stage.tray.float);
+    // Over the right pan, a let-go here would write 2x = 18 (the test above).
+    drag.start(7, { from: 'tray', kind: 'float' }, float5, slot.piece, slot.piece);
+    drag.move(7, { x: 1300, y: 450 });
+    expect(dropTarget({ x: 1300, y: 450 }, layout)).toBe('right');
+    win.dispatchEvent(Object.assign(new Event('pointercancel'), { pointerId: 8 }));
+    expect(drag.carry()?.phase).toBe('held');
+    win.dispatchEvent(Object.assign(new Event('pointercancel'), { pointerId: 7 }));
+    expect(release).not.toHaveBeenCalled();
+    expect(drag.carry()?.phase).toBe('returning');
+    expect(room()).toBe(before);
+    expect(room().stage.lines.map((line) => line.tokens.join(''))).not.toContain('2x=18');
+    expect(events.map((event) => event.type)).not.toContain('WayUsed');
+    stop();
+  });
+
+  it('slides back a held piece when the window loses focus or the page is hidden', () => {
+    const { drag, room } = wiredTray();
+    const win = new EventTarget();
+    const doc = Object.assign(new EventTarget(), { visibilityState: 'visible' });
+    const stop = watchDragCancel(win, doc, cancelWatch(drag));
+    const before = room();
+    const float5 = trayPiece('float', before.stage.tray.float);
+    drag.start(1, { from: 'tray', kind: 'float' }, float5, home, home);
+    drag.move(1, { x: 300, y: 450 });
+    win.dispatchEvent(new Event('blur'));
+    expect(drag.carry()?.phase).toBe('returning');
+    drag.settle();
+    drag.start(1, { from: 'tray', kind: 'float' }, float5, home, home);
+    drag.move(1, { x: 300, y: 450 });
+    doc.visibilityState = 'hidden';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    expect(drag.carry()?.phase).toBe('returning');
+    expect(room()).toBe(before);
+    stop();
+  });
+
   it('asks the store only about tray actions, and nothing without a room', () => {
     const { room } = wiredTray();
     expect(storeTakes(null, ['balance'], { type: 'tray/drop', side: 'left', kind: 'weight' })).toBe(
@@ -253,7 +317,9 @@ describe('Tray.tsx and the pans', () => {
     for (const event of ["'globalpointermove'", "'pointerup'", "'pointerupoutside'"]) {
       expect(tray).toContain(`stage.on(${event}`);
     }
-    expect(tray).toContain('watchDragCancel(window, document, drag)');
+    // A cancelled pointer is not a drop: the carry is aborted, never ended (cancelWatch).
+    expect(tray).toContain('watchDragCancel(window, document, cancelWatch(drag))');
+    expect(tray).not.toContain('watchDragCancel(window, document, drag)');
   });
 
   it('ends a held stepper on up, up outside and cancel, and on blur or a hidden page', () => {

@@ -1,6 +1,6 @@
 # Story 1.10: Balance with the tray
 
-Status: review
+Status: done
 
 ## Story
 
@@ -99,3 +99,28 @@ Claude Opus 5.5 (claude-opus-5-5), unattended overnight run.
 - `src/ui/scene/SceneRoot.tsx`, `scale/Scale.tsx`, `scale/Pan.tsx`, `scale/Piece.tsx`, `scale/use-piece-tween.ts`, `scale/layout.ts`, `scale/layout.test.ts`, `scale/piece-tween.test.ts` (modified)
 - `src/dev/DevPanel.tsx`, `DevPanel.test.tsx`, `dev-view.ts`, `dev-view.test.ts` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified), this story file
+
+## Review
+
+Reviewed once; the fixes were applied in one pass with no second review.
+
+### Findings
+
+- **Bug, fixed: a cancelled pointer dropped the carried piece instead of sliding it back.** `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\Tray.tsx` passed the piece drag straight to `watchDragCancel`, which turns the DOM's `pointercancel` into `drag.end(pointerId)`. `end` asks the release handler, so a piece held over a pan when Android cancelled the pointer (an edge gesture, palm rejection) landed there, and with Balance `auto` could write a line he never let go of (a float 5 over the right pan in room 4 wrote `2x = 18`).
+  - `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\piece-drag.ts`: `PieceDrag` has a new `abort(pointerId)`. When that pointer holds the piece, it slides back (`returning`) and the release handler is never called. A new `cancelWatch(drag)` maps `watchDragCancel`'s `end` to `abort` and its `cancel` to `cancel`, so a cancel is never a drop. The header now says so.
+  - `Tray.tsx` now calls `watchDragCancel(window, document, cancelWatch(drag))`. The review asked for the same mapping written inline; it is a named helper so the test drives exactly what the tray wires.
+  - `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\piece-drag.test.ts`: `abort` slides back only its own pointer's piece and never asks; a DOM `pointercancel` (through `watchDragCancel` and `cancelWatch`, with the real store-wired release handler) while a float 5 is held over the right pan leaves the handler uncalled, the phase `returning`, the room unchanged and no `2x = 18`; blur and a hidden page slide a held piece back; the source check now requires `cancelWatch(drag)` and refuses the old `watchDragCancel(window, document, drag)`.
+
+### Minor notes (not fixed, for Luka)
+
+- **AC2 vs restoring the written side:** `changedPans` in `C:\Users\lpodobnik\Claude\matematika\src\room\tray.ts` puts back the last committed side as it was written. After a typed `2x = 25 − 7`, a weight 3 and then a float 3 on the right show two number pieces (25 and float 7) again, not one 18. That breaks "combine into one piece" and the splitter example in the architecture.
+- **AC5 "drags a piece back" only partly holds** (flagged as a call by the dev): dropped pieces merge, so in room 4 a float 5 on the left leaves no number piece to drag back, and he has to drop a weight 5 instead. Worth your confirm or veto.
+- **A tray-written line (`2x = 18`) is not acted out:** `actingOut` stays false and the pans stay tipped at the dial's x. The architecture's `StageState` says `actingOut` is true "from a written line", and the chain's auto lines are acted out. This was a flagged call, open to veto.
+- **The first-use wiggle guard is a component ref** (`wiggled` in `C:\Users\lpodobnik\Claude\matematika\src\ui\scene\scale\Tray.tsx`), and `hintLevel` stays at 1 for the whole stage. A scene remount after WebGL context loss (common on Android) replays the wiggle, despite this story's claim that it won't.
+- **The release handler checks `storeTakes` against the room from the last render** (`latest.current.room` in `Tray.tsx`), but dispatches to the live store. Using `useGame.getState()` there would keep "lands" and "slides back" in step with what the reducer does. Edge case only.
+
+### Checks after the review
+
+- `npm run check`: 155 files, no errors.
+- `npm test`: 59 files, 1,193 tests passing (3 new).
+- `npm run build`: `tsc --noEmit` clean; 1.03 MB in 9 files, JavaScript 0.31 MB gzipped (unchanged).

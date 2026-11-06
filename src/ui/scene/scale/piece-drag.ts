@@ -5,10 +5,12 @@
 // - A drag starts on one of the tray's pieces (a new weight or float with the stepper's
 //   number) or on a weight or float on a pan. The piece follows the finger, keeping where
 //   he grabbed it (`onMove`, written to Pixi through a ref, never React state).
-// - It ends on pointer up, up outside and cancel (and on blur or a hidden page, through
-//   dial-drag's watchDragCancel). The release handler decides where it landed, from the
-//   point he let go: when the store takes the move the piece lands (`landing`) and fades
-//   where it is; otherwise, or when the drag is cancelled, it slides back (`returning`).
+// - It ends on pointer up and up outside (`end`): the release handler decides where it
+//   landed, from the point he let go. When the store takes the move the piece lands
+//   (`landing`) and fades where it is; otherwise it slides back (`returning`).
+// - A cancelled drag is not a drop: on the DOM's pointercancel (`abort`, an Android edge
+//   gesture or palm rejection), and on blur or a hidden page (`cancel`), both through
+//   dial-drag's watchDragCancel, it slides back without asking the release handler.
 // - Once that short animation ends, `settle` ends the carry. A new drag settles the old
 //   one at once, so a quick second drag is never refused.
 // Only a start, a release and a settle change what is carried (`subscribe`), so React
@@ -49,6 +51,11 @@ export interface PieceDrag {
   move(pointerId: number, at: Point): void;
   /** Lets go of this pointer's piece where it is: the release handler says where it landed. */
   end(pointerId: number): void;
+  /**
+   * This pointer was cancelled (the DOM's pointercancel): its piece slides back without a
+   * drop, wherever the finger was. The release handler is not asked.
+   */
+  abort(pointerId: number): void;
   /** Lets go of any held piece without a drop: it slides back (blur, page hidden, unmount). */
   cancel(): void;
   /** The landing or the slide back has played: the carry is over. */
@@ -105,6 +112,9 @@ export function createPieceDrag(): PieceDrag {
       const landed = onRelease?.(carry, held.last) ?? false;
       letGo(landed ? 'landing' : 'returning');
     },
+    abort(pointerId) {
+      if (held?.pointerId === pointerId) letGo('returning');
+    },
     cancel() {
       if (held) letGo('returning');
     },
@@ -129,6 +139,15 @@ export function createPieceDrag(): PieceDrag {
       onRelease = handler;
     },
   };
+}
+
+/**
+ * What dial-drag's watchDragCancel drives for the piece drag. Ending a drag is not
+ * dropping it: the DOM's pointercancel aborts that pointer's carry, and blur or a hidden
+ * page cancels any, so in both cases the piece slides back and the store is never asked.
+ */
+export function cancelWatch(drag: PieceDrag): { end(pointerId: number): void; cancel(): void } {
+  return { end: (pointerId) => drag.abort(pointerId), cancel: () => drag.cancel() };
 }
 
 /**
