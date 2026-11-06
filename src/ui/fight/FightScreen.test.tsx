@@ -6,7 +6,7 @@ import { hr } from '@/content/text/hr';
 import { reduceFight, startFight } from '@/fight/fight';
 import type { FightAction, FightState } from '@/fight/types';
 import { LeaveConfirm } from '@/ui/fight/FightEnd';
-import { FightBoard } from '@/ui/fight/FightScreen';
+import { FightBoard, showsPage } from '@/ui/fight/FightScreen';
 
 const css = readFileSync(new URL('./fight.css', import.meta.url), 'utf8');
 
@@ -240,5 +240,36 @@ describe('what a fight pays and costs (story 3.3)', () => {
     );
     expect(html).toContain(hr.fight.pileHere(4));
     expect(text(board(fresh))).not.toContain(hr.fight.pileHere(4));
+  });
+});
+
+describe('a torn page returned by a win (story 3.4)', () => {
+  it('shows the page over the end after the parts land, until read, only when one came back', () => {
+    const won = {
+      ...struck,
+      phase: 'won' as const,
+      outcome: { won: true as const, clean: false, reward: 9 },
+    };
+    const end = {
+      lairId: 'lair-30' as const,
+      won: true,
+      clean: false,
+      reason: null,
+      reward: 9,
+      recovered: 0,
+      dropped: 0,
+      page: 'page-1' as const,
+    };
+    // The page waits for the win's parts to land, then shows until he closes it.
+    expect(showsPage(end, null, null)).toBe(false);
+    expect(showsPage(end, end, null)).toBe(true);
+    expect(showsPage(end, end, end)).toBe(false);
+    expect(showsPage({ ...end, page: null }, end, null)).toBe(false);
+    // A new fight's end is a new end: its page is due on its own.
+    expect(showsPage({ ...end }, end, null)).toBe(false);
+    // Before it is due, the end and its parts show, not the page.
+    const html = renderToString(<FightBoard fight={won} end={end} onAction={() => undefined} />);
+    expect(html).not.toContain('data-page=');
+    expect(text(html)).toContain(hr.fight.paid(9));
   });
 });

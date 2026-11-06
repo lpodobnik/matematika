@@ -11,6 +11,8 @@ import type { IdeaId, RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { LockBadge, NodeGlyph } from '@/ui/map/glyphs';
 import '@/ui/story/story.css';
+import type { PageId } from '@/fight/types';
+import { PagesReader } from '@/ui/pages/TornPages';
 import { IdeaCards, StoryLines } from '@/ui/story/StoryLines';
 
 const authored = rooms.map((room) => room.id);
@@ -32,6 +34,7 @@ export function MapScreen() {
   const seen = useGame((s) => s.save.progress.ideasSeen);
   const name = useGame((s) => s.save.character.name);
   const economy = useGame((s) => s.save.economy);
+  const pages = useGame((s) => s.save.progress.tornPages);
   const dispatch = useGame((s) => s.dispatch);
   // A winding-down automaton rewinds on the clock (ADR-13), so the map looks again each half
   // minute while one is asleep.
@@ -64,6 +67,7 @@ export function MapScreen() {
       seen={seen}
       name={name}
       wakes={wakes}
+      pages={pages}
       onTravel={(node) => dispatch({ type: 'map/travel', node })}
     />
   );
@@ -96,6 +100,8 @@ interface BoardProps {
   name?: string | null;
   /** Lairs winding down: the minutes until each rewinds (story 3.3). */
   wakes?: Readonly<Partial<Record<NodeId, number>>>;
+  /** Torn pages fights have returned (story 3.4); their button shows once he has one. */
+  pages?: readonly PageId[];
   onTravel(node: NodeId): void;
   /** For tests: the log starts open. */
   logOpen?: boolean;
@@ -112,10 +118,12 @@ export function MapBoard({
   seen = [],
   name = null,
   wakes = {},
+  pages = [],
   onTravel,
   logOpen = false,
 }: BoardProps) {
   const [log, setLog] = useState(logOpen);
+  const [reading, setReading] = useState(false);
   return (
     <main className="map">
       <div className="map__board">
@@ -136,6 +144,20 @@ export function MapBoard({
           <MapNode key={node.id} node={node} wake={wakes[node.id] ?? null} onTravel={onTravel} />
         ))}
         {view.allDone && <p className="map__note">{hr.app.toBeContinued}</p>}
+        {pages.length > 0 && (
+          <button
+            type="button"
+            className="map__log-button map__pages-button"
+            aria-label={hr.pages.open}
+            onClick={() => setReading(true)}
+          >
+            {/* A page torn along its top edge. */}
+            <svg viewBox="-20 -16 40 32" aria-hidden="true">
+              <path d="M-11 -11 L-6 -14 L-1 -10 L4 -14 L8 -10 L11 -12 V14 H-11 Z" />
+              <path d="M-7 -4 H7 M-7 1 H7 M-7 6 H3" />
+            </svg>
+          </button>
+        )}
         <button
           type="button"
           className="map__log-button"
@@ -150,6 +172,7 @@ export function MapBoard({
         </button>
       </div>
       {log && <CityLog told={told} seen={seen} name={name} onClose={() => setLog(false)} />}
+      {reading && <PagesReader pages={pages} onClose={() => setReading(false)} />}
     </main>
   );
 }

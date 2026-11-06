@@ -449,6 +449,44 @@ export const hr = {
     pileHere: (n: number) =>
       `Ovdje te ${fewParts(n) ? 'čekaju' : 'čeka'} ${n} ${partsWord(n)} s prošle borbe.`,
   },
+  /**
+   * Story 3.4: the three torn logbook pages the armour 30, 45 and 60 automatons carry
+   * (narrative design, Found Documents): lore only, in Majstor Kristijan's hand, hinting at
+   * why the First Automaton wants to know why. Placeholders until epic 6.
+   */
+  pages: {
+    title: 'Otrgnute stranice',
+    /** Over the fight's end, when a win returns a page. */
+    found: 'Automat je nosio otrgnutu stranicu iz dnevnika.',
+    /** For screen readers: the map's button for the pages. */
+    open: 'Otrgnute stranice iz dnevnika',
+    close: 'Zatvori',
+    sign: '— K.',
+    count: (n: number, of: number) => `Pronađeno: ${n} od ${of}`,
+    text: {
+      'page-1': {
+        title: 'Iz dnevnika, list prvi',
+        lines: [
+          'Prvi Automat me je danas pitao zašto treći korak dolazi prije četvrtog.',
+          'Odgovorio sam: tako piše u Knjizi. Nije mu bilo dosta.',
+        ],
+      },
+      'page-2': {
+        title: 'Iz dnevnika, list drugi',
+        lines: [
+          'Kotač se istrošio pa koraci više ne vrijede. Grad se svejedno drži Knjige.',
+          'Prvi Automat zna sve korake napamet, a nijedan razlog. To ga muči.',
+        ],
+      },
+      'page-3': {
+        title: 'Iz dnevnika, list treći',
+        lines: [
+          'Tko god ovo čita: nauči zašto, ne samo kako.',
+          'Tko zna zašto, popravit će i ono čega u Knjizi nema.',
+        ],
+      },
+    },
+  },
   parts: {
     /** The parts counter in the scene's corner, read out with its number. */
     label: 'Dijelovi',

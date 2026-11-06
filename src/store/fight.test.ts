@@ -380,8 +380,10 @@ describe('a fight that ends (stories 3.2, 3.3)', () => {
     g.act({ type: 'fight/close' });
     g.clock.now += 15 * minute;
     g.act({ type: 'map/travel', node: 'lair-30' });
+    // The dev seed still holds, so the same dice win again.
     playOut(g, true);
-    if (g.fight().phase === 'won') expect(g.state().ui.fightEnd?.page).toBeNull();
+    expect(g.fight().phase).toBe('won');
+    expect(g.state().ui.fightEnd?.page).toBeNull();
     expect(g.state().save.progress.tornPages).toEqual(['page-1']);
   });
 

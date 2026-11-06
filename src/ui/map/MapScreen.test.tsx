@@ -145,3 +145,19 @@ describe('lairs on the map screen (story 3.3)', () => {
     expect(html).toContain('class="map__pile"');
   });
 });
+
+describe('torn pages on the map (story 3.4)', () => {
+  it('shows the pages button only once a fight has returned a page', () => {
+    const view = mapView(
+      districtMap,
+      { roomsDone: ['r01', 'r02'], tools: [], started: [], fresh: null },
+      authored,
+    );
+    const none = renderToString(<MapBoard view={view} onTravel={() => undefined} />);
+    expect(none).not.toContain(`aria-label="${hr.pages.open}"`);
+    const some = renderToString(
+      <MapBoard view={view} pages={['page-1']} onTravel={() => undefined} />,
+    );
+    expect(some).toContain(`aria-label="${hr.pages.open}"`);
+  });
+});

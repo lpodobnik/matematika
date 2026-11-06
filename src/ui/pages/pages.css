@@ -1,0 +1,148 @@
+/* Story 3.4: the torn logbook pages. A sheet of paper laid over the screen, torn along its
+   top edge, in Kristijan's hand (a placeholder hand until epic 6's art). */
+.pages__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--table) 75%, transparent);
+}
+
+.pages__card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(640px, 100%);
+  max-height: 100%;
+  padding: 18px 22px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  overflow-y: auto;
+}
+
+.pages__head {
+  position: sticky;
+  top: -18px;
+  z-index: 1;
+  margin: -18px -22px 0;
+  padding: 18px 22px 8px;
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pages__heading {
+  margin: 0;
+  font-size: 26px;
+}
+
+.pages__found,
+.pages__count {
+  margin: 0;
+  font-size: 18px;
+}
+
+.pages__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.torn-page {
+  padding: 18px 18px 14px;
+  background: var(--sheet);
+  /* The torn top edge. */
+  clip-path: polygon(
+    0 8px,
+    6% 0,
+    13% 7px,
+    21% 1px,
+    30% 8px,
+    38% 2px,
+    47% 7px,
+    55% 0,
+    64% 6px,
+    72% 1px,
+    81% 8px,
+    89% 2px,
+    100% 7px,
+    100% 100%,
+    0 100%
+  );
+  border-bottom: 2px solid var(--rule);
+}
+
+.torn-page__title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-style: italic;
+}
+
+.torn-page__line {
+  margin: 0 0 6px;
+  font-family: "Segoe Print", "Comic Sans MS", cursive;
+  font-size: 19px;
+  line-height: 1.45;
+}
+
+.torn-page__sign {
+  margin: 4px 0 0;
+  font-family: "Segoe Print", "Comic Sans MS", cursive;
+  text-align: right;
+}
+
+.pages__close {
+  align-self: flex-end;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: 18px;
+  touch-action: manipulation;
+}
+
+@media (max-height: 499.98px) {
+  .pages__backdrop {
+    padding: 8px;
+  }
+
+  .pages__card {
+    gap: 6px;
+    padding: 10px 14px;
+  }
+
+  .pages__heading {
+    font-size: 18px;
+  }
+
+  .pages__head {
+    top: -10px;
+    margin: -10px -14px 0;
+    padding: 10px 14px 4px;
+  }
+
+  .pages__found,
+  .pages__count,
+  .torn-page__title {
+    font-size: 14px;
+  }
+
+  .torn-page {
+    padding: 12px 12px 8px;
+  }
+
+  .torn-page__line {
+    font-size: 14px;
+  }
+}

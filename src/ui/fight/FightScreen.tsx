@@ -11,6 +11,7 @@ import { PartsCounterView, partsFlightMs } from '@/ui/common/PartsCounter';
 import { FightEndPanel, LeaveConfirm, StrikeBanner } from '@/ui/fight/FightEnd';
 import { Automaton, DieFace, PunchedTape } from '@/ui/fight/fight-art';
 import { type Tap, tapDie, tapLeave, tapSlot } from '@/ui/fight/taps';
+import { PageReturned } from '@/ui/pages/TornPages';
 
 /**
  * The fight screen (story 3.1; GDD, Automaton fights): the automaton and its armour on the
@@ -78,6 +79,15 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
   const lair = lairs[fight.lairId];
   // Leaving after a strike loses the fight, so he is asked first (story 3.2).
   const [askLeave, setAskLeave] = useState(false);
+  // A torn page a win returned shows over the end until he closes it (story 3.4).
+  const [pageRead, setPageRead] = useState<FightEnd | null>(null);
+  // ...after the win's parts have landed on the counter, the only reward signal (NFR13).
+  const [pageDue, setPageDue] = useState<FightEnd | null>(null);
+  useEffect(() => {
+    if (!end?.page) return;
+    const timer = setTimeout(() => setPageDue(end), pageDelayMs);
+    return () => clearTimeout(timer);
+  }, [end]);
   // The question goes with the moment it was asked in: a new round or the end closes it.
   const moment = `${fight.round}:${fight.phase}`;
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new round or phase closes it
@@ -144,6 +154,9 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
         )}
       </section>
       {children}
+      {over && end?.page && showsPage(end, pageDue, pageRead) && (
+        <PageReturned page={end.page} onClose={() => setPageRead(end)} />
+      )}
       {askLeave && !over && (
         <LeaveConfirm
           onStay={() => setAskLeave(false)}
@@ -246,6 +259,18 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
       </>
     );
   }
+}
+
+/** How long a returned page waits: the win's parts land first (`partsFlightMs`), then a beat. */
+export const pageDelayMs = partsFlightMs + 400;
+
+/** Whether the torn page a win returned shows now: once it is due, until he has read it. */
+export function showsPage(
+  end: FightEnd | null,
+  due: FightEnd | null,
+  read: FightEnd | null,
+): boolean {
+  return end?.page != null && due === end && read !== end;
 }
 
 /** The automaton's armour: what is left, as a number and a bar. */

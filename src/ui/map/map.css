@@ -286,6 +286,11 @@
   stroke-linejoin: round;
 }
 
+/* Story 3.4: the torn pages, under the city's log. */
+.map__pages-button {
+  top: calc(2.5cqw + max(48px, 4.5cqw) + 12px);
+}
+
 .map__log-button:active {
   background: var(--table);
 }
