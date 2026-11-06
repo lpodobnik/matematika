@@ -112,10 +112,10 @@ export interface DialStep {
  * it, and the machine tests it then (room/pin.ts; story 1.14). Null, so the action is
  * ignored, when x is where the dial already is, isn't one of its reachable notches (the
  * poke window, until the pin is locked), the phase holds the dial still, or the machine is
- * jammed (Pattern 2: while jammed he can only edit the draft, drag the splitter off, reset
- * or leave). The store only changes when the notch does. A notch in `arrive` is a touch on
+ * jammed (Pattern 2: while jammed he can only edit the draft, reset or leave). The store only changes when the notch does. A notch in `arrive` is a touch on
  * the machine, so it ends arrive too (the scene reports the touch first, so this only
- * matters if that report is ever missed).
+ * matters if that report is ever missed). A notch at the dial's maximum that leaves the
+ * pans tipped is remembered: it offers the tray (room/tray.ts; story 1.15).
  */
 export function setDial(room: RoomState, x: number): DialStep | null {
   const { dial } = currentStageSpec(room);
@@ -124,9 +124,13 @@ export function setDial(room: RoomState, x: number): DialStep | null {
   if (x === stage.dialX || !isOnDial(dial, x)) return null;
   if (x < stage.dialOpen.min || x > stage.dialOpen.max) return null;
   const events: RoomEvent[] = [{ type: 'DialNotch', x }];
-  if (isLevel(sideValues(stage.pans, q.rational(x)))) {
+  const level = isLevel(sideValues(stage.pans, q.rational(x)));
+  if (level) {
     events.push({ type: 'PansLevel', roomId: room.spec.id, stage: room.stageIndex, x });
   }
   const touched = touchMachine(room)?.room.stage ?? stage;
-  return { room: { ...room, stage: { ...touched, dialX: x, actingOut: false } }, events };
+  // Story 1.15: his dial at its maximum without levelling the pans offers the tray.
+  const maxed = x === dial.max && !level && !touched.balance.dialMaxed;
+  const balance = maxed ? { ...touched.balance, dialMaxed: true } : touched.balance;
+  return { room: { ...room, stage: { ...touched, dialX: x, actingOut: false, balance } }, events };
 }

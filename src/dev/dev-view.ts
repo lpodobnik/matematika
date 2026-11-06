@@ -104,12 +104,11 @@ export function trayText(room: RoomState, tools: readonly ToolId[]): string {
   return view.works ? numbers : `${numbers}, jammed`;
 }
 
-/** The splitter as the panel shows it; `on the pans` while a split jams the machine. */
+/** The splitter as the panel shows it. */
 export function splitterText(room: RoomState, tools: readonly ToolId[]): string {
   const view = splitterView(room, tools);
   if (!view) return 'off';
   const parts = `${view.parts} parts`;
-  if (view.onPans) return `${parts}, on the pans`;
   return view.works ? parts : `${parts}, jammed`;
 }
 

@@ -30,8 +30,8 @@ import { Pin } from '@/ui/scene/scale/Pin';
 import { createPieceDrag } from '@/ui/scene/scale/piece-drag';
 import { Scale } from '@/ui/scene/scale/Scale';
 import { Splitter } from '@/ui/scene/scale/Splitter';
+import { createSplitShow } from '@/ui/scene/scale/split-show';
 import { createSplitterDrag } from '@/ui/scene/scale/splitter-drag';
-import { panUnder } from '@/ui/scene/scale/splitter-layout';
 import { Tray } from '@/ui/scene/scale/Tray';
 import type { Point } from '@/ui/scene/scale/tray-layout';
 
@@ -137,9 +137,10 @@ function drawPaper(g: Graphics): void {
  * is a touch like any other.
  *
  * The scale and the tray share one piece drag (story 1.10): a weight or float can be carried
- * from the tray to a pan, or off a pan into the tray. The splitter (story 1.11) has a drag of
- * its own, across both pans or off them. The tray and the splitter, drawn last, draw what he
- * carries above everything else.
+ * from the tray over the scale, or off a pan, and either acts on both sides (story 1.15). The
+ * splitter (story 1.11) has a drag of its own, dropped over the scale, and shows what it does
+ * on the pans through the scale (`splitShow`). The tray and the splitter, drawn last, draw
+ * what he carries above everything else.
  *
  * Until the quality setting is picked, the frame-time test runs from the scene's first frame,
  * with every effect on (store/quality.ts); a scene remounted mid-test starts it over.
@@ -243,7 +244,8 @@ interface SceneCopyProps {
 function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps) {
   const copyRef = useRef<Container>(null);
   const drag = useMemo(() => createPieceDrag(), []);
-  const splitterDrag = useMemo(() => createSplitterDrag(panUnder), []);
+  const splitterDrag = useMemo(() => createSplitterDrag(), []);
+  const splitShow = useMemo(() => createSplitShow(), []);
   const toScene = useCallback((point: PointData): Point => {
     const copy = copyRef.current;
     if (!copy) return { x: point.x, y: point.y };
@@ -255,13 +257,15 @@ function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps
     <pixiContainer ref={copyRef} x={placement.x} y={placement.y} scale={placement.scale}>
       <pixiGraphics draw={drawPaper} />
       <Machine />
-      <Scale sceneScale={copyScale} drag={drag} toScene={toScene} />
+      <Scale sceneScale={copyScale} drag={drag} toScene={toScene} splitShow={splitShow} />
       <Dial sceneScale={copyScale} />
       {/* The pin's question tag keeps 20 CSS px text, so like the tools it is drawn only
           when the copy is the only one. */}
       <Pin sceneScale={copyScale} question={tools ? sceneOrigin : null} />
       {tools && <Tray sceneScale={copyScale} drag={drag} toScene={toScene} />}
-      {tools && <Splitter sceneScale={copyScale} drag={splitterDrag} toScene={toScene} />}
+      {tools && (
+        <Splitter sceneScale={copyScale} drag={splitterDrag} toScene={toScene} show={splitShow} />
+      )}
       {/* Story 1.15: the next step's handover tag, over the tools; like them, only in the
           only copy, as its text keeps 20 CSS px. */}
       {tools && <HandoverTag sceneScale={copyScale} origin={sceneOrigin} />}

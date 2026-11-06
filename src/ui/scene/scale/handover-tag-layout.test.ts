@@ -226,9 +226,9 @@ describe('handover tags in the scene (story 1.15)', () => {
       const goal = tagFor('balance-goal', balancedTo(wheel, '2x + 8 = 26'), balance, fit).tag;
       expect(goal.nail).toBe(true);
     }
-    // On the tablet the tray's tag hangs under its shelf, clear of the machine.
+    // On the tablet the tray's tag stays clear of the machine. (Lane B's taller tray, with
+    // + and − on its pieces, leaves no room under the shelf, so the tag may hang above it.)
     const tray = tagFor('tray', wheel, balance, tabletFit).tag;
-    expect(tray.box.y).toBeGreaterThan(tray.tie.y);
     expect(tray.coversMachine).toBe(false);
   });
 });

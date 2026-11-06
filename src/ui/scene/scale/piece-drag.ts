@@ -3,7 +3,9 @@
 // gesture can be tested on its own, like the dial's (dial-drag.ts):
 //
 // - A drag starts on one of the tray's pieces (a new weight or float with the stepper's
-//   number) or on a weight or float on a pan. The piece follows the finger, keeping where
+//   number) or on a weight or float on a pan. Either way the move acts on both sides at
+//   once (story 1.15): a tray piece let go over the scale sends a copy to each side, and a
+//   pan's piece let go off the scale comes off both. The piece follows the finger, keeping where
 //   he grabbed it (`onMove`, written to Pixi through a ref, never React state).
 // - It ends on pointer up and up outside (`end`): the release handler decides where it
 //   landed, from the point he let go. When the store takes the move the piece lands
@@ -17,7 +19,7 @@
 // renders per drag, never per move.
 
 import type { PieceView } from '@/room/scale';
-import { dropOnPan, takeOffPan } from '@/room/tray';
+import { dropOnScale, takeOffPan } from '@/room/tray';
 import type { RoomState, Side, ToolId, TrayKind } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DropTarget, Point } from '@/ui/scene/scale/tray-layout';
@@ -151,17 +153,16 @@ export function cancelWatch(drag: PieceDrag): { end(pointerId: number): void; ca
 }
 
 /**
- * The store action a piece let go over `target` asks for: a tray piece on a pan drops it
- * there, and a pan's piece over the tray is taken off. Anything else (a tray piece back on
- * the tray, a pan's piece on a pan, nowhere) asks for nothing, and the piece slides back.
+ * The store action a piece let go over `target` asks for (story 1.15): a tray piece over the
+ * scale drops a copy on each side, and a pan's piece let go off the scale (the tray or
+ * anywhere else) comes off both sides. A tray piece let go off the scale, or a pan's piece
+ * let go over it, asks for nothing, and the piece slides back.
  */
 export function releaseAction(source: DragSource, target: DropTarget): Action | null {
   if (source.from === 'tray') {
-    return target === 'left' || target === 'right'
-      ? { type: 'tray/drop', side: target, kind: source.kind }
-      : null;
+    return target === 'scale' ? { type: 'tray/drop', kind: source.kind } : null;
   }
-  return target === 'tray' ? { type: 'tray/take', side: source.side, key: source.key } : null;
+  return target === 'scale' ? null : { type: 'tray/take', side: source.side, key: source.key };
 }
 
 /**
@@ -174,7 +175,7 @@ export function storeTakes(
   action: Action | null,
 ): boolean {
   if (!room || !action) return false;
-  if (action.type === 'tray/drop') return dropOnPan(room, tools, action.side, action.kind) !== null;
+  if (action.type === 'tray/drop') return dropOnScale(room, tools, action.kind) !== null;
   if (action.type === 'tray/take') return takeOffPan(room, tools, action.side, action.key) !== null;
   return false;
 }

@@ -121,12 +121,10 @@ describe('the handover tags through the store (story 1.15)', () => {
     game.act({ type: 'pin/confirm' });
     if (game.room().stage.dialX !== 6) game.act({ type: 'dial/set', x: 6 });
     expect(game.shown()).toBe('tray');
-    game.act({ type: 'tray/drop', side: 'left', kind: 'weight' });
+    game.act({ type: 'tray/drop', kind: 'weight' });
     expect(game.met()).toContain('handover-tray');
-    expect(game.met().filter((id) => !id.startsWith('handover-'))).toEqual([
-      'pin',
-      'tray',
-      'splitter',
-    ]);
+    // Story 1.15 lane B: the splitter is offered only once a side holds only x, so a first
+    // drop that leaves numbers on both sides doesn't offer (or wiggle) it yet.
+    expect(game.met().filter((id) => !id.startsWith('handover-'))).toEqual(['pin', 'tray']);
   });
 });

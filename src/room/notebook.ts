@@ -12,13 +12,13 @@ import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
 import { check, type Verdict } from '@/math/check';
 import { type Equation, maxNumber } from '@/math/expr';
-import { formatLine, formatTokens, type LineSegment } from '@/math/format';
+import { formatEquation, formatLine, formatTokens, type LineSegment } from '@/math/format';
 import { parse } from '@/math/parse';
-import { fillBlanks, isDigit, type Token } from '@/math/tokens';
+import { fillBlanks, isDigit, type Token, tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
 import { progressAfter } from '@/room/machine';
 import { resolvePin } from '@/room/pin';
-import type { NotebookLine, Phase, RoomState, StageState } from '@/room/types';
+import type { NotebookLine, Phase, RoomState, StageState, WayId } from '@/room/types';
 
 /** A key on the number pad, or its stand-in on a computer keyboard. */
 export type NotebookKey = Token | 'delete' | 'enter';
@@ -116,7 +116,7 @@ function withStage(room: RoomState, stage: StageState): RoomState {
 
 /**
  * The stage after an edit to the draft: any edit clears a line jam and returns the pans to
- * the last committed line (Pattern 1, two layers). A split jam stays.
+ * the last committed line (Pattern 1, two layers).
  */
 function edited(stage: StageState, draft: Token[]): StageState {
   if (stage.jam?.kind !== 'line') return { ...stage, draft };
@@ -180,6 +180,37 @@ export function commitLine(
 /** Whether the progress a committed line reports moves the machine (`LineAccepted.progress`). */
 export function lineProgress(verdict: Verdict): boolean {
   return verdict.kind === 'valid' ? verdict.progress : true;
+}
+
+/** A line a way on the machine wrote, and whether it moves the machine. */
+export interface WayLine {
+  stage: StageState;
+  progress: boolean;
+}
+
+/**
+ * A line a way on the machine writes for him (Balance `auto`; story 1.15 writes the move,
+ * then its result): judged like a typed line, and committed only if it is valid, never as
+ * the answer or check line, which he writes himself. It is judged against `judgedAgainst`,
+ * the committed lines unless the caller says otherwise: a Balance move judges its result
+ * against the lines before the move, so the move and its result count as one step. The
+ * pans take its layout, as for any line. Null when the checker wouldn't commit it as a
+ * valid line, so it is never written.
+ */
+export function writeWayLine(
+  stage: StageState,
+  line: Equation,
+  source: WayId,
+  judgedAgainst: readonly NotebookLine[] = stage.lines,
+): WayLine | null {
+  const tokenized = tokenize(formatEquation(line));
+  assert(tokenized.ok, `the line isn't in pad tokens: ${formatEquation(line)}`);
+  const verdict = check(committedEquations(judgedAgainst), tokenized.tokens);
+  if (verdict.kind !== 'valid') return null;
+  return {
+    stage: commitLine(stage, tokenized.tokens, source, verdict),
+    progress: verdict.progress,
+  };
 }
 
 /**

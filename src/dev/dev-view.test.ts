@@ -20,7 +20,7 @@ import {
   verdictText,
 } from '@/dev/dev-view';
 import { tokenize } from '@/math/tokens';
-import { dialView } from '@/room/dial';
+import { dialView, setDial } from '@/room/dial';
 import { enterLine, typeToken } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
 import { enterRoom } from '@/room/room';
@@ -86,8 +86,12 @@ describe('devReadout', () => {
     expect(readout.draft).toBeNull();
   });
 
-  it('shows the tray in an open stage once Balance is earned, and switches Balance', () => {
-    const room = opened(freeRoomOne);
+  it('shows the tray once Balance is earned and the stage offers it, and switches Balance', () => {
+    const fresh = opened(freeRoomOne);
+    expect(trayText(fresh, ['balance'])).toBe('off');
+    // Story 1.15: the dial at its maximum without levelling the pans offers the tray.
+    const room = setDial(fresh, 10)?.room;
+    if (!room) throw new Error('the dial did not turn');
     expect(trayText(room, [])).toBe('off');
     expect(trayText(room, ['balance'])).toBe('weight 1, float 1');
     const jammed = enterLine(typed(room, 'x = 6'), 0)?.room;
@@ -98,16 +102,20 @@ describe('devReadout', () => {
     expect(toggledBalance(['balance', 'chain'])).toEqual(['chain']);
   });
 
-  it('shows the splitter in an open stage once Balance is earned, and when it lies on the pans', () => {
-    const room = opened(freeRoomOne);
+  it('shows the splitter once Balance is earned and a side holds only x pieces, and jammed', () => {
+    expect(splitterText(opened(freeRoomOne), ['balance'])).toBe('off');
+    // Story 1.15: room 2's `3x = 12` holds only x pieces on the left from the start.
+    const freeRoomTwo: RoomSpec = {
+      ...r02,
+      stages: [{ ...(r02.stages[0] as StageSpec), fading: { try: 'blank' } }],
+    };
+    const room = opened(freeRoomTwo);
     expect(splitterText(room, [])).toBe('off');
     expect(splitterText(room, ['balance'])).toBe('2 parts');
     expect(devReadout(room, ['balance']).splitter).toBe('2 parts');
     const jammed = enterLine(typed(room, 'x = 6'), 0)?.room;
     if (!jammed) throw new Error('enter was ignored');
     expect(splitterText(jammed, ['balance'])).toBe('2 parts, jammed');
-    const onPans = { ...room, stage: { ...room.stage, jam: { kind: 'split', parts: 3 } as const } };
-    expect(splitterText(onPans, ['balance'])).toBe('3 parts, on the pans');
   });
 
   it('shows the prediction pin: where it is, and whether it is locked and resolved', () => {

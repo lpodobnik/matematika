@@ -124,33 +124,24 @@ describe('createPieceDrag', () => {
   });
 });
 
-describe('releaseAction', () => {
-  it('drops a tray piece on a pan, and takes a pan’s piece into the tray', () => {
-    expect(releaseAction(fromTray, 'left')).toEqual({
+describe('releaseAction (story 1.15: both sides at once)', () => {
+  it('drops a tray piece over the scale, and takes a pan’s piece off anywhere off the scale', () => {
+    expect(releaseAction(fromTray, 'scale')).toEqual({ type: 'tray/drop', kind: 'float' });
+    expect(releaseAction({ from: 'tray', kind: 'weight' }, 'scale')).toEqual({
       type: 'tray/drop',
-      side: 'left',
-      kind: 'float',
-    });
-    expect(releaseAction({ from: 'tray', kind: 'weight' }, 'right')).toEqual({
-      type: 'tray/drop',
-      side: 'right',
       kind: 'weight',
     });
     const pan: DragSource = { from: 'pan', side: 'right', key: 'right-weight-0' };
-    expect(releaseAction(pan, 'tray')).toEqual({
-      type: 'tray/take',
-      side: 'right',
-      key: 'right-weight-0',
-    });
+    const take = { type: 'tray/take', side: 'right', key: 'right-weight-0' };
+    expect(releaseAction(pan, 'tray')).toEqual(take);
+    expect(releaseAction(pan, null)).toEqual(take);
   });
 
   it('asks for nothing otherwise, so the piece slides back', () => {
     expect(releaseAction(fromTray, 'tray')).toBeNull();
     expect(releaseAction(fromTray, null)).toBeNull();
     const pan: DragSource = { from: 'pan', side: 'left', key: 'left-weight-0' };
-    for (const target of ['left', 'right', null] as const) {
-      expect(releaseAction(pan, target)).toBeNull();
-    }
+    expect(releaseAction(pan, 'scale')).toBeNull();
   });
 });
 
@@ -169,6 +160,8 @@ function wiredTray() {
   act({ type: 'machine/touch' });
   act({ type: 'pin/set', value: { kind: 'x', x: 9 } });
   act({ type: 'pin/confirm' });
+  // Story 1.15: the dial at 6 can't level the pans, so the tray is offered.
+  act({ type: 'dial/set', x: 6 });
   for (let i = 0; i < 4; i += 1) act({ type: 'tray/step', kind: 'float', by: 1 });
   const layout = trayLayout(0.54, labelFontSize(0.54));
   const drag = createPieceDrag();
@@ -185,25 +178,30 @@ function wiredTray() {
 }
 
 describe('the piece drag, wired to the store', () => {
-  it('drops a float of 5 from the tray on the left pan, then on the right, and 2x = 18 is written', () => {
-    const { drag, layout, room, events } = wiredTray();
-    const slot = layout.slots[1];
-    if (!slot) throw new Error('no float slot');
-    const float5 = trayPiece('float', room().stage.tray.float);
-    drag.start(1, { from: 'tray', kind: 'float' }, float5, slot.piece, slot.piece);
-    drag.move(1, { x: 300, y: 450 });
-    drag.end(1);
-    expect(drag.carry()?.phase).toBe('landing');
-    drag.settle();
-    expect(room().stage.lines).toHaveLength(1);
-    drag.start(1, { from: 'tray', kind: 'float' }, float5, slot.piece, slot.piece);
-    drag.move(1, { x: 1300, y: 450 });
-    drag.end(1);
-    expect(room().stage.lines.map((line) => line.tokens.join(''))).toEqual(['2x+5=23', '2x=18']);
-    expect(events.map((event) => event.type)).toContain('WayUsed');
+  it('drops a float of 5 anywhere over the scale, the beam included: both sides lose 5', () => {
+    for (const at of [
+      { x: 300, y: 450 },
+      { x: 800, y: 560 },
+      { x: 1300, y: 450 },
+    ]) {
+      const { drag, layout, room, events } = wiredTray();
+      const slot = layout.slots[1];
+      if (!slot) throw new Error('no float slot');
+      const float5 = trayPiece('float', room().stage.tray.float);
+      drag.start(1, { from: 'tray', kind: 'float' }, float5, slot.piece, slot.piece);
+      drag.move(1, at);
+      drag.end(1);
+      expect(drag.carry()?.phase).toBe('landing');
+      expect(room().stage.lines.map((line) => line.tokens.join(''))).toEqual([
+        '2x+5=23',
+        '2x+5−5=23−5',
+        '2x=18',
+      ]);
+      expect(events.map((event) => event.type)).toContain('WayUsed');
+    }
   });
 
-  it('takes the weight off the left pan into the tray', () => {
+  it('takes the weight off the left pan into the tray: 5 comes off both sides', () => {
     const { drag, layout, room } = wiredTray();
     const [weight] = scaleView(room()).left.pieces.filter((p) => p.kind === 'weight');
     if (!weight) throw new Error('no weight');
@@ -218,6 +216,7 @@ describe('the piece drag, wired to the store', () => {
     drag.end(1);
     expect(drag.carry()?.phase).toBe('landing');
     expect(panPieces(room().stage.pans).left.map((p) => p.kind)).toEqual(['gear', 'gear']);
+    expect(panPieces(room().stage.pans).right.map((p) => p.kind)).toEqual(['weight']);
   });
 
   it('slides back a drop the store refuses: the right pan has no x and can’t go below 0', () => {
@@ -234,7 +233,7 @@ describe('the piece drag, wired to the store', () => {
     expect(room()).toBe(before);
   });
 
-  it('slides back a pan’s piece let go over a pan, and asks the store nothing', () => {
+  it('slides back a pan’s piece let go over the scale, either pan, and asks the store nothing', () => {
     const { drag, room } = wiredTray();
     const before = room();
     drag.start(
@@ -262,14 +261,14 @@ describe('the piece drag, wired to the store', () => {
     // Over the right pan, a let-go here would write 2x = 18 (the test above).
     drag.start(7, { from: 'tray', kind: 'float' }, float5, slot.piece, slot.piece);
     drag.move(7, { x: 1300, y: 450 });
-    expect(dropTarget({ x: 1300, y: 450 }, layout)).toBe('right');
+    expect(dropTarget({ x: 1300, y: 450 }, layout)).toBe('scale');
     win.dispatchEvent(Object.assign(new Event('pointercancel'), { pointerId: 8 }));
     expect(drag.carry()?.phase).toBe('held');
     win.dispatchEvent(Object.assign(new Event('pointercancel'), { pointerId: 7 }));
     expect(release).not.toHaveBeenCalled();
     expect(drag.carry()?.phase).toBe('returning');
     expect(room()).toBe(before);
-    expect(room().stage.lines.map((line) => line.tokens.join(''))).not.toContain('2x=18');
+    expect(room().stage.lines).toHaveLength(1);
     expect(events.map((event) => event.type)).not.toContain('WayUsed');
     stop();
   });
@@ -297,15 +296,12 @@ describe('the piece drag, wired to the store', () => {
 
   it('asks the store only about tray actions, and nothing without a room', () => {
     const { room } = wiredTray();
-    expect(storeTakes(null, ['balance'], { type: 'tray/drop', side: 'left', kind: 'weight' })).toBe(
-      false,
-    );
+    const drop = { type: 'tray/drop', kind: 'weight' } as const;
+    expect(storeTakes(null, ['balance'], drop)).toBe(false);
     expect(storeTakes(room(), ['balance'], { type: 'machine/touch' })).toBe(false);
     expect(storeTakes(room(), ['balance'], null)).toBe(false);
-    expect(storeTakes(room(), [], { type: 'tray/drop', side: 'left', kind: 'weight' })).toBe(false);
-    expect(
-      storeTakes(room(), ['balance'], { type: 'tray/drop', side: 'left', kind: 'weight' }),
-    ).toBe(true);
+    expect(storeTakes(room(), [], drop)).toBe(false);
+    expect(storeTakes(room(), ['balance'], drop)).toBe(true);
   });
 });
 

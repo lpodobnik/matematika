@@ -11,8 +11,8 @@ export type RoomEvent =
   /** The dial levelled the pans (audio: a thunk). Never fired by acting out a line. */
   | { type: 'PansLevel'; roomId: RoomSpec['id']; stage: number; x: number }
   /**
-   * A move on the machine completed (the play log's ways used): with Balance, the pans'
-   * equation has the stage's solution again after a change to both pans.
+   * A move on the machine completed (the play log's ways used): with Balance, once per
+   * move, since every Balance move acts on both sides at once (story 1.15).
    */
   | { type: 'WayUsed'; roomId: RoomSpec['id']; stage: number; way: WayId }
   /**
@@ -29,8 +29,8 @@ export type RoomEvent =
     }
   /** Enter judged a line wrong; it stays in the draft (the play log keeps the text). */
   | { type: 'LineWrong'; roomId: RoomSpec['id']; stage: number; line: string }
-  /** The machine jammed: on a wrong line, or (story 1.11) a split that doesn't divide (audio: a hiss). */
-  | { type: 'MachineJammed'; roomId: RoomSpec['id']; kind: 'line' | 'split' }
+  /** The machine jammed on a wrong line (audio: a hiss). An uneven split is refused, never a jam (story 1.15). */
+  | { type: 'MachineJammed'; roomId: RoomSpec['id']; kind: 'line' }
   /**
    * A prediction pin resolved as he confirmed it, once per stage: right or wrong (the play
    * log's predictions). The root reducer pays parts for a right one, once per stage.

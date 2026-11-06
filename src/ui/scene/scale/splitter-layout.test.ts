@@ -5,9 +5,9 @@ import { machineBounds } from '@/ui/scene/machine/layout';
 import { type Box, minHitCssPx } from '@/ui/scene/scale/dial-layout';
 import { beamPose, labelFontSize, scaleGeometry } from '@/ui/scene/scale/layout';
 import {
-  bladeHeight,
+  frameHeight,
   overHolder,
-  panAreas,
+  splitsAt,
   splitterGeometry,
   splitterLayout,
 } from '@/ui/scene/scale/splitter-layout';
@@ -49,13 +49,13 @@ function within(inner: Box, outer: Box): boolean {
 }
 
 describe('splitterLayout', () => {
-  it('puts the holder in the top-left corner: the blade, then + above − beside it', () => {
+  it('puts the holder in the top-left corner: the divider frame, then + above − at its end', () => {
     const layout = splitterLayout(tablet, labelFontSize(tablet));
     expect(layout.box.x).toBeCloseTo(splitterGeometry.resetClearPx / tablet);
     expect(layout.box.y).toBe(20);
     expect(splitterLayout(4, labelFontSize(4)).box.x).toBe(splitterGeometry.left);
-    expect(within(layout.blade, layout.box)).toBe(true);
-    expect(layout.up.x).toBeGreaterThan(layout.blade.x + layout.blade.width);
+    expect(within(layout.frame, layout.box)).toBe(true);
+    expect(layout.up.x).toBeGreaterThan(layout.frame.x + layout.frame.width);
     expect(layout.up.y).toBeLessThan(layout.down.y);
     expect(overlaps(layout.up, layout.down)).toBe(false);
   });
@@ -90,7 +90,13 @@ describe('splitterLayout', () => {
     const fontSize = labelFontSize(tablet);
     const { box } = splitterLayout(tablet, fontSize);
     const pan = beamPose(0).left;
-    expect(box.y + box.height).toBeLessThan(pan.y - bladeHeight(fontSize));
+    // A weight's height: a row of the left pan's usual pieces.
+    expect(box.y + box.height).toBeLessThan(pan.y - fontSize * 2);
+  });
+
+  it('gives the frame’s tag room for `: n` at the label size (story 1.15)', () => {
+    const fontSize = labelFontSize(tablet);
+    expect(frameHeight(fontSize) * 0.38).toBeGreaterThanOrEqual(fontSize * 1.15);
   });
 
   it.each([
@@ -100,22 +106,12 @@ describe('splitterLayout', () => {
   ])('makes every button and grab area at least 48 CSS px on %s', (_, scale) => {
     const layout = splitterLayout(scale, labelFontSize(scale));
     const min = minHitCssPx / scale;
-    for (const box of [layout.up, layout.down, layout.grab, layout.onPansGrab]) {
+    for (const box of [layout.up, layout.down, layout.grab]) {
       expect(box.width).toBeGreaterThanOrEqual(min - 1e-9);
       expect(box.height).toBeGreaterThanOrEqual(min - 1e-9);
     }
     for (const box of [layout.up, layout.down]) expect(within(box, layout.box)).toBe(true);
-    expect(within(layout.blade, layout.grab)).toBe(true);
-    expect(within(layout.onPans, layout.onPansGrab)).toBe(true);
-  });
-
-  it('lays the blade across both pans after a split that jams, from pan to pan, under the machine', () => {
-    const layout = splitterLayout(tablet, labelFontSize(tablet));
-    const rest = beamPose(0);
-    expect(layout.onPans.x).toBeCloseTo(rest.left.x);
-    expect(layout.onPans.x + layout.onPans.width).toBeCloseTo(rest.right.x);
-    expect(layout.onPans.y).toBeGreaterThan(machineBounds().bottom);
-    expect(layout.onPans.y + layout.onPans.height).toBeLessThan(scaleGeometry.pivot.y);
+    expect(within(layout.frame, layout.grab)).toBe(true);
   });
 
   it('draws its frame line at least 1.5 CSS px', () => {
@@ -124,21 +120,23 @@ describe('splitterLayout', () => {
   });
 });
 
-describe('panAreas and overHolder', () => {
-  it('covers each pan’s width, with its pieces, at any tilt', () => {
-    const areas = panAreas();
+describe('splitsAt and overHolder (story 1.15: anywhere over the scale)', () => {
+  it('splits when let go anywhere over the scale: either pan, the beam, the space between', () => {
+    const layout = splitterLayout(tablet, labelFontSize(tablet));
     for (const tilt of [-15, 0, 15]) {
       const pose = beamPose(tilt);
-      for (const side of ['left', 'right'] as const) {
-        const area = areas[side];
-        const pan = pose[side];
-        expect(area.x).toBeLessThan(pan.x - scaleGeometry.panWidth / 2);
-        expect(area.x + area.width).toBeGreaterThan(pan.x + scaleGeometry.panWidth / 2);
-        expect(area.y).toBeLessThan(pan.y - 150);
-        expect(area.y + area.height).toBeGreaterThan(pan.y);
+      for (const pan of [pose.left, pose.right]) {
+        expect(splitsAt(pan, layout)).toBe(true);
+        expect(splitsAt({ x: pan.x, y: pan.y - 100 }, layout)).toBe(true);
       }
     }
-    expect(overlaps(areas.left, areas.right)).toBe(false);
+    expect(splitsAt({ x: scaleGeometry.pivot.x, y: scaleGeometry.pivot.y }, layout)).toBe(true);
+    expect(splitsAt({ x: 300, y: 920 }, layout)).toBe(false);
+    expect(splitsAt({ x: 800, y: 100 }, layout)).toBe(false);
+    // Let go back over its holder (which reaches down over the scale on a phone), it goes home.
+    const phoneLayout = splitterLayout(phone, labelFontSize(phone));
+    const { box } = phoneLayout;
+    expect(splitsAt({ x: box.x + 20, y: box.y + box.height - 5 }, phoneLayout)).toBe(false);
   });
 
   it('takes a splitter let go over the holder, or near it, back into it', () => {

@@ -1,43 +1,47 @@
-// The tray (architecture Pattern 1, Balance moves; GDD, Three ways to solve: Balance). Pure:
-// when the tray is offered, what its stepper does, and what a drop on a pan or a piece
-// dragged off a pan does to the stage.
+// The tray (architecture Pattern 1, Balance moves; GDD, Three ways to solve: Balance; story
+// 1.15). Pure: when the tray is offered, what its stepper does, and what a drop over the
+// scale or a piece dragged off a side does to the stage.
 //
-//   offered    once Balance is earned (room 3), whenever a stage is open; off while the
-//              machine is jammed (Pattern 2, Jams)
+// Every Balance move acts on both sides at once: "you can only do left what you do right".
+//
+//   offered    in an open stage once Balance is earned, from the moment one of these holds:
+//              he met the tray before this stage; his dial has stood at its maximum this
+//              stage without levelling the pans; a Balance move was made this stage. Each
+//              is remembered, so it stays for the rest of the stage. It does nothing while
+//              the machine is jammed (Pattern 2, Jams)
 //   pieces     weights and floats only, each numbered 1–99 by a stepper (− and +); x-gears
 //              and springs can't be added or dragged off
-//   a drop     a piece from the tray on a pan, or a weight or float dragged off a pan into
-//              the tray: the number pieces on that pan combine into one piece of their sum
-//              (a weight if positive, a float if negative, nothing if 0). A drop that would
-//              leave a pan with no x pieces below 0 is refused, and the piece slides back
-//   one pan    changed alone, the pans' equation no longer has the stage's solution: the
-//              pans tip at the dial's x, and nothing is written
-//   both pans  once the pans' equation has the stage's solution again, the move is complete
-//              (`WayUsed`, way `balance`). With Balance fading `auto` the equation is
-//              appended as the next line (`LineAccepted`, source `balance`), unless it is
-//              `x = n`, which he writes himself. Balance `blanks` arrives in epic 2.
+//   a drop     a piece from the tray let go anywhere over the scale sends one copy to each
+//              side; the number pieces on each side then combine into one piece of their sum
+//              (a weight if positive, a float if negative, nothing if 0)
+//   drag-off   a weight or float dragged off a side takes the same number off both sides:
+//              the same move as dropping a float (or a weight) of that number
+//   refused    a move that would leave a side with no x pieces below 0 is refused, and the
+//              piece slides back
+//   true x     from his first Balance move the scale acts out: the pans are weighed at the
+//              stage's solution, so they stay level, with no readouts, until he turns the
+//              dial (room/scale.ts)
+//   lines      with Balance `auto` the move is written as done, then its result, both from
+//              `balance`: `2x + 5 − 5 = 23 − 5`, then `2x = 18`. A result `x = n` is left for
+//              him to write. `WayUsed` fires once per move. Balance `blanks` arrives in epic
+//              2; until then, as with `blank`, the pans move and nothing is written
 //
-// Every tray move is exploring, so it ends acting out a written line: the pans are weighed
-// at the dial's x again (Pattern 1). The splitter (room/splitter.ts) completes its moves
-// the same way (`balanceMove`). The moves are free and reversible: a pan that gets
-// back to the last committed line's pieces shows that line's side again. A reset, or any
-// line written, replaces them with that line's layout.
+// The splitter (room/splitter.ts) moves the same way (`balanceMove`).
 
 import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
-import { check, isAnswerLine, stageSolution } from '@/math/check';
+import { isAnswerLine, stageSolution } from '@/math/check';
 import { add, div, type Equation, type Expr, maxNumber, mul, num, sub, xVar } from '@/math/expr';
-import { formatEquation } from '@/math/format';
-import { solve, toLinear } from '@/math/linear';
+import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
-import { tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
-import { commitLine, committedEquations, lastCommitted, lineProgress } from '@/room/notebook';
+import { writeWayLine } from '@/room/notebook';
 import { isNumberPiece, numberPieceLabel, sidePieces } from '@/room/pieces';
 import { currentStageSpec, machineEquation, type RoomStep } from '@/room/room';
 import type { PieceView } from '@/room/scale';
 import type {
   FadingMode,
+  FirstUseId,
   RoomState,
   Side,
   StageSpec,
@@ -49,17 +53,34 @@ import type {
 /** The lowest number on the tray's pieces; the highest is `tuning.trayMaxNumber`. */
 export const trayMinNumber = 1;
 
-/** Whether the game offers the tray now: Balance is earned and the stage is open. */
+/**
+ * Whether the game offers the tray now: Balance is earned, the stage is open, and he met
+ * the tray before, his dial has been at its maximum without levelling the pans, or a
+ * Balance move was made this stage (story 1.15). Lane C's handovers read this too.
+ */
 export function trayOffered(room: RoomState, tools: readonly ToolId[]): boolean {
-  return tools.includes('balance') && room.stage.phase === 'open';
+  if (!tools.includes('balance') || room.stage.phase !== 'open') return false;
+  const { balance } = room.stage;
+  return balance.trayMet || balance.dialMaxed || balance.moves > 0;
 }
 
 /**
  * Whether the tray does anything now: it is offered, and the machine isn't jammed (while
- * jammed he can only edit the draft, drag the splitter off, reset or leave).
+ * jammed he can only edit the draft, reset or leave).
  */
 export function trayWorks(room: RoomState, tools: readonly ToolId[]): boolean {
   return trayOffered(room, tools) && room.stage.jam === null;
+}
+
+/**
+ * The room with its stage knowing he met the tray before (`save.progress.firstUse`), so
+ * every later stage offers it at once. The root reducer hands in what he has met. The same
+ * room when nothing changes.
+ */
+export function rememberTray(room: RoomState, met: readonly FirstUseId[]): RoomState {
+  const { stage } = room;
+  if (stage.balance.trayMet || !met.includes('tray')) return room;
+  return withStage(room, { ...stage, balance: { ...stage.balance, trayMet: true } });
 }
 
 /** The stage's Balance line mode; a stage that lists none writes nothing for Balance. */
@@ -161,79 +182,106 @@ export function sameLayout(a: Equation, b: Equation): boolean {
   return sameSide(a.left, b.left) && sameSide(a.right, b.right);
 }
 
-/**
- * The pans after `delta` is added to one pan's number pieces, which combine into one; or
- * null when the change is refused: a pan with no x pieces would weigh below 0, or a number
- * would be too long for a line. A pan that gets back to the last committed line's pieces
- * shows that line's side as it was written.
- */
-function changedPans(stage: StageState, side: Side, delta: q.Rational): Equation | null {
-  const { a, b } = linearSide(stage.pans[side]);
-  const sum = q.add(b, delta);
-  if (q.isZero(a) && q.compare(sum, q.zero) < 0) return null;
-  const written = lastCommitted(stage)[side];
-  const back = linearSide(written);
-  const expr = q.equals(back.a, a) && q.equals(back.b, sum) ? written : sideExpr(a, sum);
-  if (expr === null) return null;
-  return side === 'left' ? { left: expr, right: stage.pans.right } : { ...stage.pans, right: expr };
+/** A side holding only x pieces, more than one x: `2x`, `27x`, `2x : 3`, `0 − 5x`. */
+function onlyXs(side: Expr): boolean {
+  const { a, b } = linearSide(side);
+  return q.isZero(b) && (a.n > 1n || a.n < -1n);
 }
 
-/** Whether the equation has one solution, the stage's n. */
-function holdsSolution(equation: Equation, n: number): boolean {
-  const solution = solve(equation);
-  return solution.kind === 'one' && q.equals(solution.x, q.rational(n));
+/** Whether one side holds only x pieces, more than one x: the splitter's moment (room/splitter.ts). */
+export function readyToSplit(pans: Equation): boolean {
+  return onlyXs(pans.left) || onlyXs(pans.right);
 }
 
 /**
- * The stage after a balance move (a tray drop or take, or a split: room/splitter.ts) put
- * `pans` on the scale: exploring, at the dial's x. When the pans' equation has the stage's
- * solution again and isn't the last committed line's, the move is complete (`WayUsed`);
- * with Balance `auto` its line is written, unless it is the answer line. The line goes
- * through the checker like any line, so a line it would refuse is never written.
+ * A Balance move before it is made: the move as done, which `auto` writes first
+ * (`2x + 5 − 5 = 23 − 5`), and the pans after it, its result (`2x = 18`).
  */
-export function balanceMove(room: RoomState, pans: Equation): RoomStep {
+export interface BalanceChange {
+  line: Equation;
+  pans: Equation;
+}
+
+/** One side's number after `delta`, or null when a side with no x pieces would weigh below 0. */
+function shifted(side: Linear, delta: q.Rational): q.Rational | null {
+  const sum = q.add(side.b, delta);
+  return q.isZero(side.a) && q.compare(sum, q.zero) < 0 ? null : sum;
+}
+
+/**
+ * `delta` on both sides at once: a positive one is a weight, a negative one a float (or a
+ * weight dragged off). The move is written by appending it to each side as the pans show
+ * it; the result combines each side's numbers into one. Null when the move is refused: a
+ * side with no x pieces would weigh below 0, or a number would be too long for a line.
+ */
+export function onBothSides(pans: Equation, delta: q.Rational): BalanceChange | null {
+  const [left, right] = [linearSide(pans.left), linearSide(pans.right)];
+  const [leftSum, rightSum] = [shifted(left, delta), shifted(right, delta)];
+  if (leftSum === null || rightSum === null) return null;
+  const result = { left: sideExpr(left.a, leftSum), right: sideExpr(right.a, rightSum) };
+  const amount = quantity(magnitude(delta));
+  if (!result.left || !result.right || !amount || q.isZero(delta)) return null;
+  const append = (side: Expr) => (delta.n > 0n ? add(side, amount) : sub(side, amount));
+  return {
+    line: { left: append(pans.left), right: append(pans.right) },
+    pans: { left: result.left, right: result.right },
+  };
+}
+
+/**
+ * The stage after a Balance move (a tray drop, a drag-off, or an even split:
+ * room/splitter.ts). The pans take the move's result, and the scale acts out, weighed at
+ * the stage's solution. `WayUsed` fires. With Balance `auto` the move is written as done,
+ * then its result, unless that is the answer line. Each goes through the checker like any
+ * line, against the lines before the move, so the move and its result are one step: the
+ * result of `2x + 5 = 23` minus 5 makes progress, of plus 3 doesn't. A line the checker
+ * wouldn't commit as valid stops the writing.
+ */
+export function balanceMove(room: RoomState, change: BalanceChange): RoomStep {
   const { stage } = room;
   const spec = currentStageSpec(room);
-  const moved: StageState = { ...stage, pans, actingOut: false };
-  const n = stageSolution(machineEquation(spec, stage.machine));
-  if (!holdsSolution(pans, n) || sameLayout(pans, lastCommitted(stage))) {
-    return { room: withStage(room, moved), events: [] };
-  }
   const at = { roomId: room.spec.id, stage: room.stageIndex };
   const events: RoomEvent[] = [{ type: 'WayUsed', ...at, way: 'balance' }];
-  if (balanceFading(spec) !== 'auto' || isAnswerLine(pans, n)) {
-    return { room: withStage(room, moved), events };
+  const balance = {
+    ...stage.balance,
+    moves: stage.balance.moves + 1,
+    splitterSeen: stage.balance.splitterSeen || readyToSplit(change.pans),
+  };
+  let next: StageState = { ...stage, actingOut: true, balance };
+  if (balanceFading(spec) === 'auto') {
+    const n = stageSolution(machineEquation(spec, stage.machine));
+    const lines = isAnswerLine(change.pans, n) ? [change.line] : [change.line, change.pans];
+    for (const line of lines) {
+      const written = writeWayLine(next, line, 'balance', stage.lines);
+      if (!written) break;
+      next = written.stage;
+      events.push({ type: 'LineAccepted', ...at, source: 'balance', progress: written.progress });
+    }
   }
-  const tokenized = tokenize(formatEquation(pans));
-  assert(tokenized.ok, `the pans' equation isn't in pad tokens: ${formatEquation(pans)}`);
-  const verdict = check(committedEquations(stage.lines), tokenized.tokens);
-  if (verdict.kind !== 'valid') return { room: withStage(room, moved), events };
-  events.push({ type: 'LineAccepted', ...at, source: 'balance', progress: lineProgress(verdict) });
-  return { room: withStage(room, commitLine(moved, tokenized.tokens, 'balance', verdict)), events };
+  return { room: withStage(room, { ...next, pans: change.pans }), events };
 }
 
 /**
- * A piece from the tray dropped on a pan (`tray/drop`): the weight or float with the
- * number the stepper shows. Null, so the action is ignored and the piece slides back, when
- * the tray doesn't work now or the drop is refused.
+ * A piece from the tray dropped anywhere over the scale (`tray/drop`): the weight or float
+ * with the number the stepper shows, one copy on each side. Null, so the action is ignored
+ * and the piece slides back, when the tray doesn't work now or the move is refused.
  */
-export function dropOnPan(
+export function dropOnScale(
   room: RoomState,
   tools: readonly ToolId[],
-  side: Side,
   kind: TrayKind,
 ): RoomStep | null {
   if (!trayWorks(room, tools)) return null;
   const value = q.rational(room.stage.tray[kind]);
-  const pans = changedPans(room.stage, side, kind === 'weight' ? value : q.neg(value));
-  return pans ? balanceMove(room, pans) : null;
+  const change = onBothSides(room.stage.pans, kind === 'weight' ? value : q.neg(value));
+  return change ? balanceMove(room, change) : null;
 }
 
 /**
- * A weight or float dragged off a pan into the tray (`tray/take`), named by its key on the
- * scale (`left-weight-0`). Null, so the action is ignored and the piece slides back, when
- * the tray doesn't work now, the pan has no such weight or float (gears and springs stay
- * on), or taking it is refused.
+ * A weight or float dragged off a side (`tray/take`), named by its key on the scale
+ * (`left-weight-0`): the same number comes off both sides. Null, so the action is ignored
+ * and the piece slides back, when the tray doesn't work now, the side has no such weight or
+ * float (gears and springs stay on), or the move is refused.
  */
 export function takeOffPan(
   room: RoomState,
@@ -245,8 +293,8 @@ export function takeOffPan(
   const piece = sidePieces(room.stage.pans[side], side).find((each) => each.key === key);
   if (!piece || !isNumberPiece(piece)) return null;
   const delta = piece.kind === 'weight' ? q.neg(piece.value) : piece.value;
-  const pans = changedPans(room.stage, side, delta);
-  return pans ? balanceMove(room, pans) : null;
+  const change = onBothSides(room.stage.pans, delta);
+  return change ? balanceMove(room, change) : null;
 }
 
 /** A piece on the tray as the scale draws pieces: the weight or float with its number. */

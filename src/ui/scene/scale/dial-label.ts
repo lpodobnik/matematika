@@ -7,13 +7,15 @@
 
 import { num, xVar } from '@/math/expr';
 import { formatEquation, formatExpr } from '@/math/format';
-import { hiddenXLabel } from '@/room/scale';
 import type { DialLayout } from '@/ui/scene/scale/dial-layout';
 import { labelFontSize, labelWidth } from '@/ui/scene/scale/layout';
 
+/** What the label shows for x while the scale acts out, so it can't reveal x. */
+const hiddenX = '?';
+
 /** The label's text: `x = 9`, or `x = ?` while the scale acts out (x null). */
 export function dialLabelText(x: number | null): string {
-  if (x === null) return `${formatExpr(xVar())} = ${hiddenXLabel}`;
+  if (x === null) return `${formatExpr(xVar())} = ${hiddenX}`;
   return formatEquation({ left: xVar(), right: num(x) });
 }
 

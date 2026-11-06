@@ -1,6 +1,13 @@
 import { extend } from '@pixi/react';
 import { Container, type FederatedPointerEvent, Graphics, type PointData } from 'pixi.js';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import { scaleSkin } from '@/art/skins/scale';
 import { type PanView, type PieceView, pinRevealView, scaleView, scaleViewAt } from '@/room/scale';
 import { trayWorks } from '@/room/tray';
@@ -11,6 +18,12 @@ import { beamPose, labelFontSize, scaleGeometry } from '@/ui/scene/scale/layout'
 import { Pan } from '@/ui/scene/scale/Pan';
 import type { HiddenPiece, PieceDrag } from '@/ui/scene/scale/piece-drag';
 import { pieceIdentity } from '@/ui/scene/scale/piece-tween';
+import { SplitGroups } from '@/ui/scene/scale/SplitGroups';
+import {
+  createSplitShow,
+  type SplitShow,
+  type SplitShowChannel,
+} from '@/ui/scene/scale/split-show';
 import { createTiltSpring, type TiltSpring } from '@/ui/scene/scale/tilt-spring';
 import type { Point } from '@/ui/scene/scale/tray-layout';
 import { useCarry } from '@/ui/scene/scale/use-carry';
@@ -24,10 +37,18 @@ const emptyPan: PanView = { pieces: [], value: { n: 0n, d: 1n } };
 interface Props {
   /** CSS px per scene unit, so labels can stay at least 20 CSS px. */
   sceneScale: number;
-  /** Carries weights and floats off the pans into the tray (story 1.10). */
+  /** Carries weights and floats off the pans, off both sides (story 1.10; story 1.15). */
   drag: PieceDrag;
   /** A point on the canvas in scene units. */
   toScene(point: PointData): Point;
+  /** The splitter's shows: its groups separating on the pans (story 1.15); none in a copy. */
+  splitShow?: SplitShowChannel;
+}
+
+const noShows = createSplitShow();
+
+function useSplitShow(channel: SplitShowChannel): SplitShow | null {
+  return useSyncExternalStore(channel.subscribe, channel.current, channel.current);
 }
 
 /** The piece carried off a pan, hidden on that pan while it is carried; null for the other pan. */
@@ -42,9 +63,15 @@ function hiddenOn(side: Side, drag: ReturnType<typeof useCarry>): HiddenPiece | 
  * frame, without React renders. While the machine tests a pin he confirmed (story 1.14;
  * use-pin-test.ts), the pans follow the dial's x as the machine turns it notch by notch
  * (`scaleViewAt`), or weigh the x of a pin beyond the dial for a moment (`pinRevealView`).
- * While the tray works, its weights and floats can be grabbed and carried into the tray.
+ * While the tray works, its weights and floats can be grabbed and carried off, which takes
+ * them off both sides. When the splitter is dropped over it, each pan shows its pieces
+ * separating into the splitter's groups (SplitGroups.tsx) in place of its pieces.
  */
-export function Scale({ sceneScale, drag, toScene }: Props) {
+export function Scale({ sceneScale, drag, toScene, splitShow = noShows }: Props) {
+  const show = useSplitShow(splitShow);
+  const endShow = useCallback(() => {
+    if (show) splitShow.end(show.id);
+  }, [show, splitShow]);
   const room = useGame((s) => s.room);
   const works = useGame((s) => (s.room ? trayWorks(s.room, s.save.progress.tools) : false));
   const test = usePinTest();
@@ -125,7 +152,18 @@ export function Scale({ sceneScale, drag, toScene }: Props) {
         onGrab={grabLeft}
         hidden={hiddenOn('left', carry)}
         minHit={minHit}
-      />
+        piecesHidden={show !== null}
+      >
+        {show && (
+          <SplitGroups
+            key={`left-${show.id}`}
+            groups={show.groups.left}
+            even={show.groups.even}
+            fontSize={fontSize}
+            onDone={endShow}
+          />
+        )}
+      </Pan>
       <Pan
         side="right"
         containerRef={rightRef}
@@ -135,7 +173,17 @@ export function Scale({ sceneScale, drag, toScene }: Props) {
         onGrab={grabRight}
         hidden={hiddenOn('right', carry)}
         minHit={minHit}
-      />
+        piecesHidden={show !== null}
+      >
+        {show && (
+          <SplitGroups
+            key={`right-${show.id}`}
+            groups={show.groups.right}
+            even={show.groups.even}
+            fontSize={fontSize}
+          />
+        )}
+      </Pan>
     </pixiContainer>
   );
 }

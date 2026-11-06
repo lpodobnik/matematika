@@ -90,9 +90,9 @@ describe('machineView', () => {
       stage: { ...base.stage, machine: 1, machineProgress: [1, 0.4] },
     };
     expect(machineView(moved)?.progress).toBe(0.4);
-    for (const jam of [{ kind: 'line' }, { kind: 'split', parts: 2 }] as const) {
-      expect(machineView({ ...base, stage: { ...base.stage, jam } })?.jammed).toBe(true);
-    }
+    // Story 1.15: a line jam is the only kind; an uneven split is refused, never jammed.
+    const jam = { kind: 'line' } as const;
+    expect(machineView({ ...base, stage: { ...base.stage, jam } })?.jammed).toBe(true);
     expect(machineView({ ...base, stage: { ...base.stage, phase: 'locked' } })?.locked).toBe(true);
   });
 
