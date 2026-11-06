@@ -3,7 +3,8 @@
 // pieces, and the scale draws the list.
 //
 //   + n          a weight of n              + kx      k x-gears (one large gear above 12)
-//   − n          a float of n               − kx      k springs (one large spring above 12)
+//   − n          a float of n               − kx      k springs (one large spring above 12);
+//                                                     every minus is drawn as a balloon (story 1.15)
 //   x : n        one slice of an x-gear cut into n (the GDD's "reducer", story 1.14)
 //   2 · 9, 18 : 2, (3 + 4)   one weight of its value, or one float if subtracted
 //   (x + 4), 2 · (x + 3)     acted out from its toLinear form: gears, then a weight
@@ -215,6 +216,15 @@ export function divisorLabel(divisor: bigint): string {
     .slice(x.length, -one.length)
     .trimStart();
   return `${sign}${formatNumber(divisor)}`;
+}
+
+/**
+ * A label with the school minus in front (story 1.15): every minus is a balloon, so a
+ * spring's balloon shows `−x` or `−27x`. A label that already starts with it is kept.
+ */
+export function minusLabel(label: string): string {
+  const minus = formatNumber(-1).slice(0, -formatNumber(1).length);
+  return label.startsWith(minus) ? label : `${minus}${label}`;
 }
 
 /** What a large gear or spring shows: its count of x, as `27x`. */

@@ -46,7 +46,8 @@ function overlaps(a: { left: number; top: number }, size: Size, head: HeadSpot):
 }
 
 describe("the pin's head in the scene area", () => {
-  it('is where the scene draws it: the fitted scene, at its place on the track', () => {
+  // Story 1.15: the head is the flag's cloth, right of the pole that stands on the place.
+  it('is where the scene draws it: the fitted scene, the cloth beside its place on the track', () => {
     const area = { width: 640, height: 360 };
     const fit = fitScene(area.width, area.height);
     const layout = pinLayout(
@@ -55,7 +56,10 @@ describe("the pin's head in the scene area", () => {
       labelFontSize(fit.scale),
     );
     const head = pinHeadSpot(area, 1, 14, { kind: 'x', slots: 15, slot: 8 });
-    expect(head?.x).toBeCloseTo(fit.x + (layout.originX + 8 * layout.spacing) * fit.scale);
+    expect(layout.headX).toBeGreaterThan(layout.headRadius);
+    expect(head?.x).toBeCloseTo(
+      fit.x + (layout.originX + 8 * layout.spacing + layout.headX) * fit.scale,
+    );
     expect(head?.y).toBeCloseTo(fit.y + layout.headY * fit.scale);
     expect(head?.radius).toBeCloseTo(layout.headRadius * fit.scale);
     expect(head?.centreX).toBeCloseTo(area.width / 2);
@@ -98,17 +102,25 @@ describe('confirmSpot (story 1.14)', () => {
     }
   });
 
-  it("goes on the side away from the dial's centre, so it never covers the other option", () => {
-    const area = { width: 640, height: 360 };
-    const stage = rooms[2]?.stages[1];
-    if (!stage || stage.dial === 'locked') throw new Error('room 3, stage 2');
-    const notches = notchCount(stage.dial);
-    const down = pinHeadSpot(area, 1, notches, { kind: 'choice', slots: 2, slot: 0 });
-    const up = pinHeadSpot(area, 1, notches, { kind: 'choice', slots: 2, slot: 1 });
-    if (!down || !up) throw new Error('no heads');
-    expect(confirmSpot(down, 'choice', area).left + confirmSize.width).toBeLessThan(down.x);
-    expect(confirmSpot(up, 'choice', area).left).toBeGreaterThan(up.x);
-  });
+  // Story 1.15 rewrites 1.14's "away from the dial's centre": the option's word now takes the
+  // outer side, and the places are far enough apart that the control still misses the other.
+  it.each(areas)(
+    "goes toward the dial's centre for a direction pin, clear of the other option and the words, on %s",
+    (_, area) => {
+      const stage = rooms[2]?.stages[1];
+      if (!stage || stage.dial === 'locked') throw new Error('room 3, stage 2');
+      const notches = notchCount(stage.dial);
+      const left = pinHeadSpot(area, 1, notches, { kind: 'choice', slots: 2, slot: 0 });
+      const right = pinHeadSpot(area, 1, notches, { kind: 'choice', slots: 2, slot: 1 });
+      if (!left || !right) throw new Error('no heads');
+      const onLeft = confirmSpot(left, 'choice', area);
+      const onRight = confirmSpot(right, 'choice', area);
+      expect(onLeft.left).toBeGreaterThan(left.x);
+      expect(onLeft.left + confirmSize.width).toBeLessThan(right.x - right.radius);
+      expect(onRight.left + confirmSize.width).toBeLessThan(right.x);
+      expect(onRight.left).toBeGreaterThan(left.x + left.radius);
+    },
+  );
 
   it("goes toward the dial's centre for an x pin, clear of the pans' readouts", () => {
     const area = { width: 640, height: 360 };

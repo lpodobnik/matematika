@@ -21,7 +21,7 @@ import {
   slotOf,
   slotsInReach,
   slotValue,
-  xPanMotion,
+  tiltAsXGrows,
 } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { pinRevealView, scaleView } from '@/room/scale';
@@ -109,7 +109,7 @@ describe('the pin track (Pattern 2, Pin)', () => {
 
   it("has an effect pin's options as its places", () => {
     const track = pinTrack(effectStage);
-    expect(track).toEqual({ kind: 'choice', options: ['pan-down', 'pan-up'] });
+    expect(track).toEqual({ kind: 'choice', options: ['tilt-left', 'tilt-right'] });
     if (!track) return;
     expect(slotCount(track)).toBe(2);
     expect(slotValue(track, 1)).toEqual(choice(1));
@@ -127,7 +127,7 @@ describe('the pin track (Pattern 2, Pin)', () => {
 
   it('places only level-x and effect pins so far; the other kinds arrive with their rooms', () => {
     expect(pinSupported({ kind: 'level-x' })).toBe(true);
-    expect(pinSupported({ kind: 'effect', options: ['pan-up'] })).toBe(true);
+    expect(pinSupported({ kind: 'effect', options: ['tilt-right'] })).toBe(true);
     for (const kind of ['x-hidden', 'wrong-line', 'story-choice', 'next-dot'] as const) {
       expect(pinSupported({ kind })).toBe(false);
       expect(pinTrack({ ...levelStage, pin: { kind } })).toBeNull();
@@ -374,14 +374,22 @@ describe('the machine tests the pin on confirm (Pattern 2, Resolution)', () => {
   });
 });
 
-describe('xPanMotion and pinRight', () => {
-  it('says which way the pan holding x goes as x grows', () => {
-    expect(xPanMotion(equation('20 − x = 6'))).toBe('pan-up');
-    expect(xPanMotion(equation('x − 6 = 8'))).toBe('pan-down');
-    expect(xPanMotion(equation('2x + 5 = 23'))).toBe('pan-down');
-    expect(xPanMotion(equation('6 = 20 − x'))).toBe('pan-up');
-    expect(xPanMotion(equation('23 = 2x + 5'))).toBe('pan-down');
-    expect(xPanMotion(equation('135 − 5x = 100'))).toBe('pan-up');
+describe('tiltAsXGrows and pinRight', () => {
+  // Story 1.15 rewrites 1.14's "which way the pan holding x goes" (pan-down / pan-up): the
+  // direction pin now asks which way the whole scale tilts, toward the side that gets heavier.
+  it('says which way the whole scale tilts as x grows: toward the side x makes heavier', () => {
+    expect(tiltAsXGrows(equation('20 − x = 6'))).toBe('tilt-right');
+    expect(tiltAsXGrows(equation('x − 6 = 8'))).toBe('tilt-left');
+    expect(tiltAsXGrows(equation('2x + 5 = 23'))).toBe('tilt-left');
+    expect(tiltAsXGrows(equation('6 = 20 − x'))).toBe('tilt-left');
+    expect(tiltAsXGrows(equation('23 = 2x + 5'))).toBe('tilt-right');
+    expect(tiltAsXGrows(equation('135 − 5x = 100'))).toBe('tilt-right');
+  });
+
+  it('weighs x on both sides by what is left of it', () => {
+    expect(tiltAsXGrows(equation('3x + 1 = x + 9'))).toBe('tilt-left');
+    expect(tiltAsXGrows(equation('x + 9 = 3x + 1'))).toBe('tilt-right');
+    expect(() => tiltAsXGrows(equation('x + 1 = x + 2'))).toThrow();
   });
 
   it("is right for the stage's solution, or the option that names what x does", () => {
@@ -453,7 +461,7 @@ describe('pinView', () => {
       slots: 2,
       slot: 1,
       label: null,
-      option: 'pan-up',
+      option: 'tilt-right',
     });
   });
 });

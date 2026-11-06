@@ -4,8 +4,8 @@
 // The pans ride on posts above the beam's ends and stay level, so the heavier pan is the
 // lower one: which side is heavier shows by position, never by colour alone (NFR4).
 
-import { tagOverlap } from '@/art/skins/scale';
-import { isNumberPiece } from '@/room/pieces';
+import { balloonDome, balloonPieceHeight, isBalloon, tagOverlap } from '@/art/skins/scale';
+import { isNumberPiece, minusLabel } from '@/room/pieces';
 import type { PieceView } from '@/room/scale';
 import type { Side } from '@/room/types';
 
@@ -96,58 +96,84 @@ export interface PieceSize {
   /** The tag showing `: n` beside the slice, 0 by 0 for none; it is part of `width`. */
   tagWidth: number;
   tagHeight: number;
+  /** A balloon's string, from its knot down to the bottom of its box; 0 for other pieces. */
+  string: number;
 }
 
 /**
- * A float's height, as a multiple of the label size: the arrow, the balloon round its number,
- * and the string that holds it well above the pan (story 1.14).
+ * What a piece shows on it: its label, except that a spring is a balloon taking x off its
+ * pan (story 1.15), so its x carries the school minus, `−x` or `−27x`.
  */
-export const floatHeight = 4;
+export function pieceText(piece: Pick<PieceView, 'kind' | 'label'>): string {
+  return piece.kind === 'spring' ? minusLabel(piece.label) : piece.label;
+}
+
+/**
+ * A balloon's width at the least, as a multiple of the label size: bigger than 1.14's 1.8
+ * (story 1.15), and larger still for a large one standing for more than 12 x…
+ */
+export const balloonWidth = 2.2;
+export const largeBalloonWidth = 2.7;
+/** …its body's height at the least, a little more than its width, so it reads round… */
+export const balloonBodyHeight = 2.5;
+/** …and its string, which holds it off the pan, as multiples of the label size. */
+export const balloonString = 0.5;
 /** A divided gear's diameter, at the least, as a multiple of the label size… */
 export const slicedGearSize = 2.8;
-/** …and a divided spring's cap width and height, which fit its x above its solid layer. */
-export const slicedSpringWidth = 2.4;
-export const slicedSpringHeight = 3.5;
+/** …and a divided balloon's width, which fits its x in the ghost above its solid slice. */
+export const slicedBalloonWidth = 2.6;
 /** A slice's tag: its height as a multiple of the label size. */
 export const tagHeightShare = 1.15;
 
+/** A balloon's body height for its width: a little taller than wide (a large one, rounder). */
+function balloonBody(width: number, fontSize: number, large: boolean): number {
+  return Math.max(fontSize * balloonBodyHeight, width * (large ? 1.05 : 1.12));
+}
+
 /** A piece's size in scene units, large enough for its label with room to spare. */
 export function pieceSize(piece: PieceView, fontSize: number): PieceSize {
-  const text = labelWidth(piece.label, fontSize);
+  const text = labelWidth(pieceText(piece), fontSize);
   const fit = text + fontSize;
-  const none = { slices: 0, tagWidth: 0, tagHeight: 0 };
-  if (isNumberPiece(piece)) {
-    if (piece.kind === 'weight') {
-      return { width: Math.max(fontSize * 2, fit), height: fontSize * 2, ...none };
+  const none = { slices: 0, tagWidth: 0, tagHeight: 0, string: 0 };
+  if (piece.kind === 'weight') {
+    return { width: Math.max(fontSize * 2, fit), height: fontSize * 2, ...none };
+  }
+  const large = !isNumberPiece(piece) && piece.count > 1n;
+  const divided = !isNumberPiece(piece) && piece.divisor !== null && piece.divisorLabel !== null;
+  const string = fontSize * balloonString;
+  if (!divided) {
+    if (piece.kind === 'gear') {
+      const diameter = Math.max(fontSize * (large ? 2.8 : 2), fit);
+      return { width: diameter, height: diameter, ...none };
     }
-    // The balloon is a little narrower than a weight, so it reads round, not squat.
-    const width = Math.max(fontSize * 1.8, text + fontSize * 0.6);
-    return { width, height: fontSize * floatHeight, ...none };
+    // A float or a spring: a balloon round its label (story 1.15).
+    const width = large
+      ? Math.max(fontSize * largeBalloonWidth, fit - fontSize * 0.3)
+      : Math.max(fontSize * balloonWidth, fit - fontSize * 0.2);
+    const height = balloonPieceHeight(balloonBody(width, fontSize, large), string);
+    return { width, height, ...none, string };
   }
-  const large = piece.count > 1n;
-  if (piece.divisor === null || piece.divisorLabel === null) {
-    const diameter = Math.max(fontSize * (large ? 2.8 : 2), fit);
-    return { width: diameter, height: diameter, ...none };
-  }
-  // One slice of n: the whole gear (or cap) is drawn faint around it, with x above the
-  // slice, so it is larger than a small gear. The tag hangs beside it, a quarter over its
+  // One slice of n: the whole gear (or balloon) is drawn faint around it, with x above the
+  // slice, so it is larger than a small one. The tag hangs beside it, a quarter over its
   // faint edge (tagOverlap), leaving the slice in view. The tag's text sits right of its
   // punched hole: 0.24 of its height clear on each side of the text.
+  const divisorText = piece.divisorLabel ?? '';
   const tagHeight = fontSize * tagHeightShare;
-  const tagWidth = tagTextWidth(piece.divisorLabel, fontSize) + tagHeight * 0.48;
+  const tagWidth = tagTextWidth(divisorText, fontSize) + tagHeight * 0.48;
   const beside = tagWidth * (1 - tagOverlap);
   const slices = Number(piece.divisor);
   if (piece.kind === 'gear') {
     const diameter = Math.max(fontSize * slicedGearSize, fit + fontSize * 0.6);
-    return { width: diameter + beside, height: diameter, slices, tagWidth, tagHeight };
+    return { width: diameter + beside, height: diameter, slices, tagWidth, tagHeight, string: 0 };
   }
-  const cap = Math.max(fontSize * slicedSpringWidth, fit + fontSize * 0.3);
+  const body = Math.max(fontSize * slicedBalloonWidth, fit + fontSize * 0.4);
   return {
-    width: cap + beside,
-    height: fontSize * slicedSpringHeight,
+    width: body + beside,
+    height: balloonPieceHeight(balloonBody(body, fontSize, large), string),
     slices,
     tagWidth,
     tagHeight,
+    string,
   };
 }
 
@@ -173,10 +199,93 @@ export interface PieceBox extends PieceSize {
   y: number;
 }
 
+type Sized = Omit<PieceBox, 'x' | 'y'> & { balloon: boolean };
+
+/** Something laid out in a row: one piece, or a bunch of balloons; x from its left edge. */
+interface RowItem {
+  members: { piece: Sized; x: number }[];
+  width: number;
+  height: number;
+}
+
+function single(piece: Sized): RowItem {
+  return { members: [{ piece, x: piece.width / 2 }], width: piece.width, height: piece.height };
+}
+
+/** How far each tier of a bunch rises above the one below: a balloon's dome, centre to top. */
+function tierRise(piece: Sized): number {
+  return balloonDome(piece.height, piece.string);
+}
+
+/**
+ * A bunch of balloons (story 1.15), from the front of a run of them, in `room` across: as
+ * many side by side as fit (at least one), then the rest in tiers above, each nestled in
+ * the gaps of the tier below, as balloons tied together float. Every balloon's box still
+ * stands on the row, its string longer the higher it floats. A bunch never stacks one
+ * balloon right above another: with room for only one, it is just that one. Null when not
+ * even one fits.
+ */
+function bunch(
+  run: readonly Sized[],
+  room: number,
+  gap: number,
+  rowEmpty: boolean,
+): RowItem | null {
+  let count = 0;
+  let width = 0;
+  for (const piece of run) {
+    const next = count === 0 ? piece.width : width + gap + piece.width;
+    if (next > room) break;
+    count += 1;
+    width = next;
+  }
+  if (count === 0) {
+    if (!rowEmpty) return null;
+    return single(run[0] as Sized);
+  }
+  if (count === 1) return single(run[0] as Sized);
+  const ground = run.slice(0, count);
+  const centres: number[] = [];
+  let left = 0;
+  for (const piece of ground) {
+    centres.push(left + piece.width / 2);
+    left += piece.width + gap;
+  }
+  const gaps = centres.slice(1).map((x, i) => (x + (centres[i] ?? 0)) / 2);
+  const rise = Math.max(...run.map(tierRise));
+  const members: RowItem['members'] = [];
+  let tier = 0;
+  let placed = 0;
+  while (placed < run.length) {
+    const spots = tier % 2 === 0 ? centres : gaps;
+    for (const x of spots) {
+      const piece = run[placed];
+      if (!piece) break;
+      const lift = tier * rise;
+      members.push({
+        piece: { ...piece, height: piece.height + lift, string: piece.string + lift },
+        x,
+      });
+      placed += 1;
+    }
+    tier += 1;
+  }
+  const lefts = members.map((m) => m.x - m.piece.width / 2);
+  const shift = Math.min(0, ...lefts);
+  const right = Math.max(...members.map((m) => m.x + m.piece.width / 2));
+  return {
+    members: members.map((m) => ({ ...m, x: m.x - shift })),
+    width: right - shift,
+    height: Math.max(...members.map((m) => m.piece.height)),
+  };
+}
+
 /**
  * Lays pieces out on a pan in the order given: left to right in rows no wider than the
  * pan, each row centred, rows stacked upward. A piece wider than the pan gets a row of
- * its own.
+ * its own. Balloons next to each other are tied in a bunch (story 1.15): side by side
+ * while they fit beside what is already in the row, the rest floating above, nestled
+ * between them, so a pan of balloons stays low.
  */
 export function layoutPan(
   pieces: readonly PieceView[],
@@ -184,33 +293,68 @@ export function layoutPan(
   geometry: ScaleGeometry = scaleGeometry,
 ): PieceBox[] {
   const { panWidth, gap } = geometry;
-  const sized = pieces.map((piece) => ({ key: piece.key, ...pieceSize(piece, fontSize) }));
-  const rows: (typeof sized)[] = [];
-  let row: typeof sized = [];
+  const sized: Sized[] = pieces.map((piece) => ({
+    key: piece.key,
+    balloon: isBalloon(piece.kind),
+    ...pieceSize(piece, fontSize),
+  }));
+  const rows: RowItem[][] = [];
+  let row: RowItem[] = [];
   let rowWidth = 0;
-  for (const piece of sized) {
-    const width = row.length === 0 ? piece.width : rowWidth + gap + piece.width;
-    if (row.length > 0 && width > panWidth) {
-      rows.push(row);
-      row = [piece];
-      rowWidth = piece.width;
-    } else {
-      row.push(piece);
-      rowWidth = width;
+  const place = (item: RowItem) => {
+    rowWidth = row.length === 0 ? item.width : rowWidth + gap + item.width;
+    row.push(item);
+  };
+  const breakRow = () => {
+    rows.push(row);
+    row = [];
+    rowWidth = 0;
+  };
+  let i = 0;
+  while (i < sized.length) {
+    const piece = sized[i] as Sized;
+    const room = row.length === 0 ? panWidth : panWidth - rowWidth - gap;
+    if (!piece.balloon) {
+      if (row.length > 0 && piece.width > room) breakRow();
+      place(single(piece));
+      i += 1;
+      continue;
     }
+    let end = i;
+    while (sized[end]?.balloon) end += 1;
+    const item = bunch(sized.slice(i, end), room, gap, row.length === 0);
+    if (!item) {
+      breakRow();
+      continue;
+    }
+    place(item);
+    i += item.members.length;
   }
   if (row.length > 0) rows.push(row);
 
   const boxes: PieceBox[] = [];
   let bottom = 0;
-  for (const pieceRow of rows) {
-    const width = pieceRow.reduce((sum, p) => sum + p.width, 0) + gap * (pieceRow.length - 1);
+  for (const itemRow of rows) {
+    const width = itemRow.reduce((sum, item) => sum + item.width, 0) + gap * (itemRow.length - 1);
     let left = -width / 2;
-    for (const piece of pieceRow) {
-      boxes.push({ ...piece, x: left + piece.width / 2, y: bottom });
-      left += piece.width + gap;
+    for (const item of itemRow) {
+      for (const { piece, x } of item.members) {
+        const { key, width: w, height, slices, tagWidth, tagHeight, string } = piece;
+        boxes.push({
+          key,
+          width: w,
+          height,
+          slices,
+          tagWidth,
+          tagHeight,
+          string,
+          x: left + x,
+          y: bottom,
+        });
+      }
+      left += item.width + gap;
     }
-    bottom -= Math.max(...pieceRow.map((p) => p.height)) + gap;
+    bottom -= Math.max(...itemRow.map((item) => item.height)) + gap;
   }
   return boxes;
 }

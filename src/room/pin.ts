@@ -188,28 +188,29 @@ export function confirmPin(room: RoomState): RoomStep | null {
 }
 
 /**
- * Which way the pan holding x moves as x grows: down when x pushes it (a gear), up when x
- * lifts it (a spring), as in room 3's `20 − x = 6`. Content tests keep x on one side in
- * every stage with an effect pin.
+ * Which way the whole scale tilts as x grows (story 1.15; it replaces 1.14's "which way the
+ * pan holding x goes"): toward the side that gets heavier as x grows, because that side goes
+ * down. In room 3's `20 − x = 6`, x takes off the left side, so the right side goes down:
+ * `tilt-right`. x may sit on both sides, as long as growing it makes one side heavier;
+ * content tests check every stage with an effect pin.
  */
-export function xPanMotion(equation: Equation): EffectOption {
+export function tiltAsXGrows(equation: Equation): EffectOption {
   const left = toLinear(equation.left);
   const right = toLinear(equation.right);
   assert(left.kind === 'linear' && right.kind === 'linear', 'the pans hold only linear sides');
   // How much more the left side weighs for each unit x grows.
   const change = q.compare(q.sub(left.a, right.a), q.zero);
-  const xOnLeft = !q.isZero(left.a);
-  const goesDown = xOnLeft ? change > 0 : change < 0;
-  return goesDown ? 'pan-down' : 'pan-up';
+  assert(change !== 0, 'growing x tips the scale neither way');
+  return change > 0 ? 'tilt-left' : 'tilt-right';
 }
 
-/** Whether a pin there is right: the stage's solution, or what x really does to its pan. */
+/** Whether a pin there is right: the stage's solution, or the way x really tilts the scale. */
 export function pinRight(stage: StageSpec, machine: number, value: PinValue): boolean {
   const { pin } = stage;
   const equation = machineEquation(stage, machine);
   if (pin?.kind === 'level-x') return value.kind === 'x' && value.x === stageSolution(equation);
   if (pin?.kind === 'effect') {
-    return value.kind === 'choice' && pin.options[value.index] === xPanMotion(equation);
+    return value.kind === 'choice' && pin.options[value.index] === tiltAsXGrows(equation);
   }
   return false;
 }

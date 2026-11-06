@@ -8,6 +8,7 @@ import {
   countLabel,
   divisorLabel,
   isNumberPiece,
+  minusLabel,
   numberLabel,
   numberPieceLabel,
   type Piece,
@@ -284,5 +285,16 @@ describe('labels', () => {
     expect(divisorLabel(12n)).toBe(': 12');
     expect(divisorLabel(1234n)).toBe(': 1\u202f234');
     expect(divisorLabel(9_999_999n ** 2n)).toBe(': 99\u202f999\u202f980\u202f000\u202f001');
+  });
+});
+
+describe('minusLabel (story 1.15)', () => {
+  it('puts the school minus on a balloon\u2019s x, once', () => {
+    expect(minusLabel('x')).toBe('\u2212x');
+    expect(minusLabel('27x')).toBe('\u221227x');
+    expect(minusLabel('\u2212x')).toBe('\u2212x');
+    expect(minusLabel('?')).toBe('\u2212?');
+    // The minus is format.ts's own sign, never a hyphen.
+    expect(minusLabel('x').charCodeAt(0)).toBe(0x2212);
   });
 });

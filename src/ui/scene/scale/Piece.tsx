@@ -9,9 +9,10 @@ import {
 } from 'pixi.js';
 import { useCallback, useMemo } from 'react';
 import { palette } from '@/art/palette';
-import { type PieceShape, scaleSkin } from '@/art/skins/scale';
+import { balloonParts, isBalloon, type PieceShape, scaleSkin } from '@/art/skins/scale';
 import type { PieceView } from '@/room/scale';
-import { grabArea, type PieceBox } from '@/ui/scene/scale/layout';
+import { grabArea, type PieceBox, pieceText } from '@/ui/scene/scale/layout';
+import { useBalloonBob } from '@/ui/scene/scale/use-balloon-bob';
 
 extend({ Container, Graphics, Text });
 
@@ -34,9 +35,11 @@ interface Props {
 }
 
 /**
- * One piece on a pan, with its number drawn as Pixi text (architecture, Text in the scene).
- * Each dial notch gives new piece objects with new labels; the Graphics is redrawn only
- * when the piece's shape changes, never just because its label did.
+ * One piece on a pan or the tray, with its number drawn as Pixi text (architecture, Text in
+ * the scene). Each dial notch gives new piece objects with new labels; the Graphics is
+ * redrawn only when the piece's shape changes, never just because its label did. A float or
+ * spring is a balloon (story 1.15): it bobs gently on its string, its body and labels moved
+ * and its string stretched on the ticker, never redrawn.
  */
 export function Piece({
   piece,
@@ -49,12 +52,16 @@ export function Piece({
 }: Props) {
   const { kind } = piece;
   const large = (piece.kind === 'gear' || piece.kind === 'spring') && piece.count > 1n;
-  const { width, height, slices, tagWidth, tagHeight } = box;
+  const { width, height, slices, tagWidth, tagHeight, string } = box;
   const shape: PieceShape = useMemo(
-    () => ({ kind, width, height, slices, tagWidth, tagHeight, large }),
-    [kind, width, height, slices, tagWidth, tagHeight, large],
+    () => ({ kind, width, height, slices, tagWidth, tagHeight, large, string }),
+    [kind, width, height, slices, tagWidth, tagHeight, large, string],
   );
+  const balloon = isBalloon(kind);
+  const knot = balloon ? balloonParts(shape).knot : 0;
+  const { bodyRef, stringRef } = useBalloonBob(balloon && !hidden, piece.key, knot);
   const draw = useCallback((g: Graphics) => scaleSkin.piece(g, shape), [shape]);
+  const drawString = useCallback((g: Graphics) => scaleSkin.balloonString(g, shape), [shape]);
   const style: TextStyleOptions = useMemo(
     () => ({ fontFamily: 'system-ui, sans-serif', fontSize, fontWeight: '700', fill: palette.ink }),
     [fontSize],
@@ -76,11 +83,18 @@ export function Piece({
       onPointerDown={onGrab ?? undefined}
     >
       <pixiContainer visible={!hidden}>
-        <pixiGraphics draw={draw} />
-        <pixiText text={piece.label} anchor={0.5} x={label.x} y={label.y} style={style} />
-        {piece.divisorLabel !== null && tag !== null && (
-          <pixiText text={piece.divisorLabel} anchor={0.5} x={tag.x} y={tag.y} style={style} />
+        {balloon && (
+          <pixiContainer ref={stringRef}>
+            <pixiGraphics draw={drawString} />
+          </pixiContainer>
         )}
+        <pixiContainer ref={bodyRef}>
+          <pixiGraphics draw={draw} />
+          <pixiText text={pieceText(piece)} anchor={0.5} x={label.x} y={label.y} style={style} />
+          {piece.divisorLabel !== null && tag !== null && (
+            <pixiText text={piece.divisorLabel} anchor={0.5} x={tag.x} y={tag.y} style={style} />
+          )}
+        </pixiContainer>
       </pixiContainer>
     </pixiContainer>
   );

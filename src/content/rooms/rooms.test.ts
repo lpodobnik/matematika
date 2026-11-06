@@ -23,7 +23,7 @@ import { fillBlanks, tokenize } from '@/math/tokens';
 import { dialValue, isOnDial, notchCount } from '@/room/dial';
 import { openingTemplates } from '@/room/fading';
 import { panPieces } from '@/room/pieces';
-import { pinSupported, pinTrack, slotCount, slotValue, xPanMotion } from '@/room/pin';
+import { pinSupported, pinTrack, slotCount, slotValue, tiltAsXGrows } from '@/room/pin';
 import { openingDial } from '@/room/room';
 import { splitOutcome } from '@/room/splitter';
 import { isLevel, sideValues, tiltFor } from '@/room/tilt';
@@ -114,7 +114,7 @@ const gddRooms: readonly {
       { min: 0, max: 20, step: 1 },
     ],
     pokeNotches: [4, undefined],
-    pins: [{ kind: 'level-x' }, { kind: 'effect', options: ['pan-down', 'pan-up'] }],
+    pins: [{ kind: 'level-x' }, { kind: 'effect', options: ['tilt-left', 'tilt-right'] }],
     ways: ['try'],
     earns: 'balance',
   },
@@ -350,15 +350,17 @@ describe('rooms', () => {
       expect(track).toMatchObject({ kind: 'x', min: 6, max: 20, step: 1 });
     });
 
-    it('gives stage 2 no poke window and a direction pin: x is a spring, so its pan goes up', () => {
+    // Story 1.15: the direction pin asks which way the whole scale tilts (it was which way
+    // the pan holding x goes). x is a balloon on the left, so the scale tilts right.
+    it('gives stage 2 no poke window and a direction pin: x lightens the left, so it tilts right', () => {
       expect(second?.pokeNotches).toBeUndefined();
-      expect(second?.pin).toEqual({ kind: 'effect', options: ['pan-down', 'pan-up'] });
+      expect(second?.pin).toEqual({ kind: 'effect', options: ['tilt-left', 'tilt-right'] });
       expect(second?.type).toBe('predict');
       expect(panPieces(stageEquation(second)).left.map((piece) => piece.kind)).toEqual([
         'weight',
         'spring',
       ]);
-      expect(xPanMotion(stageEquation(second))).toBe('pan-up');
+      expect(tiltAsXGrows(stageEquation(second))).toBe('tilt-right');
     });
   });
 
@@ -459,17 +461,17 @@ describe('rooms', () => {
         const answer = stageSolution(stageEquation(stage));
         expect(values).toContainEqual({ kind: 'x', x: answer });
       } else {
-        expect(track.options).toContain(xPanMotion(stageEquation(stage)));
+        expect(track.options).toContain(tiltAsXGrows(stageEquation(stage)));
       }
     });
 
-    it('gives every effect pin option its text, and x on one side only', () => {
+    // Story 1.15: the direction pin asks about the whole scale, so x no longer has to sit on
+    // one side only (1.14 checked that); growing x must tip it one way, and both ways are offered.
+    it('gives every effect pin option its text, and both ways the scale can tilt', () => {
       if (stage.pin?.kind !== 'effect') return;
       for (const option of stage.pin.options) expect(hr.pin.options[option]).toMatch(/\S/);
-      const pieces = panPieces(stageEquation(stage));
-      const holdsX = (side: typeof pieces.left) =>
-        side.some((piece) => piece.kind === 'gear' || piece.kind === 'spring');
-      expect([holdsX(pieces.left), holdsX(pieces.right)].filter(Boolean)).toHaveLength(1);
+      expect([...stage.pin.options].sort()).toEqual(['tilt-left', 'tilt-right']);
+      expect(() => tiltAsXGrows(stageEquation(stage))).not.toThrow();
     });
 
     it("never levels the pans or hits the tilt clamp inside the poke window, so it can't give the answer away", () => {

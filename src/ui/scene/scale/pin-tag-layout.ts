@@ -10,13 +10,16 @@
 //
 //   on the holder   right above the holder, just over the dial's band, with a short string
 //                   from its bottom edge down to the holder's cradle
-//   on the wall     high on the scene's left, right of or below the reset control, hung
+//   on the wall     high on the scene's left (or, failing that, right of the machine: story
+//                   1.15's longer question on a phone), right of or below the reset control, hung
 //                   from a nail, when the pans leave no room above the holder: on a phone,
-//                   and in room 3's second stage, where x is a spring and its pan hangs low
+//                   and in room 3's second stage, where x is a balloon and its pan hangs low
 //
 // Text width is estimated from the number of characters, generously (system-ui runs about
 // 0.39–0.48 em a character for these questions), so the card is never too small.
 
+import { flagBounds, holderParts } from '@/art/skins/pin';
+import { hr } from '@/content/text/hr';
 import { assert } from '@/lib/assert';
 import { dialTurnsIn } from '@/room/dial';
 import { openingPhase } from '@/room/phases';
@@ -33,7 +36,7 @@ import {
   readoutBox,
   scaleGeometry,
 } from '@/ui/scene/scale/layout';
-import { type PinLayout, placeX } from '@/ui/scene/scale/pin-layout';
+import { type PinLayout, placeWord, placeX } from '@/ui/scene/scale/pin-layout';
 
 export const pinTagGeometry = {
   /** NFR4 and the story: the question is at least this big on every supported screen. */
@@ -177,12 +180,18 @@ export function tagObstacles(
     }
   }
   const hit = pin.hitArea;
+  const flag = flagBounds(pin);
   for (let slot = -1; slot < slots; slot += 1) {
-    // Place −1 is the holder, with its cradle a little wider than the head.
+    // Place −1 is the holder, with its bracket left of the flag's pole (story 1.15).
     const x = placeX(pin, slot < 0 ? null : slot);
     boxes.push({ x: x + hit.x, y: hit.y, width: hit.width, height: hit.height });
-    const cradle = pin.headRadius * 1.2;
-    boxes.push(boxOf(x - cradle, pin.headY - cradle, x + cradle, pin.tipY));
+    boxes.push(boxOf(x + flag.left, flag.top, x + flag.right, pin.tipY));
+  }
+  // A direction pin's words over its places (story 1.15).
+  if (stage.pin?.kind === 'effect') {
+    stage.pin.options.forEach((option, slot) => {
+      boxes.push(placeWord(pin, slot, [...hr.pin.options[option]].length));
+    });
   }
   const { pivot, floorY } = scaleGeometry;
   boxes.push(boxOf(0, dialGeometry.top, sceneSize.width, sceneSize.height));
@@ -253,13 +262,10 @@ function placed(
   };
 }
 
-/** The holder's cradle tip, right of the pin's head in it, where the string is tied. */
+/** The top of the holder's bracket, left of the flag's pole in it, where the string is tied. */
 function holderTie(pin: PinLayout): Point {
-  const r = pin.headRadius * 1.2;
-  return {
-    x: pin.holderX + r * Math.cos(Math.PI * 0.15),
-    y: pin.headY + r * Math.sin(Math.PI * 0.15),
-  };
+  const { tie } = holderParts(pin);
+  return { x: pin.holderX + tie.x, y: tie.y };
 }
 
 /**
@@ -294,20 +300,23 @@ function onHolder(
 }
 
 /**
- * The card on the wall, from a nail above its top edge: the clear place highest, then
- * furthest left; or null.
+ * The card on the wall, from a nail above its top edge, in the scene's left or right half:
+ * the clear place highest, then furthest left; or null.
  */
 function onWall(
   card: Card,
   fontSize: number,
   obstacles: readonly Box[],
   gap: number,
+  half: 'left' | 'right',
 ): PinTagLayout | null {
   const step = fontSize / 4;
   const nailDrop = fontSize * 0.6;
   const inset = pinTagGeometry.padding * fontSize;
+  const from = half === 'left' ? pinTagGeometry.margin : sceneSize.width / 2;
+  const to = half === 'left' ? sceneSize.width / 2 : sceneSize.width - pinTagGeometry.margin;
   for (let y = pinTagGeometry.margin + nailDrop; y + card.height <= dialGeometry.top; y += step) {
-    for (let x = pinTagGeometry.margin; x + card.width <= sceneSize.width / 2; x += step) {
+    for (let x = from; x + card.width <= to; x += step) {
       const box = { x, y, width: card.width, height: card.height };
       if (inScene(box) && clearOf(box, obstacles, gap)) {
         const hole = { x: x + card.width / 2, y: y + inset / 2 };
@@ -340,9 +349,13 @@ export function pinTagLayout(
     const layout = onHolder(card, fontSize, pin, obstacles, gap);
     if (layout) return layout;
   }
-  for (const card of cards) {
-    const layout = onWall(card, fontSize, obstacles, gap);
-    if (layout) return layout;
+  // The left half first, near the holder; then (story 1.15's longer level-x question, on a
+  // phone, where the left pan's pieces fill the left wall) right of the machine.
+  for (const half of ['left', 'right'] as const) {
+    for (const card of cards) {
+      const layout = onWall(card, fontSize, obstacles, gap, half);
+      if (layout) return layout;
+    }
   }
   const [widest] = cards as [Card];
   const tie = holderTie(pin);

@@ -90,10 +90,11 @@ export interface StageSpec {
 }
 
 /**
- * What an `effect` pin's options say will happen as x grows: the pan that holds x goes
- * down, or up. They are also the keys of their text in `hr.pin.options`.
+ * What an `effect` pin's options say will happen as x grows (story 1.15): the whole scale
+ * tilts left (its left side goes down), or right. They are also the keys of their text in
+ * `hr.pin.options`.
  */
-export type EffectOption = 'pan-down' | 'pan-up';
+export type EffectOption = 'tilt-left' | 'tilt-right';
 
 export type PinSpec =
   | { kind: 'level-x'; beyondDial?: true } // where it levels

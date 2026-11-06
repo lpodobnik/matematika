@@ -8,6 +8,7 @@ import {
   pinLayout,
   pinWiggle,
   pinWiggleMs,
+  placeWord,
   placeX,
 } from '@/ui/scene/scale/pin-layout';
 
@@ -54,12 +55,45 @@ describe('pinLayout', () => {
     expect(pin.slotPx).toBeGreaterThan(0);
   });
 
-  it("sets a choice pin's two options wide apart, centred under the scale", () => {
+  // Story 1.15: the flag's cloth, not its pole, is what is centred under the scale.
+  it("sets a choice pin's two options wide apart, their cloths centred under the scale", () => {
     const dial = dialLayout(tablet, 20);
     const pin = pinLayout(dial, { kind: 'choice', slots: 2 }, labelFontSize(tablet));
     expect(pin.slotPx).toBeCloseTo(pinGeometry.choiceSpacingPx);
-    expect((placeX(pin, 0) + placeX(pin, 1)) / 2).toBeCloseTo(dialGeometry.centerX);
+    expect((placeX(pin, 0) + placeX(pin, 1)) / 2 + pin.headX).toBeCloseTo(dialGeometry.centerX);
     expect(pin.aligned).toBe(false);
+  });
+
+  it("sets a choice pin's words beside its flags, on the outer sides, clear of the stand", () => {
+    for (const scale of [tablet, phone]) {
+      const dial = dialLayout(scale, 20);
+      const pin = pinLayout(dial, { kind: 'choice', slots: 2 }, labelFontSize(scale));
+      const [left, right] = [placeWord(pin, 0, 6), placeWord(pin, 1, 5)];
+      if (!left || !right) throw new Error('no words');
+      for (const word of [left, right]) {
+        expect(word.height * scale).toBeGreaterThanOrEqual(20);
+        // Level with the cloth, above the knob.
+        expect(word.y + word.height / 2).toBeCloseTo(pin.headY);
+        expect(word.y + word.height).toBeLessThan(dial.trackY - dial.knob.height / 2);
+        expect(word.x).toBeGreaterThanOrEqual(0);
+        expect(word.x + word.width).toBeLessThanOrEqual(sceneSize.width);
+      }
+      // Left of the left flag's pole, right of the right flag's cloth.
+      expect(left.x + left.width).toBeLessThan(placeX(pin, 0));
+      expect(right.x).toBeGreaterThan(placeX(pin, 1) + pin.headX + pin.headRadius);
+      // Clear of the holder, left of the first place.
+      expect(left.x).toBeGreaterThan(placeX(pin, null) + pin.headX + pin.headRadius);
+      // The words and the flags' cloths are clear of the stand's foot, 320 wide under the pivot.
+      const foot = { left: scaleGeometry.pivot.x - 160, right: scaleGeometry.pivot.x + 160 };
+      expect(left.x + left.width).toBeLessThan(foot.left);
+      expect(right.x).toBeGreaterThan(foot.right);
+      expect(placeX(pin, 0) + pin.headX + pin.headRadius).toBeLessThan(foot.left);
+      expect(placeX(pin, 1) + pin.headX - pin.headRadius).toBeGreaterThan(foot.right);
+      // The holder's bracket stays in the scene.
+      expect(placeX(pin, null) - pin.headRadius * 0.55 - pin.lineWidth * 2).toBeGreaterThanOrEqual(
+        0,
+      );
+    }
   });
 
   it('keeps the holder left of the first place, clear of it, inside the scene', () => {
@@ -71,7 +105,7 @@ describe('pinLayout', () => {
         const pin = pinLayout(dialLayout(scale, 14), view, labelFontSize(scale));
         expect(pin.holderPx).toBeLessThanOrEqual(-pinGeometry.holderGapPx);
         expect(placeX(pin, null)).toBeLessThan(placeX(pin, 0));
-        expect(placeX(pin, null) - pin.hitArea.width / 2).toBeGreaterThanOrEqual(-1e-9);
+        expect(placeX(pin, null) + pin.hitArea.x).toBeGreaterThanOrEqual(-1e-9);
       }
     }
   });
@@ -86,9 +120,13 @@ describe('pinLayout', () => {
     }
   });
 
-  it('gives the head a hit area of at least 48 CSS px that stops above the knob', () => {
+  it('gives the flag a hit area of at least 48 CSS px round its cloth that stops above the knob', () => {
     for (const scale of [tablet, phone, smallBeside]) {
       const { dial, pin } = roomThree(scale);
+      // Centred on the cloth, right of the pole (story 1.15).
+      expect(pin.hitArea.x + pin.hitArea.width / 2).toBeCloseTo(pin.headX);
+      expect(pin.hitArea.x).toBeLessThanOrEqual(pin.headX - pin.headRadius);
+      expect(pin.hitArea.x + pin.hitArea.width).toBeGreaterThanOrEqual(pin.headX + pin.headRadius);
       expect(pin.hitArea.width * scale).toBeGreaterThanOrEqual(minHitCssPx - 1e-9);
       expect(pin.hitArea.height * scale).toBeGreaterThanOrEqual(minHitCssPx - 1e-9);
       expect(pin.hitArea.y + pin.hitArea.height).toBeLessThan(dial.trackY - dial.knob.height / 2);
