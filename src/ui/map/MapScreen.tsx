@@ -5,11 +5,12 @@ import type { NodeId } from '@/city/types';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
-import type { RoomId } from '@/room/types';
+import { ideasByRoom } from '@/room/ideas';
+import type { IdeaId, RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { LockBadge, NodeGlyph } from '@/ui/map/glyphs';
 import '@/ui/story/story.css';
-import { StoryLines } from '@/ui/story/StoryLines';
+import { IdeaCards, StoryLines } from '@/ui/story/StoryLines';
 
 const authored = rooms.map((room) => room.id);
 
@@ -27,6 +28,7 @@ export function MapScreen() {
   const started = useGame((s) => s.save.progress.started);
   const fresh = useGame((s) => s.ui.fresh);
   const told = useGame((s) => s.save.progress.told);
+  const seen = useGame((s) => s.save.progress.ideasSeen);
   const name = useGame((s) => s.save.character.name);
   const dispatch = useGame((s) => s.dispatch);
   const view = useMemo(
@@ -42,6 +44,7 @@ export function MapScreen() {
     <MapBoard
       view={view}
       told={told}
+      seen={seen}
       name={name}
       onTravel={(node) => dispatch({ type: 'map/travel', node })}
     />
@@ -52,6 +55,8 @@ interface BoardProps {
   view: MapView;
   /** Rooms whose lines he has been told, in order: the city's log (story 2.5). */
   told?: readonly RoomId[];
+  /** Ideas whose explanation card he has seen (story 2.6). */
+  seen?: readonly IdeaId[];
   name?: string | null;
   onTravel(node: NodeId): void;
   /** For tests: the log starts open. */
@@ -63,7 +68,14 @@ interface BoardProps {
  * screen; roads are drawn in an SVG under it, and each node is a button placed over its
  * spot, at least 56 CSS px, so it stays easy to hit however small the board is.
  */
-export function MapBoard({ view, told = [], name = null, onTravel, logOpen = false }: BoardProps) {
+export function MapBoard({
+  view,
+  told = [],
+  seen = [],
+  name = null,
+  onTravel,
+  logOpen = false,
+}: BoardProps) {
   const [log, setLog] = useState(logOpen);
   return (
     <main className="map">
@@ -98,7 +110,7 @@ export function MapBoard({ view, told = [], name = null, onTravel, logOpen = fal
           </svg>
         </button>
       </div>
-      {log && <CityLog told={told} name={name} onClose={() => setLog(false)} />}
+      {log && <CityLog told={told} seen={seen} name={name} onClose={() => setLog(false)} />}
     </main>
   );
 }
@@ -141,17 +153,21 @@ function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): v
 
 /**
  * The city's log (story 2.5; narrative design, In-Game Storytelling): every line he has
- * been told, room by room in the order he restarted them, to read again.
+ * been told, and every explanation card he has seen, room by room in the order he restarted
+ * them, to read again.
  */
 function CityLog({
   told,
+  seen,
   name,
   onClose,
 }: {
   told: readonly RoomId[];
+  seen: readonly IdeaId[];
   name: string | null;
   onClose(): void;
 }) {
+  const ideas = ideasByRoom(told, seen, rooms);
   return (
     <section className="map__log" aria-label={hr.story.log.open}>
       <div className="map__log-head">
@@ -165,6 +181,7 @@ function CityLog({
         <article key={room} className="map__log-room">
           <h3 className="story__room">{hr.map.nodes[room]}</h3>
           <StoryLines room={room} name={name} />
+          <IdeaCards ideas={ideas.get(room) ?? []} />
         </article>
       ))}
     </section>

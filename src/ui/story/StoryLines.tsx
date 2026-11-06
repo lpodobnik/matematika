@@ -1,5 +1,5 @@
 import { hr } from '@/content/text/hr';
-import type { RoomId } from '@/room/types';
+import type { IdeaId, RoomId } from '@/room/types';
 
 type Rooms = typeof hr.story.rooms;
 type Line = Rooms[keyof Rooms][number];
@@ -29,5 +29,27 @@ export function StoryLines({ room, name }: { room: RoomId; name: string | null }
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Explanation cards (story 2.6, FR34): Nikola asks how, and each card gives the name school
+ * uses for the idea, in one or two sentences.
+ */
+export function IdeaCards({ ideas }: { ideas: readonly IdeaId[] }) {
+  if (ideas.length === 0) return null;
+  return (
+    <div className="story__ideas">
+      <div className="story__item" data-who="nikola">
+        <span className="story__who">{hr.story.speakers.nikola}</span>
+        <p className="story__text">{hr.ideas.ask}</p>
+      </div>
+      {ideas.map((idea) => (
+        <section key={idea} className="story__idea" data-idea={idea}>
+          <p className="story__term">{hr.ideas.cards[idea].term}</p>
+          <p className="story__explain">{hr.ideas.cards[idea].text}</p>
+        </section>
+      ))}
+    </div>
   );
 }

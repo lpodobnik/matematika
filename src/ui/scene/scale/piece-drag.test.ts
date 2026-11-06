@@ -198,6 +198,7 @@ function wiredTray(scale = 0.54) {
           started: [],
           onMap: false,
           told: [],
+          ideasSeen: [],
           tools: ['balance'],
           firstUse: [],
         },

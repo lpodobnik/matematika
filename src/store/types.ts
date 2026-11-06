@@ -4,7 +4,7 @@
 import type { Economy } from '@/economy/types';
 import type { HintState } from '@/room/hint';
 import type { SavedRoom } from '@/room/resume';
-import type { FirstUseId, RoomId, RoomState, ToolId } from '@/room/types';
+import type { FirstUseId, IdeaId, RoomId, RoomState, ToolId } from '@/room/types';
 import type { Character, Settings } from '@/save/schema';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
@@ -88,6 +88,8 @@ export interface SaveState {
     onMap: boolean;
     /** Rooms whose story lines he has seen, in order: the city's log (story 2.5). */
     told: RoomId[];
+    /** Ideas whose explanation card he has seen, in order (story 2.6). */
+    ideasSeen: IdeaId[];
   };
   /**
    * Parts, upgrades and piles (`createEconomy()`). From story 1.14 a right prediction pays

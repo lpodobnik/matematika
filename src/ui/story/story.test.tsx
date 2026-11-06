@@ -4,7 +4,7 @@ import { mapView } from '@/city/reach';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
-import { type RoomId, roomIds } from '@/room/types';
+import { ideaIds, type RoomId, roomIds } from '@/room/types';
 import { MapBoard } from '@/ui/map/MapScreen';
 import { lineText, storyLines } from '@/ui/story/StoryLines';
 import { StoryCard } from '@/ui/story/StoryScreen';
@@ -98,5 +98,41 @@ describe('the story card and the city’s log (story 2.5)', () => {
     expect(html).toContain(lineText(storyLines('r02')[0] as never, 'Ivo'));
     const empty = renderToString(<MapBoard view={view} onTravel={() => undefined} logOpen />);
     expect(empty).toContain(hr.story.log.empty);
+  });
+});
+
+describe('explanation cards (hr.ideas, story 2.6)', () => {
+  it('has a school term and one or two sentences for every idea, none praising him', () => {
+    const c = String.fromCharCode(0x10d);
+    const praise = new RegExp(`bravo|svaka ${c}ast|odli${c}no|super|genij|pametn|tako je`, 'i');
+    for (const idea of ideaIds) {
+      const card = hr.ideas.cards[idea];
+      expect(card.term.length, idea).toBeGreaterThan(0);
+      const sentences = card.text.split(/[.!?](?:\s|$)/).filter((part) => part.trim() !== '');
+      expect(sentences.length, `${idea}: ${card.text}`).toBeLessThanOrEqual(2);
+      expect(card.text.length, idea).toBeLessThanOrEqual(110);
+      expect(card.text, idea).not.toMatch(praise);
+    }
+  });
+
+  it('shows Nikola’s question and the card after the room’s lines, and in the log', () => {
+    const html = renderToString(
+      <StoryCard room="r04" name="Ivo" ideas={['balance', 'split']} onNext={() => undefined} />,
+    );
+    expect(html).toContain(hr.ideas.ask);
+    expect(html).toContain(hr.ideas.cards.balance.term);
+    expect(html).toContain(hr.ideas.cards.split.text);
+    expect(html.indexOf(hr.ideas.ask)).toBeGreaterThan(html.indexOf(hr.story.speakers.penkala));
+    const none = renderToString(<StoryCard room="r04" name="Ivo" onNext={() => undefined} />);
+    expect(none).not.toContain(hr.ideas.ask);
+    const view = mapView(
+      districtMap,
+      { roomsDone: ['r01'], tools: [], started: [], fresh: null },
+      rooms.map((room) => room.id),
+    );
+    const log = renderToString(
+      <MapBoard view={view} told={['r01']} seen={['equal']} onTravel={() => undefined} logOpen />,
+    );
+    expect(log).toContain(hr.ideas.cards.equal.term);
   });
 });

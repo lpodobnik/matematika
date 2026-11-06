@@ -7,7 +7,7 @@
 import type { LookId } from '@/city/character';
 import type { Economy } from '@/economy/types';
 import type { SavedRoom } from '@/room/resume';
-import type { FirstUseId, RoomId, ToolId } from '@/room/types';
+import type { FirstUseId, IdeaId, RoomId, ToolId } from '@/room/types';
 
 export const saveKey = 'matematika:save';
 
@@ -53,6 +53,8 @@ export interface SaveProgress {
    * finished but not yet here tells its lines before anything else.
    */
   told: RoomId[];
+  /** Ideas whose explanation card he has seen, in that order (story 2.6). */
+  ideasSeen: IdeaId[];
 }
 
 export interface SaveV1 {

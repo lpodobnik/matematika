@@ -14,6 +14,7 @@ import { setDial } from '@/room/dial';
 import { meetControls } from '@/room/first-use';
 import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } from '@/room/handover';
 import { type HintAction, hintAfter } from '@/room/hint';
+import { newIdeas } from '@/room/ideas';
 import { deleteToken, enterLine, typeToken, withoutRefusal } from '@/room/notebook';
 import {
   finishPresentation,
@@ -512,11 +513,23 @@ function owed(save: SaveState): 'story' | 'naming' | null {
 }
 
 /** A story card's "Dalje" (story 2.5): the first finished room not yet told is told. */
-function withTold(state: GameState, action: Action, save: SaveState): SaveState {
+function withTold(
+  state: GameState,
+  action: Action,
+  save: SaveState,
+  roomList: readonly RoomSpec[],
+): SaveState {
   if (action.type !== 'story/next' || state.ui.screen !== 'story') return save;
   const { roomsDone, told } = save.progress;
   const room = roomsDone.find((id) => !told.includes(id));
-  return room ? { ...save, progress: { ...save.progress, told: [...told, room] } } : save;
+  if (!room) return save;
+  // Its explanation cards are seen with it (story 2.6).
+  const { ideasSeen } = save.progress;
+  const fresh = newIdeas(roomList.find((spec) => spec.id === room)?.ideas ?? [], ideasSeen);
+  return {
+    ...save,
+    progress: { ...save.progress, told: [...told, room], ideasSeen: [...ideasSeen, ...fresh] },
+  };
 }
 
 /**
@@ -581,7 +594,7 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
     const character = namedCharacter(state, action);
     const saved = saveBefore(state.save, action, ctx.now);
-    const before = withTold(state, action, character ? { ...saved, character } : saved);
+    const before = withTold(state, action, character ? { ...saved, character } : saved, roomList);
     const change = withRefusalDown(
       withToolMemory(roomStep(state, action, ctx.now, roomList, before), before),
       state.room,

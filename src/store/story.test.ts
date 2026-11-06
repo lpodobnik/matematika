@@ -175,3 +175,19 @@ describe('the story card (story 2.5)', () => {
     expect(g.store.getState().room?.spec.id).toBe('r01');
   });
 });
+
+describe('explanation cards with the story card (story 2.6)', () => {
+  it('marks a room’s ideas seen when its card is told, and never explains one twice', () => {
+    const g = game();
+    g.playRoomOne();
+    g.act({ type: 'story/next' });
+    expect(g.store.getState().save.progress.ideasSeen).toEqual(['equal']);
+    g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
+    g.playRoomTwo();
+    g.act({ type: 'story/next' });
+    expect(g.store.getState().save.progress.ideasSeen).toEqual(['equal', 'notch']);
+    // Replaying room 1 tells nothing again, and explains nothing again.
+    const state = reload(g.store.getState());
+    expect(state.save.progress.ideasSeen).toEqual(['equal', 'notch']);
+  });
+});

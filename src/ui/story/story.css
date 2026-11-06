@@ -7,8 +7,16 @@
   align-items: center;
   justify-content: center;
   padding: 12px;
+  overflow-y: auto;
   background: var(--table);
   color: var(--ink);
+}
+
+/* Safe: a card taller than the screen scrolls from its top, never cut off above. */
+@supports (align-items: safe center) {
+  .story {
+    align-items: safe center;
+  }
 }
 
 .story__card {
@@ -96,17 +104,108 @@
   touch-action: manipulation;
 }
 
+.story__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 @media (max-height: 499.98px) {
   .story {
     padding: 6px;
+  }
+
+  .story__lines {
+    gap: 6px;
+  }
+
+  /* A phone in landscape: the lines and the explanation cards side by side. */
+  .story__body {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  /* With cards: the lines and Dalje on the left, the cards on the right. */
+  .story__body:has(.story__ideas) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 8px 10px;
+  }
+
+  .story__body:has(.story__ideas) > .story__lines {
+    grid-area: 1 / 1;
+  }
+
+  .story__body:has(.story__ideas) > .story__ideas {
+    grid-area: 1 / 2 / 3 / 3;
+  }
+
+  .story__body:has(.story__ideas) > .story__next {
+    grid-area: 2 / 1;
+    align-self: end;
+    justify-self: end;
+  }
+
+  .story__body > * {
+    flex: 1 1 0;
+  }
+
+  .story__card {
+    width: min(100%, 900px);
+  }
+
+  /* Tighter on a short screen, so the whole card and Dalje fit without scrolling. */
+  .story__text {
+    padding: 5px 12px;
+    font-size: 15px;
+  }
+
+  .story__idea {
+    padding: 6px 10px;
+  }
+
+  .story__term {
+    font-size: 14px;
+  }
+
+  .story__explain {
+    font-size: 13px;
+  }
+
+  .story__room,
+  .story__who {
+    font-size: 12px;
   }
 
   .story__card {
     gap: 8px;
     padding: 12px 16px;
   }
+}
 
-  .story__lines {
-    gap: 6px;
-  }
+/* Story 2.6: an explanation card, the school term above its one or two sentences. */
+.story__ideas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.story__idea {
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-left-width: 8px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.story__term {
+  margin: 0 0 2px;
+  font-weight: 700;
+  font-size: clamp(15px, 1.9vw, 21px);
+}
+
+.story__explain {
+  margin: 0;
+  font-size: clamp(14px, 1.9vw, 20px);
 }

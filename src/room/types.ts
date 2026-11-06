@@ -43,6 +43,22 @@ export type MachineId =
 
 export type Side = 'left' | 'right';
 export const toolIds = ['balance', 'workshop', 'chain', 'drum'] as const;
+
+/**
+ * The ideas of rooms 1-7 that an explanation card names as school does (story 2.6): level
+ * means equal, the same step per notch, a prediction, Balance, a split, judging without
+ * adding, and finding a mistake.
+ */
+export const ideaIds = [
+  'equal',
+  'notch',
+  'prediction',
+  'balance',
+  'split',
+  'compare',
+  'mistake',
+] as const;
+export type IdeaId = (typeof ideaIds)[number];
 export type ToolId = (typeof toolIds)[number];
 export const wayIds = ['try', 'balance', 'undo'] as const;
 export type WayId = (typeof wayIds)[number];
@@ -56,6 +72,11 @@ export interface RoomSpec {
   xMeaning: string;
   stages: StageSpec[];
   earns: ToolId | null;
+  /**
+   * The ideas this room uses (story 2.6, FR34): the first room he finishes with an idea
+   * explains it, on its story card. None for built and friends' rooms.
+   */
+  ideas?: readonly IdeaId[];
   /** Null for built and friends' rooms. */
   mapChange: string | null;
 }

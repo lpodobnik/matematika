@@ -172,6 +172,7 @@ describe('a new game from the dev panel', () => {
       started: [],
       onMap: false,
       told: [],
+      ideasSeen: [],
     });
     expect(state.save.settings).toEqual({ muted: true, quality: 'medium' });
     expect(g.written.at(-1)?.progress.room?.id).toBe('r01');

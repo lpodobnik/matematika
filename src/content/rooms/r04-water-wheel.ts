@@ -28,5 +28,6 @@ export const r04: RoomSpec = {
     },
   ],
   earns: null,
+  ideas: ['balance', 'split'],
   mapChange: 'water-wheel-turns',
 };

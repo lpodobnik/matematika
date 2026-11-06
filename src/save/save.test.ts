@@ -33,6 +33,7 @@ const sample: SaveV1 = {
     started: [],
     onMap: false,
     told: [],
+    ideasSeen: [],
     firstUse: ['pin', 'handover-dial'],
     room: {
       id: 'r03',
@@ -68,6 +69,7 @@ describe('decodeSave', () => {
         started: [],
         onMap: false,
         told: [],
+        ideasSeen: [],
       },
       economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {} },
       settings: { muted: false, quality: null },
@@ -127,6 +129,13 @@ describe('decodeSave', () => {
     expect(decoded?.character).toEqual({ name: 'a'.repeat(16), look: 'look-3' });
     const odd = decodeSave({ v: 1, character: { name: '   ', look: 'look-9' } }, now);
     expect(odd?.character).toEqual({ name: null, look: null });
+  });
+
+  it('counts the told rooms’ ideas as seen in a save from before story 2.6', () => {
+    const decoded = decodeSave({ v: 1, progress: { told: ['r01', 'r02', 'r03'] } }, now);
+    expect(decoded?.progress.ideasSeen).toEqual(['equal', 'notch', 'prediction']);
+    const after = decodeSave({ v: 1, progress: { told: ['r01'], ideasSeen: [] } }, now);
+    expect(after?.progress.ideasSeen).toEqual([]);
   });
 
   it('refuses only a value that isn’t an object', () => {

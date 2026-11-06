@@ -14,6 +14,7 @@ const save: SaveV1 = {
     started: [],
     onMap: false,
     told: [],
+    ideasSeen: [],
     firstUse: [],
     room: { id: 'r02', stage: 0, lines: [], pin: null, splitterSeen: false },
   },

@@ -776,6 +776,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
             started: [],
             onMap: false,
             told: [],
+            ideasSeen: [],
             tools: ['balance'],
             firstUse,
           },
@@ -935,6 +936,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
       started: [],
       onMap: false,
       told: [],
+      ideasSeen: [],
       tools: ['balance'],
       firstUse: [],
     });
@@ -947,6 +949,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
       started: [],
       onMap: false,
       told: [],
+      ideasSeen: [],
       tools: ['balance'],
       firstUse: ['tray'],
     });
@@ -981,6 +984,7 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
             started: [],
             onMap: false,
             told: [],
+            ideasSeen: [],
             tools: ['balance'],
             firstUse: ['pin', 'tray'],
           },

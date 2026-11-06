@@ -7,14 +7,18 @@
 
 import { cleanName, isLookId } from '@/city/character';
 import { LAIR_ORDER } from '@/content/lairs';
+import { rooms } from '@/content/rooms';
 import { createEconomy } from '@/economy/parts';
 import type { Economy } from '@/economy/types';
 import { UPGRADE_IDS } from '@/economy/upgrades';
 import type { LairId } from '@/fight/types';
+import { ideasByRoom } from '@/room/ideas';
 import { isRoomId, type SavedLine, type SavedRoom } from '@/room/resume';
 import {
   type FirstUseId,
   handoverIds,
+  type IdeaId,
+  ideaIds,
   type PinValue,
   type ToolId,
   toolIds,
@@ -68,6 +72,7 @@ const firstUseIds: readonly FirstUseId[] = [
 
 const isTool = inList<ToolId>(toolIds);
 const isFirstUse = inList<FirstUseId>(firstUseIds);
+const isIdea = inList<IdeaId>(ideaIds);
 const isUpgrade = inList(UPGRADE_IDS);
 const isLair = inList<LairId>(LAIR_ORDER);
 const isQuality = inList<QualityPick>(qualityPicks);
@@ -169,6 +174,15 @@ function decodeCharacter(value: unknown): Character {
   return { name, look: isLookId(value.look) ? value.look : null };
 }
 
+/**
+ * A save from before story 2.6 has no `ideasSeen`: the ideas of the rooms it has told
+ * count as seen, as they would have been on their cards, so the log shows them.
+ */
+function toldIdeas(told: readonly string[]): IdeaId[] {
+  const all = rooms.flatMap((room) => room.ideas ?? []);
+  return [...ideasByRoom(told, all, rooms).values()].flat();
+}
+
 function decodeSettings(value: unknown): Settings {
   if (!isObject(value)) return { muted: false, quality: null };
   const { muted, quality } = value;
@@ -198,6 +212,9 @@ export function decodeSave(value: unknown, now: string): SaveV1 | null {
       started: decodeStarted(progress.started),
       onMap: progress.onMap === true,
       told: known(progress.told, isRoomId),
+      ideasSeen: Array.isArray(progress.ideasSeen)
+        ? known(progress.ideasSeen, isIdea)
+        : toldIdeas(known(progress.told, isRoomId)),
     },
     economy: decodeEconomy(value.economy),
     settings: decodeSettings(value.settings),

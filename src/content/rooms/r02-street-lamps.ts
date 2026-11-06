@@ -29,5 +29,6 @@ export const r02: RoomSpec = {
     },
   ],
   earns: null,
+  ideas: ['notch'],
   mapChange: 'street-lamps-light',
 };

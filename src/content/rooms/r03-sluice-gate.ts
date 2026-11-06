@@ -32,5 +32,6 @@ export const r03: RoomSpec = {
     },
   ],
   earns: 'balance',
+  ideas: ['prediction'],
   mapChange: 'sluice-gate-releases',
 };

@@ -16,5 +16,6 @@ export const r01: RoomSpec = {
     },
   ],
   earns: null,
+  ideas: ['equal'],
   mapChange: 'door-lift-opens',
 };

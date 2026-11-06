@@ -83,11 +83,11 @@ export const hr = {
           who: 'penkala',
           text: (name: string) => `Svjetiljke gore. Čista sreća, ${name}. Ništa drugo.`,
         },
-        { who: 'nikola', text: 'Sreća? A kako svjetiljka zna koliko treba?' },
+        { who: 'nikola', text: 'Sreća? Meni ne izgleda kao sreća.' },
       ],
       r03: [
-        { who: 'nikola', text: 'Voda teče! A tko je ono gore, kod stupa?' },
-        { who: 'penkala', text: 'Automat. Skida dijelove sa svjetiljke. Prema Knjizi, smije.' },
+        { who: 'nikola', text: 'Gle, automat kod stupa! Skida dijelove sa svjetiljke.' },
+        { who: 'penkala', text: 'Prema Knjizi, smije. A voda teče, to je glavno.' },
       ],
       r04: [
         { who: 'nikola', text: 'Cijela ulica je vani. Svi gledaju kolo.' },
@@ -114,6 +114,44 @@ export const hr = {
       open: 'Dnevnik grada',
       close: 'Zatvori',
       empty: 'Još se ništa nije pokrenulo.',
+    },
+  },
+  /**
+   * Explanation cards (story 2.6, FR34): the first time a room uses an idea, Nikola asks how,
+   * and a card of one or two sentences gives the name school uses. Never praise (NFR13), and
+   * no gendered past tense about him.
+   */
+  ideas: {
+    ask: 'Kako to radi?',
+    cards: {
+      equal: {
+        term: 'Jednadžba',
+        text: 'Kad je vaga ravna, obje strane teže jednako. U jednadžbi to označava znak =.',
+      },
+      notch: {
+        term: 'Umnožak',
+        text: 'Svaki pomak klizača dodaje jednako: kad x naraste za 1, 3x naraste za 3, jer je 3x tri puta x.',
+      },
+      prediction: {
+        term: 'Procjena i provjera',
+        text: 'Zastavica je procjena: prvo pokušaš pogoditi, a stroj provjeri. U školi rješenje uvrstiš u jednadžbu.',
+      },
+      balance: {
+        term: 'Isto na obje strane',
+        text: 'Kad objema stranama dodaš ili oduzmeš isti broj, vaga ostaje ravna. Tako se rješava jednadžba.',
+      },
+      split: {
+        term: 'Dijeljenje obiju strana',
+        text: 'Kad obje strane podijeliš istim brojem, jednakost ostaje. Iz 2x = 18 dobiješ x = 9.',
+      },
+      compare: {
+        term: 'Usporedba',
+        text: 'Jednakost se ponekad vidi bez računanja: usporediš ono što se razlikuje.',
+      },
+      mistake: {
+        term: 'Traženje pogreške',
+        text: 'Uvrsti rješenje: točan redak ostaje u ravnoteži, a krivi nagne vagu. 3x je tri puta x, a ne 3 + x.',
+      },
     },
   },
   /** Story 2.2: the city map. Place names are placeholders until the final text (epic 6). */
