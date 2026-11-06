@@ -707,6 +707,27 @@ So that I can play rooms 1–4 without my dad explaining them.
 **Given** the pieces
 **Then** gears show `x`, the slider shows `x = 9`, every minus is a bobbing balloon, the pin is a flag, and the direction pin asks whether the scale tilts lijevo or desno
 
+### Story 1.16: One x, a goal and a hint button
+
+As Luka's son,
+I want one x I can trust, a picture of what I'm aiming for and a button that shows me the next step,
+So that I can solve room 4 by simplifying, not by guessing, and never get stuck.
+
+**Covers:** Luka's play of room 4 (2026-11-06); the GDD's Balance and Player Assistance. Full criteria are in `_bmad-output/implementation-artifacts/1-16-one-x-a-goal-and-a-hint-button.md`.
+
+**Acceptance Criteria:**
+
+**Given** any line or Balance move
+**Then** the pans are weighed at the slider's x, so simplifying at a wrong x stays out of balance
+
+**Given** room 4 (Balance only, no pin)
+**When** he answers `x = 9` before a line with x alone
+**Then** it is refused with "Prvo pojednostavi vagu."; once x is alone, `x = ☐` and the check template appear as blanks
+
+**Given** the hint button
+**When** he presses it once, then again
+**Then** it shows the current step's tag, then the exact next move as a ghost or a pulsing line
+
 ## Epic 2: The city
 
 Turn separate rooms into a world he wants to return to. **Stories are detailed with this workflow before the epic starts.** From the GDD:
@@ -781,7 +802,7 @@ Make it hold up against Zelda on first contact. **Stories are detailed before th
 ## Calls Open to Veto
 
 - **Only epic 1 is broken down now.** Epics 2–6 are detailed before each one starts, because playing epic 1 may change them.
-- **Epic 1 has 15 stories**: 13 splitting the GDD's 8, so each fits one developer session, plus 1.14 and 1.15 from the first playtests.
+- **Epic 1 has 16 stories**: 13 splitting the GDD's 8, so each fits one developer session, plus 1.14–1.16 from the first playtests.
 - **Acting out shows `?` on the gears** and never moves the dial, so a written line can't reveal x.
 - **The tray holds weights and floats only**, numbered 1–99, and numbers on a pan combine after each drop, so `2x + 5 = 23` becomes `2x = 18` in two drops.
 - **Reset restarts the current stage**, not the whole room (GDD updated).

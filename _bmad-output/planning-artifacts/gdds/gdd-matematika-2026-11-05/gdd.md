@@ -142,7 +142,7 @@ All three are free to try and reversible until he writes. Any correct method is 
 | Way | Machine | Move | Written, for `2x + 7 = 25` |
 |---|---|---|---|
 | Try values | x dial | Drag until the pans level. | `x = 9` |
-| Balance | Pans | Every move acts on both sides at once, because you may only do on the left what you do on the right. A weight or balloon from the tray, dropped on the scale, lands on both sides; a number dragged off one side comes off both; the splitter, set to n, divides both sides into n equal groups and keeps one. While he uses Balance the gears hide their value and the scale is weighed at the true x, so it stays level; the skill is choosing the move that leaves x alone. Each move writes its lines (`2x + 5 − 5 = 23 − 5`, `2x = 18`); he writes `x = 9` himself. A split that doesn't divide evenly is refused. | `2x = 18`, `x = 9` |
+| Balance | Pans | Every move acts on both sides at once, because you may only do on the left what you do on the right. A weight or balloon from the tray, dropped on the scale, lands on both sides; a number dragged off one side comes off both; the splitter, set to n, divides both sides into n equal groups and keeps one. There is only one x, the slider's: the scale keeps weighing at it, so at a wrong x it stays out of balance through every move (at 6: 17 vs 23, 12 vs 18, 6 vs 9), and no move can fake a solution. A goal card beside the scale (`Cilj: x sam`) shows the target, one x alone against a number, and lights when the pans match it. Each move writes its lines (`2x + 5 − 5 = 23 − 5`, `2x = 18`); he writes `x = 9` himself, and in a room whose only way is Balance it is accepted only after a line with x alone against a number ("Prvo pojednostavi vagu."). A split that doesn't divide evenly is refused. | `2x = 18`, `x = 9` |
 | Undo | Gear chain | Run the chain backward, one link at a time. | `2x = 25 − 7`, `2x = 18`, `x = 18 : 2`, `x = 9` |
 
 Each ends with the check line.
@@ -165,8 +165,8 @@ Each ends with the check line.
 
 | Way | Lines appear as he moves; he writes the last two | He fills in blanks (`2x = ☐`) | Blank page |
 |---|---|---|---|
-| Try values | None | Rooms 1–3 | From room 4 |
-| Balance | Rooms 4–5 | Rooms 6–7 | From room 8 |
+| Try values | None | Rooms 1–3 | From room 5 |
+| Balance | Rooms 4–5, with the last two as blanks (`x = ☐`, then the check) once x is alone | Rooms 6–7 | From room 8 |
 | Undo | Room 8 | Room 9 | From room 10 |
 
 #### Automaton fights
@@ -285,7 +285,7 @@ Room types carry the four understanding tasks from the brief:
 | 1 | 0–10 | None | None | Try values |
 | 2 | 0–10, then 0–30 in 3s | None | None | Try values |
 | 3 | 6–20, then 0–20 | First 4 notches, then none | Where it levels, then which way the pan moves as x grows | Try values |
-| 4 | 0–6 | First 4 notches | Where it levels, beyond the dial | Balance |
+| 4 | 0–6 | None | None: room 4 introduces only Balance | Balance |
 | 5 | 0–10 | First 4 notches | Where it levels, then where it levels after the change | Try values, Balance |
 | 6 | 20–40 | None | x, with readouts hidden | Try values, Balance |
 | 7 | Locked | None | The wrong line | Balance |
@@ -323,7 +323,7 @@ Room types carry the four understanding tasks from the brief:
 
 ### Player Assistance
 
-No instructions appear before a room. During a room, a short tag tells him the next step the first time each step comes up: move the slider, write x when the scale levels, the check line, the pin, the tray, keeping x alone, the splitter. It goes as soon as he does the step and comes back after 60 seconds without acting. His first play (2026-11-06) showed he stops at every handover without it. Help arrives when he goes 60 seconds without acting or jams the machine 3 times in a row. It is free and never recorded.
+No instructions appear before a room. During a room, a short tag tells him the next step the first time each step comes up: move the slider, write x when the scale levels, the check line, the pin, the tray, keeping x alone, the splitter. It goes as soon as he does the step and comes back after 60 seconds without acting. His first play (2026-11-06) showed he stops at every handover without it. A hint button (`?`, under the reset control) is always there: the first press shows the current step's tag, the second shows the exact next move (a ghost piece gliding from the tray to the scale, the splitter gliding over, the slider's direction, or the line to write). Hints are free and never recorded. Help arrives when he goes 60 seconds without acting or jams the machine 3 times in a row. It is free and never recorded.
 
 | Level | Help |
 |---|---|

@@ -90,3 +90,10 @@ Every decision, change and version transition for this GDD.
   - One-time handover tags tell him each next step.
   - The tray, then the splitter, appear one at a time.
   - Claude's call: zastavica rather than Luka's "hvataljka", because the dial's stop is already drawn as a clamp.
+- **From Luka's play of room 4 after story 1.15, 2026-11-06 (story 1.16), agreed by Luka:** the slider sat at 6 while Balance weighed the true x and the slider said "x = ?". That was two x's at once. Typing `x = 9` without simplifying also finished the room. Changes:
+  - **One x, the slider's:** the scale is always weighed at it, so simplifying at a wrong x stays out of balance. The true-x view and `x = ?` are removed.
+  - **Simplify first:** in a Balance-only room, `x = n` needs a line with x alone first.
+  - **Goal card:** `Cilj: x sam` shows the target and lights when the pans match it.
+  - **Hint button:** the first press shows the step, the second shows the exact next move.
+  - **Room 4 changes:** it loses its pin (testing it handed over the answer, so the pin beyond the dial waits for room 8), and it keeps blanks for its last two lines.
+  - Try values reaches a blank page from room 5.
