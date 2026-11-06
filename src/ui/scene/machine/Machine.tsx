@@ -3,10 +3,13 @@ import { animate } from 'motion';
 import { Container, Graphics } from 'pixi.js';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { effectsAt } from '@/art/quality';
 import { machineSkin } from '@/art/skins/machine';
 import { machineView } from '@/room/machine';
 import { presentationView } from '@/room/phases';
+import { qualityInUse } from '@/store/quality';
 import { useGame } from '@/store/store';
+import { Steam } from '@/ui/scene/effects/Steam';
 import {
   doorLift,
   joltMs,
@@ -16,6 +19,7 @@ import {
   lampLightMs,
   lampPositions,
   machineGeometry,
+  machineSteam,
   presentationMs,
   pulleyPositions,
   pulleyTurnMs,
@@ -32,6 +36,7 @@ const pulleys = pulleyPositions();
  * The room's machine (placeholder skin): its door rises with the machine's progress, a
  * wedge and steam show when it jams, a lamp for each stage lights when that stage locks,
  * and when the room's last stage locks the whole machine runs: its pulleys turn and it hums.
+ * Steam rises from its vent while the quality setting keeps particles (story 1.12).
  * It is the only thing that shows success: there are no stars, scores or "correct" screens
  * (NFR13). What it shows comes from `machineView` and `presentationView`; everything moves
  * through refs, frame by frame, without React renders.
@@ -44,6 +49,7 @@ export function Machine() {
   const view = useGame(useShallow((s) => machineView(s.room)));
   const playing = useGame(useShallow((s) => presentationView(s.room)));
   const dispatch = useGame((s) => s.dispatch);
+  const steams = useGame((s) => effectsAt(qualityInUse(s.ui.quality)).particles);
   const present = view !== null;
   const progress = view?.progress ?? 0;
   const jammed = view?.jammed ?? false;
@@ -145,11 +151,15 @@ export function Machine() {
   const drawDoor = useCallback((g: Graphics) => machineSkin.door(g, shape), []);
   const drawMask = useCallback((g: Graphics) => machineSkin.mask(g, shape), []);
   const drawJam = useCallback((g: Graphics) => machineSkin.jam(g, shape), []);
+  const drawVent = useCallback((g: Graphics) => machineSkin.vent(g, shape), []);
 
   if (!present) return null;
   return (
     <pixiContainer x={machineGeometry.x} y={machineGeometry.y}>
+      {/* Behind the body, and outside it, so puffs already out don't shake with a jam. */}
+      {steams && <Steam spec={machineSteam} />}
       <pixiContainer ref={bodyRef}>
+        <pixiGraphics draw={drawVent} />
         <pixiGraphics draw={drawOpening} />
         <pixiGraphics ref={maskRef} draw={drawMask} />
         <pixiContainer ref={doorRef}>

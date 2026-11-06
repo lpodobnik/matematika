@@ -23,13 +23,14 @@ import { dropOnPan, stepTray, takeOffPan } from '@/room/tray';
 import type { RoomSpec, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
+import { initialQuality, reduceQuality } from '@/store/quality';
 import type { GameState, Reduce, SaveState } from '@/store/types';
 
 export function initialGameState(): GameState {
   return {
     save: { progress: { tools: [], firstUse: [] } },
     room: null,
-    ui: { screen: 'room', notebookAside: false },
+    ui: { screen: 'room', notebookAside: false, quality: initialQuality },
   };
 }
 
@@ -102,6 +103,8 @@ function roomStep(
     case 'notebook/enter':
       return enterLine(room, now);
     case 'notebook/slide':
+    case 'quality/measured':
+    case 'quality/force':
       return null;
     case 'dev/set-tools':
       // The room is unchanged, but what it offers may not be (the tray and the splitter), so
@@ -156,6 +159,9 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
       if (save !== state.save) draft.save = castDraft(save);
       if (action.type === 'room/enter') draft.ui.screen = 'room';
       if (action.type === 'notebook/slide') draft.ui.notebookAside = action.aside;
+      if (action.type === 'quality/measured' || action.type === 'quality/force') {
+        draft.ui.quality = reduceQuality(state.ui.quality, action);
+      }
     });
     return { state: next, events };
   };

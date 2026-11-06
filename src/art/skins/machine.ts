@@ -9,6 +9,7 @@
 //   lampLight  a lit lamp's flame and rays: shape as well as colour (NFR4)
 //   door       a panel of planks, drawn from its top edge down
 //   jam        a wedge driven in beside the door and steam lines: shape as well as colour (NFR4)
+//   vent       a pipe out of the housing's left end, turning up, where the steam effect rises
 //
 // The machine is drawn with its origin at the opening's top-left corner; a pulley and a
 // lamp with theirs at their centre.
@@ -26,6 +27,8 @@ export interface MachineShape {
   /** A lamp's glass radius, and the post it stands on, on top of the housing. */
   lamp: number;
   lampPost: number;
+  /** The steam vent's pipe width. */
+  vent: number;
 }
 
 const ink = { width: 4, color: palette.ink };
@@ -48,6 +51,33 @@ export function pulleyRadius(shape: MachineShape): number {
 /** How far a lit lamp's rays reach from its centre. */
 export function lampRayReach(shape: MachineShape): number {
   return shape.lamp * 1.75;
+}
+
+/**
+ * The vent pipe: it leaves the housing's left end halfway up, runs out two pipe widths and
+ * turns up one and a half. `x` is the upright's centre line, `top` its top under the lip.
+ */
+function ventPipe(shape: MachineShape): {
+  housingEdge: number;
+  armY: number;
+  x: number;
+  top: number;
+} {
+  const { housing, post, vent } = shape;
+  const housingEdge = -post * 1.5;
+  const armY = -housing / 2;
+  return { housingEdge, armY, x: housingEdge - vent * 2, top: armY - vent * 1.5 };
+}
+
+/** Where steam leaves the vent: the middle of its lip's top. */
+export function ventOutlet(shape: MachineShape): { x: number; y: number } {
+  const { x, top } = ventPipe(shape);
+  return { x, y: top - shape.vent * 0.35 };
+}
+
+/** The vent's left edge (its lip), relative to the machine's origin. */
+export function ventLeft(shape: MachineShape): number {
+  return ventPipe(shape).x - shape.vent * 0.7;
 }
 
 export const machineSkin = {
@@ -138,6 +168,33 @@ export const machineSkin = {
   mask(g: Graphics, shape: MachineShape): void {
     g.clear();
     g.rect(0, 0, shape.width, shape.height).fill({ color: 0xffffff });
+  },
+
+  /** The steam vent: an L-shaped pipe out of the housing's left end, with a lip on top. */
+  vent(g: Graphics, shape: MachineShape): void {
+    g.clear();
+    const { vent } = shape;
+    const { housingEdge, armY, x, top } = ventPipe(shape);
+    const half = vent / 2;
+    g.poly([
+      x - half,
+      top,
+      x + half,
+      top,
+      x + half,
+      armY - half,
+      housingEdge,
+      armY - half,
+      housingEdge,
+      armY + half,
+      x - half,
+      armY + half,
+    ])
+      .fill(heavyFill)
+      .stroke(fineInk);
+    g.rect(x - vent * 0.7, top - vent * 0.35, vent * 1.4, vent * 0.35)
+      .fill(heavyFill)
+      .stroke(fineInk);
   },
 
   /** A jammed machine: a wedge driven in at the door's side, and steam puffing out. */

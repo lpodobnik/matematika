@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { lampRayReach, pulleyRadius } from '@/art/skins/machine';
+import { lampRayReach, pulleyRadius, ventOutlet } from '@/art/skins/machine';
 import { tuning } from '@/config/tuning';
+import { plumeBounds } from '@/ui/scene/effects/steam-sim';
 import { sceneSize } from '@/ui/scene/fit-scene';
 import {
   doorLift,
@@ -11,6 +12,7 @@ import {
   lampPositions,
   machineBounds,
   machineGeometry,
+  machineSteam,
   presentationMs,
   pulleyPositions,
   runningHum,
@@ -109,6 +111,29 @@ describe('the placeholder machine in the scene', () => {
     }
     // The needle reaches 96 above the pivot and the stand's tilt marks 116.
     expect(box.bottom).toBeLessThan(scaleGeometry.pivot.y - 116);
+  });
+});
+
+describe('the steam effect', () => {
+  const { shape } = machineGeometry;
+  const plume = plumeBounds(machineSteam);
+
+  it('rises from the vent', () => {
+    expect(machineSteam.origin).toEqual(ventOutlet(shape));
+  });
+
+  it('stays clear of the housing and of the lamps, with up to three lamps', () => {
+    expect(plume.right).toBeLessThanOrEqual(-shape.post * 1.5);
+    for (const count of [1, 2, 3]) {
+      const [first] = lampPositions(count);
+      expect(plume.right).toBeLessThan((first?.x ?? 0) - lampRayReach(shape));
+    }
+  });
+
+  it('is part of the machine’s box, so it fits the scene and stays between the pans', () => {
+    const box = machineBounds();
+    expect(box.left).toBeLessThanOrEqual(machineGeometry.x + plume.left);
+    expect(box.top).toBeLessThanOrEqual(machineGeometry.y + plume.top);
   });
 });
 

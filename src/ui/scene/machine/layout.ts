@@ -3,8 +3,9 @@
 // long and how it moves when a stage locks and when the whole machine restarts.
 // Presentation only: what it shows comes from room/machine.ts and room/phases.ts.
 
-import { lampRayReach, type MachineShape } from '@/art/skins/machine';
+import { lampRayReach, type MachineShape, ventLeft, ventOutlet } from '@/art/skins/machine';
 import type { Presentation } from '@/room/phases';
+import { plumeBounds, type SteamSpec } from '@/ui/scene/effects/steam-sim';
 
 export const machineGeometry = {
   /** The opening's top-left corner. */
@@ -17,8 +18,27 @@ export const machineGeometry = {
     post: 26,
     lamp: 20,
     lampPost: 12,
+    vent: 14,
   } satisfies MachineShape,
 } as const;
+
+/**
+ * The placeholder steam effect (story 1.12), relative to the machine's origin: puffs rise
+ * from the vent and drift left, away from the lamps, into the space above the left pan's
+ * inner end. It runs at the `high` and `medium` quality settings.
+ */
+export const machineSteam: SteamSpec = {
+  origin: ventOutlet(machineGeometry.shape),
+  count: 24,
+  lifeMs: 2000,
+  rise: 28,
+  drift: -8,
+  spread: 6,
+  startScale: 0.35,
+  endScale: 1,
+  alpha: 0.5,
+  radius: 20,
+};
 
 export interface Point {
   x: number;
@@ -54,17 +74,18 @@ export function pulleyPositions(geometry = machineGeometry): Point[] {
 }
 
 /**
- * The whole machine's box in the scene: frame, housing, lit lamps' rays, sill and the
- * jam's wedge and steam.
+ * The whole machine's box in the scene: frame, housing, lit lamps' rays, sill, the jam's
+ * wedge and steam lines, and the vent with its plume of steam.
  */
-export function machineBounds(geometry = machineGeometry): Bounds {
+export function machineBounds(geometry = machineGeometry, steam = machineSteam): Bounds {
   const { x, y, shape } = geometry;
   const { width, height, housing, post, lamp, lampPost } = shape;
+  const plume = plumeBounds(steam);
   return {
-    left: x - post * 1.5,
-    // The steam lines reach about this far right of the door.
+    left: x + Math.min(-post * 1.5, ventLeft(shape), plume.left),
+    // The jam's steam lines reach about this far right of the door.
     right: x + width + post + 60,
-    top: y - housing - lampPost - lamp - lampRayReach(shape),
+    top: y + Math.min(-housing - lampPost - lamp - lampRayReach(shape), plume.top),
     bottom: y + height + post * 0.6,
   };
 }

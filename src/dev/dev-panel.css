@@ -46,10 +46,22 @@
   font-weight: 700;
 }
 
-.dev-panel__jumps {
+.dev-panel__jumps,
+.dev-panel__choices {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.dev-panel__choices {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+}
+
+.dev-panel__choices legend {
+  margin-bottom: 4px;
+  padding: 0;
 }
 
 .dev-panel__button {
@@ -67,4 +79,10 @@
 .dev-panel__button:active {
   background: var(--ink);
   color: var(--paper);
+}
+
+/* The chosen quality: a thicker border and bold text, so colour isn't the only signal. */
+.dev-panel__button[aria-pressed="true"] {
+  border-width: 4px;
+  font-weight: 700;
 }

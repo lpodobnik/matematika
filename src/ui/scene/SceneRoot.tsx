@@ -6,11 +6,20 @@ import {
   type Application as PixiApplication,
   type PointData,
 } from 'pixi.js';
-import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { palette } from '@/art/palette';
 import { useGame } from '@/store/store';
 import { watchContextLoss } from '@/ui/scene/context-loss';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
+import { runFrameTest } from '@/ui/scene/frame-test';
 import { Machine } from '@/ui/scene/machine/Machine';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
@@ -129,6 +138,9 @@ function drawPaper(g: Graphics): void {
  * from the tray to a pan, or off a pan into the tray. The splitter (story 1.11) has a drag of
  * its own, across both pans or off them. The tray and the splitter, drawn last, draw what he
  * carries above everything else.
+ *
+ * Until the quality setting is picked, the frame-time test runs from the scene's first frame,
+ * with every effect on (store/quality.ts); a scene remounted mid-test starts it over.
  */
 function SceneContent() {
   const { app, isInitialised } = useApplication();
@@ -143,6 +155,15 @@ function SceneContent() {
     const local = scene.toLocal(point);
     return { x: local.x, y: local.y };
   }, []);
+  const qualityPicked = useGame((s) => s.ui.quality.measured !== null);
+
+  // A layout effect, so the ticker callback goes before the app is destroyed on a remount.
+  useLayoutEffect(() => {
+    if (!isInitialised || qualityPicked) return;
+    return runFrameTest(app.ticker, document, (frameTimesMs) =>
+      dispatch({ type: 'quality/measured', frameTimesMs }),
+    );
+  }, [app, isInitialised, qualityPicked, dispatch]);
 
   useEffect(() => {
     if (!isInitialised) return;

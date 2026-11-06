@@ -40,4 +40,15 @@ export const tuning = {
   splitterMinParts: 2,
   /** …and this many at the most. */
   splitterMaxParts: 9,
+  /** Architecture, Performance (Quality): the frame-time test starts timing this long after
+   * the scene's first frame, so mount and texture-upload spikes don't count… */
+  qualitySettleMs: 1000,
+  /** …and times frames for this long, with all effects on. */
+  qualityTestMs: 2000,
+  /** The test judges the frame time at this percentile. */
+  qualityPercentile: 95,
+  /** Up to this frame time at the percentile gives `high`… */
+  qualityHighMs: 18,
+  /** …up to this one `medium`, and anything slower `low`. */
+  qualityMediumMs: 25,
 } as const;

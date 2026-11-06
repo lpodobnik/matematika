@@ -1,7 +1,8 @@
 import type { Graphics } from 'pixi.js';
 import { describe, expect, it } from 'vitest';
 import { palette } from '@/art/palette';
-import { machineSkin } from '@/art/skins/machine';
+import { machineSkin, ventLeft, ventOutlet } from '@/art/skins/machine';
+import { steamSkin } from '@/art/skins/steam';
 import { machineGeometry } from '@/ui/scene/machine/layout';
 
 /** A stand-in for Pixi's Graphics that records the colours each shape is drawn in. */
@@ -30,8 +31,8 @@ function recordingGraphics() {
 describe('machineSkin', () => {
   const { shape } = machineGeometry;
 
-  it('draws the frame, the opening, the door, the pulleys and unlit lamps in ink alone', () => {
-    for (const part of ['frame', 'opening', 'door', 'pulley', 'lamp'] as const) {
+  it('draws the frame, the opening, the door, the pulleys, unlit lamps and the vent in ink alone', () => {
+    for (const part of ['frame', 'opening', 'door', 'pulley', 'lamp', 'vent'] as const) {
       const { g, colours, shapes } = recordingGraphics();
       machineSkin[part](g, shape);
       expect(shapes.length, part).toBeGreaterThan(0);
@@ -52,6 +53,36 @@ describe('machineSkin', () => {
     expect(colours).toContain(palette.lamp);
     expect(shapes).toContain('circle');
     expect(shapes.filter((name) => name === 'lineTo').length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('turns the vent up out of the housing’s left end, with its outlet on top', () => {
+    const outlet = ventOutlet(shape);
+    expect(outlet.x).toBeLessThan(-shape.post * 1.5);
+    expect(outlet.y).toBeLessThan(-shape.housing / 2);
+    expect(outlet.y).toBeGreaterThan(-shape.housing);
+    expect(ventLeft(shape)).toBeLessThan(outlet.x);
+  });
+
+  it('draws a puff of steam in ink alone, denser at its centre', () => {
+    const alphas: number[] = [];
+    const g = new Proxy(
+      {},
+      {
+        get(_target, name: string) {
+          return (...args: unknown[]) => {
+            if (name === 'fill') {
+              const style = args[0] as { color: number; alpha: number };
+              expect(style.color).toBe(palette.ink);
+              alphas.push(style.alpha);
+            }
+            return g;
+          };
+        },
+      },
+    ) as Graphics;
+    steamSkin.puff(g, 18);
+    expect(alphas.length).toBeGreaterThan(1);
+    expect([...alphas].sort((a, b) => a - b)).toEqual(alphas);
   });
 
   it('shows a jam by shape as well as colour: a wedge and steam lines (NFR4)', () => {
