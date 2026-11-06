@@ -9,7 +9,7 @@
 //   lampLight  a lit lamp's flame and rays: shape as well as colour (NFR4)
 //   door       a panel of planks, drawn from its top edge down
 //   jam        a wedge driven in beside the door and steam lines: shape as well as colour (NFR4)
-//   vent       a pipe out of the housing's left end, turning up, where the steam effect rises
+//   vent       a short pipe up out of the housing's top at its left end, where the steam rises
 //
 // The machine is drawn with its origin at the opening's top-left corner; a pulley and a
 // lamp with theirs at their centre.
@@ -54,19 +54,15 @@ export function lampRayReach(shape: MachineShape): number {
 }
 
 /**
- * The vent pipe: it leaves the housing's left end halfway up, runs out two pipe widths and
- * turns up one and a half. `x` is the upright's centre line, `top` its top under the lip.
+ * The vent pipe: it stands on the housing's top, one pipe width in from its left end, and
+ * rises one pipe width. It stays over the housing, not past its left end, so the splitter's
+ * holder in the scene's top-left corner (story 1.11) has the room left of the machine. `x`
+ * is its centre line, `base` the housing's top, `top` its top under the lip.
  */
-function ventPipe(shape: MachineShape): {
-  housingEdge: number;
-  armY: number;
-  x: number;
-  top: number;
-} {
+function ventPipe(shape: MachineShape): { x: number; base: number; top: number } {
   const { housing, post, vent } = shape;
-  const housingEdge = -post * 1.5;
-  const armY = -housing / 2;
-  return { housingEdge, armY, x: housingEdge - vent * 2, top: armY - vent * 1.5 };
+  const base = -housing;
+  return { x: -post * 1.5 + vent, base, top: base - vent };
 }
 
 /** Where steam leaves the vent: the middle of its lip's top. */
@@ -170,26 +166,15 @@ export const machineSkin = {
     g.rect(0, 0, shape.width, shape.height).fill({ color: 0xffffff });
   },
 
-  /** The steam vent: an L-shaped pipe out of the housing's left end, with a lip on top. */
+  /**
+   * The steam vent: a pipe up out of the housing's top, with a lip. Drawn behind the frame,
+   * so its foot runs down behind the housing and the pipe reads as coming out of it.
+   */
   vent(g: Graphics, shape: MachineShape): void {
     g.clear();
     const { vent } = shape;
-    const { housingEdge, armY, x, top } = ventPipe(shape);
-    const half = vent / 2;
-    g.poly([
-      x - half,
-      top,
-      x + half,
-      top,
-      x + half,
-      armY - half,
-      housingEdge,
-      armY - half,
-      housingEdge,
-      armY + half,
-      x - half,
-      armY + half,
-    ])
+    const { x, base, top } = ventPipe(shape);
+    g.rect(x - vent / 2, top, vent, base - top + vent / 2)
       .fill(heavyFill)
       .stroke(fineInk);
     g.rect(x - vent * 0.7, top - vent * 0.35, vent * 1.4, vent * 0.35)

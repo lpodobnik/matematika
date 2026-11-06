@@ -55,12 +55,12 @@ describe('machineSkin', () => {
     expect(shapes.filter((name) => name === 'lineTo').length).toBeGreaterThanOrEqual(6);
   });
 
-  it('turns the vent up out of the housing’s left end, with its outlet on top', () => {
+  it('stands the vent on the housing’s top at its left end, with its outlet on top', () => {
     const outlet = ventOutlet(shape);
-    expect(outlet.x).toBeLessThan(-shape.post * 1.5);
-    expect(outlet.y).toBeLessThan(-shape.housing / 2);
-    expect(outlet.y).toBeGreaterThan(-shape.housing);
+    expect(ventLeft(shape)).toBeGreaterThanOrEqual(-shape.post * 1.5);
     expect(ventLeft(shape)).toBeLessThan(outlet.x);
+    expect(outlet.x).toBeLessThan(shape.width / 4);
+    expect(outlet.y).toBeLessThan(-shape.housing);
   });
 
   it('draws a puff of steam in ink alone, denser at its centre', () => {

@@ -122,8 +122,8 @@ describe('the steam effect', () => {
     expect(machineSteam.origin).toEqual(ventOutlet(shape));
   });
 
-  it('stays clear of the housing and of the lamps, with up to three lamps', () => {
-    expect(plume.right).toBeLessThanOrEqual(-shape.post * 1.5);
+  it('stays above the housing and clear of the lamps, with up to three lamps', () => {
+    expect(plume.bottom).toBeLessThanOrEqual(-shape.housing);
     for (const count of [1, 2, 3]) {
       const [first] = lampPositions(count);
       expect(plume.right).toBeLessThan((first?.x ?? 0) - lampRayReach(shape));

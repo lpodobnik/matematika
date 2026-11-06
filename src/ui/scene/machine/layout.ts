@@ -24,20 +24,22 @@ export const machineGeometry = {
 
 /**
  * The placeholder steam effect (story 1.12), relative to the machine's origin: puffs rise
- * from the vent and drift left, away from the lamps, into the space above the left pan's
- * inner end. It runs at the `high` and `medium` quality settings.
+ * from the vent on the housing's left end and drift a little left, away from the lamps. The
+ * plume stays above the housing, under the lamps' rays, and right of the splitter's holder
+ * in the scene's top-left corner (story 1.11), even on a phone, where the holder is widest.
+ * It runs at the `high` and `medium` quality settings.
  */
 export const machineSteam: SteamSpec = {
   origin: ventOutlet(machineGeometry.shape),
-  count: 24,
+  count: 16,
   lifeMs: 2000,
-  rise: 28,
-  drift: -8,
-  spread: 6,
+  rise: 16,
+  drift: -3,
+  spread: 3,
   startScale: 0.35,
   endScale: 1,
   alpha: 0.5,
-  radius: 20,
+  radius: 16,
 };
 
 export interface Point {
