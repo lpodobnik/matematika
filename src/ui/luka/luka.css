@@ -1,0 +1,84 @@
+/* Story 2.11: Luka's view. Plain and readable, for a grown-up: no game skin, scrolls. */
+/* Its own height, so it scrolls: the game's body doesn't (story 2.11 review). Text can be
+   selected, so the link can be copied by hand. */
+.luka {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100dvh;
+  user-select: text;
+  -webkit-user-select: text;
+  padding: 16px 20px 40px;
+  overflow-y: auto;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.luka h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.luka h2 {
+  margin: 24px 0 8px;
+  font-size: 19px;
+}
+
+.luka__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.luka__button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+
+.luka__warning {
+  padding: 8px 12px;
+  border: 2px solid var(--jam);
+  border-radius: 8px;
+}
+
+.luka__table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+}
+
+.luka__table th,
+.luka__table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.luka__lines {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.luka__link {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.luka__link input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+}

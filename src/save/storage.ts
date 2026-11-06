@@ -10,7 +10,7 @@ import { decodeSave, isObject } from '@/save/decode';
 import { type Migration, migrate, migrations } from '@/save/migrate';
 import { corruptKeyPrefix, currentVersion, type SaveV1, saveKey } from '@/save/schema';
 
-type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem'>;
+export type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem'>;
 type Json = Record<string, unknown>;
 
 /**
@@ -50,6 +50,16 @@ export interface SaveStorage {
   load(now: string): LoadResult;
   /** Writes the save, when this session writes (`LoadResult.saving`). True when it is on the device. */
   write(save: SaveV1): boolean;
+  /**
+   * The save as it is stored after `load`, with fields this build doesn't know (story 2.11:
+   * a backup carries them); null when there is none, or it couldn't be read.
+   */
+  stored(): Record<string, unknown> | null;
+  /**
+   * Replaces the save whole with `json`, when this session writes (a restored backup,
+   * story 2.11): nothing of the save before it is kept. True when it is on the device.
+   */
+  replace(json: Record<string, unknown>): boolean;
 }
 
 export interface SaveStorageOptions {
@@ -168,6 +178,24 @@ export function createSaveStorage(options: SaveStorageOptions = {}): SaveStorage
   return {
     load(now) {
       return read(now);
+    },
+    stored() {
+      return kept;
+    },
+    replace(json) {
+      if (!writable) return false;
+      const store = reach();
+      if (!store) return false;
+      try {
+        const text = JSON.stringify(json);
+        store.setItem(saveKey, text);
+        kept = json;
+        lastWritten = text;
+        return true;
+      } catch (error) {
+        recordError('save', error);
+        return false;
+      }
     },
     write(save) {
       if (!writable) return false;

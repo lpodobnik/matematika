@@ -154,6 +154,54 @@ export const hr = {
       },
     },
   },
+  /**
+   * Luka's view (story 2.11; architecture, `#dnevnik`): his son's play log and the backup
+   * link, for Luka, not his son. Linked from nowhere in the game.
+   */
+  luka: {
+    title: 'Dnevnik igre',
+    back: 'Natrag u igru',
+    notSaving: 'Napredak se trenutno ne sprema na ovom uređaju.',
+    sessions: 'Igranje po danima',
+    sessionsNone: 'Još nema zapisa.',
+    day: 'Dan',
+    count: 'Igranja',
+    rooms: 'Sobe',
+    room: 'Soba',
+    entered: 'Prvi put',
+    done: 'Riješena',
+    resets: 'Ispočetka',
+    ways: 'Načini',
+    wayNames: { try: 'Probanje', balance: 'Vaga', undo: 'Unatrag' },
+    predictions: 'Procjene (točno / krivo)',
+    roomsNone: 'Još nijedna soba.',
+    wrongLines: 'Pogrešni retci',
+    latest: 'Zadnji pogrešni retci',
+    latestNone: 'Nema pogrešnih redaka.',
+    backup: 'Sigurnosna kopija',
+    backupWhy: 'Veza vraća cijeli napredak na bilo kojem uređaju. Ne sadrži ime.',
+    backupMake: 'Napravi vezu',
+    backupCopy: 'Kopiraj',
+    /** What the last try to make or copy the link said (story 2.11 review). */
+    notes: {
+      copied: 'Kopirano.',
+      copyByHand: 'Kopiranje nije uspjelo. Dodirni vezu i kopiraj je ručno.',
+      noSave: 'Još nema spremljene igre.',
+      cantMake: 'Ovaj preglednik ne može napraviti vezu.',
+    },
+    exportLog: 'Preuzmi dnevnik (JSON)',
+    restore: {
+      title: 'Vraćanje sigurnosne kopije',
+      incoming: (rooms: number) => `Kopija: riješenih soba ${rooms}.`,
+      current: (rooms: number) => `Na ovom uređaju: riješenih soba ${rooms}.`,
+      noCurrent: 'Na ovom uređaju nema spremljene igre.',
+      warning: 'Vraćanje zamjenjuje napredak na ovom uređaju. Ime ostaje.',
+      accept: 'Vrati kopiju',
+      decline: 'Odustani',
+      broken: 'Ova veza nije ispravna sigurnosna kopija.',
+      failed: 'Kopiju nije moguće spremiti na ovom uređaju.',
+    },
+  },
   /** Story 2.10: room 7, the old logbook's lines. */
   logbook: {
     /** The tag before he has tapped a line: tapping puts it on the scale. */
