@@ -49,8 +49,72 @@ export const hr = {
     ],
     confirm: 'To sam ja',
     /** His reply, the first line to use the name: the conductor, still doubtful. */
-    reply: (name: string) => `${name}? Hm. Toga nema u knjizi.`,
+    reply: (name: string) => `${name}? Hm. Zapisat ću to. Olovkom, za svaki slučaj.`,
     next: 'Dalje',
+  },
+  /**
+   * What the city says when a machine restarts (story 2.5; narrative design, Story Beats and
+   * Dialogue Style): one or two lines per room, at most about 80 characters, never praising
+   * him (NFR13), and never addressing him with a gendered past tense. Rooms 5–6 can come in
+   * either order, so their lines don't mention each other. Kristijan's lines are notes in his
+   * hand, and the First Automaton's are punched-tape notices, in capitals.
+   */
+  story: {
+    speakers: {
+      penkala: 'Gospon Penkala',
+      nikola: 'Nikola',
+      faust: 'Faust',
+      kristijan: 'Majstor Kristijan',
+      automaton: 'Prvi Automat',
+    },
+    /** In a line that takes his name, before he has one (a dev jump). */
+    noName: 'šegrte',
+    next: 'Dalje',
+    rooms: {
+      r01: [
+        {
+          who: 'penkala',
+          text: 'Kaj? Prema Knjizi, vrata se dižu kurblom. Tri okreta, ni više ni manje.',
+        },
+        { who: 'penkala', text: 'A ova su se digla bez kurble. Toga nema u Knjizi.' },
+      ],
+      r02: [
+        {
+          who: 'penkala',
+          text: (name: string) => `Svjetiljke gore. Čista sreća, ${name}. Ništa drugo.`,
+        },
+        { who: 'nikola', text: 'Sreća? A kako svjetiljka zna koliko treba?' },
+      ],
+      r03: [
+        { who: 'nikola', text: 'Voda teče! A tko je ono gore, kod stupa?' },
+        { who: 'penkala', text: 'Automat. Skida dijelove sa svjetiljke. Prema Knjizi, smije.' },
+      ],
+      r04: [
+        { who: 'nikola', text: 'Cijela ulica je vani. Svi gledaju kolo.' },
+        { who: 'penkala', text: 'Gledam i ja. Samo da provjerim vrti li se po Knjizi.' },
+      ],
+      r05: [
+        { who: 'automaton', text: 'OVAJ MOST NIJE U KORACIMA. BIT ĆE ISPRAVLJEN. HVALA.' },
+        { who: 'nikola', text: 'Netko je pribio papir na most. Tko piše samo velikim slovima?' },
+      ],
+      r06: [
+        { who: 'faust', text: 'Ona radionica tamo bila je Kristijanova. Ključ je odsad tvoj.' },
+        {
+          who: 'faust',
+          text: (name: string) => `Alat služi onome tko zna zašto, ${name}. Ne samo kako.`,
+        },
+      ],
+      r07: [
+        { who: 'kristijan', text: 'Pišem kako mi kažu. Tko razumije, vidjet će grešku.' },
+        { who: 'faust', text: 'Kristijan ne griješi. Ova je greška namjerna. Netko ga je odveo.' },
+      ],
+    },
+    /** The city's log on the map: every line he has been told, to read again. */
+    log: {
+      open: 'Dnevnik grada',
+      close: 'Zatvori',
+      empty: 'Još se ništa nije pokrenulo.',
+    },
   },
   /** Story 2.2: the city map. Place names are placeholders until the final text (epic 6). */
   map: {

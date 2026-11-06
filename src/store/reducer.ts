@@ -98,6 +98,23 @@ function nextRoom(roomList: readonly RoomSpec[], save: SaveState, from: string |
 }
 
 /**
+ * Once nothing is owed (stories 2.4, 2.5): back to the room that waited under the card or
+ * the naming (a launch with a room in progress), or to the map if he was on it; else the
+ * next room after `from`, or the map when none is left (null: the screen decides).
+ */
+function afterOwed(
+  state: GameState,
+  roomList: readonly RoomSpec[],
+  save: SaveState,
+  from: string | null,
+  now: number,
+): RoomStep | null {
+  if (state.room || save.progress.onMap) return null;
+  const next = nextRoom(roomList, save, from);
+  return next ? goInto(next, save, now) : null;
+}
+
+/**
  * The room the game starts in (story 2.1): the saved room in progress; on the map, none
  * (story 2.2); otherwise the next room, as a restart hands over (so a first launch opens
  * room 1 straight away, the narrative design: play first).
@@ -109,8 +126,9 @@ function startStep(
   now: number,
 ): RoomStep | null {
   const spec = saved ? roomList.find((room) => room.id === saved.id) : undefined;
-  if (named(save) === false) return null;
+  // A room in progress resumes, under the story card or the naming if one is owed.
   if (saved && spec) return resumeStep(spec, saved, now);
+  if (owed(save)) return null;
   if (save.progress.onMap) return null;
   const next = nextRoom(roomList, save, null);
   return next ? goInto(next, save, now) : null;
@@ -136,8 +154,8 @@ function moveOn(
   now: number,
 ): RoomStep | null {
   if (step?.room.stage.phase !== 'done') return step;
-  // After room 1, he names his apprentice first (story 2.4).
-  if (named(save) === false) return step;
+  // A room's story lines first (story 2.5), and after room 1, the naming (story 2.4).
+  if (owed(save)) return step;
   const spec = nextRoom(roomList, save, step.room.spec.id);
   if (!spec) return step;
   const entered = goInto(spec, save, now);
@@ -184,8 +202,15 @@ function roomStep(
   if (action.type === 'character/set') {
     // Named (`save` carries the name once it is valid): on to the room after room 1.
     if (state.ui.screen !== 'naming' || named(save) !== true) return null;
-    const next = nextRoom(roomList, save, 'r01');
-    return next ? goInto(next, save, now) : null;
+    return afterOwed(state, roomList, save, 'r01', now);
+  }
+  if (action.type === 'story/next') {
+    // Told (`save` lists the room once told): the naming, more lines, or the next room.
+    const last = save.progress.told.at(-1);
+    if (state.ui.screen !== 'story' || last === state.save.progress.told.at(-1) || owed(save)) {
+      return null;
+    }
+    return afterOwed(state, roomList, save, last ?? null, now);
   }
   const { room } = state;
   if (!room) return null;
@@ -416,7 +441,7 @@ function saveBefore(save: SaveState, action: Action, now: number): SaveState {
     case 'boot/start': {
       const loaded = action.save ?? newSave();
       const stamped = loaded.createdAt === null ? { ...loaded, createdAt: isoTime(now) } : loaded;
-      return owedRoomAside(stamped, action.room);
+      return stamped;
     }
     case 'dev/new-game':
       return { ...newSave(isoTime(now)), settings: save.settings };
@@ -462,25 +487,36 @@ function screenAfter(
   toMap: boolean,
   save: SaveState,
 ): GameState['ui']['screen'] {
-  // Off to the map, or, after room 1 with no name yet, to the naming (story 2.4).
-  const off = named(save) === false ? 'naming' : 'map';
+  // Off to the map, or first to what is owed: a room's lines (2.5), the naming (2.4).
+  const off = owed(save) ?? 'map';
   if (toMap) return off;
-  if (action.type === 'boot/start' || action.type === 'dev/new-game') return step ? 'room' : off;
-  if (action.type === 'room/enter' || (action.type === 'map/travel' && step)) return 'room';
-  if (action.type === 'character/set' && state.ui.screen === 'naming' && named(save)) {
-    return step ? 'room' : 'map';
+  if (action.type === 'boot/start' || action.type === 'dev/new-game') {
+    return step ? (owed(save) ?? 'room') : off;
   }
+  if (action.type === 'room/enter' || (action.type === 'map/travel' && step)) return 'room';
+  const done =
+    (action.type === 'character/set' && state.ui.screen === 'naming' && named(save)) ||
+    (action.type === 'story/next' && state.ui.screen === 'story');
+  if (done) return owed(save) ?? (step || state.room ? 'room' : 'map');
   return state.ui.screen;
 }
 
 /**
- * A save from before the naming, with a room in progress (story 2.4): the naming comes
- * first, so that room waits with the rooms he left halfway, and resumes when its turn comes.
+ * What comes before any room: a finished room's story lines not yet told (story 2.5), then
+ * the naming after room 1 (story 2.4). Null when nothing is owed.
  */
-function owedRoomAside(save: SaveState, room: SavedRoom | null): SaveState {
-  if (!room || named(save) !== false) return save;
-  const started = [...save.progress.started.filter((left) => left.id !== room.id), room];
-  return { ...save, progress: { ...save.progress, started } };
+function owed(save: SaveState): 'story' | 'naming' | null {
+  const { roomsDone, told } = save.progress;
+  if (roomsDone.some((id) => !told.includes(id))) return 'story';
+  return named(save) === false ? 'naming' : null;
+}
+
+/** A story card's "Dalje" (story 2.5): the first finished room not yet told is told. */
+function withTold(state: GameState, action: Action, save: SaveState): SaveState {
+  if (action.type !== 'story/next' || state.ui.screen !== 'story') return save;
+  const { roomsDone, told } = save.progress;
+  const room = roomsDone.find((id) => !told.includes(id));
+  return room ? { ...save, progress: { ...save.progress, told: [...told, room] } } : save;
 }
 
 /**
@@ -501,7 +537,8 @@ function namedCharacter(state: GameState, action: Action): SaveState['character'
 
 /** The save keeps whether he is on the map, so a launch comes back there (story 2.2). */
 function withOnMap(save: SaveState, screen: GameState['ui']['screen']): SaveState {
-  if (screen === 'loading') return save;
+  // The card and the naming come between; where he was stays as it was.
+  if (screen === 'loading' || screen === 'story' || screen === 'naming') return save;
   const onMap = screen === 'map';
   return save.progress.onMap === onMap ? save : { ...save, progress: { ...save.progress, onMap } };
 }
@@ -544,7 +581,7 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return (state, action, ctx) => {
     const character = namedCharacter(state, action);
     const saved = saveBefore(state.save, action, ctx.now);
-    const before = character ? { ...saved, character } : saved;
+    const before = withTold(state, action, character ? { ...saved, character } : saved);
     const change = withRefusalDown(
       withToolMemory(roomStep(state, action, ctx.now, roomList, before), before),
       state.room,
@@ -583,7 +620,7 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
       draft.ui.screen = screen;
       if (
         action.type === 'room/enter' ||
-        (action.type === 'character/set' && screen !== 'naming') ||
+        ((action.type === 'character/set' || action.type === 'story/next') && screen === 'room') ||
         (action.type === 'map/travel' && step)
       ) {
         draft.ui.fresh = null;

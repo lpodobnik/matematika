@@ -13,6 +13,7 @@ const save: SaveV1 = {
     tools: [],
     started: [],
     onMap: false,
+    told: [],
     firstUse: [],
     room: { id: 'r02', stage: 0, lines: [], pin: null, splitterSeen: false },
   },

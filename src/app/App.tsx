@@ -14,6 +14,7 @@ import { MapScreen } from '@/ui/map/MapScreen';
 import { NamingScreen } from '@/ui/naming/NamingScreen';
 import { Notebook } from '@/ui/notebook/Notebook';
 import { SceneRoot } from '@/ui/scene/SceneRoot';
+import { StoryScreen } from '@/ui/story/StoryScreen';
 
 // Development builds only, loaded on demand (architecture, Debug Tools): production builds
 // drop this branch, and the panel's code with it.
@@ -29,7 +30,8 @@ const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : nu
 // The screen is a field in the store: the loading screen until the save is read and the
 // assets are loaded (story 2.1); the city map after every restart and whenever he leaves a
 // room (story 2.2), when the scene unmounts until he travels into a room again; and, once,
-// the naming after room 1 (story 2.4).
+// the naming after room 1 (story 2.4); and a room's story card the first time its restart
+// ends (story 2.5).
 export function App() {
   const dispatch = useGame((s) => s.dispatch);
   const screen = useGame((s) => s.ui.screen);
@@ -44,6 +46,7 @@ function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
   if (screen === 'loading') return <LoadingScreen loaded={loaded} />;
   if (screen === 'map') return <MapScreen />;
   if (screen === 'naming') return <NamingScreen />;
+  if (screen === 'story') return <StoryScreen />;
   return <RoomScreen />;
 }
 

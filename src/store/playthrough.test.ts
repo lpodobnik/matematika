@@ -79,7 +79,8 @@ function playRoomOne(game: Game) {
   game.write('5');
   game.presented();
   game.presented();
-  // Story 2.4: Penkala asks who he is.
+  // Story 2.5: the room's lines; story 2.4: Penkala asks who he is.
+  game.act({ type: 'story/next' });
   game.act({ type: 'character/set', name: 'Ivo', look: 'look-3' });
 }
 
@@ -97,6 +98,8 @@ function playRoomTwo(game: Game) {
   game.write('15');
   game.presented();
   game.presented();
+  // Story 2.5: the room's lines, then on.
+  game.act({ type: 'story/next' });
 }
 
 /**
@@ -122,6 +125,8 @@ function playRoomThree(game: Game) {
   game.write('14');
   game.presented();
   game.presented();
+  // Story 2.5: the room's lines, then on.
+  game.act({ type: 'story/next' });
 }
 
 /** The dial turned notch by notch from where it stands up to `to`. */
@@ -155,6 +160,8 @@ function playRoomFour(game: Game) {
   game.write('9');
   game.presented();
   game.presented();
+  // Story 2.5: the room's lines, then on.
+  game.act({ type: 'story/next' });
 }
 
 describe('rooms 1–4 back to back (story 1.13)', () => {
@@ -178,6 +185,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r02.1:open',
       'r02.1:locked',
       'r02.1:restart',
+      // Story 2.5: each room's lines, with no room.
+      'none',
       'r03.0:arrive',
       'r03.0:poke',
       'r03.0:pin',
@@ -188,6 +197,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r03.1:open',
       'r03.1:locked',
       'r03.1:restart',
+      'none',
       // Story 1.16: no pin in room 4, so no poke or pin phase.
       'r04.0:arrive',
       'r04.0:open',
@@ -399,6 +409,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     game.act = (action) => {
       act(action);
       const state = game.store.getState();
+      // Room 4's story card, at the end, has no room.
+      if (!state.room) return;
       const room = state.room as RoomState;
       const tools = [
         trayOffered(room, state.save.progress.tools) ? 'tray' : null,
@@ -476,7 +488,18 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomThree(game);
     playRoomFour(game);
     unsubscribe();
-    expect(screens).toEqual(['room', 'naming', 'room', 'map']);
+    expect(screens).toEqual([
+      'room',
+      'story',
+      'naming',
+      'room',
+      'story',
+      'room',
+      'story',
+      'room',
+      'story',
+      'map',
+    ]);
     const state = game.store.getState();
     expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r04' });
     expect(state.room).toBeNull();
@@ -499,7 +522,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(game.stage().phase).toBe('arrive');
   });
 
-  it('gets to the map on the clock too, if the machine never reports its restart', () => {
+  it('gets to room 4’s story, then the map, on the clock too, if the machine never reports its restart', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
@@ -510,6 +533,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     game.write('9');
     game.write('9');
     for (let i = 0; i < 40; i += 1) game.act({ type: 'clock/tick' });
+    expect(game.store.getState().ui.screen).toBe('story');
+    game.act({ type: 'story/next' });
     expect(game.store.getState().ui.screen).toBe('map');
   });
 });

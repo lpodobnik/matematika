@@ -26,7 +26,7 @@ function game(roomsDone: GameState['save']['progress']['roomsDone'] = ['r01', 'r
     save: {
       ...save,
       character: { name: 'Ivo', look: 'look-1' as const },
-      progress: { ...save.progress, roomsDone, onMap: true },
+      progress: { ...save.progress, roomsDone, onMap: true, told: [...roomsDone] },
     },
     room: null,
   });

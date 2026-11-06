@@ -130,7 +130,12 @@ describe('starting the game (boot/start)', () => {
       save: {
         ...save,
         character: { name: 'Ivo', look: 'look-1' as const },
-        progress: { ...save.progress, roomsDone: ['r01', 'r02'], onMap: true },
+        progress: {
+          ...save.progress,
+          roomsDone: ['r01', 'r02'],
+          onMap: true,
+          told: ['r01', 'r02'],
+        },
       },
       room: null,
     });
@@ -166,6 +171,7 @@ describe('a new game from the dev panel', () => {
       firstUse: [],
       started: [],
       onMap: false,
+      told: [],
     });
     expect(state.save.settings).toEqual({ muted: true, quality: 'medium' });
     expect(g.written.at(-1)?.progress.room?.id).toBe('r01');

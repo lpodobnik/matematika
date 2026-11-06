@@ -339,6 +339,8 @@ describe('a room from arrival to restart (story 1.8)', () => {
     const phases: string[] = [];
     const act = (action: Action) => {
       store.getState().dispatch(action);
+      // A story card between rooms (story 2.5, its own tests in story.test.ts) is tapped on.
+      if (store.getState().ui.screen === 'story') store.getState().dispatch({ type: 'story/next' });
       const room = store.getState().room;
       phases.push(room ? `${room.spec.id}.${room.stageIndex}:${room.stage.phase}` : 'none');
     };
@@ -721,7 +723,8 @@ describe('predict before the dial opens (story 1.9)', () => {
     expect(game.stage()?.phase).toBe('restart');
     expect(game.store.getState().save.progress.tools).toEqual(['balance']);
     game.presented();
-    // Room 4, the water wheel, loads next, with Balance kept.
+    // Room 3's story card (story 2.5), then room 4, the water wheel, with Balance kept.
+    game.act({ type: 'story/next' });
     expect(game.store.getState().room?.spec.id).toBe('r04');
     expect(game.stage()?.phase).toBe('arrive');
     expect(game.store.getState().save.progress.tools).toEqual(['balance']);
@@ -768,7 +771,14 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
         ...initial,
         save: {
           ...initialGameState().save,
-          progress: { roomsDone: [], started: [], onMap: false, tools: ['balance'], firstUse },
+          progress: {
+            roomsDone: [],
+            started: [],
+            onMap: false,
+            told: [],
+            tools: ['balance'],
+            firstUse,
+          },
         },
       },
     });
@@ -920,7 +930,14 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     expect({
       ...store.getState().save.progress,
       firstUse: store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
-    }).toEqual({ roomsDone: [], started: [], onMap: false, tools: ['balance'], firstUse: [] });
+    }).toEqual({
+      roomsDone: [],
+      started: [],
+      onMap: false,
+      told: [],
+      tools: ['balance'],
+      firstUse: [],
+    });
     act({ type: 'dial/set', x: 10 });
     expect({
       ...store.getState().save.progress,
@@ -929,6 +946,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
       roomsDone: [],
       started: [],
       onMap: false,
+      told: [],
       tools: ['balance'],
       firstUse: ['tray'],
     });
@@ -962,6 +980,7 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
             roomsDone: [],
             started: [],
             onMap: false,
+            told: [],
             tools: ['balance'],
             firstUse: ['pin', 'tray'],
           },

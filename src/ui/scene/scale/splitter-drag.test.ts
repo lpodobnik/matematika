@@ -119,7 +119,14 @@ function wiredSplitter() {
       ...initialGameState(),
       save: {
         ...initialGameState().save,
-        progress: { roomsDone: [], started: [], onMap: false, tools: ['balance'], firstUse: [] },
+        progress: {
+          roomsDone: [],
+          started: [],
+          onMap: false,
+          told: [],
+          tools: ['balance'],
+          firstUse: [],
+        },
       },
     },
   });

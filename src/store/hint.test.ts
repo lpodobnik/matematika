@@ -23,7 +23,7 @@ function playing(tools: ToolId[] = []) {
       ...initial,
       save: {
         ...initial.save,
-        progress: { roomsDone: [], started: [], onMap: false, tools, firstUse: [] },
+        progress: { roomsDone: [], started: [], onMap: false, told: [], tools, firstUse: [] },
       },
     },
   });

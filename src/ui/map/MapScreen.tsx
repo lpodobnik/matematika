@@ -1,12 +1,15 @@
 import '@/ui/map/map.css';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { type MapView, mapView, type NodeView } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
+import type { RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { LockBadge, NodeGlyph } from '@/ui/map/glyphs';
+import '@/ui/story/story.css';
+import { StoryLines } from '@/ui/story/StoryLines';
 
 const authored = rooms.map((room) => room.id);
 
@@ -23,6 +26,8 @@ export function MapScreen() {
   const tools = useGame((s) => s.save.progress.tools);
   const started = useGame((s) => s.save.progress.started);
   const fresh = useGame((s) => s.ui.fresh);
+  const told = useGame((s) => s.save.progress.told);
+  const name = useGame((s) => s.save.character.name);
   const dispatch = useGame((s) => s.dispatch);
   const view = useMemo(
     () =>
@@ -33,12 +38,24 @@ export function MapScreen() {
       ),
     [roomsDone, tools, started, fresh],
   );
-  return <MapBoard view={view} onTravel={(node) => dispatch({ type: 'map/travel', node })} />;
+  return (
+    <MapBoard
+      view={view}
+      told={told}
+      name={name}
+      onTravel={(node) => dispatch({ type: 'map/travel', node })}
+    />
+  );
 }
 
 interface BoardProps {
   view: MapView;
+  /** Rooms whose lines he has been told, in order: the city's log (story 2.5). */
+  told?: readonly RoomId[];
+  name?: string | null;
   onTravel(node: NodeId): void;
+  /** For tests: the log starts open. */
+  logOpen?: boolean;
 }
 
 /**
@@ -46,7 +63,8 @@ interface BoardProps {
  * screen; roads are drawn in an SVG under it, and each node is a button placed over its
  * spot, at least 56 CSS px, so it stays easy to hit however small the board is.
  */
-export function MapBoard({ view, onTravel }: BoardProps) {
+export function MapBoard({ view, told = [], name = null, onTravel, logOpen = false }: BoardProps) {
+  const [log, setLog] = useState(logOpen);
   return (
     <main className="map">
       <div className="map__board">
@@ -67,7 +85,20 @@ export function MapBoard({ view, onTravel }: BoardProps) {
           <MapNode key={node.id} node={node} onTravel={onTravel} />
         ))}
         {view.allDone && <p className="map__note">{hr.app.toBeContinued}</p>}
+        <button
+          type="button"
+          className="map__log-button"
+          aria-label={hr.story.log.open}
+          onClick={() => setLog(true)}
+        >
+          {/* An open book: the city's log. */}
+          <svg viewBox="-20 -16 40 32" aria-hidden="true">
+            <path d="M0 -10 Q-8 -14 -17 -11 V11 Q-8 8 0 12 Q8 8 17 11 V-11 Q8 -14 0 -10 Z M0 -10 V12" />
+            <path d="M-13 -5 H-5 M-13 0 H-5 M5 -5 H13 M5 0 H13" />
+          </svg>
+        </button>
       </div>
+      {log && <CityLog told={told} name={name} onClose={() => setLog(false)} />}
     </main>
   );
 }
@@ -105,5 +136,37 @@ function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): v
       {named && <span className="map__name">{name}</span>}
       {node.plate && <span className="map__plate">{node.plate}</span>}
     </button>
+  );
+}
+
+/**
+ * The city's log (story 2.5; narrative design, In-Game Storytelling): every line he has
+ * been told, room by room in the order he restarted them, to read again.
+ */
+function CityLog({
+  told,
+  name,
+  onClose,
+}: {
+  told: readonly RoomId[];
+  name: string | null;
+  onClose(): void;
+}) {
+  return (
+    <section className="map__log" aria-label={hr.story.log.open}>
+      <div className="map__log-head">
+        <h2 className="map__log-title">{hr.story.log.open}</h2>
+        <button type="button" className="story__next" onClick={onClose}>
+          {hr.story.log.close}
+        </button>
+      </div>
+      {told.length === 0 && <p className="story__text">{hr.story.log.empty}</p>}
+      {told.map((room) => (
+        <article key={room} className="map__log-room">
+          <h3 className="story__room">{hr.map.nodes[room]}</h3>
+          <StoryLines room={room} name={name} />
+        </article>
+      ))}
+    </section>
   );
 }

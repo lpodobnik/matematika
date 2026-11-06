@@ -25,7 +25,7 @@ export const districtMap: MapSpec = {
     { id: 'r10', kind: 'room', at: { x: 1120, y: 220 } },
     { id: 'r11', kind: 'room', at: { x: 1240, y: 600 }, gate: { rooms: ['r09', 'r10'] } },
     { id: 'r12', kind: 'room', at: { x: 1400, y: 430 } },
-    { id: 'r13', kind: 'room', at: { x: 1460, y: 180 }, gate: { tools: ['drum'] }, lock: 'drum' },
+    { id: 'r13', kind: 'room', at: { x: 1300, y: 230 }, gate: { tools: ['drum'] }, lock: 'drum' },
     { id: 'lair-20', kind: 'lair', at: { x: 190, y: 560 } },
     { id: 'lair-30', kind: 'lair', at: { x: 170, y: 290 } },
     { id: 'lair-45', kind: 'lair', at: { x: 560, y: 110 } },

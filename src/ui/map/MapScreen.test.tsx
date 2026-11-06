@@ -21,7 +21,8 @@ function board(done: string[], started: string[] = [], fresh: string | null = nu
   return renderToString(<MapBoard view={view} onTravel={() => undefined} />);
 }
 
-const buttons = (html: string) => [...html.matchAll(/<button[^>]*>/g)].map((match) => match[0]);
+const buttons = (html: string) =>
+  [...html.matchAll(/<button[^>]*class="map__node"[^>]*>/g)].map((match) => match[0]);
 
 describe('the map screen (story 2.2)', () => {
   it('draws every node as a button, with only the rooms he can reach enabled', () => {

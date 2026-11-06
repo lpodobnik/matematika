@@ -102,7 +102,14 @@ describe('one tag at a time with the refusal’s (story 1.16 review)', () => {
         ...initial,
         save: {
           ...initial.save,
-          progress: { roomsDone: [], started: [], onMap: false, tools: ['balance'], firstUse: [] },
+          progress: {
+            roomsDone: [],
+            started: [],
+            onMap: false,
+            told: [],
+            tools: ['balance'],
+            firstUse: [],
+          },
         },
       },
     });

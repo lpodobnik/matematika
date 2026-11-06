@@ -26,8 +26,9 @@ export interface Ctx {
  * save is read and the assets are loaded (story 2.1). `map` is the city map (story 2.2),
  * where he goes after every restart and whenever he leaves a room; it replaced story 1.13's
  * "to be continued" screen. `naming` comes once, after room 1's restart (story 2.4).
+ * `story` tells a room's lines the first time its restart ends (story 2.5).
  */
-export type Screen = 'loading' | 'room' | 'map' | 'naming';
+export type Screen = 'loading' | 'room' | 'map' | 'naming' | 'story';
 
 /**
  * How many copies of the scene the scene area draws side by side: 3 only for the tablet
@@ -85,6 +86,8 @@ export interface SaveState {
     started: SavedRoom[];
     /** He is on the map (story 2.2): a launch opens the map, not the next room. */
     onMap: boolean;
+    /** Rooms whose story lines he has seen, in order: the city's log (story 2.5). */
+    told: RoomId[];
   };
   /**
    * Parts, upgrades and piles (`createEconomy()`). From story 1.14 a right prediction pays

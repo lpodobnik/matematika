@@ -32,6 +32,7 @@ const sample: SaveV1 = {
     tools: [],
     started: [],
     onMap: false,
+    told: [],
     firstUse: ['pin', 'handover-dial'],
     room: {
       id: 'r03',
@@ -59,7 +60,15 @@ describe('decodeSave', () => {
       v: 1,
       createdAt: now,
       character: { name: null, look: null },
-      progress: { roomsDone: [], tools: [], firstUse: [], room: null, started: [], onMap: false },
+      progress: {
+        roomsDone: [],
+        tools: [],
+        firstUse: [],
+        room: null,
+        started: [],
+        onMap: false,
+        told: [],
+      },
       economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {} },
       settings: { muted: false, quality: null },
     });

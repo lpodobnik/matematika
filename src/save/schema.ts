@@ -48,6 +48,11 @@ export interface SaveProgress {
    * rooms, in a restart: a launch goes on to the next room.
    */
   onMap: boolean;
+  /**
+   * Rooms whose story lines he has seen, in that order: the city's log (story 2.5). A room
+   * finished but not yet here tells its lines before anything else.
+   */
+  told: RoomId[];
 }
 
 export interface SaveV1 {

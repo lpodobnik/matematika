@@ -246,7 +246,7 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
     expect(splitterOffered(store.getState().room as RoomState, ['balance'])).toBe(true);
   });
 
-  it('a reload in a restart goes on to the next room (story 2.2)', () => {
+  it('a reload in a restart comes back to the room’s story card, before the next room (stories 2.2, 2.5)', () => {
     const g = game();
     g.act({ type: 'room/enter', roomId: 'r01' });
     g.act({ type: 'machine/touch' });
@@ -256,20 +256,31 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
     expect(g.store.getState().room?.stage.phase).toBe('restart');
     expect(g.store.getState().save.progress.roomsDone).toEqual(['r01']);
     const { state } = reload(g.store.getState());
-    expect(state.ui.screen).toBe('room');
-    expect(state.room?.spec.id).toBe('r02');
+    expect(state.ui.screen).toBe('story');
+    expect(state.room).toBeNull();
   });
 
   it('with every room done, the map shows', () => {
     const save = {
       ...newSave(at),
       character: { name: 'Ivo', look: 'look-1' as const },
-      progress: { ...newSave().progress, roomsDone: ['r01', 'r02', 'r03', 'r04'] as const },
+      progress: {
+        ...newSave().progress,
+        roomsDone: ['r01', 'r02', 'r03', 'r04'] as const,
+        told: ['r01', 'r02', 'r03', 'r04'] as const,
+      },
     };
     const store = createGameStore({ effects: [] });
     store.getState().dispatch({
       type: 'boot/start',
-      save: { ...save, progress: { ...save.progress, roomsDone: [...save.progress.roomsDone] } },
+      save: {
+        ...save,
+        progress: {
+          ...save.progress,
+          roomsDone: [...save.progress.roomsDone],
+          told: [...save.progress.told],
+        },
+      },
       room: null,
     });
     expect(store.getState().ui.screen).toBe('map');

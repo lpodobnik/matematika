@@ -197,6 +197,7 @@ export function decodeSave(value: unknown, now: string): SaveV1 | null {
       room: decodeRoom(progress.room),
       started: decodeStarted(progress.started),
       onMap: progress.onMap === true,
+      told: known(progress.told, isRoomId),
     },
     economy: decodeEconomy(value.economy),
     settings: decodeSettings(value.settings),

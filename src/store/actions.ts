@@ -29,6 +29,8 @@ export type Action =
    * the naming screen; the next room follows.
    */
   | { type: 'character/set'; name: string; look: LookId }
+  /** The story card's "Dalje" (story 2.5): the room's lines are told; on to what comes next. */
+  | { type: 'story/next' }
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */
   | { type: 'room/enter'; roomId: RoomId; stage?: number }
   /** A touch anywhere on the machine; the first one ends the stage's arrive. */

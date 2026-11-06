@@ -40,6 +40,8 @@ function game(save: SaveState | null = null) {
     write('5');
     act({ type: 'presentation/done', roomId: 'r01', stage: 0, phase: 'locked' });
     act({ type: 'presentation/done', roomId: 'r01', stage: 0, phase: 'restart' });
+    // Room 1's story card first (story 2.5).
+    act({ type: 'story/next' });
   };
   return { store, seen, act, write, playRoomOne };
 }
@@ -109,8 +111,11 @@ describe('the naming after room 1 (story 2.4)', () => {
     g.write('5');
     g.act({ type: 'presentation/done', roomId: 'r01', stage: 0, phase: 'locked' });
     expect(g.store.getState().room?.stage.phase).toBe('restart');
-    expect(reload(g.store.getState()).ui.screen).toBe('naming');
+    // Room 1's story card comes first (story 2.5), then the naming.
+    expect(reload(g.store.getState()).ui.screen).toBe('story');
     g.act({ type: 'presentation/done', roomId: 'r01', stage: 0, phase: 'restart' });
+    expect(reload(g.store.getState()).ui.screen).toBe('story');
+    g.act({ type: 'story/next' });
     expect(reload(g.store.getState()).ui.screen).toBe('naming');
   });
 
@@ -119,12 +124,15 @@ describe('the naming after room 1 (story 2.4)', () => {
     const g = game();
     g.store.getState().dispatch({
       type: 'boot/start',
-      save: { ...save, progress: { ...save.progress, roomsDone: ['r01'] } },
+      save: { ...save, progress: { ...save.progress, roomsDone: ['r01'], told: ['r01'] } },
       room: { id: 'r02', stage: 1, lines: [], pin: null, splitterSeen: false },
     });
+    // The room waits under the naming, and is still saved as the room in progress.
     expect(g.store.getState().ui.screen).toBe('naming');
-    expect(g.store.getState().save.progress.started.map((room) => room.id)).toEqual(['r02']);
+    expect(g.store.getState().room?.spec.id).toBe('r02');
+    expect(reload(g.store.getState()).ui.screen).toBe('naming');
     g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
+    expect(g.store.getState().ui.screen).toBe('room');
     expect(g.store.getState().room?.spec.id).toBe('r02');
     expect(g.store.getState().room?.stageIndex).toBe(1);
     expect(g.store.getState().save.progress.started).toEqual([]);
@@ -134,7 +142,12 @@ describe('the naming after room 1 (story 2.4)', () => {
     const save = newSave(at);
     const g = game({
       ...save,
-      progress: { ...save.progress, roomsDone: ['r01', 'r02', 'r03', 'r04'], tools: ['balance'] },
+      progress: {
+        ...save.progress,
+        roomsDone: ['r01', 'r02', 'r03', 'r04'],
+        told: ['r01', 'r02', 'r03', 'r04'],
+        tools: ['balance'],
+      },
     });
     expect(g.store.getState().ui.screen).toBe('naming');
     g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });

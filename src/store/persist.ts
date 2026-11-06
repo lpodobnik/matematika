@@ -12,7 +12,7 @@ export function newSave(createdAt: string | null = null): SaveState {
   return {
     createdAt,
     character: { name: null, look: null },
-    progress: { roomsDone: [], tools: [], firstUse: [], started: [], onMap: false },
+    progress: { roomsDone: [], tools: [], firstUse: [], started: [], onMap: false, told: [] },
     economy: createEconomy(),
     settings: { muted: false, quality: null },
   };
