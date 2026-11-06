@@ -50,10 +50,10 @@ so that what I learned matches what school calls it.
 ### Review (one pass) and fixes
 
 No correctness bug in normal play. All findings were fixed:
-1. A save that has rooms told but no  (from the 2.5 build) would never show those rooms' cards anywhere. The decoder now counts the told rooms' ideas as seen, so the log shows them (with a test). This also fixes the log placing an idea under the wrong room for such a save.
-2. On the tablet, Dalje came before the cards in the markup, so a screen reader read it too early. It now comes last in the markup, and the phone layout uses a grid instead of .
-3. The card's term was an  under the log's  rooms. It is now a paragraph, in bold.
-4.  had no fallback for older Safari. It now sits in , over plain centring.
+1. A save that has rooms told but no `ideasSeen` (from the 2.5 build) would never show those rooms' cards anywhere. The decoder now counts the told rooms' ideas as seen, so the log shows them (with a test). This also fixes the log placing an idea under the wrong room for such a save.
+2. On the tablet, Dalje came before the cards in the markup, so a screen reader read it too early. It now comes last in the markup, and the phone layout uses a grid instead of `order`.
+3. The card's term was an `h2` under the log's `h3` rooms. It is now a paragraph, in bold.
+4. `align-items: safe center` had no fallback for older Safari. It now sits in `@supports`, over plain centring.
 5. The Croatian:
    - the notch card says "pomak klizača", not "zarez" (school's decimal comma), and reasons the right way round;
    - the prediction card says "prvo pokušaš pogoditi" and "uvrstiš u jednadžbu";
