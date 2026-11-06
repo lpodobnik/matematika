@@ -87,3 +87,34 @@ describe('the poke window on the dial (story 1.14)', () => {
     expect(bottom).toBeGreaterThan(layout.tickHeight / 2);
   });
 });
+
+describe('dialSkin.label (story 1.15)', () => {
+  it('draws a paper plate over the knob with a pointer down to the knob’s top', () => {
+    const polys: number[][] = [];
+    const plates: { x: number; y: number; width: number; height: number }[] = [];
+    const fills: number[] = [];
+    const g = {
+      clear: () => g,
+      poly: (points: number[]) => {
+        polys.push(points);
+        return g;
+      },
+      roundRect: (x: number, y: number, width: number, height: number) => {
+        plates.push({ x, y, width, height });
+        return g;
+      },
+      fill: (style: { color: number }) => {
+        fills.push(style.color);
+        return g;
+      },
+      stroke: () => g,
+    };
+    dialSkin.label(g as unknown as Graphics, 120, 50, -60, -48, 4);
+    expect(plates).toEqual([{ x: -60, y: -110, width: 120, height: 50 }]);
+    // The pointer: from the plate's bottom edge to its tip on the knob's top, centred.
+    const [pointer] = polys;
+    expect(pointer?.slice(-2)).toEqual([0, -48]);
+    expect(Math.max(...(pointer ?? []).filter((_, i) => i % 2 === 1))).toBe(-48);
+    expect(fills).toHaveLength(2);
+  });
+});

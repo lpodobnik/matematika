@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { hr } from '@/content/text/hr';
 import type { LineSegment } from '@/math/format';
 import type { LineToken, Token } from '@/math/tokens';
+import { handoverView } from '@/room/handover';
 import {
   draftDisplay,
   type LineDisplay,
@@ -13,6 +14,11 @@ import {
 import { pinOffered } from '@/room/pin';
 import type { NotebookLine } from '@/room/types';
 import { useGame } from '@/store/store';
+import {
+  HandoverNote,
+  isNotebookHandover,
+  type NotebookHandover,
+} from '@/ui/notebook/HandoverNote';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
 import { LineView, textLine } from '@/ui/notebook/LineView';
 import { NumberPad } from '@/ui/notebook/NumberPad';
@@ -28,6 +34,10 @@ const noTemplates: LineToken[][] = [];
  * the draft and the number pad. It reads the stage through selectors and acts only through
  * dispatch; what a key does is decided in `room/notebook.ts`. A computer's keys work too.
  * On a phone it shows pushed aside while a pin waits to be confirmed (notebook-aside.ts).
+ * When the next step is in the notebook (story 1.15: `write` or `check`,
+ * room/handover.ts), the line to write pulses and its handover tag hangs under the lines.
+ * When it is on the scene, with its tag there, the phone's notebook shows pushed aside
+ * as for a waiting pin, so it never hides the tag; he can bring it back as then.
  */
 export function Notebook() {
   const lines = useGame((s) => s.room?.stage.lines ?? noLines);
@@ -37,9 +47,13 @@ export function Notebook() {
   const refused = useGame((s) => s.room?.stage.refused ?? 0);
   const writes = useGame((s) => (s.room ? notebookWrites(s.room.stage) : false));
   const choice = useGame((s) => s.ui.notebookAside);
-  const waiting = useGame((s) =>
-    s.room && pinOffered(s.room) ? `${s.room.spec.id}.${s.room.stageIndex}` : null,
+  const step = useGame((s) =>
+    handoverView(s.room, s.save.progress.firstUse, s.save.progress.tools),
   );
+  const stageAt = useGame((s) => (s.room ? `${s.room.spec.id}.${s.room.stageIndex}` : null));
+  const pinWaits = useGame((s) => (s.room ? pinOffered(s.room) : false));
+  const onScene = step !== null && !isNotebookHandover(step);
+  const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${step}` : null;
   const [broughtBack, setBroughtBack] = useState<string | null>(null);
   const aside = shownAside(choice, waiting, broughtBack);
   const dispatch = useGame((s) => s.dispatch);
@@ -47,7 +61,8 @@ export function Notebook() {
   const shown = useMemo(() => lineDisplays(lines), [lines]);
   const display = useMemo(() => draftDisplay({ draft, templates }), [draft, templates]);
   const send = useCallback((key: NotebookKey) => dispatch(keyAction(key)), [dispatch]);
-  // The page asks for the opposite of what it shows; the waiting pin decides what that means.
+  // The page asks for the opposite of what it shows; the waiting pin (or the scene's
+  // handover tag) decides what that means.
   const slide = useCallback(() => {
     const next = pressHandle({ choice, broughtBack }, waiting);
     setBroughtBack(next.broughtBack);
@@ -66,6 +81,7 @@ export function Notebook() {
       refused={refused}
       writes={writes}
       aside={aside}
+      handover={isNotebookHandover(step) ? step : null}
       onKey={send}
       onSlide={slide}
     />
@@ -86,6 +102,11 @@ export interface NotebookPageProps {
   writes: boolean;
   /** On a phone, pushed aside off the scale; the tablet layout ignores it. */
   aside: boolean;
+  /**
+   * The next step is in the notebook (story 1.15): the draft line pulses, its tag hangs
+   * under the lines, and on a phone the handle pulses while the notebook is pushed aside.
+   */
+  handover?: NotebookHandover | null;
   onKey(key: NotebookKey): void;
   onSlide(aside: boolean): void;
 }
@@ -93,7 +114,8 @@ export interface NotebookPageProps {
 /**
  * The notebook's page, from props only. On the tablet it sits beside the scale; on a phone
  * in landscape (under 500 CSS px tall) notebook.css slides it over the scale, and the
- * handle pushes it aside or brings it back.
+ * handle pushes it aside or brings it back. The draft line always stays in view, also when
+ * a handover tag takes room under the lines.
  */
 export function NotebookPage({
   lines,
@@ -104,17 +126,24 @@ export function NotebookPage({
   refused,
   writes,
   aside,
+  handover = null,
   onKey,
   onSlide,
 }: NotebookPageProps) {
   const listRef = useRef<HTMLOListElement>(null);
 
-  // The draft stays in view as lines are added and it grows.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: it scrolls when either changes
+  // The draft stays in view as lines are added, as it grows, and as a handover tag takes
+  // room: the list scrolls to its end, but never so far that the draft's top is cut off.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: it scrolls when any of them changes
   useLayoutEffect(() => {
     const list = listRef.current;
-    if (list) list.scrollTop = list.scrollHeight;
-  }, [lines, draft]);
+    if (!list) return;
+    list.scrollTop = list.scrollHeight;
+    const line = list.querySelector('.line--draft');
+    if (!line) return;
+    const cut = list.getBoundingClientRect().top - line.getBoundingClientRect().top;
+    if (cut > 0) list.scrollTop -= cut;
+  }, [lines, draft, handover]);
 
   return (
     <aside className="notebook-area" data-aside={aside} aria-label={hr.notebook.label}>
@@ -124,13 +153,14 @@ export function NotebookPage({
         className="notebook__handle"
         aria-label={aside ? hr.notebook.bringBack : hr.notebook.pushAside}
         aria-expanded={!aside}
+        data-pulse={handover !== null}
         onPointerDown={(event) => primaryPress(event, () => onSlide(!aside))}
       >
         <svg className="notebook__chevron" viewBox="0 0 24 24" aria-hidden="true">
           <path d={aside ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
         </svg>
       </button>
-      <div className="notebook">
+      <div className="notebook" data-handover={handover !== null}>
         <ol className="notebook__lines" ref={listRef}>
           {lines.map((line) => (
             <LineView
@@ -145,6 +175,7 @@ export function NotebookPage({
             kind="draft"
             wrong={wrong}
             wiggle={refused > 0}
+            pulse={handover !== null}
             caret={writes}
           />
           {upcoming.map((segments, i) => (
@@ -152,6 +183,7 @@ export function NotebookPage({
             <LineView key={`upcoming-${i}`} segments={segments} kind="upcoming" />
           ))}
         </ol>
+        {handover && <HandoverNote step={handover} />}
         <NumberPad writes={writes} blank={blank} onKey={onKey} />
       </div>
     </aside>

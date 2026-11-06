@@ -59,6 +59,9 @@ describe('enterRoom', () => {
       dialOpen: { min: 0, max: 10 },
       pin: null,
       hintLevel: 0,
+      // Story 1.15: the root reducer starts the idle clock as the stage arrives.
+      lastActionAt: null,
+      idle: false,
       presentedAt: null,
     });
     expect(events).toEqual([{ type: 'StageArrived', roomId: 'r01', stage: 0 }]);

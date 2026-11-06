@@ -1,11 +1,14 @@
 import { extend } from '@pixi/react';
-import { animate } from 'motion';
-import { Container, Graphics, Rectangle } from 'pixi.js';
+import { type AnimationPlaybackControls, animate } from 'motion';
+import { Container, Graphics, Rectangle, Text, type TextStyleOptions } from 'pixi.js';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { palette } from '@/art/palette';
 import { dialSkin } from '@/art/skins/dial';
 import { tuning } from '@/config/tuning';
 import { dialView, notchCount, notchOf } from '@/room/dial';
+import { handoverView } from '@/room/handover';
+import { scaleView } from '@/room/scale';
 import { useGame } from '@/store/store';
 import {
   createDialDrag,
@@ -16,6 +19,13 @@ import {
   watchDragCancel,
 } from '@/ui/scene/scale/dial-drag';
 import {
+  dialLabelLayout,
+  dialLabelText,
+  dialLabelTop,
+  dimmedLabelAlpha,
+  nudgeOffset,
+} from '@/ui/scene/scale/dial-label';
+import {
   clampNotch,
   type DialLayout,
   dialLayout,
@@ -23,7 +33,7 @@ import {
 } from '@/ui/scene/scale/dial-layout';
 import { usePinTest } from '@/ui/scene/scale/use-pin-test';
 
-extend({ Container, Graphics });
+extend({ Container, Graphics, Text });
 
 interface Props {
   /** CSS px per scene unit: notches are 24 CSS px apart, whatever the screen. */
@@ -47,11 +57,22 @@ const clampWidth = 0.6;
  * (use-pin-test.ts), though the store has it there already. If he grabs the dial during the
  * test, his drag takes over from where the knob is: the dial is set there, and the test
  * ends.
+ *
+ * A plate above the knob shows its x, `x = 9`, and follows it; while the scale acts out a
+ * line (or Balance) it reads `x = ?`, dimmed (story 1.15; dial-label.ts). It is drawn
+ * outside the track's mask, so a scrolling track never clips it, and a drag can start on it
+ * too. Until he first turns a dial (the `dial` handover, room/handover.ts), the knob and
+ * its plate nudge one notch over and back by themselves every `tuning.dialNudgeMs`, with no
+ * store change; under reduced motion the knob blinks instead.
  */
 export function Dial({ sceneScale }: Props) {
   const dial = useGame(useShallow((s) => dialView(s.room)));
   const dispatch = useGame((s) => s.dispatch);
   const test = usePinTest();
+  const actingOut = useGame((s) => (s.room ? scaleView(s.room).actingOut : false));
+  const nudging = useGame(
+    (s) => handoverView(s.room, s.save.progress.firstUse, s.save.progress.tools) === 'dial',
+  );
   const notches = dial ? notchCount(dial) : 0;
   const layout = useMemo(
     () => (sceneScale > 0 ? dialLayout(sceneScale, notches) : null),
@@ -62,6 +83,9 @@ export function Dial({ sceneScale }: Props) {
   const knobRef = useRef<Container>(null);
   const maskRef = useRef<Graphics>(null);
   const clampRef = useRef<Container>(null);
+  const knobNudgeRef = useRef<Container>(null);
+  const labelRef = useRef<Container>(null);
+  const labelNudgeRef = useRef<Container>(null);
   const layoutRef = useRef<DialLayout | null>(layout);
   const dialRef = useRef(dial);
   const testXRef = useRef(test.dialX);
@@ -78,6 +102,7 @@ export function Dial({ sceneScale }: Props) {
           scrollRef.current = followScroll(current, scrollRef.current, offset);
           if (knobRef.current) knobRef.current.x = offset;
           if (trackRef.current) trackRef.current.x = current.originX - scrollRef.current;
+          if (labelRef.current) labelRef.current.x = current.originX - scrollRef.current + offset;
         },
         onNotch: (notch) => {
           const view = dialRef.current;
@@ -151,10 +176,84 @@ export function Dial({ sceneScale }: Props) {
     return () => controls.stop();
   }, [lifting, layout]);
 
+  // The nudge: until he first turns a dial, one notch over and back every dialNudgeMs, the
+  // first soon after the stage shows; never while he drags. At the end of its reach the
+  // knob nudges left instead.
+  const turns = dial?.turns ?? false;
+  const spacing = layout?.spacing ?? 0;
+  useEffect(() => {
+    if (!nudging || !turns || spacing <= 0) return;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    let controls: AnimationPlaybackControls | null = null;
+    const settle = () => {
+      for (const part of [knobNudgeRef.current, labelNudgeRef.current]) {
+        if (part) part.x = 0;
+      }
+      if (knobNudgeRef.current) knobNudgeRef.current.alpha = 1;
+    };
+    const nudge = () => {
+      if (drag.dragging()) return;
+      const view = dialRef.current;
+      const reach = view && view.x >= view.openMax ? -spacing : spacing;
+      controls?.stop();
+      controls = animate(0, 1, {
+        duration: tuning.dialNudgeLengthMs / 1000,
+        ease: 'linear',
+        onUpdate: (t) => {
+          const knob = knobNudgeRef.current;
+          if (reduced) {
+            if (knob) knob.alpha = 1 - 0.6 * nudgeOffset(t, 1);
+            return;
+          }
+          const dx = nudgeOffset(t, reach);
+          if (knob) knob.x = dx;
+          if (labelNudgeRef.current) labelNudgeRef.current.x = dx;
+        },
+        onComplete: settle,
+      });
+    };
+    const first = setTimeout(nudge, 1000);
+    const every = setInterval(nudge, tuning.dialNudgeMs);
+    return () => {
+      clearTimeout(first);
+      clearInterval(every);
+      controls?.stop();
+      settle();
+    };
+  }, [nudging, turns, spacing, drag]);
+
+  // The plate's text: the test's x while the machine turns the dial, `x = ?` while the
+  // scale acts out, else the dial's x.
+  const labelText = dialLabelText(test.dialX ?? (actingOut || !dial ? null : dial.x));
+  const dimmed = actingOut && test.dialX === null;
+  const label = useMemo(
+    () => (layout ? dialLabelLayout(layout, labelText, sceneScale) : null),
+    [layout, labelText, sceneScale],
+  );
+  const labelStyle: TextStyleOptions = useMemo(
+    () => ({
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: label?.fontSize ?? 0,
+      fontWeight: '700',
+      fill: palette.ink,
+    }),
+    [label?.fontSize],
+  );
+  const drawLabel = useCallback(
+    (g: Graphics) => {
+      if (!label || !layout) return;
+      dialSkin.label(g, label.width, label.height, label.bottom, label.knobTop, layout.lineWidth);
+    },
+    [label, layout],
+  );
+
+  // A drag can start anywhere on the window, and on the plate above the knob too.
   const hitArea = useMemo(() => {
     const box = layout?.hitArea;
-    return box ? new Rectangle(box.x, box.y, box.width, box.height) : null;
-  }, [layout]);
+    if (!box || !layout) return null;
+    const top = Math.max(0, Math.min(box.y, layout.trackY + dialLabelTop(layout, sceneScale)));
+    return new Rectangle(box.x, top, box.width, box.y + box.height - top);
+  }, [layout, sceneScale]);
   const drawTrack = useCallback(
     (g: Graphics) => {
       if (!layout) return;
@@ -211,9 +310,26 @@ export function Dial({ sceneScale }: Props) {
           </pixiContainer>
         )}
         <pixiContainer ref={knobRef}>
-          <pixiGraphics draw={drawKnob} />
+          {/* Nudged through its ref (story 1.15); the drag places the knob around it. */}
+          <pixiContainer ref={knobNudgeRef}>
+            <pixiGraphics draw={drawKnob} />
+          </pixiContainer>
         </pixiContainer>
       </pixiContainer>
+      {/* Placed through its ref with the knob (onKnob), outside the track's mask. */}
+      {label && (
+        <pixiContainer ref={labelRef} y={layout.trackY} alpha={dimmed ? dimmedLabelAlpha : 1}>
+          <pixiContainer ref={labelNudgeRef}>
+            <pixiGraphics draw={drawLabel} />
+            <pixiText
+              text={labelText}
+              anchor={0.5}
+              y={(label.top + label.bottom) / 2}
+              style={labelStyle}
+            />
+          </pixiContainer>
+        </pixiContainer>
+      )}
     </pixiContainer>
   );
 }

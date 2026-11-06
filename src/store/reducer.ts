@@ -9,6 +9,7 @@ import { payPrediction, predictionKey } from '@/economy/predictions';
 import { assert } from '@/lib/assert';
 import { setDial } from '@/room/dial';
 import { meetControls } from '@/room/first-use';
+import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } from '@/room/handover';
 import { deleteToken, enterLine, typeToken } from '@/room/notebook';
 import {
   finishPresentation,
@@ -23,7 +24,7 @@ import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { liftSplitter, splitBothPans, stepSplitter } from '@/room/splitter';
 import { dropOnPan, stepTray, takeOffPan } from '@/room/tray';
-import type { RoomSpec, ToolId } from '@/room/types';
+import type { RoomSpec, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import { initialQuality, reduceQuality } from '@/store/quality';
@@ -147,6 +148,59 @@ function progress(step: RoomStep | null, save: SaveState): Progressed {
 }
 
 /**
+ * The actions that aren't his: the game's own, the clock's and the dev panel's. Any other
+ * that does something to the room restarts the stage's idle clock.
+ */
+const notHis: ReadonlySet<Action['type']> = new Set<Action['type']>([
+  'room/enter',
+  'presentation/done',
+  'clock/tick',
+  'dev/set-tools',
+  'dev/set-copies',
+  'quality/measured',
+  'quality/force',
+]);
+
+/** His action as the handovers name it (room/handover.ts). */
+function handoverMove(action: Action): HandoverMove {
+  switch (action.type) {
+    case 'dial/set':
+      return 'dial';
+    case 'tray/drop':
+    case 'tray/take':
+      return 'tray';
+    case 'splitter/split':
+      return 'split';
+    default:
+      return 'other';
+  }
+}
+
+/**
+ * The handover tags' part of an action (story 1.15; room/handover.ts): a stage that has
+ * just arrived starts its idle clock at `now`; an action of his that did something
+ * restarts it and ends idle, and marks the handover steps it took as met; the clock makes
+ * a stage idle after `tuning.hintIdleMs`. `previous` is the room before the action.
+ */
+function handOver(
+  previous: RoomState | null,
+  action: Action,
+  now: number,
+  { step, save }: Progressed,
+): Progressed {
+  let room = step?.room ?? previous;
+  if (!room) return { step, save };
+  if (step) room = stampArrival(room, now) ?? room;
+  if (step && !notHis.has(action.type)) room = actedAt(room, now);
+  if (action.type === 'clock/tick') room = tickIdle(room, now) ?? room;
+  const { firstUse, tools } = save.progress;
+  const met = step ? meetHandovers(previous, room, handoverMove(action), firstUse, tools) : null;
+  const nextSave = met ? { ...save, progress: { ...save.progress, firstUse: met } } : save;
+  if (room === (step?.room ?? previous)) return { step, save: nextSave };
+  return { step: { room, events: step?.events ?? [] }, save: nextSave };
+}
+
+/**
  * A right prediction pays parts into `save.economy`, once per stage (GDD, Prediction; story
  * 1.14). It is read off the room's `PredictionMade` events, so the room reducers know
  * nothing of the economy.
@@ -171,7 +225,7 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
     const before =
       action.type === 'dev/set-tools' ? withTools(state.save, action.tools) : state.save;
     const change = roomStep(state, action, ctx.now, roomList, before.progress.tools);
-    const progressed = progress(change, before);
+    const progressed = handOver(state.room, action, ctx.now, progress(change, before));
     const { step } = progressed;
     const events: DomainEvent[] = step ? [...step.events] : [];
     const save = payPredictions(events, progressed.save);

@@ -48,6 +48,14 @@ export const tuning = {
   trayRepeatDelayMs: 450,
   /** …then one step this often, until he lets go. The splitter's − and + repeat the same way. */
   trayRepeatMs: 110,
+  /** Story 1.15 (GDD, Player Assistance): this long without an action of his in a stage,
+   * and the current handover step's tag shows again, met or not. */
+  hintIdleMs: 60_000,
+  /** Story 1.15: until he first turns a dial, its knob nudges one notch right and back by
+   * itself this often (presentation only)… */
+  dialNudgeMs: 4000,
+  /** …each nudge taking this long, there and back. */
+  dialNudgeLengthMs: 600,
   /** Architecture, Balance moves: the splitter is set to this many parts at the fewest (a
    * stage arrives with it)… */
   splitterMinParts: 2,

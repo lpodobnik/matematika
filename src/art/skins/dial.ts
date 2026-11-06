@@ -7,6 +7,7 @@
 //            its screw on top, so the track is blocked there by shape, not just a thicker
 //            tick (NFR4). It lifts away when the pin is confirmed
 //   knob     a handle centred on its notch, with an index line down its middle
+//   label    the knob's x (story 1.15): a paper plate above it, pointing down at it
 
 import type { Graphics } from 'pixi.js';
 import { palette } from '@/art/palette';
@@ -89,6 +90,30 @@ export const dialSkin = {
     g.moveTo(-half * 0.8, top)
       .lineTo(half * 0.8, top)
       .stroke({ ...ink, width: lineWidth * 1.75 });
+  },
+
+  /**
+   * The x label's plate (story 1.15), centred over the knob: a small sign with its bottom
+   * at `bottom` and a pointer down to the knob's top at `knobTop` (y from the track's line),
+   * so it reads as the knob's own x. Its text is drawn over it.
+   */
+  label(
+    g: Graphics,
+    width: number,
+    height: number,
+    bottom: number,
+    knobTop: number,
+    lineWidth: number,
+  ): void {
+    g.clear();
+    const ink = { width: lineWidth, color: palette.ink };
+    const half = Math.min(width / 4, height * 0.22);
+    g.poly([-half, bottom - lineWidth, half, bottom - lineWidth, 0, knobTop])
+      .fill({ color: palette.ink })
+      .stroke({ ...ink, join: 'round' });
+    g.roundRect(-width / 2, bottom - height, width, height, height * 0.25)
+      .fill({ color: palette.paper })
+      .stroke(ink);
   },
 
   /** The knob, centred on its notch. */

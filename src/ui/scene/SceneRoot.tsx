@@ -25,6 +25,7 @@ import { Machine } from '@/ui/scene/machine/Machine';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
 import { Dial } from '@/ui/scene/scale/Dial';
+import { HandoverTag } from '@/ui/scene/scale/HandoverTag';
 import { Pin } from '@/ui/scene/scale/Pin';
 import { createPieceDrag } from '@/ui/scene/scale/piece-drag';
 import { Scale } from '@/ui/scene/scale/Scale';
@@ -261,6 +262,9 @@ function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps
       <Pin sceneScale={copyScale} question={tools ? sceneOrigin : null} />
       {tools && <Tray sceneScale={copyScale} drag={drag} toScene={toScene} />}
       {tools && <Splitter sceneScale={copyScale} drag={splitterDrag} toScene={toScene} />}
+      {/* Story 1.15: the next step's handover tag, over the tools; like them, only in the
+          only copy, as its text keeps 20 CSS px. */}
+      {tools && <HandoverTag sceneScale={copyScale} origin={sceneOrigin} />}
     </pixiContainer>
   );
 }

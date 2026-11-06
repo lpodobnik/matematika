@@ -232,3 +232,155 @@
     opacity: 0.3;
   }
 }
+
+/* Story 1.15, the handover tags at the notebook (room/handover.ts): when the next step is
+   to write x, or the check line, the draft line pulses until he writes it, and the step's
+   tag hangs between the lines and the pad. It is the 1.14 pin's paper tag: clipped
+   corners, a punched hole and a string, text at least 20 CSS px. Ink only (NFR12). */
+/* A ring that swells and fades round the line; no transform, so the list never overflows. */
+.line--pulse {
+  border-radius: 4px;
+  animation: line-pulse 1600ms ease-in-out infinite;
+}
+
+/* A refusal still wiggles the pulsing line once, then it pulses on. */
+.line--pulse.line--wiggle {
+  animation:
+    line-wiggle 360ms ease-in-out,
+    line-pulse 1600ms ease-in-out 360ms infinite;
+}
+
+@keyframes line-pulse {
+  0%,
+  100% {
+    background: rgb(61 75 92 / 0);
+    box-shadow: inset 0 0 0 0 rgb(61 75 92 / 0);
+  }
+  50% {
+    background: rgb(61 75 92 / 0.1);
+    box-shadow: inset 0 0 0 3px rgb(61 75 92 / 0.45);
+  }
+}
+
+/* While the tag hangs, the lines take only the room they need, so the tag hangs right
+   under them; the pad stays at the bottom, and a long page still scrolls. */
+.notebook[data-handover="true"] .notebook__lines {
+  flex: 0 1 auto;
+}
+
+.notebook[data-handover="true"] .pad {
+  margin-top: auto;
+}
+
+.handover-note {
+  position: relative;
+  flex: 0 0 auto;
+  padding-top: 10px;
+}
+
+/* The string, from the lines down to the hole. */
+.handover-note__string {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 22px;
+  margin-left: -1px;
+  background: var(--ink);
+  opacity: 0.8;
+}
+
+/* The card's ink edge and its paper, both with clipped corners. */
+.handover-note__edge {
+  padding: 2px;
+  background: var(--ink);
+  clip-path: polygon(
+    10px 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    10px 100%,
+    0 calc(100% - 10px),
+    0 10px
+  );
+}
+
+.handover-note__card {
+  margin: 0;
+  padding: 18px 10px 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.25;
+  text-align: center;
+  clip-path: polygon(
+    9px 0,
+    calc(100% - 9px) 0,
+    100% 9px,
+    100% calc(100% - 9px),
+    calc(100% - 9px) 100%,
+    9px 100%,
+    0 calc(100% - 9px),
+    0 9px
+  );
+}
+
+.handover-note__hole {
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: -12px auto 4px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: rgb(61 75 92 / 0.12);
+}
+
+/* On a phone the tag is tighter, so the line to write keeps room above it; with the
+   notebook pushed aside, its handle pulses when the step is in it. */
+@media (max-height: 499.98px) {
+  .handover-note {
+    padding-top: 4px;
+  }
+
+  .handover-note__string {
+    height: 12px;
+  }
+
+  .handover-note__card {
+    padding: 10px 8px 4px;
+    line-height: 1.15;
+  }
+
+  .handover-note__hole {
+    margin: -6px auto 2px;
+  }
+
+  .notebook-area[data-aside="true"] .notebook__handle[data-pulse="true"] {
+    animation: handle-pulse 1600ms ease-in-out infinite;
+  }
+}
+
+@keyframes handle-pulse {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line--pulse,
+  .line--pulse.line--wiggle,
+  .notebook-area[data-aside="true"] .notebook__handle[data-pulse="true"] {
+    animation: pulse-blink 1600ms steps(2, jump-none) infinite;
+  }
+}
+
+@keyframes pulse-blink {
+  50% {
+    box-shadow: inset 0 0 0 3px rgb(61 75 92 / 0.45);
+  }
+}

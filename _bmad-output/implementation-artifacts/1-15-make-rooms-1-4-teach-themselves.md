@@ -142,3 +142,48 @@ And Luka in room 4:
 ## Dev Agent Record
 
 (Each lane adds its own section: Calls, files, checks.)
+
+### Lane C: the slider shows x, handover tags (AC 12–13)
+
+**Calls**
+- Handover steps are met as `handover-<id>` in `firstUse` (`HandoverId` plus a template type), because the existing `tray`/`splitter` ids are met on offer for the wiggle, and a handover only once he takes the step.
+- His action, for the idle clock, means an action of his that changed the room. A touch or key that does nothing doesn't count, so if he is stuck tapping around, the tag still comes back. A stage starts its clock when it arrives (reset too).
+- The clock tick sets `stage.idle` once 60 s pass. The earliest step that applies then shows again, met or not, until his next action.
+- No handover shows while the pin is offered (its own tag asks), while jammed, or once locked.
+- `dial` stops applying once the pans level, a line is acted out, the tray is offered, or Balance has been used.
+- `write` also applies when Balance leaves `x = n` on the pans.
+- `balance-goal` applies after a Balance-written line, until one side holds only x and the other no x.
+- `balance-goal` is met only if it applied before the move that isolated x. So in room 4's straight path (`2x = 18` at once) it never shows, and the splitter tag comes next. Otherwise the goal tag would hide the splitter tag until the split.
+- `splitter` applies only while x is isolated but not alone (and `splitterOffered`), so it can't jump ahead under today's offer rules.
+- Met when: `dial` on any `dial/set`; `tray` on any `tray/drop`/`tray/take` that did something; `splitter` on a split; `write`/`check` when that line appears.
+- Slider label: a paper plate above the knob, drawn outside the track's mask, moved by the drag's `onKnob`.
+- `x = ?`, dimmed, follows `scaleView(room).actingOut`, so lane B's Balance acting-out flows through. During the pin test it shows the test's x.
+- The dial's hit area grows up to cover the plate.
+- Nudge: first after 1 s, then every 4 s. It goes one notch right and back (left at the end of the reach), and skips while he drags. Under reduced motion the knob blinks.
+- Scene tags (`dial`, `tray`, `splitter`, `balance-goal`) reuse `pinSkin.tag` and are drawn over the tools with `eventMode="none"`. They take the clear place nearest the thing they are about.
+- Tags never cover: the pans (every reachable x, plus acting out), the dial band from the label down, the pin (all places for a choice pin), the reset corner, or the tool the tag is about or he needs next (the splitter for its own tag, else the tray).
+- Tags cover the machine, the stand or the other tool only when nothing else fits.
+- Strings are at most 3 em and clear of the hard obstacles; otherwise the tag hangs from a nail. The goal tag always hangs from a nail, and a dash never starts a line.
+- String ties: the dial's to the top of the knob's label, the tray's to its shelf's inner bottom corner, the splitter's to its holder's.
+- Notebook tags (`write`, `check`) are HTML, between the lines and the pad. The lines shrink to fit, so the tag hangs right under them.
+- The draft line pulses with an ink ring (no transform), and the list keeps the draft's top in view.
+- Phone: while a scene tag shows, the notebook shows pushed aside, as for a waiting pin, and can be brought back the same way. With the step in the notebook and the notebook aside, its handle pulses.
+- At 640 × 360 the tags often cover the machine and stand. Under today's offer rules (room 4 offers both tools at once), the tray and goal tags also cover the splitter's holder; lane B's rules remove that.
+
+**Files**
+- New: `src/room/handover.ts`, `src/room/handover.test.ts`, `src/store/handover.test.ts`, `src/ui/scene/scale/HandoverTag.tsx`, `src/ui/scene/scale/handover-tag-layout.ts`, `src/ui/scene/scale/handover-tag-layout.test.ts`, `src/ui/scene/scale/dial-label.ts`, `src/ui/scene/scale/dial-label.test.ts`, `src/ui/notebook/HandoverNote.tsx`.
+- Changed: `src/room/types.ts` (`HandoverId`, `FirstUseId`, `lastActionAt`, `idle`), `src/room/room.ts` (the two fields at arrival), `src/room/first-use.ts` (comment), `src/store/reducer.ts` (`handOver`), `src/config/tuning.ts` (`hintIdleMs`, `dialNudgeMs`, `dialNudgeLengthMs`), `src/content/text/hr.ts` (`handover`), `src/art/skins/dial.ts` (`label`), `src/ui/scene/scale/Dial.tsx`, `src/ui/scene/SceneRoot.tsx`, `src/ui/notebook/Notebook.tsx`, `LineView.tsx`, `notebook.css`.
+- Tests rewritten in place: `src/room/room.test.ts` (arrival fields). Added to: `src/art/skins/dial.test.ts`, `src/ui/notebook/Notebook.test.tsx`.
+
+**For the merge**
+- The tests read `trayOffered`/`splitterOffered`. The room 4 tray cases turn the dial to its end first.
+- `handoverMove` keys off the action names `tray/drop`, `tray/take` and `splitter/split`.
+- Re-run `handover-tag-layout.test.ts` once lane A's flag and direction pictures land. Pin boxes are the pin's hit area plus 12 units.
+- `store/playthrough.test.ts` is unchanged.
+
+**Checks**
+- `npm run check` passes.
+- `npm test`: 94 files, 1736 passed, 2 skipped.
+- `npm run build` passes (JavaScript 0.33 MB gzipped).
+- Browser at 1280 × 800 in the app's pane: room 1 shows the dial tag, the nudge, and the label following the knob; the tag goes on the first notch; at level the draft pulses with the write tag; after the answer, the check tag shows with `x = ?` dimmed.
+- The pane then went hidden (other lanes share it), so the rest ran in headless Chrome (Playwright, system Chrome) on port 5310. Covered at 1280 × 800 and 640 × 360: the room 1 dial, write and check tags; the room 2 dial tag; the room 4 tray, goal and splitter tags; the dial tag shown again after idling. No page errors.

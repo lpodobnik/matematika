@@ -3,7 +3,8 @@
 // has met is kept beside the room, in the store's progress, so a control wiggles in the
 // first stage that offers it and never again, even after a reset. Saving it (epic 2) keeps
 // it across sessions. The tray and the splitter need Balance, so it takes the tools he has
-// earned; both are first offered in the same stage, so they wiggle together.
+// earned; both are first offered in the same stage, so they wiggle together. The handover
+// tags (story 1.15) are met in the same list, under their own ids (room/handover.ts).
 
 import { pinOffered } from '@/room/pin';
 import { splitterOffered } from '@/room/splitter';

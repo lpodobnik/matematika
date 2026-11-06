@@ -14,6 +14,8 @@ interface Props {
   wrong?: boolean;
   /** Enter refused the draft: it wiggles once as it mounts. */
   wiggle?: boolean;
+  /** The next step is to write this line (story 1.15, a handover): it pulses until he does. */
+  pulse?: boolean;
   /** Where the next key goes, while the notebook takes keys: the blank, or the line's end. */
   caret?: boolean;
 }
@@ -27,8 +29,21 @@ function Caret() {
   return <span className="line__caret" aria-hidden="true" />;
 }
 
-export function LineView({ segments, kind, wrong = false, wiggle = false, caret = false }: Props) {
-  const className = ['line', `line--${kind}`, wrong && 'line--wrong', wiggle && 'line--wiggle']
+export function LineView({
+  segments,
+  kind,
+  wrong = false,
+  wiggle = false,
+  pulse = false,
+  caret = false,
+}: Props) {
+  const className = [
+    'line',
+    `line--${kind}`,
+    wrong && 'line--wrong',
+    wiggle && 'line--wiggle',
+    pulse && 'line--pulse',
+  ]
     .filter(Boolean)
     .join(' ');
   const blankAt = segments.findIndex((segment) => segment.kind === 'blank');

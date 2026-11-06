@@ -266,3 +266,38 @@ describe('notebook.css', () => {
     expect(rule(css, '.line--wrong .line__text')).toMatch(/text-decoration:\s*underline wavy/);
   });
 });
+
+describe('the handover tags at the notebook (story 1.15)', () => {
+  it('pulses the draft line and hangs the step’s tag between the lines and the pad', () => {
+    const html = page(opened(r01), { handover: 'write' });
+    expect(html).toContain('class="line line--draft line--pulse"');
+    expect(html).toContain('role="note"');
+    expect(html).toContain(hr.handover.write);
+    const note = html.indexOf('handover-note');
+    expect(note).toBeGreaterThan(html.indexOf('</ol>'));
+    expect(note).toBeLessThan(html.indexOf('class="pad"'));
+    expect(html).toContain('data-pulse="true"');
+  });
+
+  it('tells him to check after the answer line, and nothing when the step is elsewhere', () => {
+    expect(page(opened(r01), { handover: 'check' })).toContain(hr.handover.check);
+    const quiet = page(opened(r01));
+    expect(quiet).not.toContain('line--pulse');
+    expect(quiet).not.toContain('handover-note');
+    expect(quiet).toContain('data-pulse="false"');
+  });
+
+  it('keeps the pulse after a refusal’s wiggle', () => {
+    const html = page(opened(r01), { handover: 'write', refused: 1 });
+    expect(html).toContain('class="line line--draft line--wiggle line--pulse"');
+    expect(rule(css, '.line--pulse.line--wiggle')).toMatch(/line-wiggle[^,]*,\s*line-pulse/);
+  });
+
+  it('sets the tag’s text at least 20 CSS px, and blinks instead of moving under reduced motion', () => {
+    expect(px(rule(css, '.handover-note__card'), 'font-size')).toBeGreaterThanOrEqual(20);
+    expect(rule(css, '.line--pulse')).toMatch(/animation:\s*line-pulse/);
+    const reduced = css.slice(css.lastIndexOf('@media (prefers-reduced-motion: reduce)'));
+    expect(reduced).toContain('.line--pulse');
+    expect(reduced).toMatch(/animation:\s*pulse-blink/);
+  });
+});

@@ -1,0 +1,265 @@
+// The handover tags (story 1.15; GDD, Player Assistance). His first play showed he needs
+// to be told the next step once: he didn't know to move the slider, nor that the notebook
+// came next when the pans levelled. They are the deliberate exception to "no instructions".
+// Pure: which single step applies now, when he has taken one, and the idle clock. The
+// tags' text is in hr.ts (`hr.handover`); the scene and the notebook draw them.
+//
+//   dial          from arrival until he first turns a dial; the knob nudges itself too
+//   write         his dial levels the pans (or Balance leaves x alone), and no answer line
+//   check         after the answer line, before the check line
+//   tray          the tray is offered, before his first Balance move in the stage
+//   balance-goal  after a Balance move, until a side holds only x and the other no x
+//   splitter      the splitter is offered and a side holds only x, not yet x alone
+//
+// Only one tag shows at a time: the earliest step that applies and that he hasn't met
+// (`save.progress.firstUse` holds `handover-<id>`). Once he takes the step it is met, and
+// its tag goes. After `tuning.hintIdleMs` without an action of his in the stage, the
+// earliest step that applies shows again, met or not, until he acts. No tag shows while the
+// pin is offered (its own question tag asks then), while the machine is jammed, or once the
+// stage locks.
+
+import { tuning } from '@/config/tuning';
+import type { Equation, Expr } from '@/math/expr';
+import { toLinear } from '@/math/linear';
+import * as q from '@/math/rational';
+import { dialTurnsNow } from '@/room/dial';
+import { notebookWrites } from '@/room/notebook';
+import { pinOffered } from '@/room/pin';
+import { scaleView, stageX } from '@/room/scale';
+import { splitterOffered } from '@/room/splitter';
+import { trayOffered } from '@/room/tray';
+import type { FirstUseId, HandoverId, Phase, RoomState, ToolId } from '@/room/types';
+
+/** The handover steps in the order he meets them; the earliest that applies comes first. */
+export const handoverOrder: readonly HandoverId[] = [
+  'dial',
+  'write',
+  'check',
+  'tray',
+  'balance-goal',
+  'splitter',
+];
+
+/** The id that marks a handover step met, in `save.progress.firstUse`. */
+export function handoverMet(id: HandoverId): FirstUseId {
+  return `handover-${id}`;
+}
+
+/** Phases a handover can show in: from arrival until the stage locks. */
+const handoverPhases: ReadonlySet<Phase> = new Set<Phase>(['arrive', 'poke', 'pin', 'open']);
+
+function hasLine(room: RoomState, kind: 'answer' | 'check'): boolean {
+  return room.stage.lines.some((line) => line.verdict.kind === kind);
+}
+
+/** A Balance move was made in this stage: a line written by Balance. */
+function balanced(room: RoomState): boolean {
+  return room.stage.lines.some((line) => line.source === 'balance');
+}
+
+interface Side {
+  a: q.Rational;
+  b: q.Rational;
+}
+
+function sideOf(expr: Expr): Side | null {
+  const linear = toLinear(expr);
+  return linear.kind === 'linear' ? { a: linear.a, b: linear.b } : null;
+}
+
+/** The x side and the number side when one side holds only x and the other no x; or null. */
+function isolatedSides(pans: Equation): { xs: Side; other: Side } | null {
+  const left = sideOf(pans.left);
+  const right = sideOf(pans.right);
+  if (!left || !right) return null;
+  const onlyX = (s: Side) => !q.isZero(s.a) && q.isZero(s.b);
+  if (onlyX(left) && q.isZero(right.a)) return { xs: left, other: right };
+  if (onlyX(right) && q.isZero(left.a)) return { xs: right, other: left };
+  return null;
+}
+
+/**
+ * Balance's goal is reached: one pan holds only x (`2x`, `x`) and the other only numbers,
+ * as `2x = 18` or `x = 9`.
+ */
+export function xIsolated(pans: Equation): boolean {
+  return isolatedSides(pans) !== null;
+}
+
+/** The pans hold the answer: x alone against the stage's solution, `x = 9` or `9 = x`. */
+function answerOnPans(room: RoomState): boolean {
+  const sides = isolatedSides(room.stage.pans);
+  if (!sides || !q.equals(sides.xs.a, q.one)) return false;
+  return q.equals(sides.other.b, q.rational(stageX(room)));
+}
+
+/** What the steps ask of the stage, worked out once for all of them. */
+interface Situation {
+  /** A handover can show at all: not while the pin is offered, jammed, or once locked. */
+  on: boolean;
+  open: boolean;
+  answered: boolean;
+  checked: boolean;
+  balanced: boolean;
+  isolated: boolean;
+  answerOnPans: boolean;
+  /** The scale acts a line (or Balance) out, at the stage's solution. */
+  actingOut: boolean;
+  /** His dial levels the pans: he is exploring, and the sides are equal. */
+  levelAtDial: boolean;
+  dialTurns: boolean;
+  writes: boolean;
+  tray: boolean;
+  splitter: boolean;
+}
+
+function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
+  const { stage } = room;
+  const view = scaleView(room);
+  return {
+    on: handoverPhases.has(stage.phase) && stage.jam === null && !pinOffered(room),
+    open: stage.phase === 'open',
+    answered: hasLine(room, 'answer'),
+    checked: hasLine(room, 'check'),
+    balanced: balanced(room),
+    isolated: xIsolated(stage.pans),
+    answerOnPans: answerOnPans(room),
+    actingOut: view.actingOut,
+    levelAtDial: !view.actingOut && view.level,
+    dialTurns: dialTurnsNow(room),
+    writes: notebookWrites(stage),
+    tray: trayOffered(room, tools),
+    splitter: splitterOffered(room, tools),
+  };
+}
+
+function applies(id: HandoverId, s: Situation): boolean {
+  if (!s.on) return false;
+  switch (id) {
+    case 'dial':
+      return s.dialTurns && !s.answered && !s.balanced && !s.tray && !s.actingOut && !s.levelAtDial;
+    case 'write':
+      return s.writes && !s.answered && (s.levelAtDial || s.answerOnPans);
+    case 'check':
+      return s.writes && s.answered && !s.checked;
+    case 'tray':
+      return s.tray && !s.answered && !s.balanced && !s.isolated;
+    case 'balance-goal':
+      return s.open && !s.answered && s.balanced && !s.isolated;
+    case 'splitter':
+      return s.splitter && !s.answered && s.isolated && !s.answerOnPans;
+  }
+}
+
+/** Whether a handover step applies to the stage now, met or not. */
+export function handoverApplies(
+  id: HandoverId,
+  room: RoomState,
+  tools: readonly ToolId[],
+): boolean {
+  return applies(id, situationOf(room, tools));
+}
+
+/**
+ * The handover whose tag shows now, or null: the earliest step that applies and that he
+ * hasn't met; or, after `tuning.hintIdleMs` without his acting (`stage.idle`), the earliest
+ * step that applies, met or not. Flat, for selectors.
+ */
+export function handoverView(
+  room: RoomState | null,
+  met: readonly FirstUseId[],
+  tools: readonly ToolId[],
+): HandoverId | null {
+  if (!room) return null;
+  const situation = situationOf(room, tools);
+  const applying = handoverOrder.filter((id) => applies(id, situation));
+  const fresh = applying.find((id) => !met.includes(handoverMet(id)));
+  if (fresh) return fresh;
+  return room.stage.idle ? (applying[0] ?? null) : null;
+}
+
+/** What his action was, as far as the handovers care: the root reducer names it. */
+export type HandoverMove = 'dial' | 'tray' | 'split' | 'other';
+
+/**
+ * The handover steps an action of his took, which count as met from now on:
+ * - `dial`: he turned a dial (any notch, wherever);
+ * - `write` and `check`: the answer line, or the check line, is now written;
+ * - `tray`: a weight or balloon moved between the tray and the scale;
+ * - `balance-goal`: the step applied, and his Balance move left x isolated;
+ * - `splitter`: he split the pans.
+ * `before` and `after` are the same stage; `move` is null when the action did nothing.
+ */
+export function stepsTaken(
+  before: RoomState,
+  after: RoomState,
+  move: HandoverMove | null,
+  tools: readonly ToolId[],
+): HandoverId[] {
+  if (move === null) return [];
+  const taken: HandoverId[] = [];
+  if (move === 'dial') taken.push('dial');
+  if (hasLine(after, 'answer') && !hasLine(before, 'answer')) taken.push('write');
+  if (hasLine(after, 'check') && !hasLine(before, 'check')) taken.push('check');
+  if (move === 'tray') taken.push('tray');
+  if (
+    (move === 'tray' || move === 'split') &&
+    handoverApplies('balance-goal', before, tools) &&
+    xIsolated(after.stage.pans)
+  ) {
+    taken.push('balance-goal');
+  }
+  if (move === 'split') taken.push('splitter');
+  return taken;
+}
+
+/**
+ * What he has met after an action: `met` with the steps it took added (`stepsTaken`), or
+ * null when nothing new is met. Steps of another room or stage are never compared.
+ */
+export function meetHandovers(
+  before: RoomState | null,
+  after: RoomState,
+  move: HandoverMove | null,
+  met: readonly FirstUseId[],
+  tools: readonly ToolId[],
+): FirstUseId[] | null {
+  if (!before || before.spec.id !== after.spec.id || before.stageIndex !== after.stageIndex) {
+    return null;
+  }
+  const fresh = stepsTaken(before, after, move, tools)
+    .map(handoverMet)
+    .filter((id) => !met.includes(id));
+  return fresh.length > 0 ? [...met, ...fresh] : null;
+}
+
+/**
+ * A stage the idle clock hasn't started on yet (it has just arrived) starts it at `now`;
+ * null when it has started.
+ */
+export function stampArrival(room: RoomState, now: number): RoomState | null {
+  if (room.stage.lastActionAt !== null) return null;
+  return { ...room, stage: { ...room.stage, lastActionAt: now } };
+}
+
+/** His action at `now`, one that did something: the idle clock starts over, and idle ends. */
+export function actedAt(room: RoomState, now: number): RoomState {
+  const { stage } = room;
+  if (stage.lastActionAt === now && !stage.idle) return room;
+  return { ...room, stage: { ...stage, lastActionAt: now, idle: false } };
+}
+
+/**
+ * The clock (`clock/tick`): once `tuning.hintIdleMs` has passed since his last action in a
+ * stage that can show a handover, the stage goes idle. A stage with no start time, or one
+ * after now (the device's clock went back), starts counting now. Null when nothing changes.
+ */
+export function tickIdle(room: RoomState, now: number): RoomState | null {
+  const { stage } = room;
+  if (!handoverPhases.has(stage.phase)) return null;
+  if (stage.lastActionAt === null || now < stage.lastActionAt) {
+    return { ...room, stage: { ...stage, lastActionAt: now } };
+  }
+  if (stage.idle || now - stage.lastActionAt < tuning.hintIdleMs) return null;
+  return { ...room, stage: { ...stage, idle: true } };
+}

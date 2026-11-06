@@ -123,8 +123,19 @@ export interface PinState {
   resolved: boolean;
 }
 
-/** The controls that wiggle once, the first time the game offers them (Pattern 2, First use). */
-export type FirstUseId = 'pin' | 'tray' | 'splitter';
+/**
+ * The one-time handover tags (story 1.15; room/handover.ts), in the order he meets them: each
+ * names the step its tag tells him to take next.
+ */
+export type HandoverId = 'dial' | 'write' | 'check' | 'tray' | 'balance-goal' | 'splitter';
+
+/**
+ * What he has met, so each shows only the first time (Pattern 2, First use): the controls
+ * that wiggle once, the first time the game offers them (`pin`, `tray`, `splitter`), and
+ * the handover steps he has taken (`handover-dial`, …; room/handover.ts). A handover's id
+ * is its own, since the tray is met as it is offered and its handover only once he uses it.
+ */
+export type FirstUseId = 'pin' | 'tray' | 'splitter' | `handover-${HandoverId}`;
 
 /** What the tray holds (Pattern 1, Balance moves): weights and floats only, never gears or springs. */
 export type TrayKind = 'weight' | 'float';
@@ -150,9 +161,10 @@ export type Jam = { kind: 'line' } | { kind: 'split'; parts: number };
 
 /**
  * The stage in play: the part of Pattern 2's `StageState` that the scale, the dial, the
- * pin, the notebook, the machine and the room's phases need so far. Epic 2 adds the rest
- * of the hints (`lastActionAt`), epic 4 the drum. Paying for a right prediction is the root
- * reducer's, in `save.economy.paidPredictions` (story 1.14).
+ * pin, the notebook, the machine and the room's phases need so far. Story 1.15 adds
+ * `lastActionAt` for the handover tags; epic 2 adds the rest of the hints, epic 4 the
+ * drum. Paying for a right prediction is the root reducer's, in
+ * `save.economy.paidPredictions` (story 1.14).
  */
 export interface StageState {
   phase: Phase;
@@ -203,6 +215,16 @@ export interface StageState {
   pin: PinState | null;
   /** Pattern 2's hint level. Only the first-use wiggle sets it in epic 1 (room/first-use.ts). */
   hintLevel: HintLevel;
+  /**
+   * ctx.now at his last action in this stage that did something, or as the stage arrived;
+   * null until the root reducer stamps it (room/handover.ts). The clock reads it.
+   */
+  lastActionAt: number | null;
+  /**
+   * `tuning.hintIdleMs` passed without an action of his in the stage: the current handover
+   * step's tag shows again, met or not, until he acts (story 1.15).
+   */
+  idle: boolean;
   /**
    * ctx.now when the machine began presenting the stage's lock or the room's restart (the
    * `locked` and `restart` phases); null in every other phase. The clock ends a presentation

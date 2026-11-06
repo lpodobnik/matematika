@@ -31,6 +31,24 @@ export const hr = {
       'pan-up': 'Kad x raste, zdjela se diže.',
     },
   },
+  /**
+   * Story 1.15: the handover tags, by step (room/handover.ts). Each tells him the next step
+   * once, the first time it comes up, and again after a minute without his acting.
+   */
+  handover: {
+    /** By the knob, until he first turns a dial. */
+    dial: 'Pomiči klizač – tako mijenjaš x.',
+    /** At the notebook, when his dial first levels the pans. */
+    write: 'Vaga je u ravnoteži. Upiši x u bilježnicu.',
+    /** At the notebook, after the answer line. */
+    check: 'Provjeri: uvrsti broj umjesto x.',
+    /** At the tray, when it is first offered. */
+    tray: 'Klizač ne doseže. Stavi broj s police na vagu – ide na obje strane.',
+    /** Above the scale, after his first Balance move. */
+    'balance-goal': 'Vaga zna koliki je x. Ostavi x samog na jednoj strani.',
+    /** At the splitter, when it is first offered. */
+    splitter: 'Razdjelnik dijeli obje strane na jednake dijelove.',
+  },
   parts: {
     /** The parts counter in the scene's corner, read out with its number. */
     label: 'Dijelovi',
