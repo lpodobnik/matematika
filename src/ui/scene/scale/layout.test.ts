@@ -1,13 +1,14 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import {
+  balloonEmblem,
   balloonParts,
+  balloonSlice,
   gearSlice,
   type PieceShape,
   scaleSkin,
   slicedBody,
   sliceTag,
-  springLayers,
   tagOverlap,
 } from '@/art/skins/scale';
 import { r01 } from '@/content/rooms/r01-door-lift';
@@ -17,9 +18,9 @@ import type { RoomState } from '@/room/types';
 import { fitScene } from '@/ui/scene/fit-scene';
 import { dialLayout } from '@/ui/scene/scale/dial-layout';
 import {
+  balloonWidth,
   baseLabelSize,
   beamPose,
-  floatHeight,
   grabArea,
   labelFontSize,
   labelWidth,
@@ -27,6 +28,7 @@ import {
   minNumberCssPx,
   type PieceBox,
   pieceSize,
+  pieceText,
   readoutBox,
   scaleGeometry,
   tagTextWidth,
@@ -145,6 +147,7 @@ describe('pieceSize', () => {
       ...leftPieces('2 · 9 + 7 = 25'),
       ...leftPieces('20 − x = 6'),
       ...leftPieces('20 − x : 2 = 6'),
+      ...leftPieces('20 − 27x = 6'),
       ...leftPieces('14x : 3 + x : 2 = 6'),
     ];
     for (const fontSize of fontSizes) {
@@ -153,7 +156,7 @@ describe('pieceSize', () => {
         const shape = shapeOf(piece, fontSize);
         const text = textBox(
           scaleSkin.labelSpot(shape),
-          labelWidth(piece.label, fontSize),
+          labelWidth(pieceText(piece), fontSize),
           fontSize,
         );
         const label = `${piece.key} at ${fontSize}`;
@@ -161,7 +164,46 @@ describe('pieceSize', () => {
         expect(text.x1, label).toBeLessThanOrEqual(size.width / 2);
         expect(text.y0, label).toBeGreaterThanOrEqual(-size.height);
         expect(text.y1, label).toBeLessThanOrEqual(0);
+        // A balloon's label is in its balloon, above its knot.
+        if (shape.kind === 'float' || shape.kind === 'spring') {
+          const balloon = balloonParts(shape);
+          expect(text.y0, label).toBeGreaterThan(balloon.top);
+          expect(text.y1, label).toBeLessThan(balloon.bottom);
+        }
       }
+    }
+  });
+
+  it('labels a spring’s balloon with its minus, `−x` or `−27x` (story 1.15)', () => {
+    const [, small] = leftPieces('20 − x = 6');
+    const [, large] = leftPieces('20 − 27x = 6');
+    if (!small || !large) throw new Error('expected a weight and a spring');
+    expect(small.kind).toBe('spring');
+    expect(large.kind).toBe('spring');
+    // Lane B labels a spring `−x` itself; the drawing never doubles the minus.
+    expect(pieceText({ kind: 'spring', label: 'x' })).toBe('−x');
+    expect(pieceText({ kind: 'spring', label: '27x' })).toBe('−27x');
+    expect(pieceText({ kind: 'spring', label: '−x' })).toBe('−x');
+    expect(pieceText(large)).toBe('−27x');
+    expect(pieceText(small)).toBe('−x');
+    expect(pieceText({ kind: 'gear', label: 'x' })).toBe('x');
+    expect(pieceText({ kind: 'float', label: '−6' })).toBe('−6');
+  });
+
+  it('makes every minus the same balloon, a large one larger, with a gear emblem (story 1.15)', () => {
+    const [, float] = leftPieces('20 − 6 = 6');
+    const [, spring] = leftPieces('20 − x = 6');
+    const [, large] = leftPieces('20 − 27x = 6');
+    if (!float || !spring || !large) throw new Error('expected balloons');
+    for (const fontSize of fontSizes) {
+      const a = pieceSize(float, fontSize);
+      const b = pieceSize(spring, fontSize);
+      expect(a.width).toBeGreaterThanOrEqual(fontSize * balloonWidth);
+      expect(b.width).toBeGreaterThanOrEqual(fontSize * balloonWidth);
+      expect(pieceSize(large, fontSize).width).toBeGreaterThan(b.width);
+      expect(pieceSize(large, fontSize).height).toBeGreaterThan(b.height);
+      const emblem = balloonEmblem(shapeOf(spring, fontSize));
+      expect(emblem.radius * 2).toBeGreaterThan(fontSize * 0.5);
     }
   });
 
@@ -229,34 +271,43 @@ describe('pieceSize', () => {
         expect(tagBox.y0, label).toBeGreaterThanOrEqual(-shape.height - 1e-9);
         expect(tagBox.y1, label).toBeLessThanOrEqual(0);
         // It never covers x, nor the middle of the solid slice, so the slice shows.
-        const x = textBox(scaleSkin.labelSpot(shape), labelWidth(piece.label, fontSize), fontSize);
+        const x = textBox(
+          scaleSkin.labelSpot(shape),
+          labelWidth(pieceText(piece), fontSize),
+          fontSize,
+        );
         expect(apart(x, tagBox), label).toBe(true);
         if (shape.kind === 'gear') {
           const { centre, radius } = gearSlice(shape);
           expect(inside({ x: centre.x, y: centre.y + radius * 0.6 }, tagBox), label).toBe(false);
         } else {
-          const { solidTop, bottom } = springLayers(shape);
-          const middle = { x: slicedBody(shape).centreX, y: (solidTop + bottom) / 2 };
+          // Story 1.15: a divided spring is a balloon cut like the gear, its bottom slice solid.
+          const { parts } = balloonSlice(shape);
+          const middle = { x: parts.centre.x, y: (parts.centre.y + parts.bottom) / 2 };
           expect(inside(middle, tagBox), label).toBe(false);
         }
       }
     }
   });
 
-  it('floats a balloon well above the pan, in a box no wider than a weight’s (story 1.14)', () => {
+  // Story 1.15 rewrites 1.14's "4 label sizes tall, arrow on top": the balloon is bigger, the
+  // arrow is gone, and the whole piece is no taller than 1.14's.
+  it('floats a bigger balloon well above the pan, in a box no taller than 1.14’s', () => {
     const [weight, float] = leftPieces('9 − 6 = 3');
     if (!weight || !float) throw new Error('expected a weight and a float');
     expect(float.label).toBe('−6');
     for (const fontSize of fontSizes) {
       const size = pieceSize(float, fontSize);
       expect(size.width).toBeLessThanOrEqual(pieceSize(weight, fontSize).width + fontSize);
-      expect(size.height).toBe(fontSize * floatHeight);
+      expect(size.width).toBeGreaterThan(fontSize * 1.8);
+      expect(size.height).toBeLessThanOrEqual(fontSize * 4);
       // Its number sits in its balloon, which floats on its string above the pan.
-      const balloon = balloonParts(size.width, size.height);
+      const balloon = balloonParts({ kind: 'float', ...size, large: false });
+      expect(balloon.bottom - balloon.top).toBeGreaterThan(fontSize * 1.72);
       const text = textBox(balloon.centre, labelWidth(float.label, fontSize), fontSize);
       expect(text.y0).toBeGreaterThan(balloon.top);
       expect(text.y1).toBeLessThan(balloon.bottom);
-      expect(balloon.knot).toBeLessThan(-fontSize * 0.5);
+      expect(balloon.knot).toBeLessThanOrEqual(-fontSize * 0.5);
     }
   });
 });
@@ -286,6 +337,69 @@ describe('layoutPan', () => {
         }
       }
     }
+  });
+
+  it('ties balloons side by side in a bunch, the rest nestled above, strings to the pan (story 1.15)', () => {
+    // On the tablet and at 640 × 360 (56: see labelFontSize).
+    for (const fontSize of [baseLabelSize, labelFontSize(fitScene(640, 360).scale)]) {
+      // 135 − 5x: a weight and five balloons; side by side they would need a second row.
+      const pieces = leftPieces('135 − 5x = 100');
+      const boxes = layoutPan(pieces, fontSize);
+      expect(boxes.map((b) => b.key)).toEqual(pieces.map((p) => p.key));
+      const [weight, ...balloons] = boxes;
+      if (!weight) throw new Error('no weight');
+      // Everything stands on the pan in one row, within the pan's width.
+      for (const box of boxes) {
+        expect(box.y).toBe(0);
+        expect(box.x - box.width / 2).toBeGreaterThanOrEqual(-scaleGeometry.panWidth / 2 - 1e-9);
+        expect(box.x + box.width / 2).toBeLessThanOrEqual(scaleGeometry.panWidth / 2 + 1e-9);
+      }
+      const ground = balloons.filter((b) => b.string === fontSize * 0.5);
+      const above = balloons.filter((b) => b.string > fontSize * 0.5);
+      expect(ground.length).toBeGreaterThanOrEqual(2);
+      expect(above.length).toBeGreaterThan(0);
+      // A balloon above floats on a longer string, by as much as it rises: the same balloon.
+      const base = ground[0];
+      if (!base) throw new Error('no balloon');
+      for (const up of above) {
+        expect(up.height - up.string).toBeCloseTo(base.height - base.string);
+      }
+      // The first one above floats in the gap between the first two below.
+      const [first, second] = ground;
+      const nestled = above[0];
+      if (!first || !second || !nestled) throw new Error('no bunch');
+      expect(nestled.x).toBeCloseTo((first.x + second.x) / 2);
+      // Every balloon's label stays clear of every other's.
+      const labelAt = (b: PieceBox) => {
+        const shape = { kind: 'spring' as const, ...b, large: false };
+        const spot = scaleSkin.labelSpot(shape);
+        return { x: b.x + spot.x, y: b.y + spot.y };
+      };
+      for (const [i, a] of balloons.entries()) {
+        for (const b of balloons.slice(i + 1)) {
+          const p = labelAt(a);
+          const q = labelAt(b);
+          const apart =
+            Math.abs(p.x - q.x) >= labelWidth('−x', fontSize) || Math.abs(p.y - q.y) >= fontSize;
+          expect(apart, `${a.key} ${b.key}`).toBe(true);
+        }
+      }
+      // So a pan of five balloons is far lower than two rows of them.
+      const top = Math.max(...boxes.map((b) => b.height - b.y));
+      expect(top).toBeLessThan(2 * (base.height + scaleGeometry.gap));
+      if (fontSize === baseLabelSize) expect(top).toBeLessThanOrEqual(fontSize * 4.3);
+    }
+  });
+
+  it('lays one balloon or two side by side, as before', () => {
+    const one = layoutPan(leftPieces('20 − x = 6'), baseLabelSize);
+    expect(one.map((b) => b.string)).toEqual([0, baseLabelSize * 0.5]);
+    const two = layoutPan(leftPieces('20 − 2x = 6'), baseLabelSize);
+    expect(two.filter((b) => b.string > 0).map((b) => b.string)).toEqual([
+      baseLabelSize * 0.5,
+      baseLabelSize * 0.5,
+    ]);
+    expect(new Set(two.map((b) => b.y))).toEqual(new Set([0]));
   });
 
   it('keeps 12 gears on the pan in several rows', () => {

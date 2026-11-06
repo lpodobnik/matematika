@@ -31,11 +31,20 @@ describe("the pin's confirm control", () => {
     expect(html).not.toContain('<input');
   });
 
+  // Story 1.15: the pin is a flag, so its icon is a flag too, with no round head.
+  it('shows a flag, not a round-headed pin', () => {
+    const html = renderToString(
+      <PinConfirmControl option={null} spot={spot} onConfirm={vi.fn()} />,
+    );
+    expect(html).toContain('pin-confirm__icon');
+    expect(html).not.toContain('<circle');
+  });
+
   it("reads out a choice pin's option in its name", () => {
     const html = renderToString(
-      <PinConfirmControl option="pan-up" spot={spot} onConfirm={vi.fn()} />,
+      <PinConfirmControl option="tilt-right" spot={spot} onConfirm={vi.fn()} />,
     );
-    expect(html).toContain(`aria-label="${hr.pin.confirm}: ${hr.pin.options['pan-up']}"`);
+    expect(html).toContain(`aria-label="${hr.pin.confirm}: ${hr.pin.options['tilt-right']}"`);
   });
 
   // Story 1.14: it sits beside the pin's head, not in the scene area's bottom-left corner.

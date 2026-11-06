@@ -109,6 +109,7 @@ function column(
     tagWidth: 0,
     tagHeight: 0,
     large: false,
+    string: size.string,
   });
   // The number's centre from the piece's top; the band round it is two label sizes tall.
   const numberAt = size.height + label.y;

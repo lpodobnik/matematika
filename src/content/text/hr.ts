@@ -19,16 +19,17 @@ export const hr = {
     confirm: 'Potvrdi',
     /**
      * The question on the tag that hangs on the pin's holder while the pin is offered (story
-     * 1.14), by pin kind: where the pans level, or what the pan holding x does as x grows.
+     * 1.14), by pin kind: where to put the flag so the scale levels, or which way the whole
+     * scale tilts as x grows (story 1.15).
      */
     questions: {
-      'level-x': 'Gdje će se vaga uravnotežiti?',
-      effect: 'Kad x raste, ide li zdjelica s x gore ili dolje?',
+      'level-x': 'Postavi zastavicu na mjesto gdje će vaga biti u ravnoteži.',
+      effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
     },
-    /** An effect pin's options (room 3): what the pan holding x does as x grows. */
+    /** An effect pin's options (room 3), under their pictures: the scale tilted left or right. */
     options: {
-      'pan-down': 'Kad x raste, zdjela se spušta.',
-      'pan-up': 'Kad x raste, zdjela se diže.',
+      'tilt-left': 'lijevo',
+      'tilt-right': 'desno',
     },
   },
   /**

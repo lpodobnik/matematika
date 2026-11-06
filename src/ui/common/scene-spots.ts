@@ -43,7 +43,8 @@ export function pinHeadSpot(
   const toX = (x: number) => fit.x + (copy.x + x * copy.scale) * fit.scale;
   const toY = (y: number) => fit.y + (copy.y + y * copy.scale) * fit.scale;
   return {
-    x: toX(placeX(layout, pin.slot)),
+    // The head is the flag's cloth, right of its pole (story 1.15).
+    x: toX(placeX(layout, pin.slot) + layout.headX),
     y: toY(layout.headY),
     radius: layout.headRadius * scale,
     centreX: toX(dialGeometry.centerX),
@@ -61,15 +62,16 @@ function clamp(value: number, min: number, max: number): number {
 
 /**
  * Where the confirm control goes, beside the pin's head (its top-left corner in the area),
- * with its bottom level with the head's, so it stays clear of the knob below. An x pin's
- * control goes on the side toward the dial's centre, over the stand's foot, clear of the
- * pans' readouts under their outer halves; a choice pin's goes on the outer side, so it never
- * covers the other option. It takes the other side when there is no room, and always stays
- * inside the area.
+ * with its bottom level with the head's, so it stays clear of the knob below. It goes on the
+ * side toward the dial's centre, over the stand's foot: an x pin's stays clear of the pans'
+ * readouts under their outer halves, and (story 1.15) a direction pin's of its option's word,
+ * on the outer side; its two places are far enough apart that the other stays clear. It takes
+ * the other side when there is no room, and always stays inside the area. Both kinds go the
+ * same way since story 1.15; `_kind` stays so the callers keep their shape.
  */
 export function confirmSpot(
   head: HeadSpot,
-  kind: PinView['kind'],
+  _kind: PinView['kind'],
   area: Size,
   size: Size = confirmSize,
 ) {
@@ -78,8 +80,7 @@ export function confirmSpot(
   const left = head.x - head.radius - gap - size.width;
   const roomRight = right + size.width <= area.width - gap;
   const roomLeft = left >= gap;
-  const leftOfCentre = head.x < head.centreX;
-  const preferRight = kind === 'choice' ? !leftOfCentre : leftOfCentre;
+  const preferRight = head.x < head.centreX;
   const goRight = preferRight ? roomRight || !roomLeft : !roomLeft && roomRight;
   return {
     left: clamp(goRight ? right : left, gap, area.width - gap - size.width),

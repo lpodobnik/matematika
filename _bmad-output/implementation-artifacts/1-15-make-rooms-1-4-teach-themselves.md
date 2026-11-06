@@ -109,7 +109,7 @@ And Luka in room 4:
 
 ## Tasks / Subtasks
 
-- [ ] Lane A: AC 1–4
+- [x] Lane A: AC 1–4
 - [x] Lane B: AC 5–11
 - [x] Lane C: AC 12–13
 - [ ] Merge A and B into `epic-1`; checks green (AC 14)
@@ -142,6 +142,44 @@ And Luka in room 4:
 ## Dev Agent Record
 
 (Each lane adds its own section: Calls, files, checks.)
+
+### Lane A (`lane/1-15-art`): flag pin, balloons for every minus, tilt question
+
+**Calls** (flag any for veto):
+- The flag: a pole with a flat cap and a waving cloth on its right that holds the number. Unlocked, the foot is sharpened like a stake, no wider than the pole. A wider point read as an arrow in the browser. Locked, the point is gone into the track, a plate sits at the foot and the cloth is shaded.
+- The cloth sits where the head was. `PinLayout.headX` (the cloth's centre, right of the pole) is new. The hit area, Potvrdi (`scene-spots.ts`) and the tag's obstacles all follow it.
+- The holder is a socket on the track with a bracket over the pole's top. The tag's string is tied to the top of the bracket.
+- The Potvrdi icon is now a flag, so no round-headed pin is left anywhere.
+- Direction pin options are `tilt-left` / `tilt-right`. `tiltAsXGrows` replaces `xPanMotion`: the scale tilts toward the side that gets heavier as x grows. x may sit on both sides, as long as growing it tips the scale, so the content test drops 1.14's "x on one side only".
+- Each place is a faint flag with a picture of the whole scale in its cloth, tilted 20° its way. The placed flag carries the same picture.
+- The words `lijevo` / `desno` sit level with the cloth, on the outer side. Above the flag, `lijevo` collided with room 3.2's low left pan at 640 × 360.
+- So Potvrdi now goes toward the dial's centre for direction pins too. This also fixes 1.14's "Potvrdi covers the left readout" on the phone.
+- The direction places are 280 CSS px apart, not 160, so their pictures clear the stand's foot.
+- The longer level-x question doesn't fit on the holder or the left wall at 640 × 360. The tag now tries the wall right of the machine after the left wall. On the phone, rooms 3.1 and 4 hang top right.
+- Every minus is one balloon drawing: a light shaded skin with a paper shine, a knot, and a string drawn on its own. 1.14's arrow is gone, since the balloon and its bob show the pull. A spring's balloon carries a small toothed x-gear under its label, with 18 teeth when large.
+- The balloon is 2.2 label sizes wide (1.14: 1.8), with a body 2.5 tall (1.14: 1.72). The string is 0.5 label sizes. A large one is at least 2.7 wide.
+- The spring's minus is added in the drawing: `pieceText` uses `minusLabel` from `room/pieces.ts`, which never doubles a minus. `room/scale.ts` is lane B's, so it isn't touched. Until lane B's `x` labels land, a spring shows `−` plus the dial's value. Main session: you may move this into `pieceView` at the merge.
+- A divided spring is cut the way the divided gear is: a faint ghost balloon cut into n from its centre, its bottom sector solid (with the emblem), x in the ghost above, and the `: n` tag beside it.
+- Bunches (new in `layoutPan`): balloons side by side tie into a bunch. As many as fit stand side by side, and the rest float one tier up, nestled in the gaps, on longer strings. Without this, `135 − 5x` and `50 − 4x` needed two rows of balloons and broke the art bible's pan sweep (y 243). The sweep and zones are unchanged.
+- The bob is ±4 scene units over 2 s, with a phase per piece key. It runs on the app's ticker and moves only the balloon's container; the string's container stretches to stay tied to the pan. It is still under `prefers-reduced-motion` and applies on pans, the tray and a carried piece.
+
+**Files changed:** `src/art/skins/{pin,scale}.ts`, `src/room/{pin,pieces,types}.ts` (`EffectOption` only), `src/content/rooms/r03-sluice-gate.ts`, `src/content/text/hr.ts` (`pin` texts only), `src/ui/scene/scale/{Pin,Piece}.tsx`, `src/ui/scene/scale/{layout,pin-layout,pin-tag-layout}.ts`, `src/ui/common/{scene-spots.ts,PinConfirm.tsx}`. New: `src/ui/scene/scale/{balloon-bob,use-balloon-bob}.ts`. Tests:
+- New: `balloon-bob.test.ts`.
+- Rewritten in place, each with a comment naming what 1.15 replaced: `art/skins/{pin,scale}.test.ts`, `room/pin.test.ts`, `content/rooms/rooms.test.ts`, `ui/scene/scale/{layout,pin-layout,pin-tag-layout}.test.ts`, `ui/common/{scene-spots,PinConfirm}.test.tsx`.
+- Extended: `room/pieces.test.ts`.
+- Not touched: `ui/notebook/notebook-aside.test.ts` (lane C's area) still says "pan-up" in one test title. `confirmSpot` keeps its unused `_kind` parameter, so that file needs no change.
+
+**Checks:**
+- `npm run check`: clean (225 files).
+- `npm test`: 91 files, 1713 passed, 2 skipped.
+- `npm run build`: passes, 0.33 MB of JavaScript gzipped.
+- Browser: own Vite server on 5300, since stopped; 5173 untouched. The app's browser pane was hidden, which stalls the tweens, so this used headless Chrome through Playwright, at 1280 × 800 and 640 × 360:
+  - Room 3.1: the flag in its holder, placed on 14 with Potvrdi, then confirmed and lit, with the pans level.
+  - Room 3.2: both pictures with their words, the flag on `lijevo` and on `desno`, confirmed `desno` right and lit, with parts 0 → 2.
+  - Room 4: the tray's bigger balloon.
+  - The balloon bobs. It is still under reduced motion: the frames are byte-identical.
+  - No console errors other than one existing 404 for a resource.
+- Not seen in the browser: a divided spring, a large spring and a bunch. No room 1–4 has them; unit tests cover them.
 
 ### Lane B: Balance (AC 5–11), branch `lane/1-15-balance`
 

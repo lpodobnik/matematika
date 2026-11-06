@@ -352,15 +352,6 @@ function holeFor(box: Box, tie: Point, inset: number): Point {
   return { x: tie.x < box.x ? box.x + inset / 2 : box.x + box.width - inset / 2, y };
 }
 
-function inside(point: Point, box: Box): boolean {
-  return (
-    point.x > box.x &&
-    point.x < box.x + box.width &&
-    point.y > box.y &&
-    point.y < box.y + box.height
-  );
-}
-
 /**
  * Whether a string from `from` to `to` is short enough, at most `longest`, and passes over
  * none of the boxes, checked every `step`.
@@ -374,12 +365,36 @@ function stringClear(
 ): boolean {
   const length = Math.hypot(to.x - from.x, to.y - from.y);
   if (length > longest) return false;
-  const samples = Math.max(1, Math.ceil(length / step));
-  // The ends are left out: the tie sits on what the tag is about.
-  for (let i = 1; i < samples; i += 1) {
-    const t = i / samples;
-    const point = { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
-    if (obstacles.some((box) => inside(point, box))) return false;
+  // The ends are left out, `step` at each: the tie sits on what the tag is about. The rest
+  // is tested exactly, so a string can't clip a box's corner between two samples.
+  const end = length > 0 ? Math.min(0.5, step / length) : 0.5;
+  return !obstacles.some((box) => segmentCrosses(from, to, box, end, 1 - end));
+}
+
+/**
+ * Whether the part of the segment from `from` to `to` between `t0` and `t1` (0–1 along it)
+ * passes through the box's inside (Liang–Barsky clipping).
+ */
+function segmentCrosses(from: Point, to: Point, box: Box, t0: number, t1: number): boolean {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  let enter = t0;
+  let exit = t1;
+  const edges: [number, number][] = [
+    [-dx, from.x - box.x],
+    [dx, box.x + box.width - from.x],
+    [-dy, from.y - box.y],
+    [dy, box.y + box.height - from.y],
+  ];
+  for (const [p, q] of edges) {
+    if (p === 0) {
+      if (q <= 0) return false;
+      continue;
+    }
+    const t = q / p;
+    if (p < 0) enter = Math.max(enter, t);
+    else exit = Math.min(exit, t);
+    if (enter >= exit) return false;
   }
   return true;
 }

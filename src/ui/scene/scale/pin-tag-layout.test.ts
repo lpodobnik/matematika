@@ -63,7 +63,7 @@ describe('wrapWords', () => {
     ]);
     expect(wrapWords('a bb ccc', 100)).toEqual(['a bb ccc']);
     expect(wrapWords('balance?', 4)).toEqual(['balance?']);
-    expect(wrapWords(hr.pin.questions['level-x'], 15)).toHaveLength(2);
+    expect(wrapWords(hr.pin.questions['level-x'], 26)).toHaveLength(3);
     expect(wrapWords('  ', 10)).toEqual([]);
   });
 });

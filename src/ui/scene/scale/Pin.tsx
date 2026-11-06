@@ -20,6 +20,7 @@ import {
   pinLayout,
   pinWiggle,
   pinWiggleMs,
+  placeWord,
   placeX,
 } from '@/ui/scene/scale/pin-layout';
 import {
@@ -47,9 +48,10 @@ interface Props {
 const wrongAlpha = 0.45;
 
 /**
- * The prediction pin (Pattern 2, Pin): it waits in a holder by the dial's track, he drags
- * it onto a place (an x over the dial's notches, or an option), drags it again to move it,
- * and confirms it with the confirm control beside its head (ui/common/PinConfirm.tsx).
+ * The prediction pin (Pattern 2, Pin), drawn as a small flag (story 1.15): it waits in a
+ * holder by the dial's track, he drags it onto a place (an x over the dial's notches, or a
+ * direction pin's picture of the scale tilted left or right), drags it again to move it,
+ * and confirms it with the confirm control beside its cloth (ui/common/PinConfirm.tsx).
  * While it is offered, a paper tag hangs on the holder with its question (story 1.14). The
  * first time the game offers it, it wiggles once. When he confirms it, the machine tests it
  * (use-pin-test.ts); once the pans come to rest, a right pin lights up like a lamp and a
@@ -145,6 +147,7 @@ export function Pin({ sceneScale, question }: Props) {
       layout
         ? {
             tipY: layout.tipY,
+            headX: layout.headX,
             headY: layout.headY,
             headRadius: layout.headRadius,
             lineWidth: layout.lineWidth,
@@ -156,11 +159,16 @@ export function Pin({ sceneScale, question }: Props) {
   const option = view?.option ?? null;
   const drawPin = useCallback(
     (g: Graphics) => {
-      if (!shape) return;
-      pinSkin.pin(g, shape, locked);
-      if (option) pinSkin.arrow(g, option, shape.headY, shape.headRadius * 0.7, shape.lineWidth);
+      if (shape) pinSkin.pin(g, shape, locked);
     },
-    [shape, locked, option],
+    [shape, locked],
+  );
+  // A direction pin's flag carries its option's picture, over the glow of a right pin.
+  const drawPicture = useCallback(
+    (g: Graphics) => {
+      if (shape && option) pinSkin.picture(g, shape, option);
+    },
+    [shape, option],
   );
   const drawLight = useCallback(
     (g: Graphics) => {
@@ -214,7 +222,14 @@ export function Pin({ sceneScale, question }: Props) {
       {view.kind === 'x' && <BeyondDial layout={layout} reach={view.reach} slots={view.slots} />}
       {track?.kind === 'choice' &&
         track.options.map((choice, i) => (
-          <Place key={choice} layout={layout} slot={i} option={choice} />
+          <Place
+            key={choice}
+            layout={layout}
+            shape={shape}
+            slot={i}
+            option={choice}
+            style={style}
+          />
         ))}
       {/* The holder stays while the pin is offered: the question tag hangs on it. */}
       {view.movable && (
@@ -238,8 +253,15 @@ export function Pin({ sceneScale, question }: Props) {
         <pixiContainer ref={bodyRef}>
           <pixiGraphics draw={drawPin} />
           {result === 'right' && <pixiGraphics draw={drawLight} />}
+          {option !== null && <pixiGraphics draw={drawPicture} />}
           {view.label !== null && (
-            <pixiText text={view.label} anchor={0.5} y={layout.headY} style={style} />
+            <pixiText
+              text={view.label}
+              anchor={0.5}
+              x={layout.headX}
+              y={layout.headY}
+              style={style}
+            />
           )}
         </pixiContainer>
       </pixiContainer>
@@ -312,20 +334,33 @@ function BeyondDial({ layout, reach, slots }: BeyondProps) {
 
 interface PlaceProps {
   layout: PinLayout;
+  shape: PinShape;
   slot: number;
   option: EffectOption;
+  style: TextStyleOptions;
 }
 
-/** One option's place for a choice pin, under where the pin's head goes. */
-function Place({ layout, slot, option }: PlaceProps) {
-  const draw = useCallback(
-    (g: Graphics) =>
-      pinSkin.place(g, option, layout.headY, layout.headRadius * 1.1, layout.lineWidth),
-    [layout, option],
-  );
+/**
+ * One option's place for a direction pin (story 1.15): a faint flag where the flag goes,
+ * with the picture of the whole scale tilted its way, and its word (`lijevo`, `desno`)
+ * beside it on the outer side, set against the flag.
+ */
+function Place({ layout, shape, slot, option, style }: PlaceProps) {
+  const draw = useCallback((g: Graphics) => pinSkin.place(g, shape, option), [shape, option]);
+  const word = hr.pin.options[option];
+  const box = placeWord(layout, slot, [...word].length);
+  const x = placeX(layout, slot);
+  const onLeft = box.x + box.width <= x;
   return (
-    <pixiContainer x={placeX(layout, slot)}>
+    <pixiContainer x={x} eventMode="none">
       <pixiGraphics draw={draw} />
+      <pixiText
+        text={word}
+        anchor={{ x: onLeft ? 1 : 0, y: 0.5 }}
+        x={(onLeft ? box.x + box.width : box.x) - x}
+        y={box.y + box.height / 2}
+        style={style}
+      />
     </pixiContainer>
   );
 }
