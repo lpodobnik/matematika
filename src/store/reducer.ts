@@ -10,6 +10,7 @@ import { assert } from '@/lib/assert';
 import { setDial } from '@/room/dial';
 import { meetControls } from '@/room/first-use';
 import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } from '@/room/handover';
+import { type HintAction, hintAfter } from '@/room/hint';
 import { deleteToken, enterLine, typeToken } from '@/room/notebook';
 import {
   finishPresentation,
@@ -34,7 +35,7 @@ export function initialGameState(): GameState {
   return {
     save: { progress: { tools: [], firstUse: [] }, economy: createEconomy() },
     room: null,
-    ui: { screen: 'room', notebookAside: false, quality: initialQuality, copies: 1 },
+    ui: { screen: 'room', notebookAside: false, quality: initialQuality, copies: 1, hint: null },
   };
 }
 
@@ -106,6 +107,7 @@ function roomStep(
     case 'notebook/enter':
       return enterLine(room, now);
     case 'notebook/slide':
+    case 'hint/press':
     case 'quality/measured':
     case 'quality/force':
     case 'dev/set-copies':
@@ -170,6 +172,28 @@ const notHis: ReadonlySet<Action['type']> = new Set<Action['type']>([
   'quality/measured',
   'quality/force',
 ]);
+
+/**
+ * Story 1.16: the tray's and the splitter's steppers set the number a move uses rather than
+ * make one, so the hint stays while he sets the number it names.
+ */
+const toolSettings: ReadonlySet<Action['type']> = new Set<Action['type']>([
+  'tray/step',
+  'splitter/step',
+]);
+
+/**
+ * What an action means for the hint button (room/hint.ts): its press; one that ends the
+ * hint, an action of his that did something to the room (`changed`), or a room entered; or
+ * any other, which leaves it.
+ */
+function hintAction(action: Action, changed: boolean): HintAction {
+  if (action.type === 'hint/press') return 'press';
+  if (action.type === 'room/enter') return 'ends';
+  const his =
+    !notHis.has(action.type) && action.type !== 'notebook/slide' && !toolSettings.has(action.type);
+  return his && changed ? 'ends' : 'other';
+}
 
 /** His action as the handovers name it (room/handover.ts). */
 function handoverMove(action: Action): HandoverMove {
@@ -242,6 +266,14 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
     const { step } = progressed;
     const events: DomainEvent[] = step ? [...step.events] : [];
     const save = payPredictions(events, progressed.save);
+    const roomNow = step?.room ?? state.room;
+    const hint = hintAfter(
+      state.ui.hint,
+      hintAction(action, roomNow !== state.room),
+      state.room,
+      roomNow,
+      save.progress.tools,
+    );
     const next = produce(state, (draft) => {
       if (step && step.room !== state.room) draft.room = castDraft(step.room);
       if (save !== state.save) draft.save = castDraft(save);
@@ -252,6 +284,7 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
       }
       if (action.type === 'dev/set-copies') draft.ui.copies = action.copies;
       if (action.type === 'notebook/slide') draft.ui.notebookAside = action.aside;
+      if (hint !== state.ui.hint) draft.ui.hint = hint;
       if (action.type === 'quality/measured' || action.type === 'quality/force') {
         draft.ui.quality = reduceQuality(state.ui.quality, action);
       }

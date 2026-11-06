@@ -30,6 +30,7 @@ import { sceneSize } from '@/ui/scene/fit-scene';
 import { machineBounds } from '@/ui/scene/machine/layout';
 import { dialLabelTop } from '@/ui/scene/scale/dial-label';
 import { type Box, dialLayout, followScroll } from '@/ui/scene/scale/dial-layout';
+import { goalCardBounds } from '@/ui/scene/scale/goal-card-layout';
 import {
   beamPose,
   labelFontSize,
@@ -167,7 +168,8 @@ function weighings(room: RoomState): ScaleView[] {
  * What the tag of handover `about` keeps clear of in the stage as it is now, at the scene's
  * scale (CSS px per scene unit), with the scene's top-left corner at `origin` in the scene
  * area, CSS px. Hard: the pans in every weighing, the dial's band from its x label down,
- * the pin (a choice pin's places too), the reset control's corner, and the tool the tag
+ * the pin (a choice pin's places too), the reset control's corner with the hint button, the
+ * goal card (story 1.16), and the tool the tag
  * is about or that he needs next: the splitter for its own tag, else the tray (and for the
  * dial's, both). Soft: the other tool while offered, the machine and the stand. (Until
  * story 1.15's offer rules land, room 4 offers both tools at once.)
@@ -207,6 +209,9 @@ export function handoverObstacles(
     }
   }
   hard.push(resetCorner(sceneScale, origin));
+  // Story 1.16: the goal card, while the tray is offered.
+  const goal = goalCardBounds(room, tools, sceneScale, origin);
+  if (goal) hard.push(goal);
   const tray = trayOffered(room, tools) ? [trayLayout(sceneScale, labelSize).box] : [];
   const splitter = splitterOffered(room, tools) ? [splitterLayout(sceneScale, labelSize).box] : [];
   if (about === 'splitter') {

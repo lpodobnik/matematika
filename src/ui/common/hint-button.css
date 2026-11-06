@@ -1,0 +1,51 @@
+/* Story 1.16: the hint button, directly under the reset control (common.css) in the scene
+   area's top-left corner, above the canvas: a round `?`, at least 48 CSS px, with no hover
+   state. Its place is kept clear by the scene's tags and the goal card
+   (pin-tag-layout.ts, `resetCorner`: 72 CSS px wide, 136 down). The splitter's holder starts
+   72 CSS px from the area's left (splitter-layout.ts), so the button stays clear of it. */
+.hint {
+  position: absolute;
+  top: 72px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.hint:active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hint:disabled {
+  opacity: 0.4;
+}
+
+/* While a hint shows, its ring is heavier: shape, not colour, says it is on. */
+.hint[data-shown="true"] {
+  border-width: 5px;
+}
+
+/* On a phone the scene fills the area, so the button stands over the scene's corner: a
+   little smaller there, to keep clear of the left pan as it rises. */
+@media (max-height: 499.98px) {
+  .hint {
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+  }
+}

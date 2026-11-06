@@ -55,6 +55,13 @@ export const tuning = {
   dialNudgeMs: 4000,
   /** …each nudge taking this long, there and back. */
   dialNudgeLengthMs: 600,
+  /** Story 1.16: the hint button's second press shows the next move as a ghost (presentation
+   * only): a knob, a tray piece or the splitter frame, its whole way taking this long… */
+  hintGhostMs: 2400,
+  /** …then shown again after this pause, for as long as the hint shows. */
+  hintGhostPauseMs: 1200,
+  /** The knob's ghost goes this many notches the right way, and back. */
+  hintSlideNotches: 2,
   /** Architecture, Balance moves: the splitter is set to this many parts at the fewest (a
    * stage arrives with it)… */
   splitterMinParts: 2,

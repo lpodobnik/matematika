@@ -1,5 +1,14 @@
 // Every Croatian string in the game. Placeholders until the final text in epic 6,
 // which also avoids gendered verb forms.
+
+/**
+ * "s" before a number, or "sa" where its word starts with s or š, as Croatian says it: the
+ * splitter's parts run 2–9, so only 6 (šest) and 7 (sedam) take "sa".
+ */
+function withS(n: string): string {
+  return n === '6' || n === '7' ? `sa ${n}` : `s ${n}`;
+}
+
 export const hr = {
   app: {
     turnToLandscape: 'Okreni uređaj vodoravno.',
@@ -13,6 +22,8 @@ export const hr = {
   ui: {
     /** The reset control: the stage in play starts again from its first line. */
     reset: 'Ispočetka',
+    /** Story 1.16: the hint button, `?` under the reset control. */
+    hint: 'Pomoć',
   },
   pin: {
     /** Confirms the prediction pin where it is: it locks, and the machine tests it. */
@@ -49,6 +60,29 @@ export const hr = {
     'balance-goal': 'Vaga zna koliki je x. Ostavi x samog na jednoj strani.',
     /** At the splitter, when it is first offered. */
     splitter: 'Razdjelnik dijeli obje strane na jednake dijelove.',
+  },
+  /** Story 1.16: the goal card in the scene while the tray is offered: what Balance aims for. */
+  goal: {
+    label: 'Cilj: x sam',
+  },
+  /**
+   * Story 1.16: the hint button's second press, the exact next move (room/hint.ts). The
+   * numbers and lines come in written in school notation (math/format.ts).
+   */
+  hint: {
+    /** By the knob: which way to move the slider. */
+    slide: { right: 'Pomiči klizač udesno.', left: 'Pomiči klizač ulijevo.' },
+    /** At the tray: a balloon of n takes n off both sides. */
+    take: (n: string, balloon: string) =>
+      `Skini ${n} s obje strane: stavi balon ${balloon} na vagu.`,
+    /** At the tray: a weight of n adds n to both sides. */
+    add: (n: string, weight: string) => `Dodaj ${n} na obje strane: stavi uteg ${weight} na vagu.`,
+    /** At the splitter. */
+    split: (n: string) => `Podijeli obje strane ${withS(n)}.`,
+    /** At the notebook: the answer line, `x = 9`. */
+    answer: (line: string) => `Upiši ${line}.`,
+    /** At the notebook: the check line. */
+    check: (n: string) => `Prepiši prvu jednadžbu, a umjesto x upiši ${n}.`,
   },
   parts: {
     /** The parts counter in the scene's corner, read out with its number. */

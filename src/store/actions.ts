@@ -47,6 +47,11 @@ export type Action =
   | { type: 'notebook/enter' }
   /** On a phone, the notebook slides over the scale; this pushes it aside or brings it back. */
   | { type: 'notebook/slide'; aside: boolean }
+  /**
+   * Story 1.16: the hint button. The first press shows the current step's tag, the next ones
+   * the exact next move (room/hint.ts). Free, never recorded: it changes nothing in the room.
+   */
+  | { type: 'hint/press' }
   /** The dev panel only (architecture, Debug Tools): sets the tools he has earned. */
   | { type: 'dev/set-tools'; tools: ToolId[] }
   /** The dev panel only: draws the scene once, or three times side by side for the profile. */

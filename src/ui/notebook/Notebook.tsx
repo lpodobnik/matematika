@@ -14,11 +14,13 @@ import {
 import { pinOffered } from '@/room/pin';
 import type { NotebookLine } from '@/room/types';
 import { useGame } from '@/store/store';
+import { hintOf, hintPlace, notebookHint } from '@/ui/common/hint-text';
 import {
   HandoverNote,
   isNotebookHandover,
   type NotebookHandover,
 } from '@/ui/notebook/HandoverNote';
+import { HintNote } from '@/ui/notebook/HintNote';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
 import { LineView, textLine } from '@/ui/notebook/LineView';
 import { NumberPad } from '@/ui/notebook/NumberPad';
@@ -37,7 +39,10 @@ const noTemplates: LineToken[][] = [];
  * When the next step is in the notebook (story 1.15: `write` or `check`,
  * room/handover.ts), the line to write pulses and its handover tag hangs under the lines.
  * When it is on the scene, with its tag there, the phone's notebook shows pushed aside
- * as for a waiting pin, so it never hides the tag; he can bring it back as then.
+ * as for a waiting pin, so it never hides the tag; he can bring it back as then. While the
+ * hint button's hint shows (story 1.16), its tag takes the handover's place: at the
+ * notebook, with the draft pulsing, when it is about writing; else in the scene, with the
+ * phone's notebook pushed aside again on each press.
  */
 export function Notebook() {
   const lines = useGame((s) => s.room?.stage.lines ?? noLines);
@@ -52,8 +57,13 @@ export function Notebook() {
   );
   const stageAt = useGame((s) => (s.room ? `${s.room.spec.id}.${s.room.stageIndex}` : null));
   const pinWaits = useGame((s) => (s.room ? pinOffered(s.room) : false));
-  const onScene = step !== null && !isNotebookHandover(step);
-  const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${step}` : null;
+  const hinting = useGame((s) => hintOf(s) !== null);
+  const hintNote = useGame(notebookHint);
+  const hintOnScene = useGame((s) => hintPlace(s) === 'scene');
+  const presses = useGame((s) => s.ui.hint?.presses ?? 0);
+  const onScene = hinting ? hintOnScene : step !== null && !isNotebookHandover(step);
+  const shownStep = hinting ? `hint-${presses}` : step;
+  const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${shownStep}` : null;
   const [broughtBack, setBroughtBack] = useState<string | null>(null);
   const aside = shownAside(choice, waiting, broughtBack);
   const dispatch = useGame((s) => s.dispatch);
@@ -81,7 +91,8 @@ export function Notebook() {
       refused={refused}
       writes={writes}
       aside={aside}
-      handover={isNotebookHandover(step) ? step : null}
+      handover={!hinting && isNotebookHandover(step) ? step : null}
+      hint={hintNote === null ? null : { text: hintNote, presses }}
       onKey={send}
       onSlide={slide}
     />
@@ -107,6 +118,11 @@ export interface NotebookPageProps {
    * under the lines, and on a phone the handle pulses while the notebook is pushed aside.
    */
   handover?: NotebookHandover | null;
+  /**
+   * Story 1.16: the hint button's tag at the notebook, in the handover's place: its text,
+   * and the presses so far, so each press pops it in again. The draft line pulses with it.
+   */
+  hint?: { text: string; presses: number } | null;
   onKey(key: NotebookKey): void;
   onSlide(aside: boolean): void;
 }
@@ -127,10 +143,12 @@ export function NotebookPage({
   writes,
   aside,
   handover = null,
+  hint = null,
   onKey,
   onSlide,
 }: NotebookPageProps) {
   const listRef = useRef<HTMLOListElement>(null);
+  const tagged = handover !== null || hint !== null;
 
   // The draft stays in view as lines are added, as it grows, and as a handover tag takes
   // room: the list scrolls to its end, but never so far that the draft's top is cut off.
@@ -143,7 +161,7 @@ export function NotebookPage({
     if (!line) return;
     const cut = list.getBoundingClientRect().top - line.getBoundingClientRect().top;
     if (cut > 0) list.scrollTop -= cut;
-  }, [lines, draft, handover]);
+  }, [lines, draft, handover, hint?.text]);
 
   return (
     <aside className="notebook-area" data-aside={aside} aria-label={hr.notebook.label}>
@@ -153,14 +171,14 @@ export function NotebookPage({
         className="notebook__handle"
         aria-label={aside ? hr.notebook.bringBack : hr.notebook.pushAside}
         aria-expanded={!aside}
-        data-pulse={handover !== null}
+        data-pulse={tagged}
         onPointerDown={(event) => primaryPress(event, () => onSlide(!aside))}
       >
         <svg className="notebook__chevron" viewBox="0 0 24 24" aria-hidden="true">
           <path d={aside ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
         </svg>
       </button>
-      <div className="notebook" data-handover={handover !== null}>
+      <div className="notebook" data-handover={tagged}>
         <ol className="notebook__lines" ref={listRef}>
           {lines.map((line) => (
             <LineView
@@ -175,7 +193,7 @@ export function NotebookPage({
             kind="draft"
             wrong={wrong}
             wiggle={refused > 0}
-            pulse={handover !== null}
+            pulse={tagged}
             caret={writes}
           />
           {upcoming.map((segments, i) => (
@@ -183,7 +201,11 @@ export function NotebookPage({
             <LineView key={`upcoming-${i}`} segments={segments} kind="upcoming" />
           ))}
         </ol>
-        {handover && <HandoverNote step={handover} />}
+        {hint ? (
+          <HintNote key={hint.presses} text={hint.text} />
+        ) : (
+          handover && <HandoverNote step={handover} />
+        )}
         <NumberPad writes={writes} blank={blank} onKey={onKey} />
       </div>
     </aside>

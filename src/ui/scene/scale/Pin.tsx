@@ -11,6 +11,7 @@ import { pinTrack, pinView, slotValue } from '@/room/pin';
 import { currentStageSpec } from '@/room/room';
 import type { EffectOption } from '@/room/types';
 import { useGame } from '@/store/store';
+import { hintPlace } from '@/ui/common/hint-text';
 import { dialPointerHandlers, watchDragCancel } from '@/ui/scene/scale/dial-drag';
 import { dialLayout } from '@/ui/scene/scale/dial-layout';
 import { labelFontSize } from '@/ui/scene/scale/layout';
@@ -69,6 +70,8 @@ export function Pin({ sceneScale, question }: Props) {
     return dial ? notchCount(dial) : null;
   });
   const dispatch = useGame((s) => s.dispatch);
+  // Story 1.16: the hint button, while the pin is offered, shows its question again.
+  const hinted = useGame((s) => (hintPlace(s) === 'pin' ? (s.ui.hint?.presses ?? 0) : 0));
   const fontSize = labelFontSize(sceneScale);
   const kind = view?.kind ?? null;
   const slots = view?.slots ?? 0;
@@ -218,7 +221,7 @@ export function Pin({ sceneScale, question }: Props) {
   const result = test.result ? view.result : null;
   return (
     <pixiContainer>
-      {tag && <QuestionTag tag={tag} lineWidth={layout.lineWidth} />}
+      {tag && <QuestionTag tag={tag} lineWidth={layout.lineWidth} hinted={hinted} />}
       {view.kind === 'x' && <BeyondDial layout={layout} reach={view.reach} slots={view.slots} />}
       {track?.kind === 'choice' &&
         track.options.map((choice, i) => (
@@ -272,13 +275,43 @@ export function Pin({ sceneScale, question }: Props) {
 interface TagProps {
   tag: PinTagLayout;
   lineWidth: number;
+  /** The hint button's presses while the pin is offered (story 1.16): each pops the tag in. */
+  hinted: number;
 }
+
+/** How long the question tag's pop takes on a press of the hint button. */
+const hintPopMs = 260;
 
 /**
  * The paper tag with the pin's question, on its string (pin-tag-layout.ts): drawn once per
- * layout, under the pin, so the pin passes over it as he drags it.
+ * layout, under the pin, so the pin passes over it as he drags it. A press of the hint
+ * button pops it in again (story 1.16): a prediction has no next move to show.
  */
-function QuestionTag({ tag, lineWidth }: TagProps) {
+function QuestionTag({ tag, lineWidth, hinted }: TagProps) {
+  const ref = useRef<Container>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || hinted === 0) return;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const { box } = tag;
+    const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const at = (s: number, alpha: number) => {
+      if (node.destroyed) return;
+      node.scale.set(s);
+      node.position.set(centre.x * (1 - s), centre.y * (1 - s));
+      node.alpha = alpha;
+    };
+    const controls = animate(0, 1, {
+      duration: hintPopMs / 1000,
+      ease: 'easeOut',
+      onUpdate: (t) => (reduced ? at(1, 0.4 + 0.6 * t) : at(0.88 + 0.12 * t, 0.3 + 0.7 * t)),
+      onComplete: () => at(1, 1),
+    });
+    return () => {
+      controls.stop();
+      at(1, 1);
+    };
+  }, [hinted, tag]);
   const draw = useCallback(
     (g: Graphics) =>
       pinSkin.tag(g, {
@@ -300,7 +333,7 @@ function QuestionTag({ tag, lineWidth }: TagProps) {
     [tag],
   );
   return (
-    <pixiContainer eventMode="none">
+    <pixiContainer ref={ref} eventMode="none">
       <pixiGraphics draw={draw} />
       <pixiText text={tag.lines.join('\n')} x={tag.text.x} y={tag.text.y} style={style} />
     </pixiContainer>

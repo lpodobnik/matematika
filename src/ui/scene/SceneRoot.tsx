@@ -17,6 +17,7 @@ import {
 } from 'react';
 import { palette } from '@/art/palette';
 import { useGame } from '@/store/store';
+import { hintOf } from '@/ui/common/hint-text';
 import { watchContextLoss } from '@/ui/scene/context-loss';
 import { type CopyPlacement, copyPlacements } from '@/ui/scene/copies';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
@@ -25,7 +26,10 @@ import { Machine } from '@/ui/scene/machine/Machine';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
 import { Dial } from '@/ui/scene/scale/Dial';
+import { GoalCard } from '@/ui/scene/scale/GoalCard';
 import { HandoverTag } from '@/ui/scene/scale/HandoverTag';
+import { HintGhost } from '@/ui/scene/scale/HintGhost';
+import { HintTag } from '@/ui/scene/scale/HintTag';
 import { Pin } from '@/ui/scene/scale/Pin';
 import { createPieceDrag } from '@/ui/scene/scale/piece-drag';
 import { Scale } from '@/ui/scene/scale/Scale';
@@ -236,8 +240,9 @@ interface SceneCopyProps {
 
 /**
  * One copy of the scene: the paper, the machine, the scale, the dial, the pin and, when it
- * is the only copy, the tray, the splitter and the pin's question tag. Normally there is
- * one, filling the scene. Its drags and its `toScene` work in its own units, and its parts
+ * is the only copy, the goal card, the tray, the splitter, the hint's ghosts and the pin's
+ * question tag, then the handover tag or, while the hint button's hint shows, its tag in
+ * its place (story 1.16: only one tag at a time). Normally there is one, filling the scene. Its drags and its `toScene` work in its own units, and its parts
  * get its own CSS px per unit, so a notch stays 24 CSS px in a copy drawn at a third of the
  * size.
  */
@@ -253,6 +258,7 @@ function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps
     return { x: local.x, y: local.y };
   }, []);
   const copyScale = sceneScale * placement.scale;
+  const hinting = useGame((s) => hintOf(s) !== null);
   return (
     <pixiContainer ref={copyRef} x={placement.x} y={placement.y} scale={placement.scale}>
       <pixiGraphics draw={drawPaper} />
@@ -262,13 +268,22 @@ function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps
       {/* The pin's question tag keeps 20 CSS px text, so like the tools it is drawn only
           when the copy is the only one. */}
       <Pin sceneScale={copyScale} question={tools ? sceneOrigin : null} />
+      {/* Story 1.16: the goal card, under the tools, so what he carries passes over it. */}
+      {tools && <GoalCard sceneScale={copyScale} origin={sceneOrigin} />}
       {tools && <Tray sceneScale={copyScale} drag={drag} toScene={toScene} />}
       {tools && (
         <Splitter sceneScale={copyScale} drag={splitterDrag} toScene={toScene} show={splitShow} />
       )}
+      {/* Story 1.16: the hint's ghost of the next move, over the tools. */}
+      {tools && <HintGhost sceneScale={copyScale} />}
       {/* Story 1.15: the next step's handover tag, over the tools; like them, only in the
-          only copy, as its text keeps 20 CSS px. */}
-      {tools && <HandoverTag sceneScale={copyScale} origin={sceneOrigin} />}
+          only copy, as its text keeps 20 CSS px. While the hint shows, its tag instead. */}
+      {tools &&
+        (hinting ? (
+          <HintTag sceneScale={copyScale} origin={sceneOrigin} />
+        ) : (
+          <HandoverTag sceneScale={copyScale} origin={sceneOrigin} />
+        ))}
     </pixiContainer>
   );
 }

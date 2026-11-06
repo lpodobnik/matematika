@@ -1,0 +1,22 @@
+/* Story 1.16: the hint button's tag at the notebook is the handover tag's card (notebook.css);
+   it pops in on each press, so a press always shows something. */
+.handover-note--hint {
+  animation: hint-note-pop 260ms ease-out;
+}
+
+@keyframes hint-note-pop {
+  from {
+    transform: scale(0.88);
+    opacity: 0.3;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handover-note--hint {
+    animation: none;
+  }
+}

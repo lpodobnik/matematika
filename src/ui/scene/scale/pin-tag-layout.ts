@@ -50,6 +50,11 @@ export const pinTagGeometry = {
   gapPx: 4,
   /** The reset control's corner of the scene area, with a gap: 8 CSS px in, 56 wide. */
   resetCornerPx: 72,
+  /**
+   * Story 1.16: the hint button stands under the reset control (common/hint-button.css: 72
+   * CSS px down, 56 tall), so the corner reaches this far down, with a gap.
+   */
+  resetCornerDepthPx: 136,
   /** From the scene's edges, in scene units. */
   margin: 20,
   /** Characters a line, tried widest first: a wide card is short and fits under the pans. */
@@ -116,18 +121,18 @@ function boxOf(x0: number, y0: number, x1: number, y1: number): Box {
 }
 
 /**
- * The HTML reset control's corner of the scene area (ui/common/common.css), in scene units,
- * for the scene's scale and where its top-left corner sits in the area, in CSS px
- * (`fitScene`): on a phone the scene fills the area's height and the control covers its
- * corner; on the tablet the scene is letterboxed below it.
+ * The HTML reset control's corner of the scene area (ui/common/common.css), with the hint
+ * button under it (story 1.16), in scene units, for the scene's scale and where its
+ * top-left corner sits in the area, in CSS px (`fitScene`): on a phone the scene fills the
+ * area's height and the controls cover its corner; on the tablet the scene is letterboxed
+ * below the reset control, and the hint button reaches just to the scene's top.
  */
 export function resetCorner(sceneScale: number, origin: Point): Box {
-  const corner = pinTagGeometry.resetCornerPx;
   return {
     x: -origin.x / sceneScale,
     y: -origin.y / sceneScale,
-    width: corner / sceneScale,
-    height: corner / sceneScale,
+    width: pinTagGeometry.resetCornerPx / sceneScale,
+    height: pinTagGeometry.resetCornerDepthPx / sceneScale,
   };
 }
 

@@ -2,6 +2,7 @@
 // every change goes through dispatch, which calls the pure root reducer with ctx.
 
 import type { Economy } from '@/economy/types';
+import type { HintState } from '@/room/hint';
 import type { FirstUseId, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
@@ -41,6 +42,11 @@ export interface UiState {
   quality: QualityState;
   /** The dev panel only: 3 draws the scene three times side by side, for the tablet profile. */
   copies: SceneCopies;
+  /**
+   * Story 1.16: the hint button's presses in the stage in play, or null; an action of his
+   * ends them (room/hint.ts). In memory only: hints are never recorded.
+   */
+  hint: HintState | null;
 }
 
 /**

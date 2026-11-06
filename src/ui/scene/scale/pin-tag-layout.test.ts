@@ -129,14 +129,16 @@ describe('pinTagLayout (story 1.14)', () => {
     expect(tagFor(r03, 1, tablet).tag.spot).toBe('wall');
   });
 
-  it('keeps clear of the reset control in the scene area’s corner', () => {
+  it('keeps clear of the reset control and the hint button under it in the area’s corner', () => {
     const onPhone = resetCorner(phone, phoneFit);
     expect(onPhone.x).toBeCloseTo(-phoneFit.x / phone);
     expect(onPhone.y).toBeCloseTo(0);
     expect(onPhone.width * phone).toBeCloseTo(72);
-    expect(onPhone.height * phone).toBeCloseTo(72);
-    // On the tablet the scene is letterboxed below the control, so it reaches into nothing.
+    // Story 1.16: the hint button, 72 CSS px down and 56 tall, with a gap below it.
+    expect(onPhone.height * phone).toBeCloseTo(136);
+    // On the tablet the scene is letterboxed below the reset control; the hint button reaches
+    // just past the scene's top edge.
     const corner = resetCorner(tablet, tabletFit);
-    expect(corner.y + corner.height).toBeLessThan(0);
+    expect((corner.y + corner.height) * tablet).toBeLessThanOrEqual(8 + 1e-9);
   });
 });

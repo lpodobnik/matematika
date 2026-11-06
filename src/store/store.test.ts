@@ -29,6 +29,7 @@ describe('the store', () => {
       notebookAside: false,
       quality: { measured: null, measuredMs: null, forced: null },
       copies: 1,
+      hint: null,
     });
   });
 
