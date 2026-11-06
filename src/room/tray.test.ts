@@ -55,15 +55,37 @@ function equation(text: string): Equation {
   return result.equation;
 }
 
-/** Room 4 with its pin locked at 9, so the stage is open; the tray isn't offered yet. */
-function lockedPin(): RoomState {
-  const poking = step(touchMachine(enterRoom(r04).room)).room;
-  return step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
+/**
+ * Room 4, open after his first touch; the tray isn't offered yet. Story 1.16 took its pin
+ * and poke window away (until then this locked the pin at 9 first).
+ */
+function openWheel(): RoomState {
+  return step(touchMachine(enterRoom(r04).room)).room;
 }
 
 /** Room 4, open, with the dial pushed to its maximum (6), which can't level it: the tray is offered. */
 function waterWheel(): RoomState {
-  return step(setDial(lockedPin(), 6)).room;
+  return step(setDial(openWheel(), 6)).room;
+}
+
+/**
+ * Room 4 as it was until story 1.16, with a "where it levels" pin beyond the dial and a poke
+ * window over 0–3: the pin's rules stay for later rooms, so their tests keep it.
+ */
+const pinnedWheel: RoomSpec = {
+  ...r04,
+  stages: [
+    {
+      ...(r04.stages[0] as StageSpec),
+      pokeNotches: 4,
+      pin: { kind: 'level-x', beyondDial: true },
+    },
+  ],
+};
+
+/** Room 4, split down to x = 9 by Balance, with the notebook's `x = ☐` to fill (story 1.16). */
+function xAloneWheel(): RoomState {
+  return step(splitBothPans(drop(waterWheel(), 'float', 5).room, balance)).room;
 }
 
 /** A one-stage room with no pin, open after his first touch; 'none' lists no Balance mode. */
@@ -119,23 +141,24 @@ const written = (room: RoomState) => room.stage.lines.map((line) => formatTokens
 
 describe('when the tray is offered (story 1.15: one tool at a time)', () => {
   it('needs Balance and an open stage: not in arrive, poke or pin, nor once the stage locks', () => {
-    const arriving = enterRoom(r04).room;
+    const arriving = enterRoom(pinnedWheel).room;
     const poking = step(touchMachine(arriving)).room;
     const pinning = step(setPin(poking, { kind: 'x', x: 9 })).room;
     for (const room of [arriving, poking, pinning]) {
       expect(trayOffered(rememberTray(room, ['tray']), balance)).toBe(false);
     }
+    expect(trayOffered(rememberTray(enterRoom(r04).room, ['tray']), balance)).toBe(false);
     expect(trayOffered(waterWheel(), balance)).toBe(true);
     expect(trayOffered(waterWheel(), [])).toBe(false);
-    let room = typed(waterWheel(), 'x = 9');
-    room = step(enterLine(room, 0)).room;
-    room = step(enterLine(typed(room, '2 · 9 + 5 = 23'), 0)).room;
+    // Story 1.16: x = 9 waits for the pans to be simplified, so Balance gets there first.
+    let room = step(enterLine(typed(xAloneWheel(), '9'), 0)).room;
+    room = step(enterLine(typed(room, '9'), 0)).room;
     expect(room.stage.phase).toBe('locked');
     expect(trayOffered(room, balance)).toBe(false);
   });
 
   it('waits in a fresh stage until his dial has been at its maximum without levelling the pans', () => {
-    const open = lockedPin();
+    const open = openWheel();
     expect(trayOffered(open, balance)).toBe(false);
     expect(trayView(open, balance)).toBeNull();
     expect(dropOnScale(open, balance, 'float')).toBeNull();
@@ -153,8 +176,9 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
 
   // Story 1.15 review: a pin at 6 has the machine park the dial at its maximum itself, and
   // his grab there sends `dial/set 6`, which the dial already has, so it was never maxed.
+  // Story 1.16 took room 4's pin away; the rule stays for later rooms, on the pinned wheel.
   it("is offered when the machine's pin test leaves the dial at its maximum with the pans tipped", () => {
-    const poking = step(touchMachine(enterRoom(r04).room)).room;
+    const poking = step(touchMachine(enterRoom(pinnedWheel).room)).room;
     const atSix = step(confirmPin(step(setPin(poking, { kind: 'x', x: 6 })).room)).room;
     expect(atSix.stage.dialX).toBe(6);
     expect(atSix.stage.balance.dialMaxed).toBe(true);
@@ -163,11 +187,12 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
     // A test that stops short of the maximum, or weighs a pin beyond the dial, doesn't.
     const atFive = step(confirmPin(step(setPin(poking, { kind: 'x', x: 5 })).room)).room;
     expect(atFive.stage.balance.dialMaxed).toBe(false);
-    expect(trayOffered(lockedPin(), balance)).toBe(false);
+    const atNineBeyond = step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
+    expect(trayOffered(atNineBeyond, balance)).toBe(false);
     // Nor does one that levels the pans at the maximum: the dial solves it there.
     const reachable: RoomSpec = {
-      ...r04,
-      stages: [{ ...(r04.stages[0] as StageSpec), dial: { min: 0, max: 9, step: 1 } }],
+      ...pinnedWheel,
+      stages: [{ ...(pinnedWheel.stages[0] as StageSpec), dial: { min: 0, max: 9, step: 1 } }],
     };
     const levelling = step(touchMachine(enterRoom(reachable).room)).room;
     const atNine = step(confirmPin(step(setPin(levelling, { kind: 'x', x: 9 })).room)).room;
@@ -182,7 +207,7 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
   });
 
   it('is offered at once in a stage after the one where he met it', () => {
-    const open = lockedPin();
+    const open = openWheel();
     const remembered = rememberTray(open, ['pin', 'tray']);
     expect(remembered.stage.balance.trayMet).toBe(true);
     expect(trayOffered(remembered, balance)).toBe(true);
@@ -275,7 +300,7 @@ describe('the stepper', () => {
     expect(stepped.room.stage.pans).toBe(room.stage.pans);
     expect(stepped.events).toEqual([]);
     expect(stepTray(room, [], 'weight', 1)).toBeNull();
-    expect(stepTray(lockedPin(), balance, 'weight', 1)).toBeNull();
+    expect(stepTray(openWheel(), balance, 'weight', 1)).toBeNull();
   });
 
   it('keeps its numbers when the stage is reset', () => {
@@ -354,21 +379,28 @@ describe('a drop over the scale puts one copy on each side (Balance moves, story
     expect(written(room).slice(2)).toEqual(['2x + 5 = 23 − 5 + 5', '2x + 5 = 23']);
   });
 
+  // Story 1.16: he writes x = n into the `x = ☐` the notebook gives him once x is alone.
   it('leaves x = n for him to write: the move is written, its result is not', () => {
     const { room, events } = drop(openRoom('x + 4 = 9'), 'float', 4);
     expect(events.map((event) => event.type)).toEqual(['WayUsed', 'LineAccepted']);
     expect(written(room)).toEqual(['x + 4 = 9', 'x + 4 − 4 = 9 − 4']);
     expect(shown(room)).toBe('x = 5');
-    expect(enterLine(typed(room, 'x = 5'), 0)?.verdict).toEqual({ kind: 'answer' });
+    expect(room.stage.templates.map((line) => line.join(' '))).toEqual(['x = ☐', '☐ + 4 = 9']);
+    expect(enterLine(typed(room, '5'), 0)?.verdict).toEqual({ kind: 'answer' });
   });
 
+  // Story 1.16: the pans stay at the dial's x (1.15 weighed them level at the true x).
   it('writes nothing with Balance blank (or no Balance mode), though the pans move and WayUsed fires', () => {
     for (const fading of ['blank', 'none'] as const) {
       const { room, events } = drop(openRoom('2x + 5 = 23', fading), 'float', 5);
       expect(events).toEqual([{ type: 'WayUsed', roomId: 'r01', stage: 0, way: 'balance' }]);
       expect(written(room)).toEqual(['2x + 5 = 23']);
       expect(shown(room)).toBe('2x = 18');
-      expect(scaleView(room)).toMatchObject({ actingOut: true, level: true });
+      expect(scaleView(room)).toMatchObject({
+        x: 0,
+        level: false,
+        readouts: { left: '0', right: '18' },
+      });
     }
     expect(balanceFading(r04.stages[0] as StageSpec)).toBe('auto');
     expect(balanceFading(r01.stages[0] as StageSpec)).toBe('blank');
@@ -419,43 +451,64 @@ describe('dragging a piece off a side (story 1.15)', () => {
   });
 });
 
-describe('the scale acts out at the true x during Balance (story 1.15)', () => {
-  it('from his first move the pans are weighed at the stage’s solution: level, no readouts', () => {
+// Story 1.16 rewrote this block: story 1.15 weighed the pans at the stage's solution from his
+// first Balance move ("acting out", level, no readouts) while the slider stood elsewhere, which
+// gave two x's at once. Now the slider is the only x.
+describe('the pans stay at the slider’s x during Balance (story 1.16)', () => {
+  it('weighs every move at the dial’s x, with readouts: at 6, 17 vs 23, then 12 vs 18, then 6 vs 9', () => {
     const before = scaleView(waterWheel());
-    expect(before).toMatchObject({ actingOut: false, x: 6, level: false });
+    expect(before).toMatchObject({ x: 6, level: false, readouts: { left: '17', right: '23' } });
     const room = drop(waterWheel(), 'float', 5).room;
-    expect(room.stage.actingOut).toBe(true);
     expect(scaleView(room)).toMatchObject({
-      actingOut: true,
-      x: 9,
-      tilt: 0,
-      level: true,
-      readouts: null,
+      x: 6,
+      level: false,
+      readouts: { left: '12', right: '18' },
+    });
+    expect(scaleView(room).tilt).toBeLessThan(0);
+    const halved = step(splitBothPans(room, balance)).room;
+    expect(shown(halved)).toBe('x = 9');
+    expect(scaleView(halved)).toMatchObject({
+      x: 6,
+      level: false,
+      readouts: { left: '6', right: '9' },
     });
     // A move never touches the dial.
-    expect(room.stage.dialX).toBe(6);
+    expect(halved.stage.dialX).toBe(6);
   });
 
-  it('any dial move returns to exploring, at the dial’s x, with the pans as they are', () => {
+  it('weighs the pans as they are at the dial’s next notch', () => {
     const room = drop(waterWheel(), 'float', 5).room;
     const turned = step(setDial(room, 4)).room;
-    expect(turned.stage.actingOut).toBe(false);
     expect(shown(turned)).toBe('2x = 18');
-    expect(scaleView(turned)).toMatchObject({ actingOut: false, x: 4, level: false });
+    expect(scaleView(turned)).toMatchObject({ x: 4, level: false });
     expect(scaleView(turned).readouts).toEqual({ left: '8', right: '18' });
   });
 
-  it('goes back on reset, to line 0, exploring', () => {
+  it('goes back on reset, to line 0, at the dial’s minimum', () => {
     const reset = step(resetStage(drop(waterWheel(), 'float', 5).room)).room;
     expect(shown(reset)).toBe('2x + 5 = 23');
-    expect(reset.stage.actingOut).toBe(false);
+    expect(scaleView(reset)).toMatchObject({ x: 0, readouts: { left: '5', right: '23' } });
   });
 
-  it('is replaced by the layout of a line he writes', () => {
+  it('brings up x = ☐ once a move leaves x alone, and takes it away if the next does not', () => {
+    const alone = xAloneWheel();
+    expect(alone.stage.templates).toHaveLength(2);
+    const filled = typed(alone, '9');
+    const plusThree = drop(filled, 'weight', 3).room;
+    expect(shown(plusThree)).toBe('x + 3 = 12');
+    expect(plusThree.stage.templates).toEqual([]);
+    expect(formatTokens(plusThree.stage.draft)).toBe('x = 9');
+    // Back to x alone: the blanks return, with his 9 in the first.
+    const back = drop(plusThree, 'float', 3).room;
+    expect(back.stage.templates).toHaveLength(2);
+    expect(back.stage.draft).toEqual(['9']);
+  });
+
+  it('is replaced by the layout of a line he writes, still at the dial’s x', () => {
     const moved = drop(waterWheel(), 'float', 5).room;
     const wrote = step(enterLine(typed(moved, 'x = 9'), 0)).room;
     expect(shown(wrote)).toBe('x = 9');
-    expect(wrote.stage.actingOut).toBe(true);
+    expect(scaleView(wrote)).toMatchObject({ x: 6, level: false });
   });
 
   it('a jam cleared goes back to the last committed line', () => {

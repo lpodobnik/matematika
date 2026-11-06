@@ -18,7 +18,7 @@ function placed(key: string, identity: string, x: number, y = 0, alpha = 1): Pla
 }
 
 /** The left pan's pieces of an equation, as the scale labels them. */
-function leftPieces(text: string, label = '?'): PieceView[] {
+function leftPieces(text: string, label = 'x'): PieceView[] {
   const parsed = parse(text);
   if (!parsed.ok) throw new Error(text);
   return panPieces(parsed.equation).left.map((piece): PieceView => {
@@ -29,11 +29,12 @@ function leftPieces(text: string, label = '?'): PieceView[] {
 }
 
 describe('pieceIdentity', () => {
+  // Story 1.16: the second label was `?`, as a gear read while the scale acted out (gone).
   it('is the kind and the number, never the label a gear shows', () => {
-    const [atDial] = leftPieces('x + 4 = 9', '3');
-    const [actingOut] = leftPieces('x + 4 = 9', '?');
-    if (!atDial || !actingOut) throw new Error('no gear');
-    expect(pieceIdentity(atDial)).toBe(pieceIdentity(actingOut));
+    const [letter] = leftPieces('x + 4 = 9', 'x');
+    const [number] = leftPieces('x + 4 = 9', '3');
+    if (!letter || !number) throw new Error('no gear');
+    expect(pieceIdentity(letter)).toBe(pieceIdentity(number));
     const [, four] = leftPieces('x + 4 = 9');
     const [, seven] = leftPieces('x + 7 = 9');
     if (!four || !seven) throw new Error('no weight');

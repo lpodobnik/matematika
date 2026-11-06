@@ -126,9 +126,17 @@ export interface PinState {
 
 /**
  * The one-time handover tags (story 1.15; room/handover.ts), in the order he meets them: each
- * names the step its tag tells him to take next.
+ * names the step its tag tells him to take next. Story 1.16 adds `answer`: x is alone on
+ * the pans, so he writes how much x is.
  */
-export type HandoverId = 'dial' | 'write' | 'check' | 'tray' | 'balance-goal' | 'splitter';
+export type HandoverId =
+  | 'dial'
+  | 'write'
+  | 'answer'
+  | 'check'
+  | 'tray'
+  | 'balance-goal'
+  | 'splitter';
 
 /**
  * What he has met, so each shows only the first time (Pattern 2, First use): the controls
@@ -162,6 +170,13 @@ export interface NotebookLine {
  * evenly is refused, never jammed (story 1.15).
  */
 export type Jam = { kind: 'line' };
+
+/**
+ * Why enter refused a line with a tag, beyond the wiggle (story 1.16): `simplify`, an answer
+ * line before the pans are simplified, in a stage that Try values can't finish
+ * (room/notebook.ts, `answerAllowed`). Its text is in hr.ts (`hr.refusal`).
+ */
+export type Refusal = 'simplify';
 
 /**
  * What the stage remembers about Balance, so the tray and the splitter appear one at a
@@ -211,6 +226,11 @@ export interface StageState {
   jam: Jam | null;
   /** How many times enter has refused a line in this stage; the notebook wiggles each time. */
   refused: number;
+  /**
+   * Why enter last refused a line with a tag (story 1.16), until he edits the draft or
+   * enters again; null for none. The tag shows only while the reason still holds.
+   */
+  refusal: Refusal | null;
   /** Jams since the last committed line (hints from epic 2). */
   jamsInARow: number;
   /** 0–1 per machine: 0 is stopped, 1 is running; the skin shows it. */
@@ -231,11 +251,10 @@ export interface StageState {
   /** What the stage remembers about Balance, for offering its tools (story 1.15). */
   balance: BalanceMemory;
   /**
-   * The scale acts out: from a committed line or a Balance move (story 1.15) until he turns
-   * the dial. The pans are weighed at the stage's solution, so they hang level, with no
-   * readouts; the gears show `x` either way.
+   * The slider's x: the only x (story 1.16). The pans are always weighed at it, after a
+   * written line and a Balance move too; story 1.15's acting out at the stage's solution
+   * is gone.
    */
-  actingOut: boolean;
   dialX: number;
   /** The part of the dial he can reach: the poke window until the pin is locked, then the full range. */
   dialOpen: { min: number; max: number };

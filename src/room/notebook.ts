@@ -6,7 +6,12 @@
 //
 // Writing drives the machine (story 1.7): a committed line is acted out on the pans and
 // moves the machine; a wrong one is acted out, tips the pans and jams the machine; the
-// check line locks it.
+// check line locks it. The pans are weighed at the slider's x throughout (story 1.16).
+//
+// Simplify first (story 1.16): in a stage Try values can't finish (room 4), the answer line
+// `x = n` is refused until the pans are simplified, by Balance or by lines he typed: one
+// pan holding only x, the other a single number (`answerAllowed`). The refusal is like an
+// incomplete line's, with a tag (`refusal`).
 
 import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
@@ -16,9 +21,20 @@ import { formatEquation, formatLine, formatTokens, type LineSegment } from '@/ma
 import { parse } from '@/math/parse';
 import { fillBlanks, isDigit, type Token, tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
+import { withLastLines } from '@/room/fading';
 import { progressAfter } from '@/room/machine';
+import { isNumberPiece, type Piece, panPieces } from '@/room/pieces';
 import { resolvePin } from '@/room/pin';
-import type { NotebookLine, Phase, RoomState, StageState, WayId } from '@/room/types';
+import { currentStageSpec } from '@/room/room';
+import type {
+  NotebookLine,
+  Phase,
+  Refusal,
+  RoomState,
+  StageSpec,
+  StageState,
+  WayId,
+} from '@/room/types';
 
 /** A key on the number pad, or its stand-in on a computer keyboard. */
 export type NotebookKey = Token | 'delete' | 'enter';
@@ -66,6 +82,37 @@ export function isRefused(verdict: Verdict): boolean {
 /** Lines that are committed to `lines`, read-only. */
 export function isCommitted(verdict: Verdict): boolean {
   return verdict.kind === 'valid' || verdict.kind === 'answer' || verdict.kind === 'check';
+}
+
+/**
+ * The pans are simplified (story 1.16): one pan holds only x pieces and the other a single
+ * number piece, or nothing. `2x = 18`, `18 = 2x` and `x = 9` are; `2x + 5 = 23` isn't, nor
+ * `2x = 23 − 5` (a weight and a balloon). Judged on the pieces the scale shows, so a split's
+ * line, `2x : 2 = 18 : 2` (one gear against a 9), is simplified too.
+ */
+export function simplified(pans: Equation): boolean {
+  const { left, right } = panPieces(pans);
+  const onlyX = (pieces: Piece[]) => pieces.length > 0 && !pieces.some(isNumberPiece);
+  const oneNumber = (pieces: Piece[]) => pieces.length <= 1 && pieces.every(isNumberPiece);
+  return (onlyX(left) && oneNumber(right)) || (onlyX(right) && oneNumber(left));
+}
+
+/**
+ * Whether the answer line `x = n` may be written now, typed or filled into a blank (story
+ * 1.16, simplify first): always in a stage Try values can finish; otherwise only once the
+ * pans are simplified, where the last committed line or Balance's moves left them.
+ */
+export function answerAllowed(stage: StageSpec, pans: Equation): boolean {
+  return stage.ways.includes('try') || simplified(pans);
+}
+
+/**
+ * The refusal whose tag shows now, or null (story 1.16): the last enter's, while its reason
+ * still holds, so `simplify` goes as soon as the pans are simplified, by a Balance move too.
+ */
+export function refusalView(room: RoomState | null): Refusal | null {
+  if (!room || room.stage.refusal === null) return null;
+  return answerAllowed(currentStageSpec(room), room.stage.pans) ? null : room.stage.refusal;
 }
 
 function equationOf(tokens: readonly Token[], what: string): Equation {
@@ -116,11 +163,11 @@ function withStage(room: RoomState, stage: StageState): RoomState {
 
 /**
  * The stage after an edit to the draft: any edit clears a line jam and returns the pans to
- * the last committed line (Pattern 1, two layers).
+ * the last committed line (Pattern 1, two layers), and clears a refusal's tag (story 1.16).
  */
 function edited(stage: StageState, draft: Token[]): StageState {
-  if (stage.jam?.kind !== 'line') return { ...stage, draft };
-  return { ...stage, draft, jam: null, pans: lastCommitted(stage) };
+  if (stage.jam?.kind !== 'line') return { ...stage, draft, refusal: null };
+  return { ...stage, draft, refusal: null, jam: null, pans: lastCommitted(stage) };
 }
 
 /**
@@ -159,7 +206,7 @@ function progressFor(stage: StageState, verdict: Verdict): number[] {
  * The stage with a correct line committed, however it was written (typed, or by a way on
  * the machine): the line joins `lines`, read-only; the machine moves on by its verdict;
  * `jamsInARow` resets; and the pans take the line's layout. What else changes (the draft,
- * the blanks, acting out, the lock) is up to the caller.
+ * the blanks, the lock) is up to the caller.
  */
 export function commitLine(
   stage: StageState,
@@ -214,19 +261,35 @@ export function writeWayLine(
 }
 
 /**
+ * Whether the line is refused with a wiggle, not stored, and with which tag: none for what
+ * the checker refuses (`isRefused`), `simplify` for an answer line before the pans are
+ * simplified in a stage Try values can't finish (story 1.16). Null when it isn't refused.
+ */
+function refusalOf(room: RoomState, verdict: Verdict): { refusal: Refusal | null } | null {
+  if (isRefused(verdict)) return { refusal: null };
+  if (verdict.kind !== 'answer') return null;
+  return answerAllowed(currentStageSpec(room), room.stage.pans) ? null : { refusal: 'simplify' };
+}
+
+/**
  * Judges the line the draft stands for (`notebook/enter`, story 1.3's checker):
  * - `incomplete`, `nonlinear`, `aside`: refused; the draft stays and `refused` counts up,
  *   so the notebook wiggles. Nothing is acted out.
- * - `wrong`: the draft stays, marked by a line jam. The machine acts it out at the stage's
- *   solution and jams (`MachineJammed`); `jamsInARow` counts up.
+ * - `answer` before the pans are simplified, in a stage Try values can't finish (story
+ *   1.16, `answerAllowed`): refused the same way, and `refusal` is set, so its tag shows.
+ *   The returned verdict is still the checker's `answer`; nothing is stored.
+ * - `wrong`: the draft stays, marked by a line jam. The machine shows it on the pans, at
+ *   the dial's x, tipped, and jams (`MachineJammed`); `jamsInARow` counts up.
  * - `valid`, `answer`, `check`: appended to `lines`, read-only, and the draft empties (and,
- *   when he fills blanks, the next template comes up). The pans take the line's layout and
- *   act it out; the machine moves on; `jamsInARow` resets. The check line locks the stage
- *   (`StageLocked`), and the machine starts presenting the lock at `now` (ctx.now; see
- *   room/phases.ts). A locked pin that is somehow still unresolved resolves then
- *   (`PredictionMade`); confirming it normally has (room/pin.ts).
- * Acting out never fires `PansLevel`: only the dial does. Null when the notebook is off,
- * or while the machine is jammed (only an edit clears a line jam).
+ *   when he fills blanks, the next template comes up). The pans take the line's layout,
+ *   still weighed at the dial's x (story 1.16); the machine moves on; `jamsInARow` resets.
+ *   With Balance `auto`, the last two lines' blanks appear once x is alone on the pans
+ *   (room/fading.ts, `withLastLines`). The check line locks the stage (`StageLocked`), and
+ *   the machine starts presenting the lock at `now` (ctx.now; see room/phases.ts). A
+ *   locked pin that is somehow still unresolved resolves then (`PredictionMade`);
+ *   confirming it normally has (room/pin.ts).
+ * A written line never fires `PansLevel`: only the dial does. Null when the notebook is
+ * off, or while the machine is jammed (only an edit clears a line jam).
  */
 export function enterLine(room: RoomState, now: number): EnterStep | null {
   const { stage } = room;
@@ -234,14 +297,17 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
   const tokens = lineTokens(stage);
   const verdict = check(committedEquations(stage.lines), tokens);
   const at = { roomId: room.spec.id, stage: room.stageIndex };
-  if (isRefused(verdict)) {
-    return { room: withStage(room, { ...stage, refused: stage.refused + 1 }), events: [], verdict };
+  const refused = refusalOf(room, verdict);
+  if (refused) {
+    const next: StageState = { ...stage, refused: stage.refused + 1, refusal: refused.refusal };
+    return { room: withStage(room, next), events: [], verdict };
   }
   if (verdict.kind === 'wrong') {
     const jammed: StageState = {
       ...stage,
       jam: { kind: 'line' },
       jamsInARow: stage.jamsInARow + 1,
+      refusal: null,
     };
     const events: RoomEvent[] = [
       { type: 'LineWrong', ...at, line: formatTokens(tokens) },
@@ -250,14 +316,14 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
     return { room: withStage(room, jammed), events, verdict };
   }
   const locks = verdict.kind === 'check';
-  const next: StageState = {
+  const next: StageState = withLastLines(currentStageSpec(room), {
     ...commitLine(stage, tokens, 'typed', verdict),
     phase: locks ? 'locked' : stage.phase,
     draft: [],
     templates: stage.templates.slice(1),
-    actingOut: true,
+    refusal: null,
     presentedAt: locks ? now : stage.presentedAt,
-  };
+  });
   const progress = lineProgress(verdict);
   const events: RoomEvent[] = [{ type: 'LineAccepted', ...at, source: 'typed', progress }];
   const committed = withStage(room, next);

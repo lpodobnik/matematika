@@ -3,7 +3,7 @@ import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { r04 } from '@/content/rooms/r04-water-wheel';
 import type { Equation } from '@/math/expr';
-import { formatEquation, formatTokens } from '@/math/format';
+import { formatEquation, formatLine, formatTokens } from '@/math/format';
 import { parse } from '@/math/parse';
 import { tokenize } from '@/math/tokens';
 import { setDial } from '@/room/dial';
@@ -12,7 +12,7 @@ import { machineView } from '@/room/machine';
 import { enterLine, typeToken } from '@/room/notebook';
 import { resetStage, touchMachine } from '@/room/phases';
 import { panPieces } from '@/room/pieces';
-import { confirmPin, setPin } from '@/room/pin';
+import { setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { scaleView } from '@/room/scale';
 import {
@@ -27,7 +27,7 @@ import {
   stepSplitter,
 } from '@/room/splitter';
 import { dropOnScale, rememberTray, stepTray } from '@/room/tray';
-import type { FadingMode, RoomSpec, RoomState, ToolId, TrayKind } from '@/room/types';
+import type { FadingMode, RoomSpec, RoomState, StageSpec, ToolId, TrayKind } from '@/room/types';
 
 const balance: ToolId[] = ['balance'];
 
@@ -42,12 +42,26 @@ function equation(text: string): Equation {
   return result.equation;
 }
 
-/** Room 4 with its pin locked at 9 and the dial pushed to 6, so the tray is offered. */
+/**
+ * Room 4, open, with the dial pushed to 6, so the tray is offered. Story 1.16 took its pin
+ * away (until then this locked the pin at 9 first).
+ */
 function waterWheel(): RoomState {
-  const poking = step(touchMachine(enterRoom(r04).room)).room;
-  const open = step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
+  const open = step(touchMachine(enterRoom(r04).room)).room;
   return step(setDial(open, 6)).room;
 }
+
+/** Room 4 with the pin and poke window it had until story 1.16, for the phases before open. */
+const pinnedWheel: RoomSpec = {
+  ...r04,
+  stages: [
+    {
+      ...(r04.stages[0] as StageSpec),
+      pokeNotches: 4,
+      pin: { kind: 'level-x', beyondDial: true },
+    },
+  ],
+};
 
 /**
  * A one-stage room with no pin, open after his first touch, with the tray offered as in a
@@ -112,6 +126,13 @@ function write(room: RoomState, text: string): RoomStep {
 const shown = (room: RoomState) => formatEquation(room.stage.pans);
 const written = (room: RoomState) => room.stage.lines.map((line) => formatTokens(line.tokens));
 const labels = (pieces: readonly { label: string }[]) => pieces.map((piece) => piece.label);
+/** The lines with blanks left to fill, as the notebook writes them. */
+const toFill = (room: RoomState) =>
+  room.stage.templates.map((line) =>
+    formatLine(line)
+      .map((segment) => (segment.kind === 'blank' ? '☐' : segment.text))
+      .join(''),
+  );
 
 /** Room 4 after a float of 5 over the scale: `2x + 5 − 5 = 23 − 5` and `2x = 18` are written. */
 function atTwoXEighteen(): RoomState {
@@ -120,18 +141,19 @@ function atTwoXEighteen(): RoomState {
 
 describe('when the splitter is offered (story 1.15: one tool at a time)', () => {
   it('needs Balance and an open stage: not in arrive, poke or pin, nor once the stage locks', () => {
-    const arriving = enterRoom(r04).room;
+    const arriving = enterRoom(pinnedWheel).room;
     const poking = step(touchMachine(arriving)).room;
     const pinning = step(setPin(poking, { kind: 'x', x: 9 })).room;
-    for (const room of [arriving, poking, pinning]) {
+    for (const room of [arriving, poking, pinning, enterRoom(r04).room]) {
       expect(splitterOffered(room, balance)).toBe(false);
       expect(splitterView(room, balance)).toBeNull();
     }
     expect(splitterOffered(atTwoXEighteen(), balance)).toBe(true);
     expect(splitterOffered(atTwoXEighteen(), [])).toBe(false);
     expect(splitBothPans(atTwoXEighteen(), [])).toBeNull();
+    // `2x = 18` is simplified, so x = 9 may be written; the check line is then a blank (1.16).
     const answered = write(atTwoXEighteen(), 'x = 9').room;
-    const locked = write(answered, '2 · 9 + 5 = 23').room;
+    const locked = write(answered, '9').room;
     expect(locked.stage.phase).toBe('locked');
     expect(splitterOffered(locked, balance)).toBe(false);
   });
@@ -264,11 +286,16 @@ describe('a split over the scale (story 1.15)', () => {
     expect(panPieces(result.room.stage.pans).left.map((piece) => piece.kind)).toEqual(['gear']);
   });
 
-  it('room 4: he then writes x = 9 and 2 · 9 + 5 = 23, and the machine locks', () => {
+  // Story 1.16: x alone brings up `x = ☐` and then `2 · ☐ + 5 = 23`; he fills in 9 twice
+  // (he typed both lines out until then).
+  it('room 4: he then fills x = ☐ and 2 · ☐ + 5 = 23 with 9, and the machine locks', () => {
     const halved = split(atTwoXEighteen(), 2).room;
-    const answered = write(halved, 'x = 9');
+    expect(toFill(halved)).toEqual(['x = ☐', '2 · ☐ + 5 = 23']);
+    const answered = write(halved, '9');
     expect(answered.room.stage.lines.at(-1)?.verdict.kind).toBe('answer');
-    const locked = write(answered.room, '2 · 9 + 5 = 23');
+    expect(formatTokens(answered.room.stage.lines.at(-1)?.tokens ?? [])).toBe('x = 9');
+    const locked = write(answered.room, '9');
+    expect(formatTokens(locked.room.stage.lines.at(-1)?.tokens ?? [])).toBe('2 · 9 + 5 = 23');
     expect(locked.room.stage.phase).toBe('locked');
     expect(locked.events.map((event) => event.type)).toContain('StageLocked');
   });
@@ -284,13 +311,16 @@ describe('a split over the scale (story 1.15)', () => {
     expect(written(result.room).at(-1)).toBe('2x : 2 = (23 − 5) : 2');
   });
 
-  it('acts out at the true x, like any Balance move; the dial stays where it was', () => {
+  // Story 1.16: 1.15 acted a split out at the true x (level, no readouts).
+  it('stays at the dial’s x, like any Balance move; the dial stays where it was', () => {
     const turned = step(setDial(write(waterWheel(), '2x = 18').room, 3)).room;
-    expect(turned.stage.actingOut).toBe(false);
     const halved = split(turned, 2).room;
-    expect(halved.stage.actingOut).toBe(true);
     expect(halved.stage.dialX).toBe(3);
-    expect(scaleView(halved)).toMatchObject({ x: 9, actingOut: true, level: true, readouts: null });
+    expect(scaleView(halved)).toMatchObject({
+      x: 3,
+      level: false,
+      readouts: { left: '3', right: '9' },
+    });
   });
 
   it('writes the result too when it isn’t x = n: 4x + 8 = 20 by 4 is x + 2 = 5', () => {

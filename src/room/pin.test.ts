@@ -245,7 +245,7 @@ describe('the machine tests the pin on confirm (Pattern 2, Resolution)', () => {
       { type: 'PredictionMade', roomId: 'r03', stage: 0, right: true },
     ]);
     const { room } = confirmed;
-    expect(room.stage).toMatchObject({ phase: 'open', dialX: 14, actingOut: false });
+    expect(room.stage).toMatchObject({ phase: 'open', dialX: 14 });
     expect(room.stage.dialOpen).toEqual({ min: 6, max: 20 });
     expect(room.stage.pin).toEqual({ value: at(14), locked: true, resolved: true });
     expect(pinView(room)?.result).toBe('right');

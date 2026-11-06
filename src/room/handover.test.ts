@@ -20,8 +20,9 @@ import {
 } from '@/room/handover';
 import { enterLine, typeToken } from '@/room/notebook';
 import { resetStage, touchMachine } from '@/room/phases';
-import { confirmPin, setPin } from '@/room/pin';
+import { setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
+import { scaleView } from '@/room/scale';
 import { splitterOffered } from '@/room/splitter';
 import { dropOnScale, trayOffered } from '@/room/tray';
 import type { FirstUseId, HandoverId, RoomSpec, RoomState, StageSpec, ToolId } from '@/room/types';
@@ -60,11 +61,12 @@ function write(room: RoomState, text: string): RoomState {
   return step(enterLine(typed, 0)).room;
 }
 
-/** Room 4 with its pin locked at 9, so the stage is open, and the dial at its end, 6. */
+/**
+ * Room 4, open, with the dial at its end, 6. Story 1.16 took its pin away (until then this
+ * locked the pin at 9 first).
+ */
 function waterWheel(): RoomState {
-  const poking = opened(enterRoom(r04).room);
-  const room = step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
-  return room.stage.dialX === 6 ? room : dialTo(room, 6);
+  return dialTo(opened(enterRoom(r04).room), 6);
 }
 
 /** The stage after Balance moves wrote these lines (as Balance `auto` does), the last on the pans. */
@@ -84,7 +86,6 @@ function balancedTo(room: RoomState, ...lines: string[]): RoomState {
         },
       ],
       pans: equation(text),
-      actingOut: true,
     };
   }
   return {
@@ -163,8 +164,7 @@ describe('which handover applies (story 1.15)', () => {
         ...r04,
         stages: [{ ...first, fading: { try: 'blank', balance: mode } }],
       };
-      const poking = opened(enterRoom(quiet).room);
-      const open = step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
+      const open = opened(enterRoom(quiet).room);
       const moved = step(dropOnScale(dialTo(open, 6), balance, 'float')).room;
       expect(moved.stage.lines, mode).toHaveLength(1);
       expect(moved.stage.balance.moves, mode).toBe(1);
@@ -181,9 +181,69 @@ describe('which handover applies (story 1.15)', () => {
     expect(handoverView(twoX, [], balance)).toBe('splitter');
     const alone = balancedTo(twoX, 'x = 9');
     expect(handoverApplies('splitter', alone, balance)).toBe(false);
-    // Balance leaves x alone: the scale is level, so he writes it.
-    expect(handoverView(alone, metBut('write'), balance)).toBe('write');
+    // Story 1.16: Balance leaves x alone, but the scale stays at the slider's 6, out of
+    // balance, so it isn't `write` ("the scale is level") any more: `answer` asks for x.
+    expect(handoverApplies('write', alone, balance)).toBe(false);
+    expect(handoverView(alone, metBut('write', 'answer'), balance)).toBe('answer');
     expect(handoverView(alone, allMet, balance)).toBeNull();
+  });
+
+  it('has the answer step in its place, after write and before check (story 1.16)', () => {
+    expect(handoverOrder).toEqual([
+      'dial',
+      'write',
+      'answer',
+      'check',
+      'tray',
+      'balance-goal',
+      'splitter',
+    ]);
+  });
+
+  it('asks for x once room 4’s pans show x alone and no answer is written (story 1.16)', () => {
+    const twoX = step(dropOnScale(waterWheel(), balance, 'float')).room;
+    expect(handoverApplies('answer', twoX, balance)).toBe(false);
+    const alone = { ...twoX, stage: { ...twoX.stage, pans: equation('x = 9') } };
+    expect(handoverApplies('answer', alone, balance)).toBe(true);
+    // Nothing earlier applies, even for a player who has met nothing.
+    expect(handoverView(alone, [], balance)).toBe('answer');
+    expect(handoverView(alone, metBut('splitter'), balance)).toBeNull();
+    const backwards = { ...twoX, stage: { ...twoX.stage, pans: equation('9 = x') } };
+    expect(handoverApplies('answer', backwards, balance)).toBe(true);
+    // Not while x has company, nor once the answer is written.
+    expect(handoverApplies('answer', balancedTo(waterWheel(), '2x = 18'), balance)).toBe(false);
+    const answered = write(balancedTo(waterWheel(), '2x = 18'), 'x = 9');
+    expect(handoverApplies('answer', answered, balance)).toBe(false);
+    expect(handoverView(answered, metBut('check'), balance)).toBe('check');
+  });
+
+  // Story 1.16: the pans no longer weigh the stage's solution after a line, so `write`
+  // ("the scale is level, write x") must also be a step he can take: simplify first.
+  it('says the scale is level only where the answer may be written now', () => {
+    const spec: RoomSpec = {
+      ...r01,
+      stages: [{ ...(r01.stages[0] as StageSpec), ways: ['balance'], fading: { try: 'blank' } }],
+    };
+    // x + 4 = 9 levels at 5, but only Balance finishes it, so x = 5 would be refused there.
+    const level = dialTo(opened(enterRoom(spec).room), 5);
+    expect(scaleView(level).level).toBe(true);
+    expect(handoverApplies('write', level, [])).toBe(false);
+    const notYet = dialTo(write(opened(enterRoom(spec).room), 'x = 9 − 4'), 5);
+    expect(handoverApplies('write', notYet, [])).toBe(false);
+    // Simplified to 2x = 10, it levels at 5 and he may write x = 5.
+    const simplified = dialTo(write(opened(enterRoom(spec).room), '2x = 10'), 5);
+    expect(handoverApplies('write', simplified, [])).toBe(true);
+    expect(handoverApplies('write', dialTo(simplified, 4), [])).toBe(false);
+  });
+
+  // Story 1.15 kept the dial's tag away while a written line was acted out; now he has
+  // written a line himself.
+  it('stops telling him to turn the dial once he writes a line himself', () => {
+    const open = opened(enterRoom(r04).room);
+    expect(handoverApplies('dial', open, balance)).toBe(true);
+    const typedLine = write(open, '2x = 18');
+    expect(handoverApplies('dial', typedLine, balance)).toBe(false);
+    expect(handoverView(typedLine, metBut('splitter'), balance)).toBe('splitter');
   });
 
   it('shows the earliest step that applies again once he has idled, met or not', () => {
@@ -225,6 +285,21 @@ describe('taking a step marks it met (story 1.15)', () => {
     expect(stepsTaken(answered, write(answered, '5'), 'other', [])).toEqual(['check']);
     // A wrong answer jams, and meets nothing.
     expect(stepsTaken(level, write(level, '4'), 'other', [])).toEqual([]);
+  });
+
+  // Story 1.16: answer is met only when its step applied, so room 1's answer (after his dial
+  // levelled the pans) doesn't meet it, and room 4 still shows it once.
+  it('meets answer with the answer line written while x stood alone on the pans', () => {
+    const twoX = balancedTo(waterWheel(), '2x + 5 − 5 = 23 − 5', '2x = 18');
+    const alone = { ...twoX, stage: { ...twoX.stage, pans: equation('x = 9') } };
+    const answered = write(alone, 'x = 9');
+    expect(stepsTaken(alone, answered, 'other', balance)).toEqual(['write', 'answer']);
+    expect(meetHandovers(alone, answered, 'other', [], balance)).toEqual([
+      'handover-write',
+      'handover-answer',
+    ]);
+    // Written beside 2x = 18, before x stood alone, it never showed: not met.
+    expect(stepsTaken(twoX, write(twoX, 'x = 9'), 'other', balance)).toEqual(['write']);
   });
 
   it('meets the tray with a move between the tray and the scale, and the splitter with a split', () => {

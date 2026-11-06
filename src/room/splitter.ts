@@ -12,10 +12,10 @@
 //              groups, and every group but one fades away, on both sides (`splitGroups`
 //              says what the groups hold). Each side's gear count and number are divided by
 //              the parts (`2x = 18` by 2 gives `x = 9`). It is a Balance move like a tray
-//              move (room/tray.ts, `balanceMove`): the scale acts out at the stage's
-//              solution, `WayUsed` fires, and with Balance `auto` the move is written as
+//              move (room/tray.ts, `balanceMove`): the pans stay weighed at the dial's x
+//              (story 1.16), `WayUsed` fires, and with Balance `auto` the move is written as
 //              done, `2x : 2 = 18 : 2`, then its result, unless that is `x = n`, which he
-//              writes himself
+//              writes himself into the `x = ☐` that appears then (room/fading.ts)
 //   uneven     a gear count or number the parts don't divide is refused, never a jam: the
 //              pieces start to separate, show what is left over (`splitGroups`), and slide
 //              back together. Nothing changes and nothing is written

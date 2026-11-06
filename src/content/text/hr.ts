@@ -52,12 +52,14 @@ export const hr = {
     dial: 'Pomiči klizač – tako mijenjaš x.',
     /** At the notebook, when his dial first levels the pans. */
     write: 'Vaga je u ravnoteži. Upiši x u bilježnicu.',
+    /** Story 1.16: at the notebook, when x is alone on the pans and no answer is written. */
+    answer: 'x je sam na vagi. Upiši koliko je x.',
     /** At the notebook, after the answer line. */
     check: 'Provjeri: uvrsti broj umjesto x.',
     /** At the tray, when it is first offered. */
     tray: 'Klizač ne doseže. Stavi broj s police na vagu – ide na obje strane.',
     /** Above the scale, after his first Balance move. */
-    'balance-goal': 'Vaga zna koliki je x. Ostavi x samog na jednoj strani.',
+    'balance-goal': 'Ostavi x samog na jednoj strani, kao na kartici Cilj.',
     /** At the splitter, when it is first offered. */
     splitter: 'Razdjelnik dijeli obje strane na jednake dijelove.',
   },
@@ -94,5 +96,13 @@ export const hr = {
     enter: 'Upiši',
     pushAside: 'Skloni bilježnicu',
     bringBack: 'Vrati bilježnicu',
+  },
+  /**
+   * Story 1.16: the tag at the notebook when enter refuses a line for a reason beyond the
+   * wiggle (`Refusal`, room/notebook.ts).
+   */
+  refusal: {
+    /** An answer line before the pans are simplified, where Try values can't finish. */
+    simplify: 'Prvo pojednostavi vagu.',
   },
 } as const;

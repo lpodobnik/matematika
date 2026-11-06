@@ -168,6 +168,8 @@ describe('the goal card in the scene (story 1.16)', () => {
         }
       }
     },
+    // It lays out every tag in every situation, about 7 s; a full parallel run needs room.
+    30_000,
   );
 
   it('keeps clear of the reset control and the hint button under it, and the parts counter', () => {

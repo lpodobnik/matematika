@@ -4,7 +4,8 @@
 // room 3 and the checks for poke windows and pins; story 1.10 room 4, the fading matrix
 // and the ways that can finish. Story 1.13 checks rooms 1–4 against the GDD's tables in
 // one place, xMeaning included, has every finishing way finish through `steps.ts`, and
-// keeps the paper test's equations out of every room.
+// keeps the paper test's equations out of every room. Story 1.16 takes room 4's pin and
+// poke window away and checks simplify first and the last two lines' blanks.
 
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
@@ -21,7 +22,8 @@ import * as q from '@/math/rational';
 import { canonicalSolution } from '@/math/steps';
 import { fillBlanks, tokenize } from '@/math/tokens';
 import { dialValue, isOnDial, notchCount } from '@/room/dial';
-import { openingTemplates } from '@/room/fading';
+import { blanksOnceAlone, lastLines, openingTemplates } from '@/room/fading';
+import { answerAllowed } from '@/room/notebook';
 import { panPieces } from '@/room/pieces';
 import {
   machineTestX,
@@ -133,8 +135,9 @@ const gddRooms: readonly {
     answers: [9],
     types: ['solve'],
     dials: [{ min: 0, max: 6, step: 1 }],
-    pokeNotches: [4],
-    pins: [{ kind: 'level-x', beyondDial: true }],
+    // Story 1.16: one new idea, Balance; the pin beyond the dial and the poke window went.
+    pokeNotches: [undefined],
+    pins: [undefined],
     ways: ['balance'],
     earns: null,
   },
@@ -276,11 +279,13 @@ describe('rooms', () => {
       expect(room?.earns).toBeNull();
     });
 
-    it('opens a poke window over 0–3 and a "where it levels" pin beyond the dial, on 0–12', () => {
-      expect(stage.pokeNotches).toBe(4);
-      expect(pokeValues(stage)).toEqual([0, 1, 2, 3]);
-      expect(stage.pin).toEqual({ kind: 'level-x', beyondDial: true });
-      expect(pinTrack(stage)).toEqual({ kind: 'x', min: 0, max: 12, step: 1, reach: 6 });
+    // Story 1.16 rewrote this test: until then room 4 opened a poke window over 0–3 and a
+    // "where it levels" pin beyond the dial, on 0–12.
+    it('has no pin and no poke window: its one new idea is Balance, on the whole dial', () => {
+      expect(stage.pokeNotches).toBeUndefined();
+      expect(stage.pin).toBeUndefined();
+      expect(pinTrack(stage)).toBeNull();
+      expect(openingDial(stage)).toEqual({ min: 0, max: 6 });
     });
 
     it("answers 9, which the dial can't reach", () => {
@@ -289,15 +294,69 @@ describe('rooms', () => {
       expect(isOnDial(stage.dial as DialSpec, answer)).toBe(false);
     });
 
-    it('still locks when he types x = 9 and the check line: any correct method is accepted', () => {
-      const lines = [stageEquation(stage)];
+    // Story 1.16 rewrote this test: until then he could type x = 9 straight away. The checker
+    // still judges it the answer (any correct method), but the room waits for the pans to be
+    // simplified first (room/notebook.ts, `answerAllowed`).
+    it('takes x = 9 and the check line only once the pans are simplified', () => {
+      const given = stageEquation(stage);
+      expect(check([given], 'x = 9').kind).toBe('answer');
+      expect(answerAllowed(stage, given)).toBe(false);
+      expect(answerAllowed(stage, equationOf('2x + 5 − 5 = 23 − 5'))).toBe(false);
+      expect(answerAllowed(stage, equationOf('2x = 18'))).toBe(true);
+      expect(answerAllowed(stage, equationOf('x = 9'))).toBe(true);
+      const lines = [given, equationOf('2x = 18')];
       const verdicts = ['x = 9', '2 · 9 + 5 = 23'].map((line) => {
+        const verdict = check(lines, line);
+        lines.push(equationOf(line));
+        return verdict.kind;
+      });
+      expect(verdicts).toEqual(['answer', 'check']);
+    });
+
+    it('gives x = ☐ and 2 · ☐ + 5 = 23 once x is alone, and 9 fills them', () => {
+      const lines = [stageEquation(stage), equationOf('2x = 18')];
+      expect(lastLines(stage, { machine: 0, pans: equationOf('2x = 18'), lines: [] })).toEqual([]);
+      const templates = lastLines(stage, { machine: 0, pans: equationOf('x = 9'), lines: [] });
+      expect(templates).toEqual([
+        ['x', '=', '☐'],
+        ['2', '·', '☐', '+', '5', '=', '2', '3'],
+      ]);
+      const filled = (templates ?? []).map((template) => fillBlanks(template, ['9']));
+      const verdicts = filled.map((line) => {
         const verdict = check(lines, line);
         const parsed = parse(line);
         if (parsed.ok) lines.push(parsed.equation);
         return verdict.kind;
       });
       expect(verdicts).toEqual(['answer', 'check']);
+    });
+
+    // Story 1.16: the pans are weighed at the slider's x through every Balance move, so at
+    // a wrong x the scale stays out of balance: at 6, 17 vs 23, then 12 vs 18, then 6 vs 9.
+    it('stays out of balance at every notch through its Balance lines, and never hits the clamp', () => {
+      const dial = stage.dial as DialSpec;
+      const balanceLines = [
+        stageEquation(stage),
+        ...(canonicalSolution(stageEquation(stage), 'balance') ?? []).slice(0, -1),
+        equationOf('2x : 2 = 18 : 2'),
+      ];
+      for (let notch = 0; notch <= notchCount(dial); notch += 1) {
+        const x = q.rational(dialValue(dial, notch));
+        for (const line of balanceLines) {
+          const values = sideValues(line, x);
+          expect(isLevel(values), `${formatEquation(line)} at ${q.toText(x)}`).toBe(false);
+          expect(Math.abs(tiltFor(values, stage.tiltPerUnit ?? 1))).toBeLessThan(tuning.tiltMax);
+        }
+      }
+      const atSix = ['2x + 5 = 23', '2x = 18', 'x = 9'].map((text) => {
+        const values = sideValues(equationOf(text), q.rational(6));
+        return [q.toText(values.left), q.toText(values.right)];
+      });
+      expect(atSix).toEqual([
+        ['17', '23'],
+        ['12', '18'],
+        ['6', '9'],
+      ]);
     });
 
     it('is balanced by a float of 5 on both pans, then a split by 2', () => {
@@ -570,6 +629,36 @@ describe('rooms', () => {
 
     it('tilts by more than 0° per unit when it sets its own tilt', () => {
       if (stage.tiltPerUnit !== undefined) expect(stage.tiltPerUnit).toBeGreaterThan(0);
+    });
+
+    // Story 1.16: where Try values can't finish, the answer waits for simplified pans, so the
+    // dial must not reach x (it would level the pans while the answer is refused).
+    it("keeps x off the dial where Try values can't finish", () => {
+      if (stage.ways.includes('try') || stage.dial === 'locked') return;
+      expect(isOnDial(stage.dial, stageSolution(stageEquation(stage)))).toBe(false);
+    });
+
+    // Story 1.16: with Balance `auto` the last two lines come as blanks once x is alone.
+    it('can be finished by filling the last two blanks with x once Balance leaves x alone', () => {
+      if (!blanksOnceAlone(stage)) return;
+      const equation = stageEquation(stage);
+      const answer = stageSolution(equation);
+      const templates = lastLines(stage, {
+        machine: 0,
+        pans: equationOf(`x = ${answer}`),
+        lines: [],
+      });
+      const digits = tokenize(String(answer));
+      if (!digits.ok) throw new Error('no answer');
+      const lines = [equation, ...(canonicalSolution(equation, 'balance') ?? []).slice(0, -2)];
+      const verdicts = (templates ?? []).map((template) => {
+        const line = fillBlanks(template, digits.tokens);
+        const verdict = check(lines, line);
+        const filled = parse(line);
+        if (filled.ok) lines.push(filled.equation);
+        return verdict.kind;
+      });
+      expect(verdicts).toEqual(['answer', 'check']);
     });
 
     it('can be finished by filling its blanks with x, when Try values fades to blanks', () => {

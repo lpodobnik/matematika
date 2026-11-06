@@ -3,6 +3,7 @@ import { r03 } from '@/content/rooms/r03-sluice-gate';
 import { r04 } from '@/content/rooms/r04-water-wheel';
 import { notchCount } from '@/room/dial';
 import { pinTrack, slotCount } from '@/room/pin';
+import type { StageSpec } from '@/room/types';
 import { confirmSize, confirmSpot, pinHeadSpot } from '@/ui/common/scene-spots';
 import { pressHandle, shownAside } from '@/ui/notebook/notebook-aside';
 
@@ -44,12 +45,16 @@ describe('the phone notebook while a pin waits (story 1.14 review fix)', () => {
     });
   });
 
-  it("so at 640 × 360, Potvrdi on room 4's 9 and room 3's pan-up is on the visible scene", () => {
+  // Story 1.16 took room 4's pin away; a pin beyond the dial (later rooms) stays covered by
+  // room 4's stage with the pin it had.
+  it("so at 640 × 360, Potvrdi on a beyond-dial pin's 9 and room 3's pan-up is on the visible scene", () => {
     // The phone notebook covers the area's right 45 % (notebook.css) unless it is aside.
     const area = { width: 640, height: 360 };
     const notebookLeft = 640 - 0.45 * 640;
+    const wheel = r04.stages[0] as StageSpec;
+    const pinnedWheel: StageSpec = { ...wheel, pin: { kind: 'level-x', beyondDial: true } };
     const cases = [
-      { stage: r04.stages[0], value: 9 },
+      { stage: pinnedWheel, value: 9 },
       { stage: r03.stages[1], value: 1 },
     ];
     for (const { stage, value } of cases) {

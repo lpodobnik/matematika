@@ -60,7 +60,7 @@ function reachable(room: RoomState): number[] {
   return xs;
 }
 
-/** Balance moves wrote these lines (Balance `auto`); the last is on the pans, acted out. */
+/** Balance moves wrote these lines (Balance `auto`); the last is on the pans, at the dial's x. */
 function balancedTo(room: RoomState, ...lines: string[]): RoomState {
   let { stage } = room;
   for (const text of lines) {
@@ -78,7 +78,6 @@ function balancedTo(room: RoomState, ...lines: string[]): RoomState {
         },
       ],
       pans: parsed.equation,
-      actingOut: true,
     };
   }
   return { ...room, stage };

@@ -10,15 +10,17 @@ import {
   lineDisplays,
   type NotebookKey,
   notebookWrites,
+  refusalView,
 } from '@/room/notebook';
 import { pinOffered } from '@/room/pin';
-import type { NotebookLine } from '@/room/types';
+import type { NotebookLine, Refusal } from '@/room/types';
 import { useGame } from '@/store/store';
 import { hintOf, hintPlace, notebookHint } from '@/ui/common/hint-text';
 import {
   HandoverNote,
   isNotebookHandover,
   type NotebookHandover,
+  RefusalNote,
 } from '@/ui/notebook/HandoverNote';
 import { HintNote } from '@/ui/notebook/HintNote';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
@@ -36,13 +38,15 @@ const noTemplates: LineToken[][] = [];
  * the draft and the number pad. It reads the stage through selectors and acts only through
  * dispatch; what a key does is decided in `room/notebook.ts`. A computer's keys work too.
  * On a phone it shows pushed aside while a pin waits to be confirmed (notebook-aside.ts).
- * When the next step is in the notebook (story 1.15: `write` or `check`,
+ * When the next step is in the notebook (story 1.15: `write` or `check`; 1.16: `answer`;
  * room/handover.ts), the line to write pulses and its handover tag hangs under the lines.
  * When it is on the scene, with its tag there, the phone's notebook shows pushed aside
  * as for a waiting pin, so it never hides the tag; he can bring it back as then. While the
  * hint button's hint shows (story 1.16), its tag takes the handover's place: at the
  * notebook, with the draft pulsing, when it is about writing; else in the scene, with the
- * phone's notebook pushed aside again on each press.
+ * phone's notebook pushed aside again on each press. When enter refuses an answer before
+ * the pans are simplified (story 1.16), the refusal's tag hangs in the same place, ahead
+ * of both.
  */
 export function Notebook() {
   const lines = useGame((s) => s.room?.stage.lines ?? noLines);
@@ -50,6 +54,7 @@ export function Notebook() {
   const templates = useGame((s) => s.room?.stage.templates ?? noTemplates);
   const wrong = useGame((s) => s.room?.stage.jam?.kind === 'line');
   const refused = useGame((s) => s.room?.stage.refused ?? 0);
+  const refusal = useGame((s) => refusalView(s.room));
   const writes = useGame((s) => (s.room ? notebookWrites(s.room.stage) : false));
   const choice = useGame((s) => s.ui.notebookAside);
   const step = useGame((s) =>
@@ -93,6 +98,7 @@ export function Notebook() {
       aside={aside}
       handover={!hinting && isNotebookHandover(step) ? step : null}
       hint={hintNote === null ? null : { text: hintNote, presses }}
+      refusal={refusal}
       onKey={send}
       onSlide={slide}
     />
@@ -123,6 +129,11 @@ export interface NotebookPageProps {
    * and the presses so far, so each press pops it in again. The draft line pulses with it.
    */
   hint?: { text: string; presses: number } | null;
+  /**
+   * Why enter refused the line, with a tag (story 1.16, `refusalView`): it hangs where a
+   * handover's would, in its place; nothing pulses.
+   */
+  refusal?: Refusal | null;
   onKey(key: NotebookKey): void;
   onSlide(aside: boolean): void;
 }
@@ -144,11 +155,15 @@ export function NotebookPage({
   aside,
   handover = null,
   hint = null,
+  refusal = null,
   onKey,
   onSlide,
 }: NotebookPageProps) {
   const listRef = useRef<HTMLOListElement>(null);
-  const tagged = handover !== null || hint !== null;
+  // A tag hangs under the lines: the refusal's, else the hint's, else the handover's. Only a
+  // handover's or a hint's makes the line to write pulse; a refusal's doesn't.
+  const pulsing = handover !== null || hint !== null;
+  const tagged = refusal !== null || pulsing;
 
   // The draft stays in view as lines are added, as it grows, and as a handover tag takes
   // room: the list scrolls to its end, but never so far that the draft's top is cut off.
@@ -161,7 +176,7 @@ export function NotebookPage({
     if (!line) return;
     const cut = list.getBoundingClientRect().top - line.getBoundingClientRect().top;
     if (cut > 0) list.scrollTop -= cut;
-  }, [lines, draft, handover, hint?.text]);
+  }, [lines, draft, handover, hint?.text, refusal]);
 
   return (
     <aside className="notebook-area" data-aside={aside} aria-label={hr.notebook.label}>
@@ -171,7 +186,7 @@ export function NotebookPage({
         className="notebook__handle"
         aria-label={aside ? hr.notebook.bringBack : hr.notebook.pushAside}
         aria-expanded={!aside}
-        data-pulse={tagged}
+        data-pulse={pulsing}
         onPointerDown={(event) => primaryPress(event, () => onSlide(!aside))}
       >
         <svg className="notebook__chevron" viewBox="0 0 24 24" aria-hidden="true">
@@ -193,7 +208,7 @@ export function NotebookPage({
             kind="draft"
             wrong={wrong}
             wiggle={refused > 0}
-            pulse={tagged}
+            pulse={pulsing}
             caret={writes}
           />
           {upcoming.map((segments, i) => (
@@ -201,7 +216,9 @@ export function NotebookPage({
             <LineView key={`upcoming-${i}`} segments={segments} kind="upcoming" />
           ))}
         </ol>
-        {hint ? (
+        {refusal ? (
+          <RefusalNote refusal={refusal} />
+        ) : hint ? (
           <HintNote key={hint.presses} text={hint.text} />
         ) : (
           handover && <HandoverNote step={handover} />

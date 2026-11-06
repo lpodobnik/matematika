@@ -293,6 +293,30 @@ describe('the handover tags at the notebook (story 1.15)', () => {
     expect(rule(css, '.line--pulse.line--wiggle')).toMatch(/line-wiggle[^,]*,\s*line-pulse/);
   });
 
+  // Story 1.16: x alone on the pans; `x = ☐` pulses and the tag asks how much x is.
+  it('asks for x at the notebook when x is alone, pulsing the blank', () => {
+    const html = page(opened(r01), { handover: 'answer' });
+    expect(html).toContain('class="line line--draft line--pulse"');
+    expect(hr.handover.answer).toMatch(/\S/);
+    expect(html).toContain(hr.handover.answer);
+  });
+
+  // Story 1.16: an early answer is refused with a tag in the same place; nothing pulses.
+  it('hangs the refusal’s tag where a handover’s would, before any handover', () => {
+    const html = page(opened(r01), { refusal: 'simplify', refused: 1 });
+    expect(html).toContain(hr.refusal.simplify);
+    expect(html).toContain('role="note"');
+    expect(html).toContain('data-handover="true"');
+    expect(html).not.toContain('line--pulse');
+    expect(html).toContain('line--wiggle');
+    const note = html.indexOf('handover-note');
+    expect(note).toBeGreaterThan(html.indexOf('</ol>'));
+    expect(note).toBeLessThan(html.indexOf('class="pad"'));
+    const both = page(opened(r01), { refusal: 'simplify', handover: 'check' });
+    expect(both).toContain(hr.refusal.simplify);
+    expect(both).not.toContain(hr.handover.check);
+  });
+
   it('sets the tag’s text at least 20 CSS px, and blinks instead of moving under reduced motion', () => {
     expect(px(rule(css, '.handover-note__card'), 'font-size')).toBeGreaterThanOrEqual(20);
     expect(rule(css, '.line--pulse')).toMatch(/animation:\s*line-pulse/);

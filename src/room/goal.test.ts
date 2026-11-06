@@ -88,15 +88,17 @@ describe('the goal card in the stage (story 1.16)', () => {
     expect(goalView(twoX, balance)).toEqual({ matched: false });
     const alone = step(splitBothPans(twoX, balance)).room;
     expect(goalView(alone, balance)).toEqual({ matched: true });
+    // Story 1.16 lane A: once x is alone, room 4 offers its last two lines as blanks, so
+    // he fills in 9 rather than typing the whole line.
     const typed = (r: RoomState, text: string) => {
       const tokens = tokenize(text);
       if (!tokens.ok) throw new Error(text);
       const filled = tokens.tokens.reduce((at, token) => step(typeToken(at, token)).room, r);
       return step(enterLine(filled, 0)).room;
     };
-    const answered = typed(alone, 'x = 9');
+    const answered = typed(alone, '9');
     expect(goalView(answered, balance)).toEqual({ matched: true });
-    const locked = typed(answered, '2 · 9 + 5 = 23');
+    const locked = typed(answered, '9');
     expect(locked.stage.phase).toBe('locked');
     expect(goalView(locked, balance)).toBeNull();
   });

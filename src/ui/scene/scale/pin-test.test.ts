@@ -6,7 +6,7 @@ import { setDial } from '@/room/dial';
 import { touchMachine } from '@/room/phases';
 import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
-import type { PinValue, RoomSpec, RoomState } from '@/room/types';
+import type { PinValue, RoomSpec, RoomState, StageSpec } from '@/room/types';
 import {
   nextChangeMs,
   nextPlay,
@@ -34,6 +34,21 @@ function confirming(spec: RoomSpec, stage: number, value: PinValue, dialX?: numb
 
 const notch = tuning.pinTestNotchMs;
 
+/**
+ * Room 4 as it was until story 1.16, with a "where it levels" pin beyond the dial and a poke
+ * window: no room 1–4 has such a pin now, but the weighing stays for later rooms.
+ */
+const pinnedWheel: RoomSpec = {
+  ...r04,
+  stages: [
+    {
+      ...(r04.stages[0] as StageSpec),
+      pokeNotches: 4,
+      pin: { kind: 'level-x', beyondDial: true },
+    },
+  ],
+};
+
 describe('pinTestOf (story 1.14)', () => {
   it('turns the dial from where it was to the pin a level-x pin names', () => {
     const { placed, confirmed } = confirming(r03, 0, { kind: 'x', x: 14 }, 9);
@@ -59,7 +74,7 @@ describe('pinTestOf (story 1.14)', () => {
   });
 
   it('weighs the x of a pin beyond the dial, without turning it', () => {
-    const { placed, confirmed } = confirming(r04, 0, { kind: 'x', x: 9 }, 2);
+    const { placed, confirmed } = confirming(pinnedWheel, 0, { kind: 'x', x: 9 }, 2);
     expect(pinTestOf(pinTestProbe(placed), pinTestProbe(confirmed))).toEqual({
       kind: 'weigh',
       x: 9,
@@ -164,7 +179,12 @@ describe('nextPlay (review fix: an ended test never resumes)', () => {
   });
 
   it('ends the weighing of a pin beyond the dial for good when the dial turns off and back', () => {
-    const { placed: pinned, confirmed: weighed } = confirming(r04, 0, { kind: 'x', x: 9 }, 2);
+    const { placed: pinned, confirmed: weighed } = confirming(
+      pinnedWheel,
+      0,
+      { kind: 'x', x: 9 },
+      2,
+    );
     const play = nextPlay(null, pinTestProbe(pinned), pinTestProbe(weighed), 0);
     expect(play?.test).toEqual({ kind: 'weigh', x: 9 });
     const off = pinTestProbe(step(setDial(weighed, 3)));

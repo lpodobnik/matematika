@@ -127,12 +127,14 @@ function write(room: RoomState, text: string): RoomState {
 const blankPage = (equation: string, extra: Partial<RoomSpec['stages'][number]> = {}) =>
   roomWith(equation, { fading: { try: 'blank' }, dial: { min: 0, max: 10, step: 1 }, ...extra });
 
-describe('acting out a written line (story 1.7)', () => {
-  it("weighs a committed line at the stage's solution, with x on the gears and no readouts", () => {
+// Story 1.16 rewrote this block in place: from story 1.7 to 1.15 a written line was acted out
+// at the stage's solution, level and with no readouts, while the slider stood elsewhere. Now
+// the slider is the only x: a written line takes the pans' layout, weighed at the dial's x.
+describe('a written line on the pans (story 1.7; one x, story 1.16)', () => {
+  it("weighs a committed line at the dial's x, with x on the gears and readouts", () => {
     const explored = setDial(blankPage('2x + 7 = 25'), 3)?.room as RoomState;
     const view = scaleView(write(explored, '2x = 25 − 7'));
-    expect(view.actingOut).toBe(true);
-    expect(view.x).toBe(9);
+    expect(view.x).toBe(3);
     expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([
       ['gear', 'x'],
       ['gear', 'x'],
@@ -141,9 +143,9 @@ describe('acting out a written line (story 1.7)', () => {
       ['weight', '25'],
       ['float', '−7'],
     ]);
-    expect(view.readouts).toBeNull();
-    expect(view.tilt).toBe(0);
-    expect(view.level).toBe(true);
+    expect(view.readouts).toEqual({ left: '6', right: '18' });
+    expect(view.tilt).toBe(-12);
+    expect(view.level).toBe(false);
   });
 
   it('keeps the count on a large gear and the division on a slice: x, never ? (story 1.15)', () => {
@@ -155,11 +157,10 @@ describe('acting out a written line (story 1.7)', () => {
     expect(divided.left.pieces.map((p) => [p.label, p.divisorLabel])).toEqual([['x', ': 3']]);
   });
 
-  it("goes back to the dial's x and the readouts on the dial's next notch", () => {
+  it("keeps weighing the line's layout at the dial's next notch", () => {
     const acted = write(blankPage('x + 4 = 9'), 'x = 9 − 4');
     const turned = setDial(acted, 2)?.room as RoomState;
     const view = scaleView(turned);
-    expect(view.actingOut).toBe(false);
     expect(view.x).toBe(2);
     expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', 'x']]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([
@@ -180,17 +181,18 @@ describe('acting out a written line (story 1.7)', () => {
     expect(view.level).toBe(true);
   });
 
-  it(`acts out a wrong line at the solution, tipped at least ${tuning.jamMinTilt}°`, () => {
-    const jammed = write(blankPage('x + 4 = 9'), 'x = 6');
+  it(`shows a wrong line at the dial's x, tipped at least ${tuning.jamMinTilt}°`, () => {
+    const atFive = setDial(blankPage('x + 4 = 9'), 5)?.room as RoomState;
+    const jammed = write(atFive, 'x = 6');
     const view = scaleView(jammed);
-    expect(view.actingOut).toBe(true);
     expect(view.x).toBe(5);
     expect(view.left.pieces.map((p) => [p.kind, p.label])).toEqual([['gear', 'x']]);
     expect(view.right.pieces.map((p) => [p.kind, p.label])).toEqual([['weight', '6']]);
     expect(view.tilt).toBe(-tuning.jamMinTilt);
     expect(view.level).toBe(false);
-    expect(view.readouts).toBeNull();
-    const far = scaleView(write(blankPage('2x + 7 = 25'), '2x = 32'));
+    expect(view.readouts).toEqual({ left: '5', right: '6' });
+    const atNine = setDial(blankPage('2x + 7 = 25'), 9)?.room as RoomState;
+    const far = scaleView(write(atNine, '2x = 32'));
     expect(far.tilt).toBe(-14);
   });
 
@@ -201,7 +203,7 @@ describe('acting out a written line (story 1.7)', () => {
     expect(scaleView(edited)).toEqual(scaleView(explored));
   });
 
-  it("finds the stage's solution for acting out", () => {
+  it("finds the stage's solution, which the pans never weigh (the handovers read it)", () => {
     expect(stageX(blankPage('2x + 7 = 25'))).toBe(9);
     expect(stageX(enterRoom(r01).room)).toBe(5);
   });

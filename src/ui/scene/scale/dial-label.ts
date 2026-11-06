@@ -1,53 +1,32 @@
 // The slider's x label and its nudge (story 1.15). His first play showed that nothing said
-// the dial was x, so a small plate rides above the knob, following it: `x = 9` while he
-// explores, and `x = ?`, dimmed, while the scale acts a line out (a written line, or
-// Balance), since then the pans weigh the stage's solution, not the dial's x. Until he first
-// turns a dial, the knob nudges one notch right and back by itself (room/handover.ts, the
-// `dial` step). Presentation only: which x and whether it acts out come from the store.
+// the dial was x, so a small plate rides above the knob, following it, and reads the x the
+// pans are weighed at: always the dial's, `x = 9` (story 1.16: the slider is the only x;
+// 1.15's `x = ?`, dimmed while the pans weighed the stage's solution, is gone). Until he
+// first turns a dial, the knob nudges one notch right and back by itself
+// (room/handover.ts, the `dial` step). Presentation only: which x comes from the store.
 
 import { num, xVar } from '@/math/expr';
-import { formatEquation, formatExpr } from '@/math/format';
+import { formatEquation } from '@/math/format';
 import type { DialLayout } from '@/ui/scene/scale/dial-layout';
 import { labelFontSize, labelWidth } from '@/ui/scene/scale/layout';
 
-/** What the label shows for x while the scale acts out, so it can't reveal x. */
-const hiddenX = '?';
-
-/** The label's text: `x = 9`, or `x = ?` while the scale acts out (x null). */
-export function dialLabelText(x: number | null): string {
-  if (x === null) return `${formatExpr(xVar())} = ${hiddenX}`;
+/** The label's text: `x = 9`. */
+export function dialLabelText(x: number): string {
   return formatEquation({ left: xVar(), right: num(x) });
 }
 
-/** How faint the label is while the scale acts out. */
-export const dimmedLabelAlpha = 0.45;
-
-/** What the plate shows now: its text, and whether it is dimmed. */
-export interface DialLabelState {
-  text: string;
-  dimmed: boolean;
-}
-
 /**
- * What the plate shows, from the machine's pin test (use-pin-test.ts), whether the scale
- * acts out (`scaleView`), and the dial's x (null with no dial):
- * - while the machine turns the dial to test a pin, the x it has turned to, bright;
- * - while the pans weigh the x of a pin beyond the dial (room 4), `x = ?`, dimmed: the pans
- *   don't weigh the dial's x then (story 1.15 review; it showed the dial's x);
- * - while the scale acts out a line or Balance, `x = ?`, dimmed;
- * - else the dial's x, bright.
+ * The x the plate shows, from the machine's pin test (use-pin-test.ts) and the dial's x
+ * (null with no dial): the x the pans are weighed at, so there is only ever one x.
+ * - while the machine turns the dial to test a pin, the x it has turned to;
+ * - while the pans weigh the x of a pin beyond the dial (no room 1–4 has one), that x;
+ * - else the dial's x.
  */
-export function dialLabelState(
+export function dialLabelX(
   test: { dialX: number | null; weighX: number | null },
-  actingOut: boolean,
   dialX: number | null,
-): DialLabelState {
-  if (test.dialX !== null) return { text: dialLabelText(test.dialX), dimmed: false };
-  const hidden = test.weighX !== null || actingOut || dialX === null;
-  return {
-    text: dialLabelText(hidden ? null : dialX),
-    dimmed: test.weighX !== null || actingOut,
-  };
+): number | null {
+  return test.dialX ?? test.weighX ?? dialX;
 }
 
 export interface DialLabelLayout {
@@ -83,11 +62,12 @@ export function dialLabelLayout(layout: DialLayout, text: string, sceneScale: nu
 }
 
 /**
- * The highest the label reaches, from the track's line, whatever x it shows: what a tag
- * keeps clear of above the dial (handover-tag-layout.ts).
+ * The highest the label reaches, from the track's line, whatever x it shows (its height
+ * doesn't depend on the text): what a tag keeps clear of above the dial
+ * (handover-tag-layout.ts).
  */
 export function dialLabelTop(layout: DialLayout, sceneScale: number): number {
-  return dialLabelLayout(layout, dialLabelText(null), sceneScale).top;
+  return dialLabelLayout(layout, dialLabelText(0), sceneScale).top;
 }
 
 /**

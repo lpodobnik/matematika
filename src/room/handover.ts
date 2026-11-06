@@ -5,7 +5,8 @@
 // tags' text is in hr.ts (`hr.handover`); the scene and the notebook draw them.
 //
 //   dial          from arrival until he first turns a dial; the knob nudges itself too
-//   write         his dial levels the pans (or Balance leaves x alone), and no answer line
+//   write         his dial levels the pans, the answer line may be written, and none is
+//   answer        x is alone on the pans and no answer line: `x = ☐` pulses (story 1.16)
 //   check         after the answer line, before the check line
 //   tray          the tray is offered, before his first Balance move in the stage
 //   balance-goal  after a Balance move, until a side holds only x and the other no x
@@ -23,8 +24,9 @@ import type { Equation, Expr } from '@/math/expr';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
 import { dialTurnsNow } from '@/room/dial';
-import { notebookWrites } from '@/room/notebook';
+import { answerAllowed, notebookWrites } from '@/room/notebook';
 import { pinOffered } from '@/room/pin';
+import { currentStageSpec } from '@/room/room';
 import { scaleView, stageX } from '@/room/scale';
 import { splitterOffered } from '@/room/splitter';
 import { trayOffered } from '@/room/tray';
@@ -34,6 +36,7 @@ import type { FirstUseId, HandoverId, Phase, RoomState, ToolId } from '@/room/ty
 export const handoverOrder: readonly HandoverId[] = [
   'dial',
   'write',
+  'answer',
   'check',
   'tray',
   'balance-goal',
@@ -107,10 +110,15 @@ interface Situation {
   balanced: boolean;
   isolated: boolean;
   answerOnPans: boolean;
-  /** The scale acts a line (or Balance) out, at the stage's solution. */
-  actingOut: boolean;
-  /** His dial levels the pans: he is exploring, and the sides are equal. */
+  /**
+   * He has written a line himself. Story 1.15 kept the dial's tag away while a written line
+   * was acted out; the pans now stay at the dial's x (story 1.16), so this keeps it away.
+   */
+  wrote: boolean;
+  /** His dial levels the pans: the sides are equal at the dial's x (story 1.16: always it). */
   levelAtDial: boolean;
+  /** The answer line may be written now: simplify first (story 1.16, `answerAllowed`). */
+  answerAllowed: boolean;
   dialTurns: boolean;
   writes: boolean;
   tray: boolean;
@@ -119,7 +127,6 @@ interface Situation {
 
 function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
   const { stage } = room;
-  const view = scaleView(room);
   return {
     on: handoverPhases.has(stage.phase) && stage.jam === null && !pinOffered(room),
     open: stage.phase === 'open',
@@ -128,8 +135,9 @@ function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
     balanced: balanced(room),
     isolated: xIsolated(stage.pans),
     answerOnPans: answerOnPans(room),
-    actingOut: view.actingOut,
-    levelAtDial: !view.actingOut && view.level,
+    wrote: stage.lines.some((line) => line.source === 'typed'),
+    levelAtDial: scaleView(room).level,
+    answerAllowed: answerAllowed(currentStageSpec(room), stage.pans),
     dialTurns: dialTurnsNow(room),
     writes: notebookWrites(stage),
     tray: trayOffered(room, tools),
@@ -141,9 +149,11 @@ function applies(id: HandoverId, s: Situation): boolean {
   if (!s.on) return false;
   switch (id) {
     case 'dial':
-      return s.dialTurns && !s.answered && !s.balanced && !s.tray && !s.actingOut && !s.levelAtDial;
+      return s.dialTurns && !s.answered && !s.balanced && !s.tray && !s.wrote && !s.levelAtDial;
     case 'write':
-      return s.writes && !s.answered && (s.levelAtDial || s.answerOnPans);
+      return s.writes && !s.answered && s.levelAtDial && s.answerAllowed;
+    case 'answer':
+      return s.writes && !s.answered && s.answerOnPans;
     case 'check':
       return s.writes && s.answered && !s.checked;
     case 'tray':
@@ -189,6 +199,8 @@ export type HandoverMove = 'dial' | 'tray' | 'split' | 'other';
  * The handover steps an action of his took, which count as met from now on:
  * - `dial`: he turned a dial (any notch, wherever);
  * - `write` and `check`: the answer line, or the check line, is now written;
+ * - `answer`: the step applied, and the answer line is now written (story 1.16), so an
+ *   answer written after his dial levelled the pans in room 1 doesn't meet it;
  * - `tray`: a weight or balloon moved between the tray and the scale;
  * - `balance-goal`: the step applied, and his Balance move left x isolated;
  * - `splitter`: he split the pans.
@@ -203,7 +215,9 @@ export function stepsTaken(
   if (move === null) return [];
   const taken: HandoverId[] = [];
   if (move === 'dial') taken.push('dial');
-  if (hasLine(after, 'answer') && !hasLine(before, 'answer')) taken.push('write');
+  const answeredNow = hasLine(after, 'answer') && !hasLine(before, 'answer');
+  if (answeredNow) taken.push('write');
+  if (answeredNow && handoverApplies('answer', before, tools)) taken.push('answer');
   if (hasLine(after, 'check') && !hasLine(before, 'check')) taken.push('check');
   if (move === 'tray') taken.push('tray');
   if (

@@ -7,7 +7,7 @@
 
 import { tuning } from '@/config/tuning';
 import { assert } from '@/lib/assert';
-import { check, stageSolution, type Verdict } from '@/math/check';
+import { check, type Verdict } from '@/math/check';
 import { formatEquation, formatTokens } from '@/math/format';
 import { complexity, type ProgressTuple } from '@/math/moves';
 import { parse } from '@/math/parse';
@@ -171,22 +171,19 @@ export const profileRoomId: RoomId = 'r04';
 
 /**
  * What the panel's profile button dispatches (story 1.13; NFR1: 60 FPS while dragging the
- * dial in a three-machine room). Room 4 with Balance, its pin placed at the answer and
- * confirmed, so the dial's whole range is open to drag at once; `high` forced, so the steam
- * runs whatever the frame-time test picked; then three copies of the scene side by side.
- * Only existing actions, so the game decides what each does, as when he plays.
+ * dial in a three-machine room). Room 4 with Balance, opened by a touch, so the dial's whole
+ * range is open to drag at once (story 1.16 took room 4's pin and poke window away, which
+ * this placed and confirmed until then); `high` forced, so the steam runs whatever the
+ * frame-time test picked; then three copies of the scene side by side. Only existing
+ * actions, so the game decides what each does, as when he plays.
  */
 export function profileActions(list: readonly RoomSpec[], tools: readonly ToolId[]): Action[] {
   const room = list.find((spec) => spec.id === profileRoomId);
   assert(room, `no room ${profileRoomId} in content`);
-  const equation = parse(room.stages[0]?.machines[0]?.equation ?? '');
-  assert(equation.ok, `${profileRoomId} has no equation`);
   return [
     { type: 'dev/set-tools', tools: [...tools, 'balance'] },
     { type: 'room/enter', roomId: profileRoomId },
     { type: 'machine/touch' },
-    { type: 'pin/set', value: { kind: 'x', x: stageSolution(equation.equation) } },
-    { type: 'pin/confirm' },
     { type: 'quality/force', quality: 'high' },
     { type: 'dev/set-copies', copies: 3 },
   ];

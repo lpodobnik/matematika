@@ -1,17 +1,19 @@
 // What the scale shows for the stage in play: the pieces on each pan with their labels,
 // both sides' values and the tilt. The scene draws this and decides nothing itself.
 //
-// Which x the pans show (architecture, Pattern 1; story 1.15):
-//   exploring with the dial            the dial's x, with both sides' values on readouts
-//                                      unless the stage hides them
-//   acting out a written line, or      the stage's solution, no readouts. Balance moves act
-//   from a Balance move                on both sides at once, so the pans stay level
+// Which x the pans show (architecture, Pattern 1; story 1.16): always the slider's, the
+// only x. While he explores, after a written line and after a Balance move alike, the pans
+// are weighed at the dial's x, with both sides' values on readouts unless the stage hides
+// them. Balance moves act on both sides at once, so at a wrong dial value the scale stays
+// out of balance through every move: room 4 at 6 weighs 17 against 23, then 12 against 18,
+// then 6 against 9. Story 1.15 weighed the pans at the stage's solution after a line or a
+// Balance move (acting out) and the slider read `x = ?`; that gave two x's at once, and is
+// gone. The pieces always take the last committed line's layout, or where Balance left it.
 // Every x-gear shows the letter `x` (a large one `27x`), and every x-balloon (spring) `−x`,
-// never the dial's number: the dial's value shows on the slider. A committed line acted out
-// is level. A wrong line is acted out while the machine is jammed on it, and tips by at
-// least `tuning.jamMinTilt`. Acting out never moves the dial. When an x pin beyond the dial
-// resolves, the pans briefly weigh its x (`pinRevealView`): the scene decides how long, and
-// nothing here changes.
+// never the dial's number: the dial's value shows on the slider. A wrong line shows while
+// the machine is jammed on it, at the dial's x, and tips by at least `tuning.jamMinTilt`.
+// When an x pin beyond the dial resolves (no room 1–4 has one), the pans briefly weigh its
+// x (`pinRevealView`): the scene decides how long, and nothing here changes.
 
 import { tuning } from '@/config/tuning';
 import { stageSolution } from '@/math/check';
@@ -57,17 +59,15 @@ export interface Readouts {
 }
 
 export interface ScaleView {
-  /** The x the pans are weighed at. */
+  /** The x the pans are weighed at: the dial's (story 1.16), or the machine's pin test's. */
   x: number;
-  /** The scale acts out a written line or Balance moves: weighed at the stage's solution. */
-  actingOut: boolean;
   left: PanView;
   right: PanView;
   /** Degrees, positive when the left pan is lower (see tiltFor). */
   tilt: number;
   /** The pans hang level: the sides are equal, and the machine isn't jammed on a line. */
   level: boolean;
-  /** Null when the stage hides them (`readouts: false`, or the readouts blind), or while acting out. */
+  /** Null only when the stage hides them (`readouts: false`, or the readouts blind). */
   readouts: Readouts | null;
 }
 
@@ -102,12 +102,12 @@ export function readoutLabel(value: q.Rational): string {
   return value.d === 1n ? formatNumber(value.n) : numberLabel(value);
 }
 
-/** FR4: both sides' values show while he explores, except where the stage hides them. */
+/** FR4: both sides' values always show (story 1.16), except where the stage hides them. */
 export function showsReadouts(stage: StageSpec): boolean {
   return stage.readouts && !stage.blinds?.readouts;
 }
 
-/** The solution of the stage's active machine. */
+/** The solution of the stage's active machine (the handovers read it; the pans never weigh it). */
 export function stageX(room: RoomState): number {
   return stageSolution(machineEquation(currentStageSpec(room), room.stage.machine));
 }
@@ -116,36 +116,31 @@ export function stageX(room: RoomState): number {
 interface Weighing {
   equation: Equation;
   x: number;
-  actingOut: boolean;
   jammed: boolean;
 }
 
+/** The pans at the dial's x: the last committed line, or the jammed line while jammed. */
 function weighing(room: RoomState): Weighing {
   const { stage } = room;
   const jammed = jammedLine(stage);
-  if (jammed) return { equation: jammed, x: stageX(room), actingOut: true, jammed: true };
-  if (stage.actingOut)
-    return { equation: stage.pans, x: stageX(room), actingOut: true, jammed: false };
-  return { equation: stage.pans, x: stage.dialX, actingOut: false, jammed: false };
+  return { equation: jammed ?? stage.pans, x: stage.dialX, jammed: jammed !== null };
 }
 
-function viewOf(room: RoomState, { equation, x, actingOut, jammed }: Weighing): ScaleView {
+function viewOf(room: RoomState, { equation, x, jammed }: Weighing): ScaleView {
   const spec = currentStageSpec(room);
   const values = sideValues(equation, q.rational(x));
   const pieces = panPieces(equation);
   const tiltPerUnit = spec.tiltPerUnit ?? tuning.tiltPerUnit;
   return {
     x,
-    actingOut,
     left: { pieces: pieces.left.map(pieceView), value: values.left },
     right: { pieces: pieces.right.map(pieceView), value: values.right },
     tilt: jammed ? jamTilt(values, tiltPerUnit) : tiltFor(values, tiltPerUnit),
     // A jammed line always tips, even one that holds for every x.
     level: !jammed && isLevel(values),
-    readouts:
-      !actingOut && showsReadouts(spec)
-        ? { left: readoutLabel(values.left), right: readoutLabel(values.right) }
-        : null,
+    readouts: showsReadouts(spec)
+      ? { left: readoutLabel(values.left), right: readoutLabel(values.right) }
+      : null,
   };
 }
 
@@ -159,7 +154,7 @@ export function scaleView(room: RoomState): ScaleView {
  * the store already has the dial at the end of the turn.
  */
 export function scaleViewAt(room: RoomState, x: number): ScaleView {
-  return viewOf(room, { equation: room.stage.pans, x, actingOut: false, jammed: false });
+  return viewOf(room, { equation: room.stage.pans, x, jammed: false });
 }
 
 /**
@@ -175,5 +170,5 @@ export function pinRevealView(room: RoomState): ScaleView | null {
   if (x === null) return null;
   const { pans, machine } = room.stage;
   const equation = equationHasX(pans) ? pans : machineEquation(currentStageSpec(room), machine);
-  return viewOf(room, { equation, x, actingOut: false, jammed: false });
+  return viewOf(room, { equation, x, jammed: false });
 }

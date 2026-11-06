@@ -2,11 +2,13 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { r01 } from '@/content/rooms/r01-door-lift';
+import { hr } from '@/content/text/hr';
 import type { Equation } from '@/math/expr';
 import { parse } from '@/math/parse';
 import { TOKENS, type Token, tokenize } from '@/math/tokens';
 import { dialView, setDial } from '@/room/dial';
 import {
+  answerAllowed,
   blankMaxDigits,
   committedEquations,
   deleteToken,
@@ -23,6 +25,8 @@ import {
   type NotebookKey,
   type NotebookStep,
   notebookWrites,
+  refusalView,
+  simplified,
   typeToken,
 } from '@/room/notebook';
 import { touchMachine } from '@/room/phases';
@@ -327,17 +331,19 @@ function equation(text: string): Equation {
 /** Room 1 as authored: Try values fades to blanks. */
 const blanksRoomOne = (): RoomState => opened(enterRoom(r01).room);
 
-describe('a committed line is acted out (story 1.7)', () => {
-  it("replaces the pans with the line's layout, leaving the dial where it is", () => {
+// Story 1.16 rewrote this block in place: until then a committed line was acted out at the
+// stage's solution, so it always hung level. Now the pans stay at the dial's x.
+describe('a committed line on the pans (story 1.7; one x, story 1.16)', () => {
+  it("replaces the pans with the line's layout, weighed where the dial is", () => {
     const explored = step(setDial(roomWith('2x + 7 = 25'), 4)).room;
     const result = written(explored, '2x = 25 − 7');
     expect(result.room.stage.pans).toEqual(equation('2x = 25 − 7'));
-    expect(result.room.stage.actingOut).toBe(true);
     expect(result.room.stage.dialX).toBe(4);
+    expect(scaleView(result.room)).toMatchObject({ x: 4, level: false });
   });
 
-  it('never fires PansLevel, even though every committed line hangs level', () => {
-    let room = roomWith('2x + 7 = 25');
+  it('never fires PansLevel, even when a committed line hangs level at the dial’s x', () => {
+    let room = step(setDial(roomWith('2x + 7 = 25'), 9)).room;
     for (const line of ['2x = 25 − 7', '2x = 18', 'x = 18 : 2', 'x = 9', '2 · 9 + 7 = 25']) {
       const result = written(room, line);
       expect(result.events.map((event) => event.type)).not.toContain('PansLevel');
@@ -346,10 +352,9 @@ describe('a committed line is acted out (story 1.7)', () => {
     }
   });
 
-  it("ends on the dial's next notch: the pans go back to the dial's x, in the line's layout", () => {
+  it("weighs the line's layout at the dial's next notch", () => {
     const acted = written(roomOne(), 'x = 9 − 4').room;
     const turned = step(setDial(acted, 3));
-    expect(turned.room.stage.actingOut).toBe(false);
     expect(turned.room.stage.pans).toEqual(equation('x = 9 − 4'));
     expect(turned.room.stage.dialX).toBe(3);
     expect(scaleView(turned.room).x).toBe(3);
@@ -381,10 +386,13 @@ describe('a committed line moves the machine (story 1.7)', () => {
     expect(seen).toEqual([0.2, 0.4, 0.6, 0.8, 0.8]);
   });
 
-  it('keeps the pans level while it moves: a committed line is acted out at the solution', () => {
-    const view = scaleView(written(roomWith('2x + 7 = 25'), '2x = 18').room);
-    expect(view.tilt).toBe(0);
-    expect(view.level).toBe(true);
+  // Story 1.16: until then a committed line was acted out at the solution, always level.
+  it('weighs the line at the dial’s x while it moves: level only where the dial levels it', () => {
+    const atZero = written(roomWith('2x + 7 = 25'), '2x = 18').room;
+    expect(atZero.stage.machineProgress).toEqual([0.2]);
+    expect(scaleView(atZero)).toMatchObject({ x: 0, level: false, tilt: -15 });
+    const atNine = written(step(setDial(roomWith('2x + 7 = 25'), 9)).room, '2x = 18').room;
+    expect(scaleView(atNine)).toMatchObject({ x: 9, level: true, tilt: 0 });
   });
 
   it('accepts a valid line without progress and leaves the machine where it is', () => {
@@ -594,5 +602,101 @@ describe('which keys work (story 1.7)', () => {
       'delete',
       'enter',
     ]);
+  });
+});
+
+describe('simplify first (story 1.16)', () => {
+  /** A stage only Balance finishes, like room 4, on a blank page. */
+  const balanceOnly = (text: string, extra: Partial<StageSpec> = {}) =>
+    roomWith(text, { ways: ['balance'], fading: { try: 'blank', balance: 'auto' }, ...extra });
+
+  it('calls pans simplified when one pan holds only x and the other a single number', () => {
+    for (const text of ['2x = 18', '18 = 2x', 'x = 9', 'x + x = 18', '2x : 2 = 18 : 2', 'x = 0']) {
+      expect(simplified(equation(text)), text).toBe(true);
+    }
+    for (const text of [
+      '2x + 5 = 23',
+      '2x = 23 − 5',
+      '2x + 5 − 5 = 23 − 5',
+      '2x = x + 9',
+      '23 = 2x + 5',
+      '18 = 18',
+    ]) {
+      expect(simplified(equation(text)), text).toBe(false);
+    }
+  });
+
+  it('lets the answer be written at once where Try values can finish, else only once simplified', () => {
+    const balanceStage: StageSpec = { ...roomOneStage, ways: ['balance'] };
+    const both: StageSpec = { ...roomOneStage, ways: ['try', 'balance'] };
+    expect(answerAllowed(roomOneStage, equation('2x + 5 = 23'))).toBe(true);
+    expect(answerAllowed(both, equation('2x + 5 = 23'))).toBe(true);
+    expect(answerAllowed(balanceStage, equation('2x + 5 = 23'))).toBe(false);
+    expect(answerAllowed(balanceStage, equation('2x = 18'))).toBe(true);
+    expect(answerAllowed(balanceStage, equation('18 = 2x'))).toBe(true);
+  });
+
+  it('refuses an early x = 9 like an incomplete line: not stored, a wiggle, no jam, a tag', () => {
+    const result = written(balanceOnly('2x + 5 = 23'), 'x = 9');
+    expect(result.verdict.kind).toBe('answer');
+    expect(result.events).toEqual([]);
+    expect(result.room.stage.lines).toHaveLength(1);
+    expect(result.room.stage.refused).toBe(1);
+    expect(result.room.stage.jam).toBeNull();
+    expect(result.room.stage.jamsInARow).toBe(0);
+    expect(result.room.stage.machineProgress).toEqual([0]);
+    expect(result.room.stage.draft).toEqual(tokens('x = 9'));
+    expect(result.room.stage.refusal).toBe('simplify');
+    expect(refusalView(result.room)).toBe('simplify');
+    expect(hr.refusal[result.room.stage.refusal ?? 'simplify']).toMatch(/\S/);
+    // Enter again: refused again, and the wiggle counts on.
+    expect(step(enterLine(result.room, 0)).room.stage.refused).toBe(2);
+  });
+
+  it('takes the tag away on his next edit, or once the pans are simplified', () => {
+    const refused = written(balanceOnly('2x + 5 = 23'), 'x = 9').room;
+    const edited = step(deleteToken(refused)).room;
+    expect(edited.stage.refusal).toBeNull();
+    expect(refusalView(edited)).toBeNull();
+    // A Balance move that simplifies the pans (here set straight) hides it at once.
+    const moved = { ...refused, stage: { ...refused.stage, pans: equation('2x = 18') } };
+    expect(refusalView(moved)).toBeNull();
+    expect(refusalView(null)).toBeNull();
+  });
+
+  it('counts simplifying lines he types himself: 2x = 18 or 18 = 2x, then x = 9', () => {
+    for (const line of ['2x = 18', '18 = 2x']) {
+      const simpler = written(balanceOnly('2x + 5 = 23'), line);
+      expect(simpler.verdict.kind).toBe('valid');
+      const answered = written(simpler.room, 'x = 9');
+      expect(answered.verdict.kind).toBe('answer');
+      expect(answered.room.stage.lines).toHaveLength(3);
+      expect(answered.room.stage.refusal).toBeNull();
+    }
+    // A line that only moves the numbers about isn't simple enough yet.
+    const halfway = written(balanceOnly('2x + 5 = 23'), '2x = 23 − 5').room;
+    expect(written(halfway, 'x = 9').room.stage.refusal).toBe('simplify');
+  });
+
+  it('refuses an answer filled into a blank the same way', () => {
+    const room = balanceOnly('2x + 5 = 23', { fading: { try: 'blanks', balance: 'auto' } });
+    expect(fillsBlank(room.stage)).toBe(true);
+    const result = written(room, '9');
+    expect(result.room.stage.lines).toHaveLength(1);
+    expect(result.room.stage.refusal).toBe('simplify');
+    expect(result.room.stage.templates).toHaveLength(2);
+  });
+
+  it('leaves stages Try values can finish as they were, and other lines alone', () => {
+    const answered = written(roomWith('2x + 5 = 23'), 'x = 9');
+    expect(answered.verdict.kind).toBe('answer');
+    expect(answered.room.stage.refusal).toBeNull();
+    // A wrong line still jams, with no tag; an incomplete one wiggles with no tag.
+    const wrong = written(balanceOnly('2x + 5 = 23'), 'x = 8').room;
+    expect(wrong.stage.jam).toEqual({ kind: 'line' });
+    expect(wrong.stage.refusal).toBeNull();
+    const incomplete = written(balanceOnly('2x + 5 = 23'), 'x =').room;
+    expect(incomplete.stage.refused).toBe(1);
+    expect(incomplete.stage.refusal).toBeNull();
   });
 });
