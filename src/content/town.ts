@@ -10,7 +10,17 @@ import type { RoomId } from '@/room/types';
 
 export type PersonId = 'penkala' | 'nikola' | 'faust';
 
-export type AreaId = 'square' | 'canal' | 'mill' | 'bridge' | 'yard';
+export type AreaId =
+  | 'square'
+  | 'canal'
+  | 'mill'
+  | 'bridge'
+  | 'yard'
+  | 'tram'
+  | 'lift'
+  | 'market'
+  | 'wheel'
+  | 'hill';
 
 /** A tap area over an illustration, in town units. */
 export interface Rect {
@@ -68,6 +78,11 @@ export interface TownArea {
   lair: LairId | null;
   /** That automaton's round, which it walks back and forth. */
   patrol: readonly Point[];
+  /**
+   * Where the picture itself shows the automaton, standing still: a tap area and where he
+   * stands to face it, in place of a figure on a round.
+   */
+  lairSpot?: { area: Rect; stand: Point };
   /** Lamp heads that glow once room 2 restarts. */
   lamps: readonly Point[];
 }
@@ -204,6 +219,15 @@ const canal: TownArea = {
       area: { x: 1060, y: 880, w: 200, h: 120 },
       arrive: { x: 260, y: 880 },
       marker: { x: 1160, y: 860 },
+    },
+    {
+      // Along the quay to the left, to the steam lift, once the chain is his (room 7).
+      to: 'lift',
+      opensWith: 'r07',
+      stand: { x: 60, y: 520 },
+      area: { x: 0, y: 430, w: 120, h: 180 },
+      arrive: { x: 330, y: 740 },
+      marker: { x: 60, y: 420 },
     },
   ],
   people: [],
@@ -369,10 +393,279 @@ const yard: TownArea = {
       arrive: { x: 1400, y: 720 },
       marker: { x: 150, y: 690 },
     },
+    {
+      // Past the warehouses to the tram depot, once the chain is his (room 7).
+      to: 'tram',
+      opensWith: 'r07',
+      stand: { x: 1500, y: 300 },
+      area: { x: 1450, y: 180, w: 150, h: 180 },
+      arrive: { x: 200, y: 860 },
+      marker: { x: 1520, y: 170 },
+    },
   ],
   people: [],
   lair: null,
   patrol: [],
+  lamps: [],
+};
+
+const tram: TownArea = {
+  id: 'tram',
+  ground: ground(
+    [
+      { x: 0, y: 660 },
+      { x: 560, y: 470 },
+      { x: 1100, y: 300 },
+      { x: 1240, y: 260 },
+      { x: 1600, y: 420 },
+      { x: 1600, y: 1000 },
+      { x: 0, y: 1000 },
+    ],
+    [
+      { x: 930, y: 610, rx: 210, ry: 150 },
+      { x: 60, y: 930, rx: 90, ry: 70 },
+    ],
+  ),
+  arrive: { x: 200, y: 860 },
+  places: [
+    {
+      node: 'r08',
+      stand: { x: 640, y: 720 },
+      area: { x: 740, y: 400, w: 400, h: 380 },
+      marker: { x: 930, y: 400 },
+      bloom: { x: 900, y: 450, r: 460 },
+    },
+  ],
+  exits: [
+    {
+      to: 'yard',
+      opensWith: 'r07',
+      stand: { x: 150, y: 880 },
+      area: { x: 0, y: 760, w: 260, h: 240 },
+      arrive: { x: 1480, y: 300 },
+      marker: { x: 120, y: 750 },
+    },
+    {
+      to: 'market',
+      opensWith: 'r08',
+      stand: { x: 1540, y: 700 },
+      area: { x: 1480, y: 560, w: 120, h: 260 },
+      arrive: { x: 300, y: 860 },
+      marker: { x: 1540, y: 550 },
+    },
+  ],
+  people: [],
+  // The armour-45 automaton in the gap behind the shed, drawn in the picture.
+  lair: 'lair-45',
+  patrol: [],
+  lairSpot: { area: { x: 1330, y: 150, w: 180, h: 200 }, stand: { x: 1300, y: 390 } },
+  lamps: [],
+};
+
+const lift: TownArea = {
+  id: 'lift',
+  // The pier at the foot of the cliff.
+  ground: ground(
+    [
+      { x: 240, y: 690 },
+      { x: 560, y: 560 },
+      { x: 880, y: 330 },
+      { x: 1050, y: 330 },
+      { x: 1545, y: 600 },
+      { x: 1530, y: 660 },
+      { x: 800, y: 960 },
+      { x: 560, y: 820 },
+      { x: 300, y: 760 },
+    ],
+    [
+      { x: 1130, y: 590, rx: 45, ry: 30 },
+      { x: 1195, y: 705, rx: 45, ry: 30 },
+      { x: 915, y: 760, rx: 45, ry: 30 },
+      { x: 1010, y: 810, rx: 45, ry: 30 },
+    ],
+  ),
+  arrive: { x: 330, y: 740 },
+  places: [
+    {
+      node: 'r09',
+      stand: { x: 800, y: 690 },
+      area: { x: 430, y: 90, w: 440, h: 580 },
+      marker: { x: 580, y: 110 },
+      bloom: { x: 600, y: 400, r: 460 },
+    },
+  ],
+  exits: [
+    {
+      // Down the steps and back along the canal.
+      to: 'canal',
+      opensWith: 'r07',
+      stand: { x: 300, y: 745 },
+      area: { x: 0, y: 700, w: 330, h: 300 },
+      arrive: { x: 60, y: 520 },
+      marker: { x: 170, y: 690 },
+    },
+  ],
+  people: [],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+const market: TownArea = {
+  id: 'market',
+  // Getaldicev trg: round the big scale, the stalls and the baskets.
+  ground: ground(
+    [
+      { x: 220, y: 800 },
+      { x: 440, y: 700 },
+      { x: 560, y: 520 },
+      { x: 700, y: 460 },
+      { x: 930, y: 470 },
+      { x: 1150, y: 560 },
+      { x: 1260, y: 520 },
+      { x: 1600, y: 600 },
+      { x: 1600, y: 700 },
+      { x: 1360, y: 760 },
+      { x: 1100, y: 1000 },
+      { x: 560, y: 1000 },
+      { x: 470, y: 920 },
+    ],
+    [
+      { x: 800, y: 640, rx: 110, ry: 55 },
+      { x: 1130, y: 500, rx: 110, ry: 60 },
+    ],
+  ),
+  arrive: { x: 300, y: 860 },
+  places: [
+    {
+      node: 'r10',
+      stand: { x: 700, y: 730 },
+      area: { x: 690, y: 150, w: 220, h: 500 },
+      marker: { x: 790, y: 140 },
+      bloom: { x: 800, y: 450, r: 460 },
+    },
+  ],
+  exits: [
+    {
+      to: 'tram',
+      opensWith: 'r08',
+      stand: { x: 300, y: 880 },
+      area: { x: 200, y: 820, w: 260, h: 180 },
+      arrive: { x: 1500, y: 700 },
+      marker: { x: 320, y: 810 },
+    },
+    {
+      // On along the street to the river and the great wheel.
+      to: 'wheel',
+      opensWith: 'r10',
+      stand: { x: 1550, y: 650 },
+      area: { x: 1480, y: 560, w: 120, h: 160 },
+      arrive: { x: 200, y: 860 },
+      marker: { x: 1540, y: 550 },
+    },
+  ],
+  people: [],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+const wheel: TownArea = {
+  id: 'wheel',
+  // The street and the railed terrace before the great wheel.
+  ground: ground([
+    { x: 0, y: 700 },
+    { x: 300, y: 660 },
+    { x: 1020, y: 400 },
+    { x: 1480, y: 600 },
+    { x: 780, y: 940 },
+    { x: 500, y: 1000 },
+    { x: 0, y: 1000 },
+  ]),
+  arrive: { x: 200, y: 860 },
+  places: [
+    {
+      node: 'r11',
+      stand: { x: 760, y: 560 },
+      area: { x: 420, y: 20, w: 540, h: 560 },
+      marker: { x: 690, y: 40 },
+      bloom: { x: 680, y: 350, r: 460 },
+    },
+  ],
+  exits: [
+    {
+      to: 'market',
+      opensWith: 'r10',
+      stand: { x: 150, y: 900 },
+      area: { x: 0, y: 820, w: 260, h: 180 },
+      arrive: { x: 1500, y: 650 },
+      marker: { x: 120, y: 810 },
+    },
+    {
+      // Up the steps under the arch to the hilltop, once the great wheel turns.
+      to: 'hill',
+      opensWith: 'r11',
+      stand: { x: 250, y: 660 },
+      area: { x: 120, y: 380, w: 170, h: 200 },
+      arrive: { x: 260, y: 860 },
+      marker: { x: 200, y: 370 },
+    },
+  ],
+  people: [],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+const hill: TownArea = {
+  id: 'hill',
+  // The hilltop between the linked machines and the clock tower.
+  ground: ground(
+    [
+      { x: 120, y: 760 },
+      { x: 560, y: 690 },
+      { x: 860, y: 520 },
+      { x: 1180, y: 600 },
+      { x: 1600, y: 780 },
+      { x: 1600, y: 880 },
+      { x: 1100, y: 930 },
+      { x: 600, y: 900 },
+      { x: 300, y: 880 },
+    ],
+    [{ x: 1360, y: 640, rx: 190, ry: 100 }],
+  ),
+  arrive: { x: 260, y: 860 },
+  places: [
+    {
+      node: 'r12',
+      stand: { x: 640, y: 720 },
+      area: { x: 180, y: 60, w: 600, h: 560 },
+      marker: { x: 450, y: 80 },
+      bloom: { x: 450, y: 350, r: 460 },
+    },
+    {
+      node: 'r13',
+      stand: { x: 1100, y: 640 },
+      area: { x: 1000, y: 0, w: 350, h: 600 },
+      marker: { x: 1150, y: 40 },
+      bloom: { x: 1250, y: 350, r: 460 },
+    },
+  ],
+  exits: [
+    {
+      to: 'wheel',
+      opensWith: 'r11',
+      stand: { x: 230, y: 850 },
+      area: { x: 100, y: 780, w: 250, h: 220 },
+      arrive: { x: 250, y: 660 },
+      marker: { x: 200, y: 770 },
+    },
+  ],
+  people: [],
+  // The huge armour-60 automaton in the tower's back room, drawn in the picture.
+  lair: 'lair-60',
+  patrol: [],
+  lairSpot: { area: { x: 1360, y: 90, w: 240, h: 460 }, stand: { x: 1240, y: 760 } },
   lamps: [],
 };
 
@@ -382,7 +675,10 @@ export const town = {
   /** His height, in town units; people and the automaton scale from it. */
   figure: 175,
   start: 'square' as AreaId,
-  areas: { square, canal, mill, bridge, yard } as Record<AreaId, TownArea>,
+  areas: { square, canal, mill, bridge, yard, tram, lift, market, wheel, hill } as Record<
+    AreaId,
+    TownArea
+  >,
 };
 
 /** The area that holds a room, so he comes out where he went in. */

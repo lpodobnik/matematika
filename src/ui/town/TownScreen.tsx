@@ -106,7 +106,7 @@ type Bubble = {
 type Errand =
   | { kind: 'place'; place: TownPlace }
   | { kind: 'person'; person: TownPerson }
-  | { kind: 'automaton' }
+  | { kind: 'automaton'; at: Point }
   | { kind: 'exit'; exit: TownExit };
 
 const pct = (p: Point) => ({
@@ -210,7 +210,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
           return;
         }
         const text = wait !== null ? hr.town.places.beaten(wait) : hr.town.places.automaton;
-        setBubble({ who: 'self', at: botRef.current.at, lines: [text], line: 0 });
+        setBubble({ who: 'self', at: job.at, lines: [text], line: 0 });
         return;
       }
       const { person } = job;
@@ -435,6 +435,25 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               />
             </button>
           ))}
+          {area.lair && area.lairSpot && (
+            // The automaton the picture shows, standing still: a tap on it.
+            <button
+              type="button"
+              className="town__place"
+              data-lair={area.lair}
+              style={rectStyle(area.lairSpot.area)}
+              aria-label={hr.map.nodes[area.lair]}
+              onClick={() => {
+                const spot = area.lairSpot;
+                if (spot) {
+                  walkTo(spot.stand, {
+                    kind: 'automaton',
+                    at: { x: spot.area.x + spot.area.w / 2, y: spot.area.y + 40 },
+                  });
+                }
+              }}
+            />
+          )}
           {area.lair && area.patrol.length > 0 && (
             <button
               type="button"
@@ -448,7 +467,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               onClick={() =>
                 walkTo(
                   { x: botRef.current.at.x - 90, y: botRef.current.at.y + 10 },
-                  { kind: 'automaton' },
+                  { kind: 'automaton', at: botRef.current.at },
                 )
               }
             >

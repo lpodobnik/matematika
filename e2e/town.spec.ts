@@ -266,3 +266,79 @@ test('the town to the midpoint: bridge, yard, the logbook house and Faust', asyn
     { timeout: 10_000 },
   );
 });
+
+test('the whole district: tram, market, wheel, the hill, and the lift', async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    const done = [
+      'r01',
+      'r02',
+      'r03',
+      'r04',
+      'r05',
+      'r06',
+      'r07',
+      'r08',
+      'r09',
+      'r10',
+      'r11',
+      'r12',
+    ];
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        character: { name: 'Ivo', look: 'look-1' },
+        progress: {
+          ...s.save.progress,
+          introSeen: true,
+          roomsDone: done,
+          told: done,
+          tools: ['balance', 'workshop', 'chain', 'drum'],
+          onMap: true,
+        },
+      },
+      room: null,
+    });
+  });
+  const area = (id: string) => page.locator(`.town__board[data-area="${id}"]`);
+  const go = async (to: string) => {
+    await page.locator(`.town__place[data-exit="${to}"]`).click();
+    await expect(area(to)).toBeVisible({ timeout: 12_000 });
+    await page.waitForTimeout(300);
+  };
+  await go('canal');
+  await go('lift');
+  await expect(page.locator('.town__place[data-node="r09"]')).toHaveAttribute(
+    'data-state',
+    'restored',
+  );
+  await shot(page, '10-lift');
+  await go('canal');
+  await go('mill');
+  await go('yard');
+  await go('tram');
+  await expect(page.locator('.town__place[data-lair="lair-45"]')).toBeVisible();
+  await shot(page, '11-tram');
+  await go('market');
+  await shot(page, '12-market');
+  await go('wheel');
+  await shot(page, '13-wheel');
+  await go('hill');
+  await expect(page.locator('.town__place[data-node="r13"]')).toHaveAttribute('data-state', 'open');
+  await expect(page.locator('.town__place[data-lair="lair-60"]')).toBeVisible();
+  await shot(page, '14-hill');
+  // The clock tower opens room 13.
+  await page.locator('.town__place[data-node="r13"]').click();
+  await page.waitForFunction(
+    () => (window as unknown as Game).__s.getState().room?.spec.id === 'r13',
+    null,
+    { timeout: 12_000 },
+  );
+});
