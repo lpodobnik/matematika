@@ -388,8 +388,10 @@ export const hr = {
     intro: 'Priča od početka',
     /** Ways between areas, for the tap areas' labels. */
     exits: {
-      canal: 'Kroz vrata, do kanala',
-      square: 'Natrag na trg',
+      'square-canal': 'Kroz vrata, do kanala',
+      'canal-square': 'Natrag na trg',
+      'canal-mill': 'Uz kanal, do mlina',
+      'mill-canal': 'Natrag do kanala',
     },
     close: 'Zatvori',
     /** For screen readers: the town as a whole, and a tap on the ground. */

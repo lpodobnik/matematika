@@ -12,6 +12,7 @@ import look3 from '@/ui/town/art/look-3.webp';
 import look4 from '@/ui/town/art/look-4.webp';
 import look5 from '@/ui/town/art/look-5.webp';
 import look6 from '@/ui/town/art/look-6.webp';
+import mill from '@/ui/town/art/mill.webp';
 import nikola from '@/ui/town/art/nikola.webp';
 import penkala from '@/ui/town/art/penkala.webp';
 import square from '@/ui/town/art/square.webp';
@@ -34,6 +35,7 @@ export const personArt: Record<PersonId, string> = { penkala, nikola };
 /** An area's picture as it stands: the square shows the gate raised once room 1 is done. */
 export function areaArt(area: AreaId, done: readonly RoomId[]): string {
   if (area === 'canal') return canal;
+  if (area === 'mill') return mill;
   return done.includes('r01') ? squareGateOpen : square;
 }
 
@@ -42,6 +44,7 @@ export const townImages: readonly string[] = [
   square,
   squareGateOpen,
   canal,
+  mill,
   automaton20,
   ...Object.values(looks),
   ...Object.values(personArt),

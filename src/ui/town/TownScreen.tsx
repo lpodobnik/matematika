@@ -387,7 +387,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               className="town__place"
               data-exit={exit.to}
               style={rectStyle(exit.area)}
-              aria-label={hr.town.exits[exit.to]}
+              aria-label={exitLabel(areaId, exit.to)}
               onClick={() => walkTo(exit.stand, { kind: 'exit', exit })}
             />
           ))}
@@ -637,4 +637,10 @@ function rectStyle(rect: Rect) {
     width: `${(rect.w / town.width) * 100}%`,
     height: `${(rect.h / town.height) * 100}%`,
   };
+}
+
+/** A way's label, by where it leads from and to. */
+function exitLabel(from: AreaId, to: AreaId): string {
+  const key = `${from}-${to}` as keyof typeof hr.town.exits;
+  return hr.town.exits[key] ?? hr.town.walk;
 }

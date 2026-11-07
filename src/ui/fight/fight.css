@@ -69,6 +69,21 @@
   width: min(100%, 300px);
   height: auto;
   max-height: 52vh;
+  object-fit: contain;
+  /* It breathes while it waits. */
+  animation: fight-idle 2.6s ease-in-out infinite;
+}
+
+@keyframes fight-idle {
+  50% {
+    translate: 0 -2%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fight__automaton {
+    animation: none;
+  }
 }
 
 .automaton {

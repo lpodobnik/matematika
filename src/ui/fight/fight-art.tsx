@@ -1,6 +1,10 @@
-// The fight's placeholder skin (story 3.1), drawn in code until epic 6's art: the
-// automaton, one of Kristijan's helpers, and the dice. Grey ink, since nothing in a fight is
-// restored (NFR12).
+// The fight's skin (story 3.1): the automaton, one of Kristijan's helpers, from its picture
+// (story 5.2), and the dice and the punched tape, drawn in code.
+
+import automaton20 from '@/ui/fight/art/automaton-20.webp';
+import automaton30 from '@/ui/fight/art/automaton-30.webp';
+import automaton45 from '@/ui/fight/art/automaton-45.webp';
+import automaton60 from '@/ui/fight/art/automaton-60.webp';
 
 /** Where the pips sit on a 60 × 60 face, for each number. */
 const pips: Record<number, [number, number][]> = {
@@ -50,30 +54,21 @@ export function DieFace({ value }: { value: number }) {
 }
 
 /** The automaton: a riveted body on legs, one round eye, a wind-up key and a blade arm. */
-export function Automaton({ className }: { className?: string }) {
+/** Each lair's automaton, cut out of its picture (art-src/CREDITS.md, t09–t12). */
+const automatons: Record<number, string> = {
+  20: automaton20,
+  30: automaton30,
+  45: automaton45,
+  60: automaton60,
+};
+
+/** Every automaton picture, for the loading screen to fetch. */
+export const automatonImages: readonly string[] = Object.values(automatons);
+
+/** The automaton of a lair with this armour, facing him (the pictures face left). */
+export function Automaton({ className, armour }: { className?: string; armour: number }) {
   return (
-    <svg className={className} viewBox="0 0 200 240" aria-hidden="true">
-      <g className="automaton">
-        {/* The wind-up key on its back. */}
-        <path d="M100 18 V34 M84 10 Q92 2 100 10 Q108 2 116 10 Q108 18 100 18 Q92 18 84 10 Z" />
-        {/* Head and eye. */}
-        <rect x="70" y="34" width="60" height="44" rx="12" />
-        <circle cx="100" cy="56" r="11" className="automaton__eye" />
-        <circle cx="100" cy="56" r="4" className="automaton__pupil" />
-        {/* Body, with rivets. */}
-        <rect x="52" y="84" width="96" height="92" rx="10" />
-        <circle cx="62" cy="94" r="3" className="automaton__rivet" />
-        <circle cx="138" cy="94" r="3" className="automaton__rivet" />
-        <circle cx="62" cy="166" r="3" className="automaton__rivet" />
-        <circle cx="138" cy="166" r="3" className="automaton__rivet" />
-        <rect x="74" y="104" width="52" height="40" rx="5" className="automaton__plate" />
-        {/* Arms: a pincer on the left, a blade on the right. */}
-        <path d="M52 100 L28 136 L36 160 M28 136 L18 158" />
-        <path d="M148 100 L170 132 L176 112 M170 132 L192 92" />
-        {/* Legs. */}
-        <path d="M76 176 V222 H62 M124 176 V222 H138" />
-      </g>
-    </svg>
+    <img className={className} src={automatons[armour] ?? automaton20} alt="" draggable={false} />
   );
 }
 

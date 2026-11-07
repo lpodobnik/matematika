@@ -153,6 +153,7 @@ export function FightBoard({
         )}
         {fight.round > 0 && <p className="fight__round">{hr.fight.round(fight.round)}</p>}
         <Automaton
+          armour={lair.armour}
           className={
             fight.phase === 'won' ? 'fight__automaton fight__automaton--down' : 'fight__automaton'
           }

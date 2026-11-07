@@ -161,3 +161,46 @@ test('a fixed machine runs on: tapping it shows a bubble, not the room again', a
   expect((await state(page)).ui.screen).toBe('map');
   expect((await state(page)).room).toBeNull();
 });
+
+test('fixed machines open the way on: square, canal, mill', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        character: { name: 'Ivo', look: 'look-2' },
+        progress: {
+          ...s.save.progress,
+          introSeen: true,
+          roomsDone: ['r01', 'r02', 'r03'],
+          told: ['r01', 'r02', 'r03'],
+          tools: ['balance'],
+          onMap: true,
+        },
+      },
+      room: null,
+    });
+  });
+  await page.locator('.town__place[data-exit="canal"]').click();
+  await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
+  await page.locator('.town__place[data-exit="mill"]').click();
+  await expect(page.locator('.town__board[data-area="mill"]')).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.town__place[data-node="r04"]')).toHaveAttribute('data-state', 'open');
+  await expect(page.locator('.town__next')).toBeVisible();
+  await page.waitForTimeout(400);
+  await shot(page, '7-mill');
+  // Walking to the wheel opens room 4.
+  await page.locator('.town__place[data-node="r04"]').click();
+  await page.waitForFunction(
+    () => (window as unknown as Game).__s.getState().room?.spec.id === 'r04',
+    null,
+    { timeout: 10_000 },
+  );
+});

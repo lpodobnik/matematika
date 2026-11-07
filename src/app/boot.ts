@@ -6,6 +6,7 @@ import { recordError } from '@/lib/error-log';
 import type { LoadResult, SaveStorage } from '@/save/storage';
 import type { Action } from '@/store/actions';
 import { fromSaveV1 } from '@/store/persist';
+import { automatonImages } from '@/ui/fight/fight-art';
 import { openingArt } from '@/ui/opening/art';
 import { townImages } from '@/ui/town/art';
 
@@ -18,7 +19,7 @@ export type AssetLoader = (onProgress: (loaded: number) => void) => Promise<void
  * skipped; the browser fetches it again when it shows. Pixi `Assets` bundles join here.
  */
 export const loadAssets: AssetLoader = async (onProgress) => {
-  const urls = [...openingArt.map((art) => art.src), ...townImages];
+  const urls = [...openingArt.map((art) => art.src), ...townImages, ...automatonImages];
   if (typeof Image === 'undefined' || urls.length === 0) {
     onProgress(1);
     return;

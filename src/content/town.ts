@@ -9,7 +9,7 @@ import type { RoomId } from '@/room/types';
 
 export type PersonId = 'penkala' | 'nikola';
 
-export type AreaId = 'square' | 'canal';
+export type AreaId = 'square' | 'canal' | 'mill';
 
 /** A tap area over an illustration, in town units. */
 export interface Rect {
@@ -181,6 +181,15 @@ const canal: TownArea = {
       arrive: { x: 560, y: 520 },
       marker: { x: 140, y: 860 },
     },
+    {
+      // On along the quay to the mill, once the sluice gate lets the water through.
+      to: 'mill',
+      opensWith: 'r03',
+      stand: { x: 1150, y: 960 },
+      area: { x: 1060, y: 880, w: 200, h: 120 },
+      arrive: { x: 260, y: 880 },
+      marker: { x: 1160, y: 860 },
+    },
   ],
   people: [],
   // The first automaton, stripping the lamp on the near quay for parts (narrative design,
@@ -193,13 +202,57 @@ const canal: TownArea = {
   lamps: [],
 };
 
+const mill: TownArea = {
+  id: 'mill',
+  // The cobbled yard in front of the mill, and the quay path back along the canal.
+  ground: ground(
+    [
+      { x: 0, y: 667 },
+      { x: 189, y: 556 },
+      { x: 522, y: 467 },
+      { x: 778, y: 456 },
+      { x: 1167, y: 444 },
+      { x: 1200, y: 533 },
+      { x: 1333, y: 667 },
+      { x: 1478, y: 722 },
+      { x: 1389, y: 778 },
+      { x: 1333, y: 1000 },
+      { x: 0, y: 1000 },
+    ],
+    [{ x: 1211, y: 911, rx: 45, ry: 28 }],
+  ),
+  arrive: { x: 300, y: 850 },
+  places: [
+    {
+      node: 'r04',
+      stand: { x: 540, y: 530 },
+      area: { x: 300, y: 80, w: 400, h: 400 },
+      marker: { x: 520, y: 110 },
+      bloom: { x: 500, y: 300, r: 400 },
+    },
+  ],
+  exits: [
+    {
+      to: 'canal',
+      opensWith: 'r03',
+      stand: { x: 180, y: 900 },
+      area: { x: 0, y: 780, w: 280, h: 220 },
+      arrive: { x: 1100, y: 930 },
+      marker: { x: 130, y: 780 },
+    },
+  ],
+  people: [],
+  patrol: [],
+  lamps: [],
+};
+
 export const town = {
   width: 1600,
   height: 1000,
   /** His height, in town units; people and the automaton scale from it. */
   figure: 175,
   start: 'square' as AreaId,
-  areas: { square, canal } as Record<AreaId, TownArea>,
+  areas: { square, canal, mill } as Record<AreaId, TownArea>,
 };
 
 /** The area that holds a room, so he comes out where he went in. */
