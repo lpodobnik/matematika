@@ -10,6 +10,29 @@ import type { FightState, PageId } from '@/fight/types';
 import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, IdeaId, RoomId, ToolId } from '@/room/types';
 
+/** A reply link's stamp on a room he sent (epic 5): the friend cracked it, or gave up. */
+export type Stamp = 'cracked' | 'uncracked';
+
+/** A room he sent (epic 5; architecture, `SaveV1.workshop`): it hangs on the workshop wall. */
+export interface SentRoom {
+  /** The room's id: the hash of its link's bytes (links/room-link.ts, `roomIdOf`). */
+  id: string;
+  /** The link's data, `<data>` in `#s=<data>`, so the wall can show the link again. */
+  payload: string;
+  /** Its title's index in `hr.workshop.titles`. */
+  title: number;
+  /** The last reply's stamp, or null before any reply. */
+  stamp: Stamp | null;
+}
+
+/** The most rooms the wall keeps: the oldest go first. */
+export const maxSentRooms = 40;
+
+/** The workshop's part of the save (epic 5): the rooms he sent, oldest first. */
+export interface WorkshopSave {
+  rooms: SentRoom[];
+}
+
 export const saveKey = 'matematika:save';
 
 /** A save that can't be read is kept under this prefix and the time, for Luka to recover. */
@@ -77,4 +100,6 @@ export interface SaveV1 {
    */
   fight: FightState | null;
   settings: Settings;
+  /** Epic 5: the rooms he sent, with their stamps. A save from before has none. */
+  workshop: WorkshopSave;
 }

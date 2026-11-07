@@ -48,6 +48,7 @@ const sample: SaveV1 = {
   economy: { parts: 2, upgrades: [], paidPredictions: ['r03:0'], piles: {}, lairs: {}, seeds: {} },
   fight: null,
   settings: { muted: false, quality: 'medium' },
+  workshop: { rooms: [] },
 };
 
 afterEach(() => {
@@ -79,6 +80,7 @@ describe('decodeSave', () => {
       economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {}, seeds: {} },
       fight: null,
       settings: { muted: false, quality: null },
+      workshop: { rooms: [] },
     });
   });
 

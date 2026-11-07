@@ -823,6 +823,112 @@ export const hr = {
     short: (n: number) => `Još ${n}`,
   },
   /**
+   * Epic 5: building a room for a friend at the workshop, his sent rooms on its wall, and
+   * their stamps. Present tense and imperatives only: nothing gendered about him.
+   */
+  workshop: {
+    title: 'Novi stroj',
+    /** The counter's button that opens the builder. */
+    open: 'Napravi stroj',
+    openWhat: 'Složi stroj za prijatelja, riješi ga i pošalji kao poveznicu.',
+    back: 'Natrag na pult',
+    speech: 'Sam ga složi, sam ga riješi, pa ga pošalji. Tako radi pravi majstor.',
+    speaker: 'Faust',
+    /** Over the form buttons. */
+    form: 'Oblik',
+    machine: (n: number) => `Stroj ${n}`,
+    /** In place of the number a linked machine gets from the one before. */
+    fed: (n: number) => `☐ je rješenje stroja ${n}`,
+    less: 'Manje',
+    more: 'Više',
+    /** The design keeps every rule; x is never shown. */
+    levels: 'Vaga se može izravnati.',
+    problem: {
+      form: 'Taj oblik dolazi tek u kasnijim sobama.',
+      option: 'To dolazi tek u kasnijim sobama.',
+      limits: 'Koeficijent ide od 2 do 99, ostali brojevi do 9 999.',
+      machines: 'Najviše tri stroja.',
+      fraction: 'Vaga se nikad ne bi izravnala: x ne bi bio cijeli broj.',
+      small: 'x mora biti barem 1.',
+      big: 'x smije biti najviše 9 999.',
+      short: 'Za kratki brojčanik x mora biti veći.',
+    },
+    options: 'Da bude teže',
+    readouts: 'Sakrij brojeve na vagi',
+    shortDial: 'Kratki brojčanik',
+    plant: 'Podmetni krivi redak',
+    addMachine: 'Spoji još jedan stroj',
+    removeMachine: 'Makni ovaj stroj',
+    cost: (n: number) => `Cijena: ${n} ${partsWord(n)}`,
+    have: (n: number) => `Imaš ${n} ${partsWord(n)}.`,
+    shortBy: (n: number) => `Za slanje treba još ${n} ${partsWord(n)}.`,
+    solve: 'Isprobaj i riješi',
+    solveWhat: 'Prije slanja stroj treba sam riješiti, do kraja.',
+    solved: 'Stroj radi! Još samo ime, pa ga šalješ.',
+    plantWhat: 'Odaberi jedan svoj redak i promijeni mu broj tako da bude kriv.',
+    plantStill: 'Ovaj redak je još točan. Promijeni broj.',
+    plantReady: 'Krivi redak je spreman.',
+    plantPick: 'Dodirni redak koji želiš pokvariti.',
+    pickTitle: 'Ime stroja',
+    /** The fixed list of titles (GDD): a link carries the index, so only add at the end. */
+    titles: [
+      'Tvrdi orah',
+      'Zahrđali zupčanik',
+      'Tajna vaga',
+      'Parni čvor',
+      'Lukava opruga',
+      'Škripava poluga',
+      'Zaključana brava',
+      'Ljuti kotač',
+      'Mjesečev sat',
+      'Zlatni vijak',
+      'Kula od zupčanika',
+      'Bez milosti',
+    ],
+    send: 'Pošalji',
+    redesign: 'Promijeni stroj',
+    tooLong: 'Rješenje je predugo za poveznicu: najviše 12 redaka po stroju. Riješi ga kraće.',
+    sentTitle: 'Stroj je spreman!',
+    sentWhat: 'Pošalji ovu poveznicu prijatelju. Kad ti vrati odgovor, otvori ga ovdje.',
+    share: 'Podijeli',
+    copy: 'Kopiraj',
+    copied: 'Kopirano!',
+    link: 'Poveznica',
+    shareText: (title: string) => `Možeš li pokrenuti moj stroj „${title}“?`,
+    wall: 'Zid radionice',
+    wallEmpty: 'Ovdje vise strojevi koje pošalješ.',
+    stamps: { cracked: 'RIJEŠEN', uncracked: 'NERIJEŠEN', none: 'Čeka odgovor' },
+    reply: (title: string, stamp: string) => `Stigao je odgovor za „${title}“: ${stamp}`,
+  },
+  /**
+   * Epic 5: a friend's side of a room link. The friend is spoken to directly, in the
+   * present tense; the builder is "prijatelj" or "graditelj", never with a gendered verb.
+   */
+  friend: {
+    welcomeTitle: 'Stroj za tebe',
+    welcome: (title: string) => `Prijatelj ti šalje stroj „${title}“. Možeš li ga pokrenuti?`,
+    newHere: 'Prvo kratka proba: stroj od jedne minute.',
+    go: 'Kreni',
+    readyTitle: 'Sad znaš kako',
+    ready: 'Kad se vaga izravna i provjera stoji, stroj radi. Sad pravi stroj!',
+    toRoom: 'Na stroj',
+    giveUp: 'Odustajem',
+    giveUpAsk: 'Pokazati rješenje?',
+    giveUpYes: 'Da, pokaži',
+    giveUpNo: 'Ne još',
+    crackedTitle: 'Stroj radi!',
+    cracked: 'Pošalji odgovor prijatelju, neka vidi da je stroj riješen.',
+    gaveUpTitle: 'Rješenje',
+    gaveUp: 'Ovako graditelj rješava stroj:',
+    machine: (n: number) => `Stroj ${n}`,
+    replyWhat: 'Pošalji odgovor prijatelju.',
+    replyText: 'Odgovor na tvoj stroj',
+    play: 'Igraj cijelu igru',
+    playWhat: 'U igri možeš i ti graditi strojeve za prijatelje.',
+    brokenTitle: 'Stroj stiže pokvaren',
+    broken: 'Ova poveznica nije cijela. Zamoli prijatelja da je pošalje ponovno.',
+  },
+  /**
    * Story 3.4: the three torn logbook pages the armour 30, 45 and 60 automatons carry
    * (narrative design, Found Documents): lore only, in Majstor Kristijan's hand, hinting at
    * why the First Automaton wants to know why. Placeholders until epic 6.

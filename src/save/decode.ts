@@ -28,10 +28,13 @@ import { decodeFight } from '@/save/decode-fight';
 import {
   type Character,
   currentVersion,
+  maxSentRooms,
   type QualityPick,
   qualityPicks,
   type SaveV1,
+  type SentRoom,
   type Settings,
+  type WorkshopSave,
 } from '@/save/schema';
 
 type Json = Record<string, unknown>;
@@ -204,6 +207,24 @@ function decodeSettings(value: unknown): Settings {
   };
 }
 
+function decodeSent(value: unknown): SentRoom | null {
+  if (!isObject(value)) return null;
+  const { id, payload, title, stamp } = value;
+  if (typeof id !== 'string' || !/^[0-9a-z]{1,12}$/.test(id)) return null;
+  if (typeof payload !== 'string' || !/^[A-Za-z0-9_-]{1,2400}$/.test(payload)) return null;
+  if (typeof title !== 'number' || !Number.isInteger(title) || title < 0 || title > 255) {
+    return null;
+  }
+  return { id, payload, title, stamp: stamp === 'cracked' || stamp === 'uncracked' ? stamp : null };
+}
+
+/** The rooms he sent (epic 5): each that reads, once per id, the newest 40. */
+function decodeWorkshop(value: unknown): WorkshopSave {
+  const list = isObject(value) && Array.isArray(value.rooms) ? value.rooms : [];
+  const rooms = list.slice(-maxSentRooms).flatMap((room) => decodeSent(room) ?? []);
+  return { rooms: rooms.filter((room, i) => rooms.findIndex((o) => o.id === room.id) === i) };
+}
+
 /**
  * A save of the current version, from JSON already migrated to it: every field checked,
  * and defaulted when it is missing or doesn't fit. `createdAt` defaults to `now` (ISO
@@ -235,5 +256,6 @@ export function decodeSave(value: unknown, now: string): SaveV1 | null {
     economy: decodeEconomy(value.economy),
     fight: decodeFight(value.fight),
     settings: decodeSettings(value.settings),
+    workshop: decodeWorkshop(value.workshop),
   };
 }

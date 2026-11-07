@@ -37,6 +37,8 @@ describe('the store', () => {
       fightEnd: null,
       fightGuide: null,
       fightSeed: null,
+      workshop: null,
+      friend: null,
     });
   });
 

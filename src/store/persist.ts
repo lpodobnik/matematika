@@ -27,6 +27,7 @@ export function newSave(createdAt: string | null = null): SaveState {
     },
     economy: createEconomy(),
     settings: { muted: false, quality: null },
+    workshop: { rooms: [] },
   };
 }
 
@@ -42,6 +43,7 @@ export function toSaveV1(state: GameState, now: string): SaveV1 {
     // A fight that has ended is settled in the same step, so it is never saved (ADR-8).
     fight: fightInProgress(state.fight) ? state.fight : null,
     settings: save.settings,
+    workshop: save.workshop,
   };
 }
 
@@ -59,6 +61,7 @@ export function fromSaveV1(save: SaveV1): {
       progress,
       economy: save.economy,
       settings: save.settings,
+      workshop: save.workshop,
     },
     room,
     fight: save.fight,

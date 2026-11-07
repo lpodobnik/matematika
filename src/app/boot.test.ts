@@ -23,6 +23,7 @@ const save: SaveV1 = {
   economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {}, seeds: {} },
   fight: null,
   settings: { muted: false, quality: null },
+  workshop: { rooms: [] },
 };
 
 afterEach(() => {

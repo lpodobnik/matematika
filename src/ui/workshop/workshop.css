@@ -1,0 +1,491 @@
+/* Epic 5: the builder and the workshop wall. Grey ink on paper like the counter (shop.css);
+   every control at least 48 CSS px. The screen scrolls on a phone. */
+.workshop {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 24px;
+  background:
+    linear-gradient(var(--rule) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--paper);
+  color: var(--ink);
+  overflow-y: auto;
+}
+
+:where(.workshop, .wall) button {
+  font: inherit;
+  color: inherit;
+  touch-action: manipulation;
+}
+
+.workshop .parts-counter {
+  top: 16px;
+  right: 16px;
+  bottom: auto;
+  left: auto;
+}
+
+.workshop__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 120px;
+}
+
+.workshop__back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 14px 0 6px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 18px;
+}
+
+.workshop__back svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.workshop__title {
+  margin: 0;
+  font-size: 28px;
+}
+
+.workshop__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workshop__speech {
+  max-width: 760px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--sheet);
+  font-size: 19px;
+}
+
+.workshop__machine,
+.workshop__options,
+.workshop__plant,
+.workshop__titles-box,
+.workshop__sent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.workshop__machine-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workshop__name {
+  margin: 0;
+  font-size: 21px;
+}
+
+.workshop__forms,
+.workshop__toggles,
+.workshop__titles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workshop__form,
+.workshop__toggle,
+.workshop__title-pick,
+.workshop__line,
+.workshop__small,
+.workshop__add {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--sheet);
+  font-size: 18px;
+}
+
+.workshop__form[aria-pressed="true"],
+.workshop__toggle[aria-pressed="true"],
+.workshop__title-pick[aria-pressed="true"],
+.workshop__line[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.workshop__add {
+  align-self: flex-start;
+  border-style: dashed;
+}
+
+.workshop__price {
+  font-weight: 700;
+}
+
+.workshop__numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.workshop__number {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workshop__number--fed {
+  min-height: 48px;
+  font-size: 18px;
+}
+
+.workshop__letter {
+  min-width: 18px;
+  font-size: 20px;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.workshop__step {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.workshop__step:disabled {
+  opacity: 0.4;
+}
+
+.workshop__input {
+  width: 4.5em;
+  min-height: 48px;
+  box-sizing: border-box;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--sheet);
+  color: var(--ink);
+  font: inherit;
+  font-size: 22px;
+  text-align: center;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.workshop__equation {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.workshop__status {
+  margin: 0;
+  font-size: 18px;
+}
+
+.workshop__status[data-ok="false"] {
+  color: var(--jam);
+  font-weight: 700;
+}
+
+.workshop__hint {
+  font-size: 16px;
+}
+
+.workshop__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.workshop__bill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 18px;
+}
+
+.workshop__go {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.workshop__primary,
+.workshop__secondary {
+  min-width: 160px;
+  min-height: 56px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  font-size: 21px;
+}
+
+.workshop__primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.workshop__secondary {
+  background: var(--paper);
+}
+
+.workshop__primary:disabled {
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 0.5;
+}
+
+.workshop__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workshop__line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+}
+
+.workshop__line-machine {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.workshop__plant-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 24px;
+}
+
+.workshop__plant-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workshop__sent-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.workshop__sent p,
+.workshop__plant p {
+  margin: 0;
+}
+
+/* The wall, on the counter (ShopScreen). */
+.wall {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 8px;
+}
+
+.wall__build {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.wall__reply {
+  margin: 0;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--lamp-wash);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.wall__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wall__room {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wall__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--sheet);
+}
+
+.wall__room[data-fresh="true"] .wall__card {
+  box-shadow: 0 0 0 4px var(--lamp);
+}
+
+.wall__title {
+  margin: 0;
+  font-size: 20px;
+}
+
+.wall__equations {
+  margin: 0;
+  font-size: 17px;
+}
+
+.wall__stamp {
+  padding: 4px 10px;
+  border: 3px double var(--ink);
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+.wall__room[data-stamp="cracked"] .wall__stamp {
+  border-color: var(--ink);
+  opacity: 1;
+  transform: rotate(-4deg);
+}
+
+.wall__room[data-stamp="uncracked"] .wall__stamp {
+  border-color: var(--jam);
+  color: var(--jam);
+  opacity: 1;
+  transform: rotate(-4deg);
+}
+
+@media (max-height: 499.98px) {
+  .workshop {
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  .workshop .parts-counter {
+    top: 8px;
+    right: 8px;
+  }
+
+  .workshop__title {
+    font-size: 18px;
+  }
+
+  .workshop__back {
+    font-size: 15px;
+  }
+
+  .workshop__speech {
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+
+  .workshop__body {
+    gap: 6px;
+  }
+
+  .workshop__machine,
+  .workshop__options,
+  .workshop__plant,
+  .workshop__titles-box,
+  .workshop__sent {
+    gap: 4px;
+    padding: 6px 8px;
+  }
+
+  .workshop__name {
+    font-size: 16px;
+  }
+
+  .workshop__form,
+  .workshop__toggle,
+  .workshop__title-pick,
+  .workshop__line,
+  .workshop__small,
+  .workshop__add {
+    padding: 0 10px;
+    font-size: 15px;
+  }
+
+  .workshop__equation {
+    font-size: 20px;
+  }
+
+  .workshop__status,
+  .workshop__bill,
+  .workshop__hint {
+    font-size: 13px;
+  }
+
+  .workshop__input {
+    font-size: 17px;
+  }
+
+  .workshop__primary,
+  .workshop__secondary {
+    min-width: 120px;
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .wall__reply {
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+
+  .wall__card {
+    padding: 6px 10px;
+  }
+
+  .wall__title {
+    font-size: 16px;
+  }
+
+  .wall__equations {
+    font-size: 13px;
+  }
+}

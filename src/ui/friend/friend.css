@@ -1,0 +1,238 @@
+/* Epic 5: a friend's cards, and the give-up control in a friend's room. Grey ink on paper;
+   every control at least 48 CSS px. */
+.friend {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+  background:
+    linear-gradient(var(--rule) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--paper);
+  color: var(--ink);
+  overflow-y: auto;
+}
+
+:where(.friend, .give-up) button {
+  font: inherit;
+  color: inherit;
+  touch-action: manipulation;
+}
+
+.friend__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  box-sizing: border-box;
+  width: min(760px, 100%);
+  margin: auto 0;
+  padding: 20px 24px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--sheet);
+  font-size: 20px;
+}
+
+.friend__card p {
+  margin: 0;
+}
+
+.friend__card .share-link {
+  align-self: stretch;
+}
+
+.friend__title {
+  margin: 0;
+  font-size: 30px;
+}
+
+.friend__name {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.friend__primary,
+.friend__secondary {
+  min-width: 160px;
+  min-height: 56px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  font-size: 21px;
+}
+
+.friend__primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.friend__secondary {
+  background: var(--paper);
+}
+
+.friend__play {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 6px;
+  font-size: 17px;
+}
+
+.friend__solution {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+}
+
+.friend__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 22px;
+}
+
+.friend__machine {
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+.friend__given {
+  font-weight: 700;
+}
+
+.friend__line {
+  animation: friend-line 300ms ease-out;
+}
+
+@keyframes friend-line {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* In a friend's room: where the map control would be, giving up, with its question. */
+.give-up {
+  position: absolute;
+  bottom: 72px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 16px);
+}
+
+.give-up__flag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: 56px;
+  height: 56px;
+  padding: 0 14px 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 28px;
+  background: var(--paper);
+  font-size: 17px;
+}
+
+.give-up__flag[aria-expanded="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.give-up__flag svg {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.give-up__button {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--ink);
+  border-radius: 24px;
+  background: var(--paper);
+  font-size: 17px;
+}
+
+.give-up__button--yes {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.give-up__ask {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 17px;
+}
+
+@media (max-height: 499.98px) {
+  .friend {
+    padding: 8px 12px;
+  }
+
+  .friend__card {
+    gap: 6px;
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  .friend__title {
+    font-size: 20px;
+  }
+
+  .friend__name {
+    font-size: 18px;
+  }
+
+  .friend__lines {
+    font-size: 16px;
+  }
+
+  .friend__primary,
+  .friend__secondary {
+    min-width: 120px;
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .friend__play {
+    font-size: 13px;
+  }
+
+  .give-up {
+    bottom: 66px;
+  }
+
+  /* On a phone the flag is a circle the map control's size, clear of the dial's label. */
+  .give-up__flag {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .give-up__word {
+    display: none;
+  }
+
+  .give-up__button,
+  .give-up__ask {
+    font-size: 14px;
+  }
+}

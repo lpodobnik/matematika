@@ -1,9 +1,11 @@
 import '@/ui/shop/shop.css';
+import type { ReactNode } from 'react';
 import { hr } from '@/content/text/hr';
 import type { Economy, UpgradeId } from '@/economy/types';
 import { UPGRADE_IDS, upgradeCost } from '@/economy/upgrades';
 import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
+import { WorkshopWall } from '@/ui/workshop/WorkshopWall';
 
 /**
  * The old mechanic's counter (story 3.5; GDD, Automaton fights: upgrades; narrative design,
@@ -18,7 +20,9 @@ export function ShopScreen() {
       economy={economy}
       onBuy={(upgrade) => dispatch({ type: 'shop/buy', upgrade })}
       onClose={() => dispatch({ type: 'shop/close' })}
-    />
+    >
+      <WorkshopWall />
+    </ShopBoard>
   );
 }
 
@@ -34,10 +38,12 @@ interface Props {
   economy: Pick<Economy, 'parts' | 'upgrades'>;
   onBuy(upgrade: UpgradeId): void;
   onClose(): void;
+  /** Epic 5: the workshop's half of the counter, under the upgrades. */
+  children?: ReactNode;
 }
 
 /** The counter from props only. */
-export function ShopBoard({ economy, onBuy, onClose }: Props) {
+export function ShopBoard({ economy, onBuy, onClose, children }: Props) {
   return (
     <main className="shop" aria-label={hr.shop.title}>
       <header className="shop__head">
@@ -83,6 +89,7 @@ export function ShopBoard({ economy, onBuy, onClose }: Props) {
           );
         })}
       </ul>
+      {children}
       <PartsCounterView shown={economy.parts} visible flight={null} />
     </main>
   );

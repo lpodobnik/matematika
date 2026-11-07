@@ -14,6 +14,8 @@ import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
 import { FightScreen } from '@/ui/fight/FightScreen';
+import { FriendScreen } from '@/ui/friend/FriendScreen';
+import { GiveUpButton } from '@/ui/friend/GiveUpButton';
 import { NamingScreen } from '@/ui/naming/NamingScreen';
 import { Notebook } from '@/ui/notebook/Notebook';
 import { OpeningScreen } from '@/ui/opening/OpeningScreen';
@@ -21,6 +23,7 @@ import { SceneRoot } from '@/ui/scene/SceneRoot';
 import { ShopScreen } from '@/ui/shop/ShopScreen';
 import { StoryScreen } from '@/ui/story/StoryScreen';
 import { TownScreen } from '@/ui/town/TownScreen';
+import { WorkshopScreen } from '@/ui/workshop/WorkshopScreen';
 
 // Development builds only, loaded on demand (architecture, Debug Tools): production builds
 // drop this branch, and the panel's code with it.
@@ -61,6 +64,8 @@ function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
   if (screen === 'story') return <StoryScreen />;
   if (screen === 'fight') return <FightScreen />;
   if (screen === 'shop') return <ShopScreen />;
+  if (screen === 'workshop') return <WorkshopScreen />;
+  if (screen === 'friend') return <FriendScreen />;
   return <RoomScreen />;
 }
 
@@ -86,15 +91,17 @@ export function AppScreen({ screen, loaded = 1 }: { screen: Screen; loaded?: num
  */
 function RoomScreen() {
   const sceneAreaRef = useRef<HTMLDivElement>(null);
+  // Epic 5: a friend's room has no town to go back to and no parts; giving up takes the map's place.
+  const friend = useGame((s) => s.ui.friend !== null);
   return (
     <>
       <main className="scene-area" ref={sceneAreaRef}>
         <SceneRoot resizeTo={sceneAreaRef} />
         <ResetButton />
         <HintButton />
-        <MapButton />
+        {friend ? <GiveUpButton /> : <MapButton />}
         <PinConfirm area={sceneAreaRef} />
-        <PartsCounter area={sceneAreaRef} />
+        {!friend && <PartsCounter area={sceneAreaRef} />}
         <GoalBanner area={sceneAreaRef} />
       </main>
       <Notebook />
