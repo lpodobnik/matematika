@@ -8,9 +8,11 @@ import type { LinkOp } from '@/math/chain';
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
 import type { SavedRoom } from '@/room/resume';
-import type { PinValue, RoomId, Side, ToolId, TrayKind } from '@/room/types';
+import type { PinValue, RoomId, RoomSpec, Side, ToolId, TrayKind } from '@/room/types';
+import type { Stamp } from '@/save/schema';
 import type { QualityAction } from '@/store/quality';
 import type { SaveState, SceneCopies } from '@/store/types';
+import type { Planted, RoomDesign } from '@/workshop/design';
 
 export type Action =
   /** While loading: how much of the assets has loaded, 0–1 (story 2.1). */
@@ -47,6 +49,32 @@ export type Action =
   | { type: 'opening/done' }
   /** The story card's "Dalje" (story 2.5): the room's lines are told; on to what comes next. */
   | { type: 'story/next' }
+  /**
+   * Epic 5: enters a room that isn't authored, from its spec: his built room, a friend's
+   * room or the friend's intro machine (store/workshop-reducer.ts sends it).
+   */
+  | { type: 'room/enter-spec'; spec: RoomSpec }
+  /** Epic 5: from the counter, "Napravi stroj": the workshop, where building stands. */
+  | { type: 'workshop/open' }
+  /** Epic 5: off the workshop, back to the counter. */
+  | { type: 'workshop/close' }
+  /** Epic 5: he tries the machine he set up: he plays it himself in the room screen. */
+  | { type: 'workshop/solve'; design: RoomDesign }
+  /** Epic 5: back from the finished machine to setting it up again. */
+  | { type: 'workshop/redesign' }
+  /** Epic 5: sends the solved machine with its title and planted line; charges its cost. */
+  | { type: 'workshop/send'; title: number; planted: Planted | null }
+  /** Epic 5: a reply link opened at launch stamps a room he sent. */
+  | { type: 'workshop/reply'; id: string; stamp: Stamp }
+  /**
+   * Epic 5: a friend's room link opened (main.tsx): its data, read here, and whether this
+   * device has never played the game, for the intro machine.
+   */
+  | { type: 'friend/start'; data: string; newToGame: boolean }
+  /** Epic 5: the friend's "Dalje" on a card: the intro machine, or the room. */
+  | { type: 'friend/next' }
+  /** Epic 5: the friend gives up: the builder's solution plays, and the reply link shows. */
+  | { type: 'friend/give-up' }
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */
   | { type: 'room/enter'; roomId: RoomId; stage?: number }
   /** A touch anywhere on the machine; the first one ends the stage's arrive. */

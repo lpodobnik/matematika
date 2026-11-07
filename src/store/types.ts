@@ -7,11 +7,16 @@ import type { FightState, PageId } from '@/fight/types';
 import type { HintState } from '@/room/hint';
 import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, IdeaId, RoomId, RoomState, ToolId } from '@/room/types';
-import type { Character, Settings } from '@/save/schema';
+import type { Character, Settings, WorkshopSave } from '@/save/schema';
+
+/** A room he sent, as the wall shows it (`SaveV1.workshop`). */
+export type SentRoom = WorkshopSave['rooms'][number];
+
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import type { FightEnd } from '@/store/fight-end';
 import type { QualityState } from '@/store/quality';
+import type { RoomDesign, RoomPayload, Solution } from '@/workshop/design';
 
 /** A source of uniform numbers in [0, 1). */
 export interface Rng {
@@ -35,7 +40,46 @@ export interface Ctx {
  * illustrated opening a new game starts with (story 5.0); `map` now shows the town (story
  * 5.0), with the district map a tap away.
  */
-export type Screen = 'loading' | 'opening' | 'room' | 'map' | 'naming' | 'story' | 'fight' | 'shop';
+export type Screen =
+  | 'loading'
+  | 'opening'
+  | 'room'
+  | 'map'
+  | 'naming'
+  | 'story'
+  | 'fight'
+  | 'shop'
+  | 'workshop'
+  | 'friend';
+
+/**
+ * Epic 5: where building a room for a friend stands (store/workshop-reducer.ts), in memory
+ * only. `design`: he sets up the machine (`workshop` screen); `solve`: he plays it himself in
+ * the room screen, his lines kept per machine as each locks; `finish`: solved, he plants a
+ * line if he chose to, picks a title and sends it; `sent`: the link is ready; `reply`: a
+ * reply link has just stamped a room on the wall (the counter shows it).
+ */
+export type WorkshopFlow =
+  | { step: 'design'; design: RoomDesign | null }
+  | { step: 'solve'; design: RoomDesign; solution: Solution }
+  | { step: 'finish'; design: RoomDesign; solution: Solution }
+  | { step: 'sent'; id: string }
+  | { step: 'reply'; id: string };
+
+/**
+ * Epic 5: a friend's room opened from a link (`friend` screen, and the room screen while
+ * playing). `welcome`, then the intro machine if new (`intro`, then `ready`), then the room
+ * (`play`), ending `cracked` or `gave-up`; `broken` for a link that doesn't read. Nothing a
+ * friend does is saved.
+ */
+export interface FriendFlow {
+  step: 'welcome' | 'intro' | 'ready' | 'play' | 'cracked' | 'gave-up' | 'broken';
+  /** The room, or null for a broken link. */
+  room: RoomPayload | null;
+  /** The room's id, for the reply link. */
+  id: string;
+  newToGame: boolean;
+}
 
 /**
  * How many copies of the scene the scene area draws side by side: 3 only for the tablet
@@ -76,6 +120,10 @@ export interface UiState {
   fightGuide: GuideStep | null;
   /** The dev panel only: the seed every new fight's dice start from, or null for random. */
   fightSeed: number | null;
+  /** Epic 5: building a room in the workshop, or null. */
+  workshop: WorkshopFlow | null;
+  /** Epic 5: a friend's room from a link, or null in his own game. */
+  friend: FriendFlow | null;
 }
 
 /**
@@ -118,6 +166,8 @@ export interface SaveState {
   economy: Economy;
   /** Muted (audio comes in epic 6), and the frame-time test's quality pick. */
   settings: Settings;
+  /** Epic 5: the rooms he sent, with their stamps (`SaveV1.workshop`). */
+  workshop: WorkshopSave;
 }
 
 /** The game's state: the architecture's four slices, `save`, `room`, `fight` and `ui`. */

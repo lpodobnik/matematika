@@ -41,6 +41,7 @@ import { newSave } from '@/store/persist';
 import { initialQuality, type QualityState, reduceQuality } from '@/store/quality';
 import { withShop } from '@/store/shop-reducer';
 import type { GameState, Reduce, SaveState } from '@/store/types';
+import { withWorkshop } from '@/store/workshop-reducer';
 
 /** The game at launch: loading, until the save is read and the assets are loaded (`boot/start`). */
 export function initialGameState(): GameState {
@@ -59,6 +60,8 @@ export function initialGameState(): GameState {
       fightEnd: null,
       fightGuide: null,
       fightSeed: null,
+      workshop: null,
+      friend: null,
     },
   };
 }
@@ -150,6 +153,8 @@ function roomStep(
   if (action.type === 'room/enter') {
     return enterRoom(findRoom(action.roomId, roomList), action.stage ?? 0);
   }
+  // Epic 5: a built or friend's room, from its spec (store/workshop-reducer.ts).
+  if (action.type === 'room/enter-spec') return enterRoom(action.spec);
   if (action.type === 'boot/start') return startStep(action.room, roomList, now);
   if (action.type === 'dev/new-game') return null;
   if (action.type === 'map/travel') return travelStep(state, action.node, roomList, save, now);
@@ -282,6 +287,7 @@ const notHis: ReadonlySet<Action['type']> = new Set<Action['type']>([
   'map/open',
   'map/travel',
   'room/enter',
+  'room/enter-spec',
   'presentation/done',
   'clock/tick',
   'dev/set-tools',
@@ -307,6 +313,7 @@ const toolSettings: ReadonlySet<Action['type']> = new Set<Action['type']>([
 function hintAction(action: Action, changed: boolean): HintAction {
   if (action.type === 'hint/press') return 'press';
   if (action.type === 'room/enter' || action.type === 'boot/start') return 'ends';
+  if (action.type === 'room/enter-spec') return 'ends';
   if (action.type === 'dev/new-game') return 'ends';
   if (action.type === 'map/open' || action.type === 'map/travel') return 'ends';
   const his =
@@ -460,7 +467,8 @@ function screenAfter(
   if (action.type === 'boot/start' || action.type === 'dev/new-game') {
     return step ? (owed(save) ?? 'room') : off;
   }
-  if (action.type === 'room/enter' || (action.type === 'map/travel' && step)) return 'room';
+  if (action.type === 'room/enter' || action.type === 'room/enter-spec') return 'room';
+  if (action.type === 'map/travel' && step) return 'room';
   const done =
     (action.type === 'character/set' && state.ui.screen === 'naming' && named(save)) ||
     (action.type === 'story/next' && state.ui.screen === 'story') ||
@@ -527,7 +535,9 @@ function withOnMap(save: SaveState, screen: GameState['ui']['screen']): SaveStat
     screen === 'story' ||
     screen === 'naming' ||
     screen === 'fight' ||
-    screen === 'shop'
+    screen === 'shop' ||
+    screen === 'workshop' ||
+    screen === 'friend'
   ) {
     return save;
   }
@@ -573,7 +583,7 @@ function leavingRoom(state: GameState, action: Action): RoomState | null {
  * fights over it (store/fight-reducer.ts).
  */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
-  return withShop(withFights(createRoomReducer(roomList), roomList), roomList);
+  return withWorkshop(withShop(withFights(createRoomReducer(roomList), roomList), roomList));
 }
 
 /** The opening's end (story 5.0): it is seen, and never shows again. */
@@ -626,6 +636,7 @@ function createRoomReducer(roomList: readonly RoomSpec[]): Reduce {
       draft.ui.screen = screen;
       if (
         action.type === 'room/enter' ||
+        action.type === 'room/enter-spec' ||
         ((action.type === 'character/set' || action.type === 'story/next') && screen === 'room') ||
         (action.type === 'map/travel' && step)
       ) {
