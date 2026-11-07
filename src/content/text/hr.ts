@@ -359,7 +359,7 @@ export const hr = {
     /** For screen readers: the last link, to tap. */
     tap: (link: string) => `Karika ${link}: dodirni je i poništi`,
     /** For screen readers: a link already undone, dark. */
-    undone: (link: string) => `${link}, poništeno`,
+    undone: ', poništeno',
     /** The picker's name, for screen readers. */
     undo: (link: string) => `Što poništava ${link}?`,
     /** Before he picks an operation. */

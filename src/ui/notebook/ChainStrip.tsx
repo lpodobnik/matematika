@@ -138,12 +138,9 @@ export function ChainStrip({
                   {linkText(link)}
                 </button>
               ) : (
-                <span
-                  className="chain__link"
-                  data-dark={link.dark || undefined}
-                  aria-label={link.dark ? hr.chain.undone(linkText(link)) : undefined}
-                >
+                <span className="chain__link" data-dark={link.dark || undefined}>
                   {linkText(link)}
+                  {link.dark && <span className="chain__said">{hr.chain.undone}</span>}
                 </span>
               )}
             </li>

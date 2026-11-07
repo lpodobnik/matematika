@@ -532,6 +532,16 @@
   white-space: nowrap;
 }
 
+/* Said to a screen reader only: the link is undone. */
+.chain__said {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .chain__link[data-dark="true"] {
   background: var(--ink);
   color: var(--paper);
@@ -640,22 +650,6 @@
     padding: 2px;
   }
 
-  /* While he picks, the picker takes the lines' place: the phone has no room for both. */
-  .notebook[data-picking="true"] {
-    gap: 4px;
-    padding: 6px;
-  }
-
-  .notebook[data-picking="true"] .notebook__lines,
-  .notebook[data-picking="true"] .help-note,
-  .notebook[data-picking="true"] .chain__links {
-    display: none;
-  }
-
-  .notebook[data-picking="true"] .chain-pick {
-    margin-top: 0;
-  }
-
   .chain__note {
     margin-top: 2px;
     padding: 2px 6px;
@@ -689,5 +683,21 @@
 
   .chain-pick__op[data-op="from"] {
     font-size: 13px;
+  }
+
+  /* While he picks, the picker takes the lines' place: the phone has no room for both. */
+  .notebook[data-picking="true"] {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .notebook[data-picking="true"] .notebook__lines,
+  .notebook[data-picking="true"] .help-note,
+  .notebook[data-picking="true"] .chain__links {
+    display: none;
+  }
+
+  .notebook[data-picking="true"] .chain-pick {
+    margin-top: 0;
   }
 }
