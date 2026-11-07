@@ -30,6 +30,9 @@ function cspInProduction(): Plugin {
 }
 
 export default defineConfig({
+  // GitHub Pages serves the game under /matematika/ (architecture, ADR-10); the deploy job
+  // sets VITE_BASE. Locally and in tests it is the root.
+  base: process.env.VITE_BASE ?? '/',
   plugins: [react(), cspInProduction()],
   resolve: {
     alias: [{ find: /^@\//, replacement: srcDir }],
