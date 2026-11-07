@@ -15,6 +15,7 @@ import type { LineSegment } from '@/math/format';
 import type { LineToken, Token } from '@/math/tokens';
 import { type ChainView, chainView } from '@/room/chain';
 import { type DialView, dialView } from '@/room/dial';
+import { type DrumView, drumView } from '@/room/drum';
 import { handoverView } from '@/room/handover';
 import { type LinkedView, linkedView } from '@/room/linked';
 import { type LogbookView, logbookView } from '@/room/logbook';
@@ -47,6 +48,7 @@ import {
   pickedLink,
   pickFor,
 } from '@/ui/notebook/ChainStrip';
+import { DrumPanel } from '@/ui/notebook/DrumPanel';
 import {
   HandoverNote,
   isNotebookHandover,
@@ -106,7 +108,8 @@ export function Notebook() {
       ? pinOffered(s.room) &&
         s.room.stage.planted === null &&
         !s.room.spec.stages[s.room.stageIndex]?.story &&
-        s.room.spec.stages[s.room.stageIndex]?.pin?.kind !== 'range'
+        s.room.spec.stages[s.room.stageIndex]?.pin?.kind !== 'range' &&
+        s.room.spec.stages[s.room.stageIndex]?.pin?.kind !== 'next-dot'
       : false,
   );
   const hinting = useGame((s) => hintOf(s) !== null);
@@ -129,12 +132,16 @@ export function Notebook() {
   // Story 4.7: a linked machine (room 12).
   const linkedKey = useGame((s) => JSON.stringify(linkedView(s.room)));
   const linked = useMemo(() => JSON.parse(linkedKey) as LinkedView | null, [linkedKey]);
+  // Story 4.8: the recording drum (room 13).
+  const drumKey = useGame((s) => JSON.stringify(drumView(s.room)));
+  const drum = useMemo(() => JSON.parse(drumKey) as DrumView | null, [drumKey]);
   const onScene = hinting ? hintOnScene : step !== null && !isNotebookHandover(step);
   const shownStep = hinting ? `hint-${presses}` : step;
   const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${shownStep}` : null;
   const [broughtBack, setBroughtBack] = useState<string | null>(null);
   // Story 4.5 review: a story pin waits in the notebook itself, so it is always shown then.
-  const aside = shownAside(choice, waiting, broughtBack) && !story?.asks && !range?.asks;
+  const aside =
+    shownAside(choice, waiting, broughtBack) && !story?.asks && !range?.asks && !drum?.pin?.asks;
   const dispatch = useGame((s) => s.dispatch);
   // Story 4.1: the gear chain, and his pick for its last link while the picker is open.
   // Its links are a fresh array on every read, so the selector returns them as text.
@@ -223,6 +230,7 @@ export function Notebook() {
       fineDial={fineDial}
       onNudge={(by) => dispatch({ type: 'dial/nudge', by })}
       linked={linked}
+      drum={drum}
       chain={chain}
       pick={picking ? pick : null}
       chainPulse={chainHint}
@@ -249,6 +257,8 @@ export interface NotebookPageProps {
   fineDial?: DialView | null;
   /** Story 4.7: a linked machine, or null. */
   linked?: LinkedView | null;
+  /** Story 4.8: the recording drum, or null. */
+  drum?: DrumView | null;
   onNudge?(by: 1 | -1): void;
   /** Story 4.1: the gear chain, or null in a stage without it. */
   chain?: ChainView | null;
@@ -327,6 +337,7 @@ export function NotebookPage({
   fineDial = null,
   onNudge = () => {},
   linked = null,
+  drum = null,
   chain = null,
   pick = null,
   chainPulse = false,
@@ -366,7 +377,9 @@ export function NotebookPage({
       ? hr.pin.questions['story-choice']
       : range?.asks
         ? hr.pin.questions.range
-        : null;
+        : drum?.pin?.asks
+          ? hr.pin.questions['next-dot']
+          : null;
   const listRef = useRef<HTMLOListElement>(null);
   // A tag hangs under the lines: the refusal's, else the hint's, else the handover's. Only a
   // handover's or a hint's makes the line to write pulse; a refusal's doesn't.
@@ -415,11 +428,12 @@ export function NotebookPage({
         className="notebook"
         data-handover={tagged}
         data-picking={pick !== null || undefined}
-        data-choosing={story?.asks || range?.asks || undefined}
+        data-choosing={story?.asks || range?.asks || drum?.pin?.asks || undefined}
       >
         {story && <StoryPanel view={story} onFlag={onFlagStory} onConfirm={onConfirmPin} />}
         {range && <RangePanel view={range} onFlag={onFlagRange} onConfirm={onConfirmPin} />}
         {linked && <LinkedPanel view={linked} />}
+        {drum && <DrumPanel view={drum} onFlag={onFlagStory} onConfirm={onConfirmPin} />}
         {fineDial && <FineDial dial={fineDial} onNudge={onNudge} />}
         {chain && (
           <ChainStrip

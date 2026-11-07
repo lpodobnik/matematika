@@ -904,3 +904,114 @@
     display: none;
   }
 }
+
+/* Story 4.8: the recording drum: dots, the dashed level line, and the line once revealed. */
+.drum {
+  flex: 0 0 auto;
+  padding: 4px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.drum__plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 140px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--sheet);
+}
+
+.drum__axis {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+
+.drum__level {
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+.drum__line {
+  stroke: var(--lamp);
+  stroke-width: 3;
+}
+
+.drum__dot {
+  fill: var(--ink);
+}
+
+.drum__guess {
+  fill: none;
+  stroke: var(--lamp);
+  stroke-width: 3;
+}
+
+/* Once the machine has tested it, a wrong guess stays as a dashed ring beside the real dot. */
+.drum__guess[data-wrong="true"] {
+  stroke: var(--jam);
+  stroke-dasharray: 3 3;
+}
+
+/* The height that was right, marked once the pin is tested (not by colour alone). */
+.drum__pin .story-panel__choice[data-right="true"] {
+  border-width: 3px;
+  text-decoration: underline;
+}
+
+.drum__options {
+  flex-direction: row;
+  margin-top: 6px;
+}
+
+.drum__options .story-panel__option {
+  flex: 1 1 0;
+}
+
+.drum__pin .story-panel__choice {
+  justify-content: center;
+  font-size: 22px;
+}
+
+@media (max-height: 499.98px) {
+  .drum__plot {
+    max-height: 64px;
+  }
+
+  .notebook:has(.drum) {
+    gap: 4px;
+    padding: 4px 8px;
+  }
+
+  /* The chain shows the equation: line 0 makes room for the drum and the pad. */
+  .notebook:has(.drum) .line--given {
+    display: none;
+  }
+
+  .notebook:has(.drum) .notebook__lines {
+    min-height: 1.4em;
+  }
+
+  .notebook:has(.drum) .chain {
+    padding: 0;
+  }
+
+  .notebook:has(.drum) .drum {
+    padding: 2px;
+  }
+
+  .notebook:has(.drum) .drum__plot {
+    max-height: 52px;
+  }
+
+  /* Once the pin is tested, its heights make room for the pad. */
+  .drum__pin:not([data-asks]) {
+    display: none;
+  }
+
+  .notebook[data-choosing="true"] .chain {
+    display: none;
+  }
+}

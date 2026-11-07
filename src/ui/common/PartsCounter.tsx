@@ -97,7 +97,8 @@ export function PartsCounter({ area }: Props) {
     notches !== null &&
     pin.kind !== 'line' &&
     pin.kind !== 'story' &&
-    pin.kind !== 'range'
+    pin.kind !== 'range' &&
+    pin.kind !== 'dot'
       ? pinHeadSpot(size, copies, notches, pin)
       : null;
   return (

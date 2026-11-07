@@ -63,6 +63,7 @@ export const ideaIds = [
   'story',
   'simplify',
   'linked',
+  'linear',
 ] as const;
 export type IdeaId = (typeof ideaIds)[number];
 export type ToolId = (typeof toolIds)[number];
@@ -370,6 +371,11 @@ export interface StageState {
   shownLine: number | null;
   /** He has tapped a line onto the scale in this stage (the tap's tag goes). */
   linesTapped: boolean;
+  /**
+   * Story 4.8: every x the slider has stood at in the stage, his notches and the machine's
+   * pin test, for the recording drum's dots (room/drum.ts). Kept by reset; never saved.
+   */
+  tried: number[];
 }
 
 /** The logbook's wrong line in a find-the-mistake stage (room/logbook.ts). */

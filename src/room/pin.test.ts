@@ -126,15 +126,13 @@ describe('the pin track (Pattern 2, Pin)', () => {
     expect(() => slotValue(track, 15)).toThrow(/no pin place/);
   });
 
-  it('places level-x, effect, wrong-line and story pins so far; the rest arrive with their rooms', () => {
+  it('places every kind of pin the rooms use (story 4.8: the last, the drum’s)', () => {
     expect(pinSupported({ kind: 'level-x' })).toBe(true);
     expect(pinSupported({ kind: 'effect', options: ['tilt-right'] })).toBe(true);
     expect(pinSupported({ kind: 'wrong-line' })).toBe(true);
     expect(pinSupported({ kind: 'story-choice' })).toBe(true);
-    for (const kind of ['next-dot'] as const) {
-      expect(pinSupported({ kind })).toBe(false);
-      expect(pinTrack({ ...levelStage, pin: { kind } })).toBeNull();
-    }
+    expect(pinSupported({ kind: 'range', bounds: [100] })).toBe(true);
+    expect(pinSupported({ kind: 'next-dot' })).toBe(true);
     expect(pinTrack({ ...levelStage, pin: undefined })).toBeNull();
   });
 });

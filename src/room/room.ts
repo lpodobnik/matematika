@@ -128,6 +128,7 @@ export function arriveAtStage(stage: StageSpec): StageState {
     planted: logbook.planted,
     shownLine: null,
     linesTapped: false,
+    tried: [dialX],
     draft: [],
     templates: openingTemplates(stage, 0),
     jam: null,

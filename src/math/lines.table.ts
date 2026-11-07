@@ -38,6 +38,8 @@ const r10a = '60 + 3x = 90';
 const r10b = '5 + 2x = 19';
 const r12a = '2x + 3 = 11';
 const r12b = '3x + 4 = 19';
+const r13a = '3x + 5 = 20';
+const r13b = '50 − 4x = 34';
 /** U+202F, the thousands separator the notebook writes. */
 const nnbsp = ' ';
 const r11 = `5${nnbsp}905 − 27x = 316`;
@@ -577,6 +579,84 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
       line: '3x = 16',
       verdict: 'wrong',
       note: 'the first machine’s 3 carried, not its answer',
+    },
+  ],
+  'r13 clock tower (3x + 5 = 20, then 50 − 4x = 34)': [
+    // Story 4.8: the line reveal's two machines, a rising line and a falling one, solved
+    // every way; and the wrong lines.
+    { stage: r13a, line: 'x = 5', verdict: 'answer' },
+    { stage: r13a, before: ['x = 5'], line: '3 · 5 + 5 = 20', verdict: 'check' },
+    { stage: r13a, line: '3x = 15', verdict: 'valid', progress: true, move: 'add-both' },
+    { stage: r13a, before: ['3x = 15'], line: 'x = 5', verdict: 'answer' },
+    { stage: r13a, before: ['3x = 15', 'x = 5'], line: '3 · 5 + 5 = 20', verdict: 'check' },
+    { stage: r13a, line: '3x = 20 − 5', verdict: 'valid', progress: true, move: 'move-across' },
+    { stage: r13a, before: ['3x = 20 − 5'], line: '3x = 15', verdict: 'valid', progress: true },
+    {
+      stage: r13a,
+      before: ['3x = 20 − 5', '3x = 15'],
+      line: 'x = 15 : 3',
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r13a,
+      before: ['3x = 20 − 5', '3x = 15', 'x = 15 : 3'],
+      line: 'x = 5',
+      verdict: 'answer',
+    },
+    {
+      stage: r13a,
+      before: ['3x = 20 − 5', '3x = 15', 'x = 15 : 3', 'x = 5'],
+      line: '3 · 5 + 5 = 20',
+      verdict: 'check',
+    },
+    { stage: r13a, line: '3x = 25', verdict: 'wrong', note: '20 + 5' },
+    {
+      stage: r13a,
+      before: ['3x = 15'],
+      line: 'x = 12',
+      verdict: 'wrong',
+      note: '3x read as 3 + x',
+    },
+    { stage: r13b, line: 'x = 4', verdict: 'answer' },
+    { stage: r13b, before: ['x = 4'], line: '50 − 4 · 4 = 34', verdict: 'check' },
+    { stage: r13b, line: '4x = 50 − 34', verdict: 'valid', progress: true },
+    { stage: r13b, before: ['4x = 50 − 34'], line: '4x = 16', verdict: 'valid', progress: true },
+    {
+      stage: r13b,
+      before: ['4x = 50 − 34', '4x = 16'],
+      line: 'x = 16 : 4',
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r13b,
+      before: ['4x = 50 − 34', '4x = 16', 'x = 16 : 4'],
+      line: 'x = 4',
+      verdict: 'answer',
+    },
+    {
+      stage: r13b,
+      before: ['4x = 50 − 34', '4x = 16', 'x = 16 : 4', 'x = 4'],
+      line: '50 − 4 · 4 = 34',
+      verdict: 'check',
+    },
+    { stage: r13b, line: '50 = 4x + 34', verdict: 'valid', progress: false, move: 'add-both' },
+    { stage: r13b, before: ['50 = 4x + 34'], line: '16 = 4x', verdict: 'valid', progress: true },
+    { stage: r13b, before: ['50 = 4x + 34', '16 = 4x'], line: '4 = x', verdict: 'answer' },
+    {
+      stage: r13b,
+      before: ['50 = 4x + 34', '16 = 4x', '4 = x'],
+      line: '50 − 4 · 4 = 34',
+      verdict: 'check',
+    },
+    { stage: r13b, line: '4x = 84', verdict: 'wrong', note: 'the chain’s + 50' },
+    {
+      stage: r13b,
+      before: ['4x = 16'],
+      line: 'x = 12',
+      verdict: 'wrong',
+      note: '4x read as 4 + x',
     },
   ],
   // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,

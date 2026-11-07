@@ -41,6 +41,14 @@ function fewParts(n: number): boolean {
   return partsWord(n) === 'dijela';
 }
 
+/** `točkica` counted, as Croatian counts it: 1 točkica, 2–4 točkice, 5 točkica, 21 točkica. */
+function dotsWord(n: number): string {
+  const [last, lastTwo] = [n % 10, n % 100];
+  if (last === 1 && lastTwo !== 11) return 'točkica';
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return 'točkice';
+  return 'točkica';
+}
+
 export const hr = {
   app: {
     turnToLandscape: 'Okreni uređaj vodoravno.',
@@ -166,6 +174,13 @@ export const hr = {
         { who: 'faust', text: 'Ovo je Kristijanov bubanj. Pamti svaki x koji isprobaš.' },
         { who: 'nikola', text: 'Na njemu su točkice. Kao da nešto crta.' },
       ],
+      r13: [
+        { who: 'nikola', text: 'Sve točkice leže na jednoj liniji. I cijela četvrt opet radi!' },
+        {
+          who: 'faust',
+          text: 'Zadnji trag na bubnju vodi ravno do ljevaonice. A ona je zatvorena.',
+        },
+      ],
       r09: [
         { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO KORACIMA. OTVARANJE NIJE PREDVIĐENO.' },
         { who: 'nikola', text: 'Pečat je pao. Ali tko lijepi te papire po cijelom gradu?' },
@@ -229,6 +244,10 @@ export const hr = {
       linked: {
         term: 'Povezane jednadžbe',
         text: 'Rješenje jedne jednadžbe može biti broj u drugoj. Zato prvu riješi točno.',
+      },
+      linear: {
+        term: 'Linearna jednadžba',
+        text: 'Točkice leže na pravcu. „Linearna” dolazi od „linija”: zato se ove jednadžbe zovu linearne.',
       },
       mistake: {
         term: 'Traženje pogreške',
@@ -358,6 +377,8 @@ export const hr = {
       'story-choice': 'Koja priča odgovara vagi? Stavi zastavicu na nju.',
       /** Story 4.6: room 11's range pin, at the notebook: about how big x is. */
       range: 'Koliki je x otprilike? Stavi zastavicu.',
+      /** Story 4.8: room 13's drum pin, at the notebook: where the next dot lands. */
+      'next-dot': 'Gdje će pasti sljedeća točkica? Stavi zastavicu.',
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
       /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
       change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
@@ -416,6 +437,12 @@ export const hr = {
     /** For screen readers, on a story's flag. */
     flag: (n: number) => `Zastavica na priču ${n}`,
     confirm: 'Potvrdi',
+  },
+  /** Story 4.8: the recording drum (room 13), at the top of the notebook. */
+  drum: {
+    label: 'Bubanj',
+    /** For screen readers: what the drum shows. */
+    read: (n: number) => `Bubanj: ${n} ${dotsWord(n)} i crta ravnoteže`,
   },
   /** Story 4.7: linked machines (room 12), at the top of the notebook. */
   linked: {

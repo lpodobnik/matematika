@@ -12,6 +12,7 @@ import { payPrediction, predictionKey } from '@/economy/predictions';
 import { assert } from '@/lib/assert';
 import { runLink } from '@/room/chain';
 import { nudgeDial, setDial } from '@/room/dial';
+import { recordDial } from '@/room/drum';
 import { meetControls } from '@/room/first-use';
 import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } from '@/room/handover';
 import { withHelp } from '@/room/help';
@@ -297,7 +298,7 @@ function unshown(room: RoomState): RoomState {
 function withToolMemory(step: RoomStep | null, save: SaveState): RoomStep | null {
   if (!step) return step;
   const { firstUse, tools } = save.progress;
-  const room = rememberSplitter(rememberTray(step.room, firstUse), tools);
+  const room = recordDial(rememberSplitter(rememberTray(step.room, firstUse), tools));
   return room === step.room ? step : { ...step, room };
 }
 

@@ -11,6 +11,7 @@ import { r09 } from './r09-steam-lift';
 import { r10 } from './r10-market-scales';
 import { r11 } from './r11-great-wheel';
 import { r12 } from './r12-junction';
+import { r13 } from './r13-clock-tower';
 
 /**
  * Every authored room, in play order: when a room's restart ends, the next one here loads.
@@ -29,4 +30,5 @@ export const rooms: readonly RoomSpec[] = [
   r10,
   r11,
   r12,
+  r13,
 ];

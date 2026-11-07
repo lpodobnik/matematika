@@ -101,7 +101,11 @@ function spotIn(state: Pick<GameState, 'room' | 'save' | 'ui'>, view: HintView):
   if (state.room.stage.planted) return { place: 'notebook', text: hr.pin.questions['wrong-line'] };
   // Story 4.5: a story pin's question hangs at the notebook too, where the stories are.
   const stage = state.room.spec.stages[state.room.stageIndex];
-  if (stage?.pin?.kind === 'story-choice' || stage?.pin?.kind === 'range') {
+  if (
+    stage?.pin?.kind === 'story-choice' ||
+    stage?.pin?.kind === 'range' ||
+    stage?.pin?.kind === 'next-dot'
+  ) {
     return { place: 'notebook', text: hr.pin.questions[stage.pin.kind] };
   }
   return spot;

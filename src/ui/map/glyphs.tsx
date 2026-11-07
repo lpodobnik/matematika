@@ -9,7 +9,7 @@ import type { LockKind, NodeId, NodeKind } from '@/city/types';
  * still until then. Rooms whose stories come later, the lairs, the workshop and the gate
  * get a plain sign of their kind. Story 2.8 adds the bridge, 2.9 the weighing yard, 2.10 the old
  * logbook, 4.3 the tram, 4.4 the steam lift, 4.5 the market scales, 4.6 the great wheel,
- * 4.7 the junction.
+ * 4.7 the junction, 4.8 the clock tower.
  */
 export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; state: NodeState }) {
   const restored = state === 'restored';
@@ -38,6 +38,8 @@ export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; sta
       return <GreatWheel restored={restored} />;
     case 'r12':
       return <Junction restored={restored} />;
+    case 'r13':
+      return <ClockTower restored={restored} />;
     default:
       return <KindSign kind={kind} />;
   }
@@ -292,6 +294,18 @@ function Junction({ restored }: { restored: boolean }) {
       <circle cx="18" cy="-12" r="13" className={lit} />
       <path d="M-16 -18 V-12 M-16 24 V30 M-40 6 H-34 M2 6 H8 M18 -31 V-25 M18 1 V7 M37 -12 H31" />
       <path d="M-34 38 H34" />
+    </g>
+  );
+}
+
+/** Room 13: the clock tower; restored, its face is lit and its hands point up. */
+function ClockTower({ restored }: { restored: boolean }) {
+  return (
+    <g>
+      <path d="M-18 40 V-14 L0 -38 L18 -14 V40 Z" />
+      <circle cx="0" cy="0" r="12" className={restored ? 'glyph__lit' : undefined} />
+      <path d={restored ? 'M0 0 V-9 M0 0 V-7' : 'M0 0 L7 4 M0 0 L-3 -8'} />
+      <path d="M-26 40 H26" />
     </g>
   );
 }

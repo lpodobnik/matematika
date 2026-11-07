@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { tuning } from '@/config/tuning';
+import { rooms } from '@/content/rooms';
 import { r01 } from '@/content/rooms/r01-door-lift';
 import { r04 } from '@/content/rooms/r04-water-wheel';
 import { createEconomy } from '@/economy/parts';
@@ -116,8 +117,10 @@ describe('the root reducer', () => {
   });
 
   it('refuses a room that is not in content', () => {
+    // Every authored room is in content since story 4.8; the reducer is given fewer.
+    const fewer = createReducer(rooms.slice(0, 12));
     expect(() =>
-      reduce(initialGameState(), { type: 'room/enter', roomId: 'r13' }, fixedCtx),
+      fewer(initialGameState(), { type: 'room/enter', roomId: 'r13' }, fixedCtx),
     ).toThrow(/no room r13/);
   });
 });

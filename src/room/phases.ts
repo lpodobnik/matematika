@@ -213,6 +213,8 @@ export function resetStage(room: RoomState): RoomStep | null {
     splitter: stage.splitter,
     balance: stage.balance,
     linesTapped: stage.linesTapped,
+    // The drum keeps its dots (story 4.8): it records, it isn't a move.
+    tried: [...new Set([...stage.tried, arrived.dialX])],
   };
   // Room 7 (story 2.10): with the mistake pin tested, the mistake stays found, for him to
   // rewrite again.

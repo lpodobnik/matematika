@@ -29,7 +29,8 @@ export function PinConfirm({ area }: Props) {
         view.slot !== null &&
         view.kind !== 'line' &&
         view.kind !== 'story' &&
-        view.kind !== 'range'
+        view.kind !== 'range' &&
+        view.kind !== 'dot'
         ? { kind: view.kind, slots: view.slots, slot: view.slot, option: view.option }
         : null;
     }),

@@ -23,6 +23,7 @@ import * as q from '@/math/rational';
 import { canonicalSolution } from '@/math/steps';
 import { fillBlanks, tokenize } from '@/math/tokens';
 import { dialValue, isOnDial, notchCount } from '@/room/dial';
+import { nextDotOptions, nextDotX, rightDot } from '@/room/drum';
 import { blanksOnceAlone, lastLines, openingTemplates } from '@/room/fading';
 import { answerAllowed } from '@/room/notebook';
 import { panPieces, sidePieces } from '@/room/pieces';
@@ -269,6 +270,24 @@ const gddRooms: readonly {
     pins: [{ kind: 'level-x' }, { kind: 'level-x' }],
     ways: ['try', 'balance', 'undo'],
     earns: 'drum',
+  },
+  {
+    id: 'r13',
+    machine: 'clock-tower',
+    xIs: 'Turns of the winder',
+    equations: ['3x + 5 = 20', '50 − 4x = 34'],
+    answers: [5, 4],
+    types: ['predict', 'predict'],
+    dials: [
+      { min: 0, max: 10, step: 1 },
+      { min: 0, max: 10, step: 1 },
+    ],
+    // Story 4.8: three dots on the drum, then the next one pinned (the GDD: "the whole dial,
+    // with the drum" once it is pinned).
+    pokeNotches: [3, 3],
+    pins: [{ kind: 'next-dot' }, { kind: 'next-dot' }],
+    ways: ['try', 'balance', 'undo'],
+    earns: null,
   },
 ];
 
@@ -560,6 +579,24 @@ describe('rooms', () => {
         expect(stage.fed.template.split('☐'), room.id).toHaveLength(2);
       });
     }
+  });
+
+  // Story 4.8 review: a next-dot pin needs the drum, lands on the dial short of the answer,
+  // offers distinct heights, and its right one isn't always in the same place.
+  it('gives every next-dot pin a drum, a place on the dial and heights to choose', () => {
+    const places = new Set<number>();
+    for (const room of rooms) {
+      for (const stage of room.stages) {
+        if (stage.pin?.kind !== 'next-dot') continue;
+        expect(stage.drum, room.id).toBe(true);
+        const x = nextDotX(stage);
+        expect(stage.dial !== 'locked' && isOnDial(stage.dial, x), room.id).toBe(true);
+        expect(x, room.id).not.toBe(stageSolution(stageEquation(stage)));
+        expect(new Set(nextDotOptions(stage)).size, room.id).toBe(3);
+        places.add(rightDot(stage));
+      }
+    }
+    expect(places.size).toBeGreaterThan(1);
   });
 
   // Story 4.6 review: a coarse dial ends on a notch, so the knob never stands past the track.
