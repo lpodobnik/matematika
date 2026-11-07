@@ -179,6 +179,12 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
       }
       if (job.kind === 'place') {
         const node = nodes.get(job.place.node);
+        // A machine he has fixed runs on; he doesn't go back in (the district map still can).
+        if (node?.state === 'restored' && node.kind === 'room') {
+          const text = hr.town.places.running(hr.map.nodes[job.place.node]);
+          setBubble({ who: 'self', at: job.place.marker, lines: [text], line: 0 });
+          return;
+        }
         if (node && (node.state === 'open' || node.state === 'restored')) {
           onTravel(job.place.node);
           return;

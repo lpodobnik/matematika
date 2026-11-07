@@ -129,3 +129,35 @@ test('a new game: the opening, the naming, the town, room 1 and back', async ({ 
   await page.getByRole('button', { name: 'Zatvori' }).click();
   await expect(page.locator('.map__board')).toHaveCount(0);
 });
+
+test('a fixed machine runs on: tapping it shows a bubble, not the room again', async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        character: { name: 'Ivo', look: 'look-5' },
+        progress: {
+          ...s.save.progress,
+          introSeen: true,
+          roomsDone: ['r01', 'r02'],
+          told: ['r01', 'r02'],
+          onMap: true,
+        },
+      },
+      room: null,
+    });
+  });
+  await expect(page.locator('.town__board[data-area="square"]')).toBeVisible();
+  await page.locator('.town__place[data-node="r02"]').click();
+  await expect(page.locator('.town__bubble')).toContainText('radi', { timeout: 8000 });
+  expect((await state(page)).ui.screen).toBe('map');
+  expect((await state(page)).room).toBeNull();
+});

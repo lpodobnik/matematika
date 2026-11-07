@@ -418,6 +418,8 @@ export const hr = {
     places: {
       /** A machine he can play: its name is enough; this is what a locked one says. */
       locked: 'Ovaj stroj čeka. Prvo neki drugi.',
+      /** A machine he has fixed: it runs, and there is nothing left to do here. */
+      running: (name: string) => `${name}: radi. Ovdje je sve gotovo.`,
       workshop: 'Kristijanova radionica. Zaključana, a ključ je kod nekog drugog.',
       automaton: 'Automat skida dijelove sa zida. Bolje ga zasad zaobići.',
       /** The automaton he beat, until it is back (ADR-13). */
