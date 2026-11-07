@@ -1,4 +1,4 @@
-images generated: 38/70
+images generated: 44/70
 
 # Art credits
 
@@ -687,4 +687,106 @@ nothing. Each names its source and the exact command.
 
   ```text
   A small worn leather notebook with a brass clasp lies alone on old wooden floorboards, next to a stub of pencil, among scattered loose pages. A child's hand reaches in from the edge of the picture to pick it up. Close view from above at a slight angle. The notebook in the centre, large. Still and quiet. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 39. `tests/town-canal.t39.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7301
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 70, 288 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice, second area: the lower town canal with room 3's sluice gate (story 5.1).
+- Review: Used: src/ui/town/art/canal.webp, the canal street behind the gate (story 5.1). Lamps drawn lit, which fits: room 2 lights them before the canal opens.
+- Prompt:
+
+  ```text
+  The lower town of a gear-and-steam city, as the second area of an adventure game, just inside the old town wall. A stone-walled canal runs diagonally across the middle of the picture. A heavy wooden sluice gate in an iron frame closes the canal, with a toothed iron rack and a large brass handwheel on top; behind the gate the water stands high and still, in front of it the channel is almost dry with wet stones. A wide cobbled quay runs along the near side of the canal, with an iron railing, a stone stair down to the water and two cast-iron oil street lamps with brass lanterns, unlit. In the bottom-left corner the inner side of the town wall with an open arched gateway, the way back to the square. On the far side of the canal, plastered houses with green shutters and terracotta roofs; at the top-right a narrow cobbled lane leads away uphill towards a big wooden water wheel on a mill house. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The scene fills the whole picture edge to edge. The cobbled quay is large open walkable space across the lower half, with the canal and the buildings beyond it. Everything is at one scale: a house is about a sixth of the picture's width. Everything is still: no people, no animals, no vehicles, no smoke, no steam, no light from the lamps, no flowing water. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 40. `tests/look-2.t40.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5000
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 117 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Look redrawn for a Croatian town (Luka, 2026-11-07): same outfit, new skin and hair; the template of t14.
+- Review: Used: look 2 (src/ui/naming/looks). Fair, freckled, light-brown curls; same outfit as t15.
+- Prompt:
+
+  ```text
+  A game character: a young apprentice inventor, an eleven-year-old child, standing in a relaxed pose and holding a small worn notebook against the chest with both hands. Fair skin with a few freckles, short light-brown curly hair, round wire-rimmed glasses, blue-grey work overalls with rolled cuffs and a patched knee, a leather tool belt with a few small tools, sturdy boots. A simple picture-book face with small dark dot eyes, no eyelashes, a small nose and a calm, curious half-smile. Slightly stylised proportions of a real eleven-year-old, the head about one sixth of the height; not chibi. Full-body three-quarter view at the child’s eye level, with little perspective. The figure is centred and fills about nine tenths of the picture’s height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 41. `tests/look-4.t41.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5000
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 192 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Look redrawn for a Croatian town (Luka, 2026-11-07): same outfit, new skin and hair; the template of t14.
+- Review: Used: look 4. Fair, blond, the aviator cap and satchel of t17. The paper ground is grainier; the cutout clears it.
+- Prompt:
+
+  ```text
+  A game character: a young apprentice inventor, an eleven-year-old child, standing in a relaxed pose and holding a small worn notebook against the chest with both hands. Fair skin, short straight blond hair under a leather aviator cap with ear flaps and brass goggles, a chunky grey knitted jumper with patched elbows, a canvas satchel across the body, dark trousers and boots. A simple picture-book face with small dark dot eyes, no eyelashes, a small nose and a calm, curious half-smile. Slightly stylised proportions of a real eleven-year-old, the head about one sixth of the height; not chibi. Full-body three-quarter view at the child’s eye level, with little perspective. The figure is centred and fills about nine tenths of the picture’s height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 42. `tests/look-5.t42.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5000
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 123 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Look redrawn for a Croatian town (Luka, 2026-11-07): same outfit, new skin and hair; the template of t14.
+- Review: Rejected: kept black hair; redrawn as t44.
+- Prompt:
+
+  ```text
+  A game character: a young apprentice inventor, an eleven-year-old child, standing in a relaxed pose and holding a small worn notebook against the chest with both hands. Fair skin, straight dark-blonde hair in a short bowl cut with a blunt fringe, a high-collared slate-blue work smock with copper buttons, fingerless gloves, a canvas satchel, grey trousers and boots. A simple picture-book face with small dark dot eyes, no eyelashes, a small nose and a calm, curious half-smile. Slightly stylised proportions of a real eleven-year-old, the head about one sixth of the height; not chibi. Full-body three-quarter view at the child’s eye level, with little perspective. The figure is centred and fills about nine tenths of the picture’s height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 43. `tests/look-6.t43.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5000
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 170 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Look redrawn for a Croatian town (Luka, 2026-11-07): same outfit, new skin and hair; the template of t14.
+- Review: Used: look 6. Light olive skin, dark-brown hair; the outfit of t19.
+- Prompt:
+
+  ```text
+  A game character: a young apprentice inventor, an eleven-year-old child, standing in a relaxed pose and holding a small worn notebook against the chest with both hands. Light olive skin, short dark-brown hair, an oversized rust-coloured work jacket with brass buttons and rolled sleeves, a red neckerchief, a small wrench in the jacket pocket, patched trousers and boots. A simple picture-book face with small dark dot eyes, no eyelashes, a small nose and a calm, curious half-smile. Slightly stylised proportions of a real eleven-year-old, the head about one sixth of the height; not chibi. Full-body three-quarter view at the child’s eye level, with little perspective. The figure is centred and fills about nine tenths of the picture’s height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 44. `tests/look-5.t44.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5001
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 173 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Look redrawn for a Croatian town (Luka, 2026-11-07): same outfit, new skin and hair; the template of t14. Retry: t42 kept black hair.
+- Review: Used: look 5. Light-brown bob; the smock and satchel of t18.
+- Prompt:
+
+  ```text
+  A game character: a young apprentice inventor, an eleven-year-old child, standing in a relaxed pose and holding a small worn notebook against the chest with both hands. Fair skin with rosy cheeks, light-brown hair in a short straight bob with a side parting, a high-collared slate-blue work smock with copper buttons, fingerless gloves, a canvas satchel, grey trousers and boots. A simple picture-book face with small dark dot eyes, no eyelashes, a small nose and a calm, curious half-smile. Slightly stylised proportions of a real eleven-year-old, the head about one sixth of the height; not chibi. Full-body three-quarter view at the child’s eye level, with little perspective. The figure is centred and fills about nine tenths of the picture’s height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
   ```

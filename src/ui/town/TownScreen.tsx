@@ -7,14 +7,23 @@ import { findPath, type Point } from '@/city/walk';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
-import { type PersonId, type TownPerson, type TownPlace, town } from '@/content/town';
+import {
+  type AreaId,
+  areaOf,
+  type PersonId,
+  type Rect,
+  type TownExit,
+  type TownPerson,
+  type TownPlace,
+  town,
+} from '@/content/town';
 import { asleepLairs } from '@/fight/settle';
 import type { RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { MapScreen } from '@/ui/map/MapScreen';
 import { OpeningPanels } from '@/ui/opening/OpeningScreen';
-import { automaton20, looks, personArt, square, squareGateOpen } from '@/ui/town/art';
+import { areaArt, automaton20, looks, personArt, square } from '@/ui/town/art';
 
 const authored = rooms.map((room) => room.id);
 
@@ -94,11 +103,20 @@ type Bubble = {
 type Errand =
   | { kind: 'place'; place: TownPlace }
   | { kind: 'person'; person: TownPerson }
-  | { kind: 'automaton' };
+  | { kind: 'automaton' }
+  | { kind: 'exit'; exit: TownExit };
 
 const pct = (p: Point) => ({
   left: `${(p.x / town.width) * 100}%`,
   top: `${(p.y / town.height) * 100}%`,
+});
+
+/** The automaton at the start of its round. */
+const botAt = (patrol: readonly Point[]) => ({
+  at: patrol[0] ?? { x: 0, y: 0 },
+  target: 1,
+  dir: 1,
+  facing: -1 as 1 | -1,
 });
 
 function readMet(): PersonId[] {
@@ -122,8 +140,11 @@ function writeMet(met: PersonId[]) {
 /** The town from props: the square, its machines, people and automaton, and his figure. */
 export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }: BoardProps) {
   const nodes = useMemo(() => new Map(view.nodes.map((node) => [node.id, node])), [view]);
-  const [start] = useState<Point>(
-    () => town.places.find((place) => place.node === fresh)?.stand ?? town.arrive,
+  // He comes out where he went in: the area holding the room just restarted.
+  const [areaId, setAreaId] = useState<AreaId>(() => areaOf(fresh) ?? town.start);
+  const area = town.areas[areaId];
+  const [start, setStart] = useState<Point>(
+    () => area.places.find((place) => place.node === fresh)?.stand ?? area.arrive,
   );
   const [walking, setWalking] = useState(false);
   const [bubble, setBubble] = useState<Bubble | null>(null);
@@ -138,12 +159,24 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   const meRef = useRef(start);
   const meFacing = useRef<1 | -1>(1);
   const meEl = useRef<HTMLDivElement>(null);
-  const botRef = useRef({ at: town.patrol[0] as Point, target: 1, dir: 1, facing: -1 as 1 | -1 });
+  const botRef = useRef(botAt(area.patrol));
+  const patrol = useRef(area.patrol);
+  patrol.current = area.patrol;
   const botEl = useRef<HTMLButtonElement>(null);
 
   const arrived = useCallback(
     (job: Errand | null) => {
       if (!job) return;
+      if (job.kind === 'exit') {
+        // Into the next area, where he comes out at the way in.
+        const { to, arrive } = job.exit;
+        setAreaId(to);
+        meRef.current = arrive;
+        setStart(arrive);
+        botRef.current = botAt(town.areas[to].patrol);
+        setBubble(null);
+        return;
+      }
       if (job.kind === 'place') {
         const node = nodes.get(job.place.node);
         if (node && (node.state === 'open' || node.state === 'restored')) {
@@ -222,14 +255,19 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
         place(meEl.current, meRef.current, meFacing.current);
       }
       const b = botRef.current;
-      const target = town.patrol[b.target] as Point;
+      const round = patrol.current;
+      const target = round[b.target];
+      if (!target) {
+        frame = requestAnimationFrame(tick);
+        return;
+      }
       const bx = target.x - b.at.x;
       const by = target.y - b.at.y;
       const bd = Math.hypot(bx, by);
       const bstep = PATROL_SPEED * dt;
       if (bd <= bstep) {
         b.at = target;
-        if (b.target + b.dir < 0 || b.target + b.dir >= town.patrol.length) b.dir = -b.dir;
+        if (b.target + b.dir < 0 || b.target + b.dir >= round.length) b.dir = -b.dir;
         b.target += b.dir;
       } else {
         b.at = { x: b.at.x + (bx / bd) * bstep, y: b.at.y + (by / bd) * bstep };
@@ -245,7 +283,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   const walkTo = (target: Point, job: Errand | null) => {
     setBubble(null);
     errand.current = job;
-    const route = findPath(town.ground, meRef.current, target);
+    const route = findPath(area.ground, meRef.current, target);
     // No way there: he stays, and nothing happens.
     if (!route) {
       errand.current = null;
@@ -270,24 +308,29 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
     };
   };
 
-  const restored = town.places.filter((place) => nodes.get(place.node)?.state === 'restored');
+  const restored = area.places.filter((place) => nodes.get(place.node)?.state === 'restored');
   const lampsLit = done.includes('r02');
-  // Room 1 lifts the gate: the square is drawn with it open from then on.
-  const art = done.includes('r01') ? squareGateOpen : square;
-  const people = town.people.filter(
+  const art = areaArt(areaId, done);
+  const people = area.people.filter(
     (person) => person.after === null || done.includes(person.after),
   );
-  // The machine to go to next; the map marks one only after room 1, the town from the start.
-  const nextPlace =
-    town.places.find((place) => nodes.get(place.node)?.next) ??
-    (done.length === 0 ? town.places.find((place) => place.node === 'r01') : undefined);
-  // The next room is off the square: the map button calls instead.
-  const nextOffSquare = !nextPlace && view.nodes.some((node) => node.next);
+  const exits = area.exits.filter((exit) => done.includes(exit.opensWith));
+  // An open way on takes the tap over its area (the raised gate is now a way through).
+  const places = area.places.filter(
+    (place) => !exits.some((exit) => sameRect(exit.area, place.area)),
+  );
+  // The machine to go to next (the map marks one only after room 1; the town from the
+  // start): its place here, or the way towards it, or else the map button calls.
+  const nextNode = view.nodes.find((node) => node.next)?.id ?? (done.length === 0 ? 'r01' : null);
+  const nextPlace = places.find((place) => place.node === nextNode);
+  const nextExit = nextPlace ? undefined : exits.find((exit) => exit.to === areaOf(nextNode));
+  const nextMarker = nextPlace?.marker ?? nextExit?.marker;
+  const nextOffTown = nextNode !== null && !nextMarker;
 
   return (
     <>
       <main className="town" aria-label={hr.town.label}>
-        <div className="town__board" ref={board}>
+        <div className="town__board" ref={board} data-area={areaId}>
           <button
             type="button"
             className="town__ground"
@@ -309,13 +352,13 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 WebkitMaskImage: bloomMask(restored, fresh),
               }}
             />
-            {fresh === 'r01' && (
+            {areaId === 'square' && fresh === 'r01' && (
               // Room 1 just restarted: the closed gate fades, and the gate stands open.
               <img className="town__art town__art--closing" src={square} alt="" draggable={false} />
             )}
           </button>
           {lampsLit &&
-            town.lamps.map((lamp) => (
+            area.lamps.map((lamp) => (
               <span
                 key={`${lamp.x},${lamp.y}`}
                 className="town__glow"
@@ -323,7 +366,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 aria-hidden="true"
               />
             ))}
-          {town.places.map((place) => (
+          {places.map((place) => (
             <PlaceButton
               key={place.node}
               place={place}
@@ -331,8 +374,19 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               onTap={() => walkTo(place.stand, { kind: 'place', place })}
             />
           ))}
-          {nextPlace && (
-            <span className="town__next" style={pct(nextPlace.marker)} aria-hidden="true">
+          {exits.map((exit) => (
+            <button
+              key={exit.to}
+              type="button"
+              className="town__place"
+              data-exit={exit.to}
+              style={rectStyle(exit.area)}
+              aria-label={hr.town.exits[exit.to]}
+              onClick={() => walkTo(exit.stand, { kind: 'exit', exit })}
+            />
+          ))}
+          {nextMarker && (
+            <span className="town__next" style={pct(nextMarker)} aria-hidden="true">
               <svg viewBox="-20 -28 40 40" aria-hidden="true">
                 <path d="M-12 -24 H12 L0 -4 Z" />
               </svg>
@@ -368,24 +422,26 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               />
             </button>
           ))}
-          <button
-            type="button"
-            ref={botEl}
-            className="town__figure town__figure--automaton"
-            style={{
-              ...pct(town.patrol[0] as Point),
-              height: `${((town.figure * 0.62) / town.height) * 100}%`,
-            }}
-            aria-label={hr.map.nodes['lair-20']}
-            onClick={() =>
-              walkTo(
-                { x: botRef.current.at.x - 90, y: botRef.current.at.y + 10 },
-                { kind: 'automaton' },
-              )
-            }
-          >
-            <img src={automaton20} alt="" draggable={false} />
-          </button>
+          {area.patrol.length > 0 && (
+            <button
+              type="button"
+              ref={botEl}
+              className="town__figure town__figure--automaton"
+              style={{
+                ...pct(area.patrol[0] as Point),
+                height: `${((town.figure * 0.62) / town.height) * 100}%`,
+              }}
+              aria-label={hr.map.nodes['lair-20']}
+              onClick={() =>
+                walkTo(
+                  { x: botRef.current.at.x - 90, y: botRef.current.at.y + 10 },
+                  { kind: 'automaton' },
+                )
+              }
+            >
+              <img src={automaton20} alt="" draggable={false} />
+            </button>
+          )}
           <div
             ref={meEl}
             className="town__figure town__figure--me"
@@ -437,7 +493,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
         <button
           type="button"
           className="town__map-button"
-          data-next={nextOffSquare}
+          data-next={nextOffTown}
           aria-label={hr.town.map}
           onClick={() => setShowMap(true)}
         >
@@ -535,12 +591,7 @@ function PlaceButton({
       className="town__place"
       data-node={place.node}
       data-state={state}
-      style={{
-        left: `${(place.area.x / town.width) * 100}%`,
-        top: `${(place.area.y / town.height) * 100}%`,
-        width: `${(place.area.w / town.width) * 100}%`,
-        height: `${(place.area.h / town.height) * 100}%`,
-      }}
+      style={rectStyle(place.area)}
       aria-label={label}
       onClick={onTap}
     />
@@ -568,4 +619,16 @@ function SpeechBubble({ bubble, onNext }: { bubble: Bubble; onNext(): void }) {
       <span className="town__line">{text}</span>
     </button>
   );
+}
+
+const sameRect = (a: Rect, b: Rect) => a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
+
+/** A tap area's place over the board, in percent. */
+function rectStyle(rect: Rect) {
+  return {
+    left: `${(rect.x / town.width) * 100}%`,
+    top: `${(rect.y / town.height) * 100}%`,
+    width: `${(rect.w / town.width) * 100}%`,
+    height: `${(rect.h / town.height) * 100}%`,
+  };
 }

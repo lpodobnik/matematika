@@ -104,13 +104,24 @@ test('a new game: the opening, the naming, the town, room 1 and back', async ({ 
   // Back in the town, outside the gate, now in colour; Nikola is there.
   await expect(page.locator('.town__board')).toBeVisible();
   expect((await state(page)).save.progress.roomsDone).toEqual(['r01']);
-  await expect(page.locator('.town__place[data-node="r01"]')).toHaveAttribute(
-    'data-state',
-    'restored',
-  );
+  // The raised gate is now the way through, not the room.
+  expect((await state(page)).save.progress.roomsDone).toContain('r01');
+  await expect(page.locator('.town__place[data-exit="canal"]')).toBeVisible();
+  await expect(page.locator('.town__place[data-node="r01"]')).toHaveCount(0);
   await expect(page.locator('[data-person="nikola"]')).toBeVisible();
   await page.waitForTimeout(2600);
   await shot(page, '5-town-after-room-1');
+
+  // The raised gate is now a way through: he walks to the canal, where room 3's sluice gate
+  // waits and the first automaton strips a lamp; and back.
+  await page.locator('.town__place[data-exit="canal"]').click();
+  await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('.town__place[data-node="r03"]')).toBeVisible();
+  await expect(page.locator('.town__figure--automaton')).toBeVisible();
+  await page.waitForTimeout(400);
+  await shot(page, '6-canal');
+  await page.locator('.town__place[data-exit="square"]').click();
+  await expect(page.locator('.town__board[data-area="square"]')).toBeVisible({ timeout: 8000 });
 
   // The district map is a tap away, and closes again.
   await page.getByRole('button', { name: 'Karta četvrti' }).click();

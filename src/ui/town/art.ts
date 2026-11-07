@@ -2,8 +2,10 @@
 // open, his six looks cut out, the townspeople and the first automaton.
 
 import type { LookId } from '@/city/character';
-import type { PersonId } from '@/content/town';
+import type { AreaId, PersonId } from '@/content/town';
+import type { RoomId } from '@/room/types';
 import automaton20 from '@/ui/town/art/automaton-20.webp';
+import canal from '@/ui/town/art/canal.webp';
 import look1 from '@/ui/town/art/look-1.webp';
 import look2 from '@/ui/town/art/look-2.webp';
 import look3 from '@/ui/town/art/look-3.webp';
@@ -29,10 +31,17 @@ export const looks: Record<LookId, string> = {
 /** Each person's figure (t31 and t32). */
 export const personArt: Record<PersonId, string> = { penkala, nikola };
 
+/** An area's picture as it stands: the square shows the gate raised once room 1 is done. */
+export function areaArt(area: AreaId, done: readonly RoomId[]): string {
+  if (area === 'canal') return canal;
+  return done.includes('r01') ? squareGateOpen : square;
+}
+
 /** Every town picture, for the loading screen to fetch before the game starts. */
 export const townImages: readonly string[] = [
   square,
   squareGateOpen,
+  canal,
   automaton20,
   ...Object.values(looks),
   ...Object.values(personArt),

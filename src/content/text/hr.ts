@@ -84,7 +84,7 @@ export const hr = {
       'Kovrče, naočale i kombinezon',
       'Riđa kosa, prsluk i zeleni šal',
       'Kožna kapa i torba',
-      'Ravne šiške i plava kuta',
+      'Smeđa kosa i plava kuta',
       'Velika radna jakna i crvena marama',
     ],
     confirm: 'To sam ja',
@@ -134,7 +134,7 @@ export const hr = {
         { who: 'penkala', text: 'Gledam i ja. Samo da provjerim vrti li se po Knjizi.' },
       ],
       r05: [
-        { who: 'automaton', text: 'OVAJ MOST NIJE U KORACIMA. BIT ĆE ISPRAVLJEN. HVALA.' },
+        { who: 'automaton', text: 'OVAJ MOST NIJE U UPUTAMA. BIT ĆE ISPRAVLJEN. HVALA.' },
         { who: 'nikola', text: 'Netko je pribio papir na most. Tko piše samo velikim slovima?' },
       ],
       r06: [
@@ -182,7 +182,7 @@ export const hr = {
         },
       ],
       r09: [
-        { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO KORACIMA. OTVARANJE NIJE PREDVIĐENO.' },
+        { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO UPUTAMA. OTVARANJE NIJE PREDVIĐENO.' },
         { who: 'nikola', text: 'Pečat je pao. Ali tko lijepi te papire po cijelom gradu?' },
       ],
     },
@@ -371,7 +371,7 @@ export const hr = {
       'Satograd je grad zupčanika i pare. Sve strojeve složio je Majstor Kristijan.',
       'Upute za svaki stroj zapisao je u Knjigu. Ljudi ih slijede i ne pitaju zašto.',
       'Jednog jutra radionica je prazna. Kristijana nema. Strojevi staju jedan po jedan.',
-      'Na podu radionice leži njegova bilježnica. U njoj nisu koraci, nego pitanja.',
+      'Na podu radionice leži njegova bilježnica. U njoj nisu upute, nego pitanja.',
     ],
     next: 'Dalje',
     skip: 'Preskoči',
@@ -386,6 +386,11 @@ export const hr = {
     map: 'Karta četvrti',
     /** The opening again, from the town's corner. */
     intro: 'Priča od početka',
+    /** Ways between areas, for the tap areas' labels. */
+    exits: {
+      canal: 'Kroz vrata, do kanala',
+      square: 'Natrag na trg',
+    },
     close: 'Zatvori',
     /** For screen readers: the town as a whole, and a tap on the ground. */
     label: 'Trg u Donjem Kotaču',
@@ -717,7 +722,7 @@ export const hr = {
       'page-2': {
         title: 'Iz dnevnika, list drugi',
         lines: [
-          'Kotač se istrošio pa koraci više ne vrijede. Grad se svejedno drži Knjige.',
+          'Kotač se istrošio pa upute više ne vrijede. Grad se svejedno drži Knjige.',
           'Prvi Automat zna sve upute napamet, a nijedan razlog. To ga muči.',
         ],
       },
