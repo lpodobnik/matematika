@@ -187,6 +187,14 @@ export function withFights(inner: Reduce, roomList: readonly RoomSpec[]): Reduce
         break;
       case 'dev/set-parts':
         return setParts(state, action.parts);
+      case 'dev/wake-lairs':
+        if (Object.keys(state.save.economy.lairs).length === 0) return unchanged(state);
+        return {
+          state: produce(state, (draft) => {
+            draft.save.economy.lairs = {};
+          }),
+          events: [{ type: 'SaveChanged' }],
+        };
       case 'dev/fight-seed':
         return {
           state: produce(state, (draft) => {

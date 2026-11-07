@@ -413,6 +413,18 @@ describe('the dev panel (architecture, Debug Tools)', () => {
     g.act({ type: 'dev/set-parts', parts: -1 });
     expect(g.state().save.economy.parts).toBe(90);
   });
+
+  it('wakes every winding-down automaton', () => {
+    const g = game();
+    const rewindsAt = new Date(start + 10 * minute).toISOString();
+    g.store.setState((s) => ({
+      save: { ...s.save, economy: { ...s.save.economy, lairs: { 'lair-20': { rewindsAt } } } },
+    }));
+    g.act({ type: 'dev/wake-lairs' });
+    expect(g.state().save.economy.lairs).toEqual({});
+    g.act({ type: 'map/travel', node: 'lair-20' });
+    expect(g.state().ui.screen).toBe('fight');
+  });
 });
 
 it('every slot is one of the three (a guard for the helpers above)', () => {

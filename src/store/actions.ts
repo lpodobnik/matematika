@@ -102,6 +102,8 @@ export type Action =
   | { type: 'fight/close' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */
   | { type: 'dev/set-parts'; parts: number }
+  /** The dev panel only: every winding-down automaton rewinds now. */
+  | { type: 'dev/wake-lairs' }
   /** The dev panel only: fixes the seed of the next fights' dice, or null for random. */
   | { type: 'dev/fight-seed'; seed: number | null }
   /** The dev panel only: a new game, from room 1; the settings stay. */

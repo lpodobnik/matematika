@@ -47,6 +47,8 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
   const tools = useGame((s) => s.save.progress.tools);
   const qualityState = useGame((s) => s.ui.quality);
   const copies = useGame((s) => s.ui.copies);
+  const parts = useGame((s) => s.save.economy.parts);
+  const seed = useGame((s) => s.ui.fightSeed);
   const dispatch = useGame((s) => s.dispatch);
   const readout = useMemo(() => (room ? devReadout(room, tools) : null), [room, tools]);
   const quality = useMemo(() => qualityReadout(qualityState), [qualityState]);
@@ -67,6 +69,13 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
         for (const action of profileToggle(copies, rooms, tools)) dispatch(action);
       }}
       onNewGame={() => dispatch({ type: 'dev/new-game' })}
+      fights={{
+        parts,
+        seed,
+        onParts: (n) => dispatch({ type: 'dev/set-parts', parts: Math.max(0, n) }),
+        onSeed: (next) => dispatch({ type: 'dev/fight-seed', seed: next }),
+        onWake: () => dispatch({ type: 'dev/wake-lairs' }),
+      }}
       onClose={onClose}
     />
   );
@@ -88,7 +97,19 @@ export interface DevPanelViewProps {
   onProfile(): void;
   /** Story 2.1: a new game from room 1; the saved progress is replaced, the settings kept. */
   onNewGame(): void;
+  /** Epic 3: his parts, the fights' seed, and waking the lairs (architecture, Debug Tools). */
+  fights?: DevFights;
   onClose(): void;
+}
+
+export interface DevFights {
+  parts: number;
+  /** The seed every new fight's dice start from, or null for random. */
+  seed: number | null;
+  onParts(parts: number): void;
+  onSeed(seed: number | null): void;
+  /** Every winding-down automaton rewinds now. */
+  onWake(): void;
 }
 
 /** The quality choices: `auto` (the test's pick) and each setting, best first. */
@@ -109,6 +130,7 @@ export function DevPanelView({
   onForceQuality,
   onProfile,
   onNewGame,
+  fights,
   onClose,
 }: DevPanelViewProps) {
   return (
@@ -165,6 +187,41 @@ export function DevPanelView({
           new game
         </button>
       </div>
+      {fights && (
+        <fieldset className="dev-panel__choices">
+          <legend>
+            fights: {fights.parts} parts, seed {fights.seed ?? 'random'}
+          </legend>
+          <button
+            type="button"
+            className="dev-panel__button"
+            onClick={() => fights.onParts(fights.parts + 10)}
+          >
+            +10 parts
+          </button>
+          <button
+            type="button"
+            className="dev-panel__button"
+            onClick={() => fights.onParts(fights.parts + 50)}
+          >
+            +50 parts
+          </button>
+          <button type="button" className="dev-panel__button" onClick={() => fights.onParts(0)}>
+            0 parts
+          </button>
+          <button
+            type="button"
+            className="dev-panel__button"
+            aria-pressed={fights.seed !== null}
+            onClick={() => fights.onSeed(fights.seed === null ? 1 : null)}
+          >
+            seed {fights.seed === null ? 'random' : 'fixed'}
+          </button>
+          <button type="button" className="dev-panel__button" onClick={fights.onWake}>
+            wake lairs
+          </button>
+        </fieldset>
+      )}
       <dl className="dev-panel__readout">
         <dt>quality</dt>
         <dd>{quality.inUse}</dd>

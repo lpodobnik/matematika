@@ -109,4 +109,17 @@ describe('the dev panel', () => {
     expect(button(view({ profiling: false }))).toEqual(['false', 'profile: 3 × r04 off']);
     expect(button(view({ profiling: true }))).toEqual(['true', 'profile: 3 × r04 on']);
   });
+
+  it('offers the fights’ tools: parts, a fixed seed, and waking the lairs (epic 3)', () => {
+    const noop = () => undefined;
+    const fights = { parts: 12, seed: null, onParts: noop, onSeed: noop, onWake: noop };
+    const html = view({ fights }).replaceAll('<!-- -->', '');
+    expect(html).toContain('fights: 12 parts, seed random');
+    for (const label of ['+10 parts', '+50 parts', '0 parts', 'seed random', 'wake lairs']) {
+      expect(html).toContain(`>${label}</button>`);
+    }
+    expect(view({ fights: { ...fights, seed: 1 } }).replaceAll('<!-- -->', '')).toContain(
+      '>seed fixed</button>',
+    );
+  });
 });
