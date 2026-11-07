@@ -299,10 +299,10 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await presented(page);
   await finish(page, 'r07', shot);
 
-  // The map, every room restored, and the "to be continued" note.
-  await expect.poll(async () => (await state(page)).screen).toBe('map');
-  await expect(page.locator('.map__note')).toBeVisible();
-  await shot('map-end');
+  // Story 4.9: room 8, the tram, comes next (rooms 8–13 are e2e/rooms-8-13.spec.ts).
+  await expect.poll(async () => (await state(page)).room).toBe('r08');
+  await expect.poll(async () => (await state(page)).screen).toBe('room');
+  await shot('r08-next');
   expect((await state(page)).done).toEqual(['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07']);
   expect(errors).toEqual([]);
 });
