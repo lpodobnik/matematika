@@ -4,6 +4,7 @@ import type { LookId } from '@/city/character';
 import { type MapView, mapView, type NodeView } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { findPath, type Point } from '@/city/walk';
+import { lairs } from '@/content/lairs';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
@@ -18,12 +19,14 @@ import {
   town,
 } from '@/content/town';
 import { asleepLairs } from '@/fight/settle';
+import type { LairId } from '@/fight/types';
 import type { RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
+import { Automaton } from '@/ui/fight/fight-art';
 import { MapScreen } from '@/ui/map/MapScreen';
 import { OpeningPanels } from '@/ui/opening/OpeningScreen';
-import { areaArt, automaton20, looks, personArt, square } from '@/ui/town/art';
+import { areaArt, looks, personArt, square } from '@/ui/town/art';
 
 const authored = rooms.map((room) => room.id);
 
@@ -87,7 +90,7 @@ interface BoardProps {
   look: LookId;
   parts: number;
   /** Minutes until a beaten lair's automaton is back (ADR-13); null when it is there. */
-  wakesIn(lair: 'lair-20'): number | null;
+  wakesIn(lair: LairId): number | null;
   onTravel(node: NodeId): void;
 }
 
@@ -162,6 +165,8 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   const botRef = useRef(botAt(area.patrol));
   const patrol = useRef(area.patrol);
   patrol.current = area.patrol;
+  const lairHere = useRef(area.lair);
+  lairHere.current = area.lair;
   const botEl = useRef<HTMLButtonElement>(null);
 
   const arrived = useCallback(
@@ -195,11 +200,13 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
         return;
       }
       if (job.kind === 'automaton') {
-        const lair = nodes.get('lair-20');
+        const id = lairHere.current;
+        if (!id) return;
+        const lair = nodes.get(id);
         const seen = lair?.state === 'open' || lair?.state === 'winding';
-        const wait = wakesIn('lair-20');
+        const wait = wakesIn(id);
         if (seen && wait === null) {
-          onTravel('lair-20');
+          onTravel(id);
           return;
         }
         const text = wait !== null ? hr.town.places.beaten(wait) : hr.town.places.automaton;
@@ -428,7 +435,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               />
             </button>
           ))}
-          {area.patrol.length > 0 && (
+          {area.lair && area.patrol.length > 0 && (
             <button
               type="button"
               ref={botEl}
@@ -437,7 +444,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 ...pct(area.patrol[0] as Point),
                 height: `${((town.figure * 0.62) / town.height) * 100}%`,
               }}
-              aria-label={hr.map.nodes['lair-20']}
+              aria-label={hr.map.nodes[area.lair]}
               onClick={() =>
                 walkTo(
                   { x: botRef.current.at.x - 90, y: botRef.current.at.y + 10 },
@@ -445,7 +452,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 )
               }
             >
-              <img src={automaton20} alt="" draggable={false} />
+              <Automaton armour={lairs[area.lair].armour} />
             </button>
           )}
           <div

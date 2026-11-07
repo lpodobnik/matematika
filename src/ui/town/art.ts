@@ -5,7 +5,9 @@ import type { LookId } from '@/city/character';
 import type { AreaId, PersonId } from '@/content/town';
 import type { RoomId } from '@/room/types';
 import automaton20 from '@/ui/town/art/automaton-20.webp';
+import bridge from '@/ui/town/art/bridge.webp';
 import canal from '@/ui/town/art/canal.webp';
+import faust from '@/ui/town/art/faust.webp';
 import look1 from '@/ui/town/art/look-1.webp';
 import look2 from '@/ui/town/art/look-2.webp';
 import look3 from '@/ui/town/art/look-3.webp';
@@ -17,6 +19,7 @@ import nikola from '@/ui/town/art/nikola.webp';
 import penkala from '@/ui/town/art/penkala.webp';
 import square from '@/ui/town/art/square.webp';
 import squareGateOpen from '@/ui/town/art/square-gate-open.webp';
+import yard from '@/ui/town/art/yard.webp';
 
 export { automaton20, square, squareGateOpen };
 
@@ -30,12 +33,14 @@ export const looks: Record<LookId, string> = {
 };
 
 /** Each person's figure (t31 and t32). */
-export const personArt: Record<PersonId, string> = { penkala, nikola };
+export const personArt: Record<PersonId, string> = { penkala, nikola, faust };
 
 /** An area's picture as it stands: the square shows the gate raised once room 1 is done. */
 export function areaArt(area: AreaId, done: readonly RoomId[]): string {
   if (area === 'canal') return canal;
   if (area === 'mill') return mill;
+  if (area === 'bridge') return bridge;
+  if (area === 'yard') return yard;
   return done.includes('r01') ? squareGateOpen : square;
 }
 
@@ -45,6 +50,8 @@ export const townImages: readonly string[] = [
   squareGateOpen,
   canal,
   mill,
+  bridge,
+  yard,
   automaton20,
   ...Object.values(looks),
   ...Object.values(personArt),

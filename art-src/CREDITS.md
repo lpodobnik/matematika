@@ -1,4 +1,4 @@
-images generated: 45/70
+images generated: 49/70
 
 # Art credits
 
@@ -801,8 +801,77 @@ nothing. Each names its source and the exact command.
 - Date: 2026-11-07
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Town, third area: the mill yard with room 4's water wheel (story 5.2).
+- Review: Used: src/ui/town/art/mill.webp, the mill yard with room 4’s wheel (story 5.2). A thin trickle under the wheel slipped through.
 - Prompt:
 
   ```text
   The mill yard of a gear-and-steam city, as an area of an adventure game. A big stone mill house with a terracotta roof stands at the top of the picture; against its side a large wooden overshot water wheel with wooden buckets and an iron hub, fed by a long wooden chute that comes from the canal at the top-left; the wheel is stopped and the chute is dry. A brass gear housing and copper pipes on the mill wall by the hub. A wide cobbled yard fills the lower half: a few sacks and crates, a millstone leaning on a wall, a bench, a small tree. In the bottom-left corner a cobbled path runs off along the canal wall, the way back to the canal. Plastered houses with green shutters at the right edge. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The scene fills the whole picture edge to edge. The cobbled yard is large open walkable space across the lower half. Everything is at one scale: a house is about a sixth of the picture's width. Everything is still: no people, no animals, no vehicles, no smoke, no steam, no flowing or splashing water, the wheel stopped. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 46. `tests/town-bridge.t46.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7501
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 64, 297 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town area (story 5.3).
+- Review: Rejected: a photoreal 3D render with a watermark, air conditioners and clock faces. Redrawn as t49 with the square as a style reference.
+- Prompt:
+
+  ```text
+  A river street of a gear-and-steam city, as an area of an adventure game. A slow river crosses the top half of the picture. Over it, a stone-and-iron bridge whose deck hangs from a beam of brass counterweights and chains: under the deck, big iron weights hang on chains in a frame, stopped. A wide cobbled quay on the near side, with two cast-iron oil street lamps with brass lanterns, a bench and some crates. A street enters from the bottom-left corner, the way back to the square. At the right edge, a narrow dark alley between two houses with heaps of scrap metal and salvaged lamp parts, where an automaton hides. Plastered houses with green shutters and terracotta roofs along the far bank. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The scene fills the whole picture edge to edge. The cobbled ground is large open walkable space across the lower half. Everything is at one scale: a house is about a sixth of the picture's width. Everything is still: no people, no animals, no vehicles, no smoke, no steam, no flowing or splashing water. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 47. `tests/town-yard.t47.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7601
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 46, 283 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town area (story 5.3).
+- Review: Used: src/ui/town/art/yard.webp, the weighing yard with room 6’s balance and the logbook house (room 7). A small sign with pseudo-letters at the top right.
+- Prompt:
+
+  ```text
+  The weighing yard of a gear-and-steam city, as an area of an adventure game. In the middle, a big platform weighbridge set into the cobbles, with a tall brass balance beam on an iron post beside it and a rack of iron weights; stacks of crates and sacks waiting to be weighed. At the left side, an old narrow stone house with a heavy wooden door studded with iron and a small barred window: the archive where the old logbook is kept; a blank brass plate by the door. A cobbled lane enters from the bottom-left corner, the way back to the mill. Warehouses with big wooden doors at the back. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The scene fills the whole picture edge to edge. The cobbled ground is large open walkable space across the lower half. Everything is at one scale: a house is about a sixth of the picture's width. Everything is still: no people, no animals, no vehicles, no smoke, no steam, no flowing or splashing water. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 48. `tests/person-faust.t48.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5300
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 195 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town townsperson (story 5.3): Faust, the old mechanic.
+- Review: Used: Faust, cut out for the square after room 6.
+- Prompt:
+
+  ```text
+  A game character: Faust, an old mechanic in his seventies, standing calmly with one hand in an apron pocket and the other holding a big brass oil can. A long leather work apron over a collarless striped shirt with rolled sleeves, a flat grey cap, round brass-rimmed spectacles pushed up on his forehead, a short white beard, thick forearms, worn boots. A simple picture-book face with small dark dot eyes and a calm, knowing half-smile. Slightly stylised proportions, the head about one sixth of the height; not chibi. Full-body three-quarter view at eye level, with little perspective. The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 49. `tests/town-bridge.t49.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 7502
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 70, 295 KB
+- References: `town-square.t33.png`
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town area (story 5.3). Retry: t46 came out as a photoreal render with a watermark.
+- Review: Used: src/ui/town/art/bridge.webp, the bridge street (room 5) with the scrap alley for the armour-30 automaton. Grainier than the square, still close in style.
+- Prompt:
+
+  ```text
+  Match the drawing style of image 1 exactly: the same ink linework, hatching, watercolour washes, palette and isometric camera. Do not copy its subject. A river street of a gear-and-steam city, as an area of an adventure game. A slow river crosses the top half of the picture. Over it, a stone-and-iron bridge whose deck hangs from a beam of brass counterweights and chains: under the deck, big iron weights hang on chains in a frame, stopped. A wide cobbled quay on the near side, with two cast-iron oil street lamps with brass lanterns, a bench and some crates. A street enters from the bottom-left corner, the way back to the square. At the right edge, a narrow dark alley between two houses with heaps of scrap metal and salvaged lamp parts, where an automaton hides. Plastered houses with green shutters and terracotta roofs along the far bank. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The scene fills the whole picture edge to edge. The cobbled ground is large open walkable space across the lower half. Everything is at one scale: a house is about a sixth of the picture's width. Everything is still: no people, no animals, no vehicles, no smoke, no steam, no flowing or splashing water. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
   ```

@@ -204,3 +204,65 @@ test('fixed machines open the way on: square, canal, mill', async ({ page }) => 
     { timeout: 10_000 },
   );
 });
+
+test('the town to the midpoint: bridge, yard, the logbook house and Faust', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    const done = ['r01', 'r02', 'r03', 'r04', 'r05', 'r06'];
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        character: { name: 'Ivo', look: 'look-3' },
+        progress: {
+          ...s.save.progress,
+          introSeen: true,
+          roomsDone: done,
+          told: done,
+          tools: ['balance', 'workshop'],
+          onMap: true,
+        },
+      },
+      room: null,
+    });
+  });
+  const area = (id: string) => page.locator(`.town__board[data-area="${id}"]`);
+  // Faust stands at the workshop now.
+  await expect(page.locator('[data-person="faust"]')).toBeVisible();
+  // Down the lamp street to the bridge, with its automaton.
+  await page.locator('.town__place[data-exit="bridge"]').click();
+  await expect(area('bridge')).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.town__place[data-node="r05"]')).toHaveAttribute(
+    'data-state',
+    'restored',
+  );
+  await expect(page.locator('.town__figure--automaton')).toBeVisible();
+  await page.waitForTimeout(400);
+  await shot(page, '8-bridge');
+  await page.locator('.town__place[data-exit="square"]').click();
+  await expect(area('square')).toBeVisible({ timeout: 10_000 });
+  // Through the gate, along the canal and the mill, to the weighing yard.
+  await page.locator('.town__place[data-exit="canal"]').click();
+  await expect(area('canal')).toBeVisible({ timeout: 10_000 });
+  await page.locator('.town__place[data-exit="mill"]').click();
+  await expect(area('mill')).toBeVisible({ timeout: 10_000 });
+  await page.locator('.town__place[data-exit="yard"]').click();
+  await expect(area('yard')).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.town__place[data-node="r07"]')).toHaveAttribute('data-state', 'open');
+  await expect(page.locator('.town__next')).toBeVisible();
+  await page.waitForTimeout(400);
+  await shot(page, '9-yard');
+  // The logbook house opens room 7.
+  await page.locator('.town__place[data-node="r07"]').click();
+  await page.waitForFunction(
+    () => (window as unknown as Game).__s.getState().room?.spec.id === 'r07',
+    null,
+    { timeout: 10_000 },
+  );
+});

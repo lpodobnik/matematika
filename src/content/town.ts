@@ -5,11 +5,12 @@
 
 import type { NodeId } from '@/city/types';
 import type { Ground, Point } from '@/city/walk';
+import type { LairId } from '@/fight/types';
 import type { RoomId } from '@/room/types';
 
-export type PersonId = 'penkala' | 'nikola';
+export type PersonId = 'penkala' | 'nikola' | 'faust';
 
-export type AreaId = 'square' | 'canal' | 'mill';
+export type AreaId = 'square' | 'canal' | 'mill' | 'bridge' | 'yard';
 
 /** A tap area over an illustration, in town units. */
 export interface Rect {
@@ -63,7 +64,9 @@ export interface TownArea {
   /** Ways on, listed before places: an open exit takes the tap over a place's area. */
   exits: readonly TownExit[];
   people: readonly TownPerson[];
-  /** The first automaton's round, which it walks back and forth, if it is here. */
+  /** The lair whose automaton prowls here, or null. */
+  lair: LairId | null;
+  /** That automaton's round, which it walks back and forth. */
   patrol: readonly Point[];
   /** Lamp heads that glow once room 2 restarts. */
   lamps: readonly Point[];
@@ -133,11 +136,23 @@ const square: TownArea = {
       arrive: { x: 470, y: 880 },
       marker: { x: 510, y: 140 },
     },
+    {
+      // Down the lamp street to the river, once the lamps are lit.
+      to: 'bridge',
+      opensWith: 'r02',
+      stand: { x: 1560, y: 625 },
+      area: { x: 1480, y: 520, w: 120, h: 200 },
+      arrive: { x: 300, y: 900 },
+      marker: { x: 1540, y: 500 },
+    },
   ],
   people: [
     { id: 'penkala', at: { x: 420, y: 600 }, facing: 1, after: null, changesWith: 'r01' },
     { id: 'nikola', at: { x: 1060, y: 450 }, facing: 1, after: 'r01', changesWith: 'r02' },
+    // Faust hands over Kristijan's workshop once room 6 is done (narrative design).
+    { id: 'faust', at: { x: 300, y: 700 }, facing: 1, after: 'r06', changesWith: 'r06' },
   ],
+  lair: null,
   patrol: [],
   lamps: [
     { x: 1187, y: 222 },
@@ -194,6 +209,7 @@ const canal: TownArea = {
   people: [],
   // The first automaton, stripping the lamp on the near quay for parts (narrative design,
   // room 3's beat).
+  lair: 'lair-20',
   patrol: [
     { x: 780, y: 880 },
     { x: 900, y: 940 },
@@ -240,8 +256,122 @@ const mill: TownArea = {
       arrive: { x: 1100, y: 930 },
       marker: { x: 130, y: 780 },
     },
+    {
+      // Through the lane past the houses to the weighing yard, once the wheel turns.
+      to: 'yard',
+      opensWith: 'r04',
+      stand: { x: 1420, y: 720 },
+      area: { x: 1380, y: 600, w: 220, h: 200 },
+      arrive: { x: 250, y: 780 },
+      marker: { x: 1460, y: 590 },
+    },
   ],
   people: [],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+const bridge: TownArea = {
+  id: 'bridge',
+  // The street from the square and the quay terrace before the bridge.
+  ground: ground([
+    { x: 0, y: 720 },
+    { x: 140, y: 650 },
+    { x: 300, y: 560 },
+    { x: 540, y: 435 },
+    { x: 780, y: 475 },
+    { x: 1140, y: 670 },
+    { x: 1150, y: 705 },
+    { x: 640, y: 960 },
+    { x: 560, y: 1000 },
+    { x: 0, y: 1000 },
+  ]),
+  arrive: { x: 300, y: 900 },
+  places: [
+    {
+      node: 'r05',
+      stand: { x: 600, y: 480 },
+      area: { x: 200, y: 0, w: 1300, h: 410 },
+      marker: { x: 700, y: 60 },
+      bloom: { x: 800, y: 250, r: 520 },
+    },
+  ],
+  exits: [
+    {
+      to: 'square',
+      opensWith: 'r02',
+      stand: { x: 160, y: 920 },
+      area: { x: 0, y: 820, w: 300, h: 180 },
+      arrive: { x: 1500, y: 625 },
+      marker: { x: 120, y: 800 },
+    },
+  ],
+  people: [],
+  // The armour-30 automaton picks through the scrap alley by the bridge.
+  lair: 'lair-30',
+  patrol: [
+    { x: 1200, y: 880 },
+    { x: 1300, y: 930 },
+    { x: 1240, y: 970 },
+  ],
+  lamps: [],
+};
+
+const yard: TownArea = {
+  id: 'yard',
+  // The weighing yard, round the weight racks and the sacks.
+  ground: ground(
+    [
+      { x: 0, y: 660 },
+      { x: 330, y: 610 },
+      { x: 470, y: 470 },
+      { x: 880, y: 440 },
+      { x: 1100, y: 250 },
+      { x: 1550, y: 190 },
+      { x: 1600, y: 350 },
+      { x: 1600, y: 1000 },
+      { x: 0, y: 1000 },
+    ],
+    [
+      { x: 1190, y: 440, rx: 150, ry: 90 },
+      { x: 1120, y: 720, rx: 150, ry: 90 },
+      { x: 850, y: 760, rx: 150, ry: 80 },
+      { x: 855, y: 640, rx: 30, ry: 20 },
+      { x: 1530, y: 830, rx: 120, ry: 200 },
+      { x: 60, y: 930, rx: 90, ry: 80 },
+    ],
+  ),
+  arrive: { x: 250, y: 780 },
+  places: [
+    {
+      node: 'r06',
+      stand: { x: 760, y: 560 },
+      area: { x: 800, y: 190, w: 280, h: 330 },
+      marker: { x: 930, y: 180 },
+      bloom: { x: 850, y: 450, r: 420 },
+    },
+    {
+      // The old archive by the yard, where the logbook is kept.
+      node: 'r07',
+      stand: { x: 290, y: 640 },
+      area: { x: 190, y: 300, w: 140, h: 280 },
+      marker: { x: 250, y: 290 },
+      bloom: { x: 240, y: 400, r: 260 },
+    },
+  ],
+  exits: [
+    {
+      to: 'mill',
+      opensWith: 'r04',
+      stand: { x: 200, y: 770 },
+      area: { x: 0, y: 700, w: 300, h: 160 },
+      arrive: { x: 1400, y: 720 },
+      marker: { x: 150, y: 690 },
+    },
+  ],
+  people: [],
+  lair: null,
   patrol: [],
   lamps: [],
 };
@@ -252,7 +382,7 @@ export const town = {
   /** His height, in town units; people and the automaton scale from it. */
   figure: 175,
   start: 'square' as AreaId,
-  areas: { square, canal, mill } as Record<AreaId, TownArea>,
+  areas: { square, canal, mill, bridge, yard } as Record<AreaId, TownArea>,
 };
 
 /** The area that holds a room, so he comes out where he went in. */

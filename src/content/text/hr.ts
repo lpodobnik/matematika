@@ -392,6 +392,10 @@ export const hr = {
       'canal-square': 'Natrag na trg',
       'canal-mill': 'Uz kanal, do mlina',
       'mill-canal': 'Natrag do kanala',
+      'square-bridge': 'Niz ulicu, do mosta',
+      'bridge-square': 'Natrag na trg',
+      'mill-yard': 'Kroz uličicu, do vagaonice',
+      'yard-mill': 'Natrag do mlina',
     },
     close: 'Zatvori',
     /** For screen readers: the town as a whole, and a tap on the ground. */
@@ -415,6 +419,18 @@ export const hr = {
           'Kristijan bi znao. Ali Kristijana nema.',
         ],
         after: ['Gore! Sve četiri!', 'Kako to radi? Pokaži mi poslije.'],
+      },
+      faust: {
+        name: 'Faust',
+        who: 'stari mehaničar',
+        before: [
+          'Radionica je sad tvoja. Kristijan bi to htio.',
+          'Za dijelove ti napravim nešto korisno. Svrati unutra.',
+        ],
+        after: [
+          'Radionica je sad tvoja. Kristijan bi to htio.',
+          'Za dijelove ti napravim nešto korisno. Svrati unutra.',
+        ],
       },
     },
     places: {
