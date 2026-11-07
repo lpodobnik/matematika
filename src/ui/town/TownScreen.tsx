@@ -417,6 +417,10 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               onClick={() => walkTo(exit.stand, { kind: 'exit', exit })}
             />
           ))}
+          {area.exits.map((exit) => (
+            // A signpost at every way out, open or not yet: where it leads, and which way.
+            <ExitSign key={`sign-${exit.to}`} exit={exit} open={done.includes(exit.opensWith)} />
+          ))}
           {nextMarker && (
             <span className="town__next" style={pct(nextMarker)} aria-hidden="true">
               <svg viewBox="-20 -28 40 40" aria-hidden="true">
@@ -687,6 +691,53 @@ function rectStyle(rect: Rect) {
 }
 
 /** A way's label, by where it leads from and to. */
+/** A way out, signposted: an arrow towards the street's edge, or a lock until its room. */
+function ExitSign({ exit, open }: { exit: TownExit; open: boolean }) {
+  const angle =
+    (Math.atan2(exit.marker.y - town.height / 2, exit.marker.x - town.width / 2) * 180) / Math.PI;
+  // Near a side it hangs inwards from the marker, clear of the corner buttons, so it is
+  // never cut off by the edge of the street or hidden under the map.
+  const edge = exit.marker.x < 300 ? 'start' : exit.marker.x > town.width - 300 ? 'end' : 'mid';
+  const left =
+    edge === 'start'
+      ? Math.max(exit.marker.x - 60, 180)
+      : edge === 'end'
+        ? Math.min(exit.marker.x + 60, town.width - 180)
+        : exit.marker.x;
+  return (
+    <span
+      className="town__sign"
+      data-sign={exit.to}
+      data-open={open}
+      data-edge={edge}
+      style={pct({ x: left, y: exit.marker.y })}
+      aria-hidden="true"
+    >
+      {open ? (
+        <svg
+          className="town__sign-icon"
+          aria-hidden="true"
+          viewBox="-10 -10 20 20"
+          style={{ transform: `rotate(${angle}deg)` }}
+        >
+          <path d="M-8 -3.5 H1 V-8 L9 0 L1 8 V3.5 H-8 Z" />
+        </svg>
+      ) : (
+        <svg className="town__sign-icon" viewBox="-10 -10 20 20" aria-hidden="true">
+          <path
+            className="town__sign-shackle"
+            d="M-5 -2 V-5 A5 5 0 0 1 5 -5 V-2"
+            fill="none"
+            strokeWidth="2.4"
+          />
+          <rect x="-7.5" y="-2" width="15" height="11" rx="2" />
+        </svg>
+      )}
+      {hr.town.signs[exit.to]}
+    </span>
+  );
+}
+
 function exitLabel(from: AreaId, to: AreaId): string {
   const key = `${from}-${to}` as keyof typeof hr.town.exits;
   return hr.town.exits[key] ?? hr.town.walk;

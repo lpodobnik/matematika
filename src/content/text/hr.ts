@@ -409,6 +409,19 @@ export const hr = {
       'wheel-hill': 'Uz stube, na brijeg',
       'hill-wheel': 'Natrag do kotača',
     },
+    /** The signpost at each way out of a street: where it leads (locked until its room). */
+    signs: {
+      square: 'Trg',
+      canal: 'Kanal',
+      mill: 'Mlin',
+      bridge: 'Most',
+      yard: 'Vagaonica',
+      tram: 'Tramvaj',
+      lift: 'Dizalo',
+      market: 'Tržnica',
+      wheel: 'Kotač',
+      hill: 'Brijeg',
+    },
     close: 'Zatvori',
     /** For screen readers: the town as a whole, and a tap on the ground. */
     label: 'Trg u Donjem Kotaču',

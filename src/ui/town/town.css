@@ -267,6 +267,57 @@
   }
 }
 
+/* A signpost at each way out of a street: below its marker, so the bobbing arrow sits on top. */
+.town__sign {
+  position: absolute;
+  z-index: 2900;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.2em 0.65em 0.2em 0.45em;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: max(14px, 1.6cqw);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--ink) 30%, transparent);
+  transform: translate(-50%, 25%);
+  pointer-events: none;
+}
+
+.town__sign[data-edge="start"] {
+  transform: translate(0, 25%);
+}
+
+.town__sign[data-edge="end"] {
+  transform: translate(-100%, 25%);
+}
+
+.town__sign-icon {
+  flex: none;
+  width: 1.15em;
+  height: 1.15em;
+  fill: var(--jam);
+  stroke: var(--jam);
+}
+
+.town__sign-shackle {
+  stroke: var(--ink);
+}
+
+.town__sign[data-open="false"] {
+  border-style: dashed;
+  background: var(--paper);
+  opacity: 0.75;
+}
+
+.town__sign[data-open="false"] .town__sign-icon {
+  fill: var(--ink);
+  stroke: var(--ink);
+}
+
 .town__next {
   position: absolute;
   z-index: 3000;

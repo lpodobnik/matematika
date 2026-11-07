@@ -201,8 +201,19 @@ test('fixed machines open the way on: square, canal, mill', async ({ page }) => 
       room: null,
     });
   });
+  // Every way out is signposted: open ones with an arrow, closed ones locked.
+  await expect(page.locator('.town__sign[data-sign="canal"]')).toHaveAttribute('data-open', 'true');
+  await expect(page.locator('.town__sign[data-sign="bridge"]')).toHaveAttribute(
+    'data-open',
+    'true',
+  );
   await page.locator('.town__place[data-exit="canal"]').click();
   await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('.town__sign[data-sign="mill"]')).toHaveAttribute('data-open', 'true');
+  await expect(page.locator('.town__sign[data-sign="lift"]')).toHaveAttribute('data-open', 'false');
+  await expect(page.locator('.town__sign[data-sign="square"]')).toBeVisible();
+  await page.waitForTimeout(400);
+  await shot(page, '6-canal-signs');
   await page.locator('.town__place[data-exit="mill"]').click();
   await expect(page.locator('.town__board[data-area="mill"]')).toBeVisible({ timeout: 10_000 });
   await expect(page.locator('.town__place[data-node="r04"]')).toHaveAttribute('data-state', 'open');
