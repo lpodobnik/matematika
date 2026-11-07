@@ -148,6 +148,8 @@ export type Action =
    * the machine loops heard follow it (store/effects/audio.ts). Changes no state.
    */
   | { type: 'town/area'; area: AreaId | null }
+  /** Story 6.1: a room guide's "Dalje": the next step, or the topic is over (room/guide.ts). */
+  | { type: 'room/guide-next' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */
   | { type: 'dev/set-parts'; parts: number }
   /** The dev panel only: every winding-down automaton rewinds now. */

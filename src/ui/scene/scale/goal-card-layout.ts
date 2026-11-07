@@ -111,7 +111,7 @@ function union(a: Box, b: Box): Box {
 }
 
 /** Each pan with its pieces, and each readout, in one weighing at `tilt`. */
-function panBoxes(view: ScaleView, tilt: number, labelSize: number): Map<string, Box> {
+export function panBoxes(view: ScaleView, tilt: number, labelSize: number): Map<string, Box> {
   const pose = beamPose(tilt);
   const boxes = new Map<string, Box>();
   for (const side of ['left', 'right'] as const) {
@@ -168,7 +168,7 @@ function sweptPans(room: RoomState, labelSize: number): Box[] {
  * scrolls), from the top of the knob's plate, at every notch, down to the scene's bottom;
  * and the pin's flag where it stands on the track.
  */
-function dialBoxes(room: RoomState, sceneScale: number, labelSize: number): Box[] {
+export function dialBoxes(room: RoomState, sceneScale: number, labelSize: number): Box[] {
   const spec = currentStageSpec(room);
   const { dial } = spec;
   if (dial === 'locked') return [];

@@ -16,6 +16,7 @@ import type { LineToken, Token } from '@/math/tokens';
 import { type ChainView, chainView } from '@/room/chain';
 import { type DialView, dialView } from '@/room/dial';
 import { type DrumView, drumView } from '@/room/drum';
+import { guideKey, guideTargetPlace } from '@/room/guide';
 import { handoverView } from '@/room/handover';
 import { type LinkedView, linkedView } from '@/room/linked';
 import { type LogbookView, logbookView } from '@/room/logbook';
@@ -30,6 +31,7 @@ import { pinOffered } from '@/room/pin';
 import { type RangeView, rangeView } from '@/room/range';
 import { type StoryView, storyView } from '@/room/story';
 import type { NotebookLine, Refusal } from '@/room/types';
+import { roomGuideOf } from '@/store/room-guide';
 import { useGame } from '@/store/store';
 import {
   helpExample,
@@ -135,13 +137,28 @@ export function Notebook() {
   // Story 4.8: the recording drum (room 13).
   const drumKey = useGame((s) => JSON.stringify(drumView(s.room)));
   const drum = useMemo(() => JSON.parse(drumKey) as DrumView | null, [drumKey]);
-  const onScene = hinting ? hintOnScene : step !== null && !isNotebookHandover(step);
-  const shownStep = hinting ? `hint-${presses}` : step;
+  // Story 6.1: Nikola's guide: on a phone the notebook shows while a step rings something
+  // in it, and is pushed aside while a step rings only the scene; his card takes the
+  // handover tag's place.
+  const guiding = useGame((s) => guideKey(roomGuideOf(s)));
+  const guideInNotebook = useGame(
+    (s) => roomGuideOf(s)?.targets.some((t) => guideTargetPlace(t) === 'notebook') ?? false,
+  );
+  const onScene = hinting
+    ? hintOnScene
+    : guiding !== null
+      ? !guideInNotebook
+      : step !== null && !isNotebookHandover(step);
+  const shownStep = hinting ? `hint-${presses}` : guiding !== null ? `guide-${guiding}` : step;
   const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${shownStep}` : null;
   const [broughtBack, setBroughtBack] = useState<string | null>(null);
   // Story 4.5 review: a story pin waits in the notebook itself, so it is always shown then.
   const aside =
-    shownAside(choice, waiting, broughtBack) && !story?.asks && !range?.asks && !drum?.pin?.asks;
+    shownAside(choice, waiting, broughtBack) &&
+    !story?.asks &&
+    !range?.asks &&
+    !drum?.pin?.asks &&
+    !guideInNotebook;
   const dispatch = useGame((s) => s.dispatch);
   // Story 4.1: the gear chain, and his pick for its last link while the picker is open.
   // Its links are a fresh array on every read, so the selector returns them as text.
@@ -215,7 +232,7 @@ export function Notebook() {
       refused={refused}
       writes={writes}
       aside={aside}
-      handover={!hinting && isNotebookHandover(step) ? step : null}
+      handover={!hinting && guiding === null && isNotebookHandover(step) ? step : null}
       hint={hintNote === null ? null : { text: hintNote, presses, key: hintPadKey }}
       refusal={refusal}
       help={structure || example ? { structure, example } : null}

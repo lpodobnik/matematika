@@ -1,5 +1,7 @@
 // Story 2.13: rooms 1–7 back to back from a fresh start, in a real browser, at the tablet's
-// 1280 × 800 and the phone's 640 × 360. Every DOM control is tapped for real: the opening's
+// 1280 × 800 and the phone's 640 × 360. Story 6.1: from a fresh start every room guide of
+// rooms 1–7 shows; he reads each through, tapping its "Dalje", and makes the moves it asks
+// for (on a phone he brings the notebook back to write). Every DOM control is tapped for real: the opening's
 // panel and skip, the naming form, the number pad, the pin's confirm, the logbook's flag, the
 // hint button, the story cards' "next", the town's places (story 5.0: every room is left back
 // to the town), its district map and the map's nodes, and the scene's canvas for the first
@@ -74,13 +76,40 @@ const state = (page: Page) =>
 
 const key = (page: Page, name: string) => page.locator(`.pad__key[data-key="${name}"]`);
 
+/**
+ * Story 6.1: Nikola's guide, the first time a room needs a tool. He reads each step and taps
+ * its "Dalje"; a step that waits for a move ("Probaj!") is left to the move he makes next.
+ */
+async function guide(page: Page) {
+  for (let i = 0; i < 12; i += 1) {
+    const next = page.locator('.room-guide__next');
+    if ((await next.count()) === 0) return;
+    await next.click();
+  }
+}
+
+/**
+ * On a phone the notebook is pushed aside while the guide rings something in the scene; he
+ * brings it back with its handle to write.
+ */
+async function notebookBack(page: Page) {
+  const phone = (page.viewportSize()?.height ?? 800) < 500;
+  if (phone && (await page.locator('.notebook-area[data-aside="true"]').count()) > 0) {
+    await page.locator('.notebook__handle').click();
+    await expect(page.locator('.notebook-area')).toHaveAttribute('data-aside', 'false');
+  }
+}
+
 /** Taps a line out on the pad and enters it. */
 async function write(page: Page, line: string) {
+  await guide(page);
+  await notebookBack(page);
   for (const char of line) await key(page, char).click();
   await key(page, 'enter').click();
 }
 
 async function deleteKeys(page: Page, times: number) {
+  await notebookBack(page);
   for (let i = 0; i < times; i += 1) await key(page, 'delete').click();
 }
 
@@ -106,6 +135,7 @@ async function presented(page: Page) {
 
 const dial = async (page: Page, xs: readonly number[]) => {
   for (const x of xs) await dispatch(page, { type: 'dial/set', x });
+  await guide(page);
 };
 
 async function dialUpTo(page: Page, to: number) {
@@ -121,11 +151,13 @@ async function touch(page: Page) {
     .first()
     .click({ position: { x: 8, y: 8 } });
   await expect.poll(async () => (await state(page)).phase).not.toBe('arrive');
+  await guide(page);
 }
 
 /** A pin set on the scene, then confirmed with its button. */
 async function pin(page: Page, value: unknown) {
   await dispatch(page, { type: 'pin/set', value });
+  await guide(page);
   await page.locator('button.pin-confirm').click();
 }
 
@@ -233,6 +265,7 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await dial(page, [7, 8, 9]);
   await dispatch(page, { type: 'pin/set', value: { kind: 'x', x: 14 } });
   await dial(page, [8, 9]);
+  await guide(page);
   await page.locator('button.pin-confirm').click();
   await write(page, '14');
   await write(page, '14');
@@ -314,6 +347,7 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await expect(logbook.nth(0)).toHaveAttribute('data-shown', 'true');
   await logbook.nth(1).locator('button.line__tap').click();
   await expect(logbook.nth(1)).toHaveAttribute('data-shown', 'true');
+  await guide(page);
   await logbook.nth(1).locator('button.line__flag').click();
   await page.locator('button.line__confirm').click();
   await write(page, '6');

@@ -36,6 +36,7 @@ describe('the store', () => {
       hint: null,
       fightEnd: null,
       fightGuide: null,
+      roomGuide: null,
       fightSeed: null,
       workshop: null,
       friend: null,

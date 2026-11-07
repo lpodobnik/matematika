@@ -13,6 +13,7 @@ import { refusalView } from '@/room/notebook';
 import { numberPieceLabel } from '@/room/pieces';
 import { xLabel } from '@/room/scale';
 import type { Refusal } from '@/room/types';
+import { roomGuideOf } from '@/store/room-guide';
 import type { GameState } from '@/store/types';
 import { isSceneHandover, type SceneHandover } from '@/ui/scene/scale/handover-tag-layout';
 
@@ -98,7 +99,12 @@ export function hintSpot(view: HintView): HintSpot {
 function spotIn(state: Pick<GameState, 'room' | 'save' | 'ui'>, view: HintView): HintSpot {
   const spot = hintSpot(view);
   if (spot.place !== 'pin' || !state.room) return spot;
-  if (state.room.stage.planted) return { place: 'notebook', text: hr.pin.questions['wrong-line'] };
+  // Story 6.1: the second press says how to place the pin and confirm it.
+  const how = view.move?.kind === 'pin';
+  if (state.room.stage.planted) {
+    const text = how ? hr.hint.pinHow['wrong-line'] : hr.pin.questions['wrong-line'];
+    return { place: 'notebook', text };
+  }
   // Story 4.5: a story pin's question hangs at the notebook too, where the stories are.
   const stage = state.room.spec.stages[state.room.stageIndex];
   if (
@@ -106,9 +112,21 @@ function spotIn(state: Pick<GameState, 'room' | 'save' | 'ui'>, view: HintView):
     stage?.pin?.kind === 'range' ||
     stage?.pin?.kind === 'next-dot'
   ) {
-    return { place: 'notebook', text: hr.pin.questions[stage.pin.kind] };
+    const text = how ? hr.hint.pinHow[stage.pin.kind] : hr.pin.questions[stage.pin.kind];
+    return { place: 'notebook', text };
   }
   return spot;
+}
+
+/**
+ * Story 6.1: what the pin's own tag says on the hint's second press, while the pin waits in
+ * the scene: how to place it and confirm it, by its kind; null otherwise (its question).
+ */
+export function pinHowText(state: Pick<GameState, 'room' | 'save' | 'ui'>): string | null {
+  const view = hintOf(state);
+  if (view?.move?.kind !== 'pin' || !state.room) return null;
+  const kind = state.room.spec.stages[state.room.stageIndex]?.pin?.kind;
+  return kind ? hr.hint.pinHow[kind] : null;
 }
 
 /** What the hint shows in the game as it is now, or null. */
@@ -171,6 +189,8 @@ export function sceneTag(
   state: Pick<GameState, 'room' | 'save' | 'ui'>,
 ): 'hint' | 'handover' | null {
   if (hintOf(state) !== null) return 'hint';
+  // Story 6.1: while Nikola's guide talks, his card says it; the handover's tag waits.
+  if (roomGuideOf(state) !== null) return null;
   return refusalView(state.room) === null ? 'handover' : null;
 }
 

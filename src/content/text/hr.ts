@@ -664,8 +664,20 @@ export const hr = {
     takeOff: (n: string) => `Odvuci uteg ${n} s vage: skine se s obje strane.`,
     /** Story 4.2, at the tray: its x-gear adds that many x to both sides. */
     addGear: (gears: string) => `Dodaj ${gears} na obje strane: stavi zupčanik ${gears} na vagu.`,
-    /** At the splitter. */
-    split: (n: string) => `Podijeli obje strane ${withS(n)}.`,
+    /** At the splitter: the split, and how to make it (story 6.1: the move, concretely). */
+    split: (n: string) => `Podijeli obje strane ${withS(n)}: odvuci razdjelnik na vagu.`,
+    /**
+     * Story 6.1: the second press while a pin is offered, by pin kind: how to place it and
+     * confirm it (the first press asks the pin's question again).
+     */
+    pinHow: {
+      'level-x': 'Odvuci zastavicu po klizaču, pa dodirni Potvrdi.',
+      effect: 'Odvuci zastavicu na lijevo ili desno, pa dodirni Potvrdi.',
+      'wrong-line': 'Dodirni zastavicu kod retka koji ne vrijedi, pa Potvrdi.',
+      'story-choice': 'Dodirni zastavicu kod priče koja odgovara, pa Potvrdi.',
+      range: 'Dodirni zastavicu kod jednog dijela, pa Potvrdi.',
+      'next-dot': 'Dodirni zastavicu kod jedne visine, pa Potvrdi.',
+    },
     /** At the notebook: the answer line, `x = 9`. */
     answer: (line: string) => `Upiši ${line}.`,
     /** At the notebook: the check line, on a blank page. */
@@ -797,6 +809,81 @@ export const hr = {
         'Zato je bolje manje udaraca, a jačih.',
       ],
       clean: ['Ako oklop padne točno na 0, to je čisti rez: dvostruka nagrada!'],
+    },
+  },
+  /**
+   * Story 6.1: the rooms' first-time guides (room/guide.ts). Nikola says what a control does,
+   * the first time a room needs it, one line per step, at most about 80 characters, in the
+   * present tense or as an imperative, so no line needs his gender. Never the answer.
+   */
+  roomGuide: {
+    /** For screen readers: the guide's card. */
+    label: 'Nikola objašnjava',
+    /** Closes a step he only reads; the topic's last one says so. */
+    next: 'Dalje',
+    last: 'U redu',
+    /** Under a step that waits for a move, instead of a button. */
+    try: 'Probaj!',
+    steps: {
+      // Room 1: the slider, the pans and what level means, the hint button.
+      dial: 'Ovo je klizač. Pomiči ga i gledaj vagu.',
+      'dial-x': 'Klizač pokazuje koliko je x. Toliko teži zupčanik s x na vagi.',
+      readouts: 'Broj ispod svake zdjele kaže koliko je teška ta strana.',
+      level: 'Teža strana ide dolje. Kad su strane jednako teške, vaga je ravna.',
+      hint: 'Ako zapneš, dodirni ? i pokazat ću ti sljedeći korak.',
+      // Room 1: the notebook, its blanks, the enter key, the check line.
+      notebook: 'Ovo je bilježnica. Ono što vaga pokaže, ovdje zapisuješ.',
+      blanks: 'Prazna kućica čeka broj. Tipkaj ga na tipkama ispod.',
+      free: 'Ovdje cijeli redak pišeš tipkama: x, znak = i brojeve.',
+      enter: 'Dodirni ↵ i stroj će provjeriti redak.',
+      'check-blank': 'Zadnji redak je provjera: u kućicu ide tvoj broj umjesto x.',
+      'check-free': 'Provjeri: prepiši prvi redak, a umjesto x upiši svoj broj.',
+      // Room 3: the prediction flag, where it levels, then which way it tilts.
+      pin: 'Ovo je zastavica. Njome pogađaš prije nego što isprobaš.',
+      poke: 'Klizač zasad ide samo malo. Probaj ga i gledaj kako se vaga mijenja.',
+      'pin-drag': 'Odvuci zastavicu tamo gdje misliš da će vaga biti ravna.',
+      'pin-confirm': 'Dodirni Potvrdi i stroj će provjeriti tvoju zastavicu.',
+      tilt: 'Sad pogađaš smjer: kamo se vaga nagne kad x raste?',
+      'tilt-drag': 'Odvuci zastavicu na lijevo ili desno, kako misliš.',
+      // Room 4: Balance, the tray and the splitter.
+      tray: 'Ovo je polica s utezima. Tipkama − i + biraš broj na njima.',
+      'tray-kinds': 'Uteg vuče svoju stranu dolje. Balon je diže, kao da oduzima.',
+      'tray-drop': 'Odvuci jedan na vagu. Ide na obje strane odjednom.',
+      auto: 'Svaki potez na vagi bilježnica zapisuje sama.',
+      goal: 'Cilj: x sam na jednoj strani, a samo broj na drugoj.',
+      splitter: 'Ovo je razdjelnik. Dijeli obje strane na jednake dijelove.',
+      split: 'Tipkama − i + biraš broj dijelova. Onda ga odvuci na vagu.',
+      // Room 7: the old logbook and its wrong line.
+      logbook: 'Ovo je stari dnevnik. Ovaj zadatak u njemu je već riješen.',
+      'logbook-tap': 'Dodirni redak i vaga ga pokaže uz isti x.',
+      'logbook-flag': 'Jedan redak ne vrijedi. Stavi zastavicu na njega, pa potvrdi.',
+      // Room 8: the gear chain.
+      chain: 'Ovo je lanac. Karike redom pokazuju što se radi s x.',
+      'chain-undo': 'Dodirni zadnju kariku i odaberi što je poništava.',
+      'chain-run': 'Upiši broj i dodirni Pokreni. Vaga i bilježnica idu za lancem.',
+      // Room 9: the tray's x-gear.
+      gear: 'Na polici je sad i zupčanik x. On dodaje x na obje strane.',
+      'gear-why': 'Balon s x oduzima x. Zupčanik ga vraća, i to na obje strane.',
+      // Room 10: the story, written; then the story that fits.
+      story: 'Ovo je priča. U njoj se krije jednadžba.',
+      'story-x': 'Ono što priča ne kaže je x. Ostale brojeve uzmi iz priče.',
+      'story-write': 'Zapiši priču kao redak i dodirni ↵. Onda se vaga napuni.',
+      'story-choice': 'Tri priče, a vagi odgovara samo jedna. Usporedi ih s vagom.',
+      'story-flag': 'Stavi zastavicu na priču koja odgovara, pa dodirni Potvrdi.',
+      // Room 11: the coarse slider and its single steps, the range pin.
+      coarse: 'Ovaj klizač skače po 10. Do velikog broja treba dugo.',
+      fine: 'Gumbi − i + mijenjaju x za 1, kad si blizu.',
+      range: 'Prvo samo procijeni koliki je x. Ne treba točan broj.',
+      'range-flag': 'Stavi zastavicu na jedan dio, pa dodirni Potvrdi.',
+      // Room 12: the linked machines.
+      linked: 'Ova dva stroja su povezana. Tvoj x odavde ide u sljedeći.',
+      'linked-slot': 'Prazno mjesto u sljedećem stroju čeka baš taj broj.',
+      'linked-fed': 'Broj iz prvog stroja sad je uteg na ovoj vagi.',
+      // Room 13: the recording drum and its next-dot pin.
+      drum: 'Ovo je bubanj. Za svaki x koji probaš nacrta točkicu.',
+      'drum-dot': 'Točkica je težina lijeve strane. Crta je težina desne.',
+      'drum-try': 'Probaj klizač na prvim mjestima i gledaj točkice.',
+      'drum-pin': 'Gdje pada sljedeća točkica? Stavi zastavicu, pa Potvrdi.',
     },
   },
   /**

@@ -39,6 +39,7 @@ import type { DomainEvent } from '@/store/events';
 import { withFights } from '@/store/fight-reducer';
 import { newSave } from '@/store/persist';
 import { initialQuality, type QualityState, reduceQuality } from '@/store/quality';
+import { withRoomGuide } from '@/store/room-guide';
 import { withSettings } from '@/store/settings-reducer';
 import { withShop } from '@/store/shop-reducer';
 import type { GameState, Reduce, SaveState } from '@/store/types';
@@ -60,6 +61,7 @@ export function initialGameState(): GameState {
       hint: null,
       fightEnd: null,
       fightGuide: null,
+      roomGuide: null,
       fightSeed: null,
       workshop: null,
       friend: null,
@@ -586,7 +588,9 @@ function leavingRoom(state: GameState, action: Action): RoomState | null {
  */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return withSettings(
-    withWorkshop(withShop(withFights(createRoomReducer(roomList), roomList), roomList)),
+    withWorkshop(
+      withShop(withFights(withRoomGuide(createRoomReducer(roomList)), roomList), roomList),
+    ),
   );
 }
 

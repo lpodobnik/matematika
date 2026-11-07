@@ -11,7 +11,7 @@ import { pinTrack, pinView, slotValue } from '@/room/pin';
 import { currentStageSpec } from '@/room/room';
 import type { EffectOption } from '@/room/types';
 import { useGame } from '@/store/store';
-import { hintPlace } from '@/ui/common/hint-text';
+import { hintPlace, pinHowText } from '@/ui/common/hint-text';
 import { dialPointerHandlers, watchDragCancel } from '@/ui/scene/scale/dial-drag';
 import { dialLayout } from '@/ui/scene/scale/dial-layout';
 import { labelFontSize } from '@/ui/scene/scale/layout';
@@ -82,6 +82,8 @@ function PinOnScale({ sceneScale, question }: Props) {
   const dispatch = useGame((s) => s.dispatch);
   // Story 1.16: the hint button, while the pin is offered, shows its question again.
   const hinted = useGame((s) => (hintPlace(s) === 'pin' ? (s.ui.hint?.presses ?? 0) : 0));
+  // Story 6.1: the second press says how to place the flag and confirm it, on the same tag.
+  const howText = useGame(pinHowText);
   const fontSize = labelFontSize(sceneScale);
   const kind = view?.kind ?? null;
   const slots = view?.slots ?? 0;
@@ -212,8 +214,9 @@ function PinOnScale({ sceneScale, question }: Props) {
     if (!asks || !layout || !roomSpec || !questionKey) return null;
     const reset = resetCorner(sceneScale, { x: originX, y: originY });
     const obstacles = tagObstacles(roomSpec, stageIndex, layout, slots, fontSize, reset);
-    return pinTagLayout(hr.pin.questions[questionKey], sceneScale, layout, obstacles);
+    return pinTagLayout(howText ?? hr.pin.questions[questionKey], sceneScale, layout, obstacles);
   }, [
+    howText,
     asks,
     layout,
     roomSpec,

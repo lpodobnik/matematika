@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { rooms } from '@/content/rooms';
-import { check } from '@/math/check';
-import type { Equation } from '@/math/expr';
+import { check, stageSolution } from '@/math/check';
+import { type Equation, hasX } from '@/math/expr';
 import { formatEquation } from '@/math/format';
 import { LINE_TABLE, type LineRow } from '@/math/lines.table';
 import { parse } from '@/math/parse';
@@ -47,7 +47,7 @@ describe.each(Object.entries(LINE_TABLE))('%s', (_name, rows) => {
 describe('the line table', () => {
   const rows = Object.values(LINE_TABLE).flat();
 
-  it('covers every stage of rooms 1–12', () => {
+  it('covers every stage of rooms 1–13', () => {
     const stages = new Set(rows.map((row) => row.stage));
     for (const stage of [
       'x + 4 = 9',
@@ -67,9 +67,25 @@ describe('the line table', () => {
       '5 905 − 27x = 316',
       '2x + 3 = 11',
       '3x + 4 = 19',
+      '3x + 5 = 20',
+      '50 − 4x = 34',
     ]) {
       expect(stages, stage).toContain(stage);
     }
+  });
+
+  // Story 6.1 (NFR11): every stage of every authored room, read off the rooms themselves, so
+  // a room added or changed can't slip past the table.
+  it('covers every stage of all 13 rooms, as the rooms are authored', () => {
+    const keys = new Set(rows.map((row) => lineKey(row.stage)));
+    const authored = rooms.flatMap((room) =>
+      room.stages.map((stage, index) => ({
+        id: `${room.id} stage ${index + 1}`,
+        text: stage.machines[0]?.equation ?? '',
+      })),
+    );
+    expect(new Set(rooms.map((room) => room.id)).size).toBe(13);
+    for (const { id, text } of authored) expect(keys.has(lineKey(text)), id).toBe(true);
   });
 
   it('has, for each stage, a check line and at least two wrong lines', () => {
@@ -237,6 +253,40 @@ describe('epic 1 in the table (story 1.13)', () => {
 
     it('has at least two wrong lines', () => {
       expect(rows.filter((row) => row.verdict === 'wrong').length).toBeGreaterThanOrEqual(2);
+    });
+
+    // Story 6.1 (NFR11): the right lines every way can write and the wrong ones a child
+    // writes, in every stage of every room.
+    const n = stageSolution(stage);
+    const isAnswerOf = (text: string, value: number) => {
+      const key = lineKey(text);
+      return key === `x = ${value}` || key === `${value} = x`;
+    };
+
+    it('takes the answer either way round, x = n and n = x', () => {
+      const answers = rows.filter((row) => row.verdict === 'answer');
+      expect(answers.some((row) => lineKey(row.line) === `x = ${n}`)).toBe(true);
+      expect(answers.some((row) => lineKey(row.line) === `${n} = x`)).toBe(true);
+    });
+
+    it('refuses a wrong answer straight after the equation', () => {
+      const wrongAnswers = rows.filter(
+        (row) =>
+          row.verdict === 'wrong' &&
+          (row.before ?? []).length === 0 &&
+          /^x = \d[\d ]*$/.test(lineKey(row.line)),
+      );
+      expect(wrongAnswers.length).toBeGreaterThan(0);
+      for (const row of wrongAnswers) expect(isAnswerOf(row.line, n)).toBe(false);
+    });
+
+    it('refuses a check line with the wrong number in it, after the answer', () => {
+      const wrongChecks = rows.filter((row) => {
+        if (row.verdict !== 'wrong' || (row.before ?? []).length === 0) return false;
+        const parsed = parse(row.line);
+        return parsed.ok && !hasX(parsed.equation.left) && !hasX(parsed.equation.right);
+      });
+      expect(wrongChecks.length).toBeGreaterThan(0);
     });
   });
 });

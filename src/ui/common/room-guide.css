@@ -1,0 +1,121 @@
+/* Story 6.1: a room guide's step. The dimming covers the whole screen but the rings' holes
+   and takes no touches, so the room stays his; only the card takes touches. It sits above
+   the notebook, which slides over the scene on a phone (notebook.css: z-index 2), and under
+   the portrait overlay (app.css: 10). */
+.room-guide__dim {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.room-guide__shade {
+  fill: color-mix(in srgb, var(--ink) 38%, transparent);
+}
+
+.room-guide__ring {
+  fill: none;
+  stroke: var(--lamp);
+  stroke-width: 4px;
+  animation: room-guide-ring 1400ms ease-in-out infinite;
+}
+
+@keyframes room-guide-ring {
+  50% {
+    stroke: var(--lamp-wash);
+  }
+}
+
+.room-guide__card {
+  position: fixed;
+  z-index: 6;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(380px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-left: 8px solid var(--lamp);
+  border-radius: 10px;
+  background: var(--sheet, var(--paper));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--ink) 30%, transparent);
+  color: var(--ink);
+}
+
+.room-guide__who {
+  font-size: 15px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.room-guide__text {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.room-guide__next {
+  align-self: flex-end;
+  min-width: 120px;
+  min-height: 52px;
+  margin-top: 4px;
+  padding: 0 22px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.room-guide__try {
+  align-self: flex-end;
+  min-height: 28px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--lamp);
+  filter: brightness(0.8);
+}
+
+/* A phone in landscape: a smaller card, so it fits beside what it points at. */
+@media (max-height: 499.98px) {
+  .room-guide__card {
+    gap: 2px;
+    width: min(280px, calc(100vw - 24px));
+    padding: 4px 10px;
+    border-left-width: 6px;
+  }
+
+  .room-guide__who {
+    font-size: 12px;
+  }
+
+  .room-guide__text {
+    font-size: 15px;
+    line-height: 1.25;
+  }
+
+  .room-guide__next {
+    min-width: 96px;
+    min-height: 48px;
+    margin-top: 0;
+    font-size: 17px;
+  }
+
+  .room-guide__try {
+    min-height: 20px;
+    font-size: 14px;
+  }
+
+  .room-guide__ring {
+    stroke-width: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-guide__ring {
+    animation: none;
+  }
+}

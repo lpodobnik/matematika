@@ -4,6 +4,7 @@
 import type { Economy } from '@/economy/types';
 import type { GuideStep } from '@/fight/guide';
 import type { FightState, PageId } from '@/fight/types';
+import type { RoomGuideState } from '@/room/guide';
 import type { HintState } from '@/room/hint';
 import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, IdeaId, RoomId, RoomState, ToolId } from '@/room/types';
@@ -118,6 +119,12 @@ export interface UiState {
    * only: a fight resumed on launch picks the guide up again from the fight.
    */
   fightGuide: GuideStep | null;
+  /**
+   * Story 6.1: where he is in the room guide that shows (room/guide.ts), or null at a
+   * topic's first step. In memory only: the topics he has read through are saved, in
+   * `save.progress.firstUse`.
+   */
+  roomGuide: RoomGuideState | null;
   /** The dev panel only: the seed every new fight's dice start from, or null for random. */
   fightSeed: number | null;
   /** Epic 5: building a room in the workshop, or null. */

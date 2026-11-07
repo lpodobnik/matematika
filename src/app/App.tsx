@@ -13,6 +13,7 @@ import { MuteButton } from '@/ui/common/MuteButton';
 import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
+import { RoomGuide } from '@/ui/common/RoomGuide';
 import { FightScreen } from '@/ui/fight/FightScreen';
 import { FriendScreen } from '@/ui/friend/FriendScreen';
 import { GiveUpButton } from '@/ui/friend/GiveUpButton';
@@ -105,6 +106,8 @@ function RoomScreen() {
         <GoalBanner area={sceneAreaRef} />
       </main>
       <Notebook />
+      {/* Story 6.1: Nikola's guide the first time the room needs a tool, over both. */}
+      <RoomGuide area={sceneAreaRef} />
     </>
   );
 }
