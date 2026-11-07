@@ -31,6 +31,18 @@ const dispatch = (page: Page, action: unknown) =>
 const shot = (page: Page, name: string) =>
   page.screenshot({ path: `test-results/town-${test.info().project.name}-${name}.png` });
 
+/**
+ * Story 6.1: Nikola's guide in room 1. He reads each step and taps its "Dalje"; a step that
+ * waits for a move is left to the move he makes next.
+ */
+async function guide(page: Page) {
+  for (let i = 0; i < 12; i += 1) {
+    const next = page.locator('.room-guide__next');
+    if ((await next.count()) === 0) return;
+    await next.click();
+  }
+}
+
 test('a new game: the opening, the naming, the town, room 1 and back', async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto('/');
@@ -91,6 +103,7 @@ test('a new game: the opening, the naming, the town, room 1 and back', async ({ 
     .click({ position: { x: 300, y: 300 } });
   for (const x of [1, 2, 3, 4, 5]) await dispatch(page, { type: 'dial/set', x });
   for (let i = 0; i < 2; i += 1) {
+    await guide(page);
     await page.locator('.pad__key[data-key="5"]').click();
     await page.locator('.pad__key[data-key="enter"]').click();
   }

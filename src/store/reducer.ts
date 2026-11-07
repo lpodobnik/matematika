@@ -39,6 +39,7 @@ import type { DomainEvent } from '@/store/events';
 import { withFights } from '@/store/fight-reducer';
 import { newSave } from '@/store/persist';
 import { initialQuality, type QualityState, reduceQuality } from '@/store/quality';
+import { withRoomGuide } from '@/store/room-guide';
 import { withShop } from '@/store/shop-reducer';
 import type { GameState, Reduce, SaveState } from '@/store/types';
 
@@ -58,6 +59,7 @@ export function initialGameState(): GameState {
       hint: null,
       fightEnd: null,
       fightGuide: null,
+      roomGuide: null,
       fightSeed: null,
     },
   };
@@ -573,7 +575,7 @@ function leavingRoom(state: GameState, action: Action): RoomState | null {
  * fights over it (store/fight-reducer.ts).
  */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
-  return withShop(withFights(createRoomReducer(roomList), roomList), roomList);
+  return withShop(withFights(withRoomGuide(createRoomReducer(roomList)), roomList), roomList);
 }
 
 /** The opening's end (story 5.0): it is seen, and never shows again. */

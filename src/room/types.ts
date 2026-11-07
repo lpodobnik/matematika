@@ -200,13 +200,46 @@ export const handoverIds = [
 export type HandoverId = (typeof handoverIds)[number];
 
 /**
+ * Story 6.1: the rooms' first-time guides (room/guide.ts), one per tool or idea a room
+ * brings, in the order the game first needs them. Nikola talks him through each once.
+ */
+export const guideTopicIds = [
+  'dial',
+  'notebook',
+  'check',
+  'pin',
+  'tilt',
+  'tray',
+  'splitter',
+  'logbook',
+  'chain',
+  'gear',
+  'story',
+  'story-choice',
+  'coarse',
+  'range',
+  'linked',
+  'linked-fed',
+  'drum',
+] as const;
+
+export type GuideTopic = (typeof guideTopicIds)[number];
+
+/**
  * What he has met, so each shows only the first time (Pattern 2, First use): the controls
  * that wiggle once, the first time the game offers them (`pin`, `tray`, `splitter`), and
  * the handover steps he has taken (`handover-dial`, …; room/handover.ts). A handover's id
  * is its own, since the tray is met as it is offered and its handover only once he uses it.
- * `fight-guide` is the guided first fight (fight/guide.ts), met once he has gone through it.
+ * `fight-guide` is the guided first fight (fight/guide.ts), met once he has gone through it;
+ * `guide-<topic>` a room guide (story 6.1, room/guide.ts), met once he has read it to its end.
  */
-export type FirstUseId = 'pin' | 'tray' | 'splitter' | 'fight-guide' | `handover-${HandoverId}`;
+export type FirstUseId =
+  | 'pin'
+  | 'tray'
+  | 'splitter'
+  | 'fight-guide'
+  | `handover-${HandoverId}`
+  | `guide-${GuideTopic}`;
 
 /**
  * What the tray holds (Pattern 1, Balance moves): weights and floats, and from room 9 an

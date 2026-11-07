@@ -90,7 +90,7 @@ describe('decodeSave', () => {
           ...sample.progress,
           roomsDone: ['r01', 'r99', 7, 'r01'],
           tools: ['balance', 'laser'],
-          firstUse: ['pin', 'handover-nope'],
+          firstUse: ['pin', 'handover-nope', 'guide-dial', 'guide-nope'],
         },
         economy: { parts: -3, upgrades: ['steam', 'rocket'], paidPredictions: ['r03:0', 'x'] },
         settings: { muted: 'yes', quality: 'ultra' },
@@ -101,7 +101,7 @@ describe('decodeSave', () => {
     expect(decoded?.progress).toMatchObject({
       roomsDone: ['r01'],
       tools: ['balance'],
-      firstUse: ['pin'],
+      firstUse: ['pin', 'guide-dial'],
     });
     expect(decoded?.economy).toMatchObject({
       parts: 0,

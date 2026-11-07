@@ -74,6 +74,26 @@ const met = [
   'handover-balance-goal',
   'handover-splitter',
   'handover-rewrite',
+  // Story 6.1: every room guide read (e2e/room-guide.spec.ts goes through them).
+  ...[
+    'dial',
+    'notebook',
+    'check',
+    'pin',
+    'tilt',
+    'tray',
+    'splitter',
+    'logbook',
+    'chain',
+    'gear',
+    'story',
+    'story-choice',
+    'coarse',
+    'range',
+    'linked',
+    'linked-fed',
+    'drum',
+  ].map((topic) => `guide-${topic}`),
 ];
 
 async function startOnTheMap(page: Page) {

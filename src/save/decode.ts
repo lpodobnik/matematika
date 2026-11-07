@@ -16,6 +16,7 @@ import { ideasByRoom } from '@/room/ideas';
 import { isRoomId, type SavedLine, type SavedRoom } from '@/room/resume';
 import {
   type FirstUseId,
+  guideTopicIds,
   handoverIds,
   type IdeaId,
   ideaIds,
@@ -70,6 +71,8 @@ const firstUseIds: readonly FirstUseId[] = [
   'splitter',
   'fight-guide',
   ...handoverIds.map((id): FirstUseId => `handover-${id}`),
+  // Story 6.1: the room guides he has read to their end.
+  ...guideTopicIds.map((id): FirstUseId => `guide-${id}`),
 ];
 
 const isTool = inList<ToolId>(toolIds);

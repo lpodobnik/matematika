@@ -9,7 +9,7 @@ describe('the hint button’s and the goal card’s words (story 1.16)', () => {
     });
     expect(hr.hint.take('5', '−5')).toBe('Skini 5 s obje strane: stavi balon −5 na vagu.');
     expect(hr.hint.add('5', '5')).toBe('Dodaj 5 na obje strane: stavi uteg 5 na vagu.');
-    expect(hr.hint.split('2')).toBe('Podijeli obje strane s 2.');
+    expect(hr.hint.split('2')).toBe('Podijeli obje strane s 2: odvuci razdjelnik na vagu.');
     expect(hr.hint.answer('x = 9')).toBe('Upiši x = 9.');
     expect(hr.hint.check('9')).toBe('Prepiši prvu jednadžbu, a umjesto x upiši 9.');
     expect(hr.goal.label).toBe('Cilj: x sam');
@@ -25,7 +25,8 @@ describe('the hint button’s and the goal card’s words (story 1.16)', () => {
   });
 
   it('says "sa" before the splitter’s parts whose word starts with s or š', () => {
-    const says = (n: number) => hr.hint.split(String(n)).replace('Podijeli obje strane ', '');
+    const says = (n: number) =>
+      `${hr.hint.split(String(n)).replace('Podijeli obje strane ', '').split(':')[0]}.`;
     expect([2, 3, 4, 5, 6, 7, 8, 9].map(says)).toEqual([
       's 2.',
       's 3.',
@@ -36,6 +37,27 @@ describe('the hint button’s and the goal card’s words (story 1.16)', () => {
       's 8.',
       's 9.',
     ]);
+  });
+});
+
+describe('the room guides’ words (story 6.1)', () => {
+  const lines = Object.entries(hr.roomGuide.steps);
+
+  it('keeps every line short: about 80 characters at most', () => {
+    for (const [step, line] of lines) expect(line.length, step).toBeLessThanOrEqual(80);
+  });
+
+  it('never addresses him with a gendered past tense', () => {
+    // "si napravio", "si napravila", "napravio si": the past tense says he or she.
+    const pastWithSi = /(?<!\p{L})si\s+\p{L}+(?:o|la)(?!\p{L})|\p{L}+(?:o|la)\s+si(?!\p{L})/u;
+    for (const [step, line] of lines) expect(line, step).not.toMatch(pastWithSi);
+  });
+
+  it('says how to place every kind of pin on the hint’s second press', () => {
+    expect(Object.keys(hr.hint.pinHow).sort()).toEqual(
+      ['effect', 'level-x', 'next-dot', 'range', 'story-choice', 'wrong-line'].sort(),
+    );
+    for (const line of Object.values(hr.hint.pinHow)) expect(line).toContain('Potvrdi');
   });
 });
 

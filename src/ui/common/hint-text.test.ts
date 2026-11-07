@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { hr } from '@/content/text/hr';
 import { tokenFromChar } from '@/math/tokens';
+import { guideMet } from '@/room/guide';
 import type { HintView } from '@/room/hint';
+import { guideTopicIds } from '@/room/types';
 import type { Action } from '@/store/actions';
 import { initialGameState } from '@/store/reducer';
 import { createGameStore } from '@/store/store';
-import { hintSpot, notebookHint, notebookRefusal, sceneTag } from '@/ui/common/hint-text';
+import {
+  hintSpot,
+  notebookHint,
+  notebookRefusal,
+  pinHowText,
+  sceneTag,
+} from '@/ui/common/hint-text';
 
 function view(partial: Partial<HintView>): HintView {
   return { level: 2, step: 'dial', move: null, presses: 2, example: null, ...partial };
@@ -111,7 +119,8 @@ describe('one tag at a time with the refusal’s (story 1.16 review)', () => {
             tornPages: [],
             introSeen: true,
             tools: ['balance'],
-            firstUse: [],
+            // Story 6.1: Nikola's guides are read, so the handover tags show as before.
+            firstUse: guideTopicIds.map(guideMet),
           },
         },
       },
@@ -149,5 +158,68 @@ describe('the hint at room 7’s line pin (story 2.10 review)', () => {
     store.getState().dispatch({ type: 'machine/touch' });
     store.getState().dispatch({ type: 'hint/press' });
     expect(notebookHint(store.getState())).toBe(hr.pin.questions['wrong-line']);
+  });
+});
+
+// Story 6.1: Nikola's card says the step while his guide talks, so no handover tag hangs.
+describe('the scene’s tag while a room guide shows (story 6.1)', () => {
+  it('hangs no handover tag while the guide shows, and the hint’s tag when he asks', () => {
+    const initial = initialGameState();
+    const store = createGameStore({
+      makeCtx: () => ({ now: 1000, rng: { next: () => 0.5 } }),
+      initialState: {
+        ...initial,
+        save: { ...initial.save, progress: { ...initial.save.progress, introSeen: true } },
+      },
+    });
+    const act = (action: Action) => store.getState().dispatch(action);
+    act({ type: 'room/enter', roomId: 'r01' });
+    expect(store.getState().ui.screen).toBe('room');
+    expect(sceneTag(store.getState())).toBeNull();
+    act({ type: 'hint/press' });
+    expect(sceneTag(store.getState())).toBe('hint');
+  });
+});
+
+// Story 6.1: the hint's second press while a pin is offered says how to place it and confirm
+// it, not the pin's question again.
+describe('the hint’s second press while a pin is offered (story 6.1)', () => {
+  function pinned(roomId: 'r03' | 'r07') {
+    const initial = initialGameState();
+    const store = createGameStore({
+      makeCtx: () => ({ now: 1000, rng: { next: () => 0.5 } }),
+      initialState: {
+        ...initial,
+        save: {
+          ...initial.save,
+          progress: {
+            ...initial.save.progress,
+            introSeen: true,
+            tools: ['balance', 'workshop'],
+            firstUse: guideTopicIds.map(guideMet),
+          },
+        },
+      },
+    });
+    const act = (action: Action) => store.getState().dispatch(action);
+    act({ type: 'room/enter', roomId });
+    act({ type: 'machine/touch' });
+    return { store, act };
+  }
+
+  it('room 3: the flag’s tag asks its question, then says to drag the flag and tap Potvrdi', () => {
+    const { store, act } = pinned('r03');
+    act({ type: 'hint/press' });
+    expect(pinHowText(store.getState())).toBeNull();
+    act({ type: 'hint/press' });
+    expect(pinHowText(store.getState())).toBe(hr.hint.pinHow['level-x']);
+  });
+
+  it('room 7: the logbook’s tag says to flag the wrong line and confirm', () => {
+    const { store, act } = pinned('r07');
+    act({ type: 'hint/press' });
+    expect(notebookHint(store.getState())).toBe(hr.pin.questions['wrong-line']);
+    act({ type: 'hint/press' });
+    expect(notebookHint(store.getState())).toBe(hr.hint.pinHow['wrong-line']);
   });
 });

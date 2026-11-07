@@ -112,6 +112,8 @@ export type Action =
   | { type: 'fight/close' }
   /** The guided first fight's "Dalje": the next step, or the guide is over (fight/guide.ts). */
   | { type: 'fight/guide-next' }
+  /** Story 6.1: a room guide's "Dalje": the next step, or the topic is over (room/guide.ts). */
+  | { type: 'room/guide-next' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */
   | { type: 'dev/set-parts'; parts: number }
   /** The dev panel only: every winding-down automaton rewinds now. */
