@@ -1,9 +1,9 @@
 // Story 3.7: automaton fights in a real browser, at the tablet's 1280 × 800 and the phone's
 // 640 × 360. From a game with rooms 1–6 done (set up through the store, as a save would
-// bring it), every fight control is tapped for real: the lair on the map, the roll, the
-// dice and slots, the blows notches, the strike, the leave and its question, the end's way
-// back, the torn page, the map's pages button, and the counter's buy and back. Each step is
-// screenshotted into the test's output folder.
+// bring it), every fight control is tapped for real: the town's district map button (story
+// 5.0) and the lair on the map, the roll, the dice and slots, the blows notches, the strike,
+// the leave and its question, the end's way back, the torn page, the map's pages button, and
+// the counter's buy and back. Each step is screenshotted into the test's output folder.
 //
 //   npm run e2e                                       (starts its own server on 5291)
 //   E2E_URL=http://localhost:5290/ npm run e2e        (uses a server already running)
@@ -47,7 +47,7 @@ const dispatch = (page: Page, action: unknown) =>
 
 const toSix = ['r01', 'r02', 'r03', 'r04', 'r05', 'r06'];
 
-/** A game with rooms 1–6 done and some parts, on the map, as a save would bring it. */
+/** A game with rooms 1–6 done and some parts, in the town, as a save would bring it. */
 async function startOnTheMap(page: Page, parts: number) {
   await page.evaluate(
     async ({ done, parts }) => {
@@ -65,6 +65,7 @@ async function startOnTheMap(page: Page, parts: number) {
             told: done,
             tools: ['balance', 'workshop'],
             onMap: true,
+            introSeen: true,
           },
           economy: { ...s.economy, parts },
         },
@@ -74,7 +75,16 @@ async function startOnTheMap(page: Page, parts: number) {
     },
     { done: toSix, parts },
   );
-  await expect(page.locator('.map')).toBeVisible();
+  await expect(page.locator('.town__board')).toBeVisible();
+}
+
+/**
+ * The town's corner button opens the district map over it (story 5.0); a fight or the
+ * workshop left goes back to the town with it closed.
+ */
+async function openMap(page: Page) {
+  await page.getByRole('button', { name: 'Karta četvrti' }).click();
+  await expect(page.locator('.town__overlay .map__board')).toBeVisible();
 }
 
 /** One round, tapped: roll, the dice placed hard (or soft), the blows set, the strike. */
@@ -132,6 +142,7 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   await page.reload();
   await hook(page);
   await startOnTheMap(page, 12);
+  await openMap(page);
   await shot('01-map');
 
   // Armour 30, beside the bridge: one soft strike, then leave, which asks and loses.
@@ -160,6 +171,7 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   await expect(page.locator('.fight__end')).toContainText(`${dropped} dijela ostaju`);
   await shot('05-lost');
   await page.locator('.fight__close').click();
+  await openMap(page);
   await expect(page.locator('.map__node[data-node="lair-30"] .map__pile')).toHaveText(
     String(dropped),
   );
@@ -184,6 +196,7 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   await shot('08-page');
   await page.locator('.pages__close').click();
   await page.locator('.fight__close').click();
+  await openMap(page);
   await expect(page.locator('.map__node[data-node="lair-30"]')).toHaveAttribute(
     'data-state',
     'winding',
@@ -194,13 +207,18 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   await expect(page.locator('.torn-page')).toHaveCount(1);
   await shot('09-pages');
   await page.locator('.pages__close').click();
+  // The district map closes again, back to the town.
+  await page.getByRole('button', { name: 'Zatvori' }).click();
+  await expect(page.locator('.town__overlay')).toHaveCount(0);
 
-  // The dev panel's "+10 parts" (story 3.7), tapped; then the workshop after room 6.
+  // The dev panel's "+10 parts" (story 3.7), tapped in the town; then the workshop after
+  // room 6, from the district map.
   const beforePanel = (await state(page)).save.economy.parts;
   await page.keyboard.press('Backquote');
   await page.locator('.dev-panel button', { hasText: '+10 parts' }).click();
   expect((await state(page)).save.economy.parts).toBe(beforePanel + 10);
   await page.locator('.dev-panel button', { hasText: 'close' }).click();
+  await openMap(page);
   await page.locator('.map__node[data-node="workshop"]').click();
   await expect(page.locator('.shop')).toBeVisible();
   const parts = (await state(page)).save.economy.parts;
@@ -223,6 +241,7 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   await hook(page);
   expect((await state(page)).save.economy.upgrades).toEqual(['steam']);
   expect((await state(page)).save.progress.tornPages).toEqual(['page-1']);
+  await openMap(page);
   await page.locator('.map__node[data-node="lair-20"]').click();
   await expect(page.locator('.fight__pip')).toHaveCount(
     tuning.fight.steam + tuning.upgrades.steam.steam,

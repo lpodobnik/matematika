@@ -351,7 +351,7 @@ export const hr = {
       open: 'otvoreno',
       locked: 'zaključano',
       seen: 'uskoro',
-      winding: 'automat se odmotava',
+      winding: 'pobijeđen, odmara se',
       closed: 'zatvoreno',
     },
     /** For screen readers: a room he left halfway. */
@@ -360,6 +360,64 @@ export const hr = {
     pile: (n: number) => `ostavljeno ${n}`,
     /** Story 3.3: on a winding-down lair, when its automaton rewinds. */
     wakes: (minutes: number) => `budi se za ${minutes} min`,
+  },
+  /**
+   * The opening (story 5.0; narrative design, Story Beats, "Opening | Start"): four panels
+   * before anything else, told as a story, with no rules and no tips (GDD: the machine
+   * teaches). Each line is short enough for a phone.
+   */
+  opening: {
+    panels: [
+      'Satograd je grad zupčanika i pare. Sve strojeve složio je Majstor Kristijan.',
+      'Upute za svaki stroj zapisao je u Knjigu. Ljudi ih slijede i ne pitaju zašto.',
+      'Jednog jutra radionica je prazna. Kristijana nema. Strojevi staju jedan po jedan.',
+      'Na podu radionice leži njegova bilježnica. U njoj nisu koraci, nego pitanja.',
+    ],
+    next: 'Dalje',
+    skip: 'Preskoči',
+    begin: 'Kreni',
+  },
+  /**
+   * The town (story 5.0): the square he walks through, its people and its machines. A
+   * person introduces themself the first time they speak.
+   */
+  town: {
+    /** The district map, a tap away in the town's corner. */
+    map: 'Karta četvrti',
+    /** The opening again, from the town's corner. */
+    intro: 'Priča od početka',
+    close: 'Zatvori',
+    /** For screen readers: the town as a whole, and a tap on the ground. */
+    label: 'Trg u Donjem Kotaču',
+    walk: 'Hodaj ovamo',
+    people: {
+      penkala: {
+        name: 'Gospon Penkala',
+        who: 'kondukter, uvijek s Knjigom',
+        before: [
+          'Prema Knjizi: tri okreta kurble, svako jutro. Okrećem. Vrata stoje.',
+          'Ne diraj stroj, molim. Toga nema u Knjizi.',
+        ],
+        after: ['Vrata su gore. A u Knjizi piše tri okreta.', 'Hm. Možda je Knjiga stara.'],
+      },
+      nikola: {
+        name: 'Nikola',
+        who: 'sin palitelja svjetiljki',
+        before: [
+          'Tata pali svjetiljke svaku večer. Sad ne gori nijedna.',
+          'Kristijan bi znao. Ali Kristijana nema.',
+        ],
+        after: ['Gore! Sve četiri!', 'Kako to radi? Pokaži mi poslije.'],
+      },
+    },
+    places: {
+      /** A machine he can play: its name is enough; this is what a locked one says. */
+      locked: 'Ovaj stroj čeka. Prvo neki drugi.',
+      workshop: 'Kristijanova radionica. Zaključana, a ključ je kod nekog drugog.',
+      automaton: 'Automat skida dijelove sa zida. Bolje ga zasad zaobići.',
+      /** The automaton he beat, until it is back (ADR-13). */
+      beaten: (minutes: number) => `Ovaj automat je pobijeđen. Opet je tu za ${minutes} min.`,
+    },
   },
   pin: {
     /** Confirms the prediction pin where it is: it locks, and the machine tests it. */
@@ -589,7 +647,7 @@ export const hr = {
     /** Armour was left, so the automaton struck back. */
     dented: 'Automat uzvraća: udubljenje u trupu.',
     /** How the fight ended. */
-    won: 'Automat staje i odmotava se.',
+    won: 'Automat staje. Pobijeđen je.',
     lost: 'Automat je ovaj put jači.',
     reasons: {
       hull: 'Trup ne može podnijeti još jedno udubljenje.',
@@ -652,7 +710,7 @@ export const hr = {
       'page-1': {
         title: 'Iz dnevnika, list prvi',
         lines: [
-          'Prvi Automat me je danas pitao zašto treći korak dolazi prije četvrtog.',
+          'Prvi Automat me je danas pitao zašto treća uputa dolazi prije četvrte.',
           'Odgovorio sam: tako piše u Knjizi. Nije mu bilo dosta.',
         ],
       },
@@ -660,7 +718,7 @@ export const hr = {
         title: 'Iz dnevnika, list drugi',
         lines: [
           'Kotač se istrošio pa koraci više ne vrijede. Grad se svejedno drži Knjige.',
-          'Prvi Automat zna sve korake napamet, a nijedan razlog. To ga muči.',
+          'Prvi Automat zna sve upute napamet, a nijedan razlog. To ga muči.',
         ],
       },
       'page-3': {

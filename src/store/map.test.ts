@@ -26,7 +26,13 @@ function game(roomsDone: GameState['save']['progress']['roomsDone'] = ['r01', 'r
     save: {
       ...save,
       character: { name: 'Ivo', look: 'look-1' as const },
-      progress: { ...save.progress, roomsDone, onMap: true, told: [...roomsDone] },
+      progress: {
+        ...save.progress,
+        introSeen: true,
+        roomsDone,
+        onMap: true,
+        told: [...roomsDone],
+      },
     },
     room: null,
   });
@@ -178,6 +184,16 @@ describe('the map (story 2.2)', () => {
     expect(g.store.getState().ui.fresh).toBeNull();
   });
 
+  it('leaves from the arrival too, before he has touched the machine (story 5.0)', () => {
+    const g = game();
+    g.act({ type: 'map/travel', node: 'r03' });
+    expect(g.store.getState().room?.stage.phase).toBe('arrive');
+    g.act({ type: 'map/open' });
+    expect(g.store.getState().ui.screen).toBe('map');
+    expect(g.store.getState().room).toBeNull();
+    expect(g.store.getState().save.progress.started).toEqual([]);
+  });
+
   it('keeps nothing for a room he leaves before writing anything', () => {
     const g = game();
     g.act({ type: 'map/travel', node: 'r03' });
@@ -200,7 +216,7 @@ describe('the map (story 2.2)', () => {
     expect(g.store.getState().ui.screen).toBe('room');
   });
 
-  it('goes on to the next room after a restart, resuming it if he left it halfway', () => {
+  it('goes back to the town after a restart, and resumes a room he left halfway from there', () => {
     const g = game();
     g.act({ type: 'map/travel', node: 'r03' });
     g.act({ type: 'machine/touch' });
@@ -208,7 +224,8 @@ describe('the map (story 2.2)', () => {
     g.act({ type: 'pin/confirm' });
     g.write('14');
     g.act({ type: 'map/open' });
-    // He replays room 2; when its restart ends, room 3 comes back where he left it.
+    // He replays room 2; when its restart ends, the town (story 5.0), and room 3 comes back
+    // where he left it once he walks to it.
     g.act({ type: 'map/travel', node: 'r02' });
     g.act({ type: 'machine/touch' });
     g.write('4');
@@ -219,6 +236,10 @@ describe('the map (story 2.2)', () => {
     g.write('15');
     g.act({ type: 'presentation/done', roomId: 'r02', stage: 1, phase: 'locked' });
     g.act({ type: 'presentation/done', roomId: 'r02', stage: 1, phase: 'restart' });
+    expect(g.store.getState().ui.screen).toBe('map');
+    expect(g.store.getState().room).toBeNull();
+    expect(g.store.getState().save.progress.started.map((left) => left.id)).toEqual(['r03']);
+    g.act({ type: 'map/travel', node: 'r03' });
     const room = g.store.getState().room;
     expect(g.store.getState().ui.screen).toBe('room');
     expect(room?.spec.id).toBe('r03');

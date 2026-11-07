@@ -32,7 +32,14 @@ export function cleanName(raw: string): string | null {
   return tidy.length > 0 ? tidy : null;
 }
 
-/** He has finished room 1 but hasn't named his apprentice yet: the naming comes next. */
-export function needsName(roomsDone: readonly string[], name: string | null): boolean {
-  return roomsDone.includes('r01') && name === null;
+/**
+ * He hasn't named his apprentice yet, but has seen the opening (story 5.0) or finished room
+ * 1 (a save from before the opening): the naming comes next.
+ */
+export function needsName(
+  roomsDone: readonly string[],
+  name: string | null,
+  introSeen = false,
+): boolean {
+  return (introSeen || roomsDone.includes('r01')) && name === null;
 }

@@ -43,6 +43,8 @@ export type Action =
    * the dial moves, another line is tapped, or a line is written. By its notebook number.
    */
   | { type: 'notebook/show-line'; line: number }
+  /** The opening's last panel, or its skip (story 5.0): on to the naming, then the town. */
+  | { type: 'opening/done' }
   /** The story card's "Dalje" (story 2.5): the room's lines are told; on to what comes next. */
   | { type: 'story/next' }
   /** Enters a room at its first stage, or at `stage` (the dev panel jumps to any stage). */

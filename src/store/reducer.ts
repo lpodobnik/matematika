@@ -4,7 +4,7 @@
 
 import { castDraft, produce } from 'immer';
 import { cleanName, isLookId, needsName } from '@/city/character';
-import { nextRoomOnMap, type Reach, roomOpen } from '@/city/reach';
+import { type Reach, roomOpen } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
@@ -22,8 +22,8 @@ import { showLine } from '@/room/logbook';
 import { deleteToken, enterLine, typeToken, withoutRefusal } from '@/room/notebook';
 import {
   finishPresentation,
+  leaveWorks,
   resetStage,
-  resetWorks,
   tickClock,
   toolEarned,
   touchMachine,
@@ -93,55 +93,17 @@ function goInto(spec: RoomSpec, save: SaveState, now: number): RoomStep {
 }
 
 /**
- * The next room he can play (Luka, story 2.2: "He should go to the next room"): the room
- * after `from` in play order when he can play it, as in epic 1; else the first open room on
- * the map he hasn't finished. Null when none is left.
- */
-function nextRoom(roomList: readonly RoomSpec[], save: SaveState, from: string | null) {
-  const reach = reachOf(save, roomList);
-  const { done, authored } = reach;
-  const after = from === null ? [] : authored.slice(authored.indexOf(from) + 1);
-  const next =
-    after.find((id) => !done.includes(id) && roomOpen(districtMap, id, reach)) ??
-    nextRoomOnMap(districtMap, reach);
-  return roomList.find((room) => room.id === next) ?? null;
-}
-
-/**
- * Once nothing is owed (stories 2.4, 2.5): back to the room that waited under the card or
- * the naming (a launch with a room in progress), or to the map if he was on it; else the
- * next room after `from`, or the map when none is left (null: the screen decides).
- */
-function afterOwed(
-  state: GameState,
-  roomList: readonly RoomSpec[],
-  save: SaveState,
-  from: string | null,
-  now: number,
-): RoomStep | null {
-  if (state.room || save.progress.onMap) return null;
-  const next = nextRoom(roomList, save, from);
-  return next ? goInto(next, save, now) : null;
-}
-
-/**
- * The room the game starts in (story 2.1): the saved room in progress; on the map, none
- * (story 2.2); otherwise the next room, as a restart hands over (so a first launch opens
- * room 1 straight away, the narrative design: play first).
+ * The room the game starts in (story 2.1): the saved room in progress, under the story card
+ * or the naming if one is owed. Otherwise none: the opening, the naming or the town (story
+ * 5.0), where he walks to a machine himself.
  */
 function startStep(
   saved: SavedRoom | null,
   roomList: readonly RoomSpec[],
-  save: SaveState,
   now: number,
 ): RoomStep | null {
   const spec = saved ? roomList.find((room) => room.id === saved.id) : undefined;
-  // A room in progress resumes, under the story card or the naming if one is owed.
-  if (saved && spec) return resumeStep(spec, saved, now);
-  if (owed(save)) return null;
-  if (save.progress.onMap) return null;
-  const next = nextRoom(roomList, save, null);
-  return next ? goInto(next, save, now) : null;
+  return saved && spec ? resumeStep(spec, saved, now) : null;
 }
 
 const authoredIds = (roomList: readonly RoomSpec[]) => roomList.map((room) => room.id);
@@ -152,25 +114,6 @@ const reachOf = (save: SaveState, roomList: readonly RoomSpec[]): Reach => ({
   tools: save.progress.tools,
   authored: authoredIds(roomList),
 });
-
-/**
- * A room whose restart has ended hands over to the next room he can play (`nextRoom`),
- * resumed if he left it halfway. With none left, the room stays done and the map shows.
- */
-function moveOn(
-  step: RoomStep | null,
-  roomList: readonly RoomSpec[],
-  save: SaveState,
-  now: number,
-): RoomStep | null {
-  if (step?.room.stage.phase !== 'done') return step;
-  // A room's story lines first (story 2.5), and after room 1, the naming (story 2.4).
-  if (owed(save)) return step;
-  const spec = nextRoom(roomList, save, step.room.spec.id);
-  if (!spec) return step;
-  const entered = goInto(spec, save, now);
-  return { room: entered.room, events: [...step.events, ...entered.events] };
-}
 
 /**
  * A tap on a map node (`map/travel`, FR27): an open room takes him there at once (city/reach.ts),
@@ -206,22 +149,11 @@ function roomStep(
   if (action.type === 'room/enter') {
     return enterRoom(findRoom(action.roomId, roomList), action.stage ?? 0);
   }
-  if (action.type === 'boot/start') return startStep(action.room, roomList, save, now);
-  if (action.type === 'dev/new-game') return startStep(null, roomList, save, now);
+  if (action.type === 'boot/start') return startStep(action.room, roomList, now);
+  if (action.type === 'dev/new-game') return null;
   if (action.type === 'map/travel') return travelStep(state, action.node, roomList, save, now);
-  if (action.type === 'character/set') {
-    // Named (`save` carries the name once it is valid): on to the room after room 1.
-    if (state.ui.screen !== 'naming' || named(save) !== true) return null;
-    return afterOwed(state, roomList, save, 'r01', now);
-  }
-  if (action.type === 'story/next') {
-    // Told (`save` lists the room once told): the naming, more lines, or the next room.
-    const last = save.progress.told.at(-1);
-    if (state.ui.screen !== 'story' || last === state.save.progress.told.at(-1) || owed(save)) {
-      return null;
-    }
-    return afterOwed(state, roomList, save, last ?? null, now);
-  }
+  // The naming and the story card change no room (story 5.0): what comes after them is the
+  // town, or the room that waited under them (screenAfter).
   const { room } = state;
   if (!room) return null;
   switch (action.type) {
@@ -230,9 +162,9 @@ function roomStep(
     case 'stage/reset':
       return resetStage(room);
     case 'presentation/done':
-      return moveOn(finishPresentation(room, action, now), roomList, save, now);
+      return finishPresentation(room, action, now);
     case 'clock/tick':
-      return moveOn(tickClock(room, now), roomList, save, now);
+      return tickClock(room, now);
     case 'dial/set':
       return setDial(room, action.x);
     case 'dial/nudge':
@@ -530,7 +462,8 @@ function screenAfter(
   if (action.type === 'room/enter' || (action.type === 'map/travel' && step)) return 'room';
   const done =
     (action.type === 'character/set' && state.ui.screen === 'naming' && named(save)) ||
-    (action.type === 'story/next' && state.ui.screen === 'story');
+    (action.type === 'story/next' && state.ui.screen === 'story') ||
+    (action.type === 'opening/done' && state.ui.screen === 'opening');
   if (done) return owed(save) ?? (step || state.room ? 'room' : 'map');
   return state.ui.screen;
 }
@@ -539,8 +472,9 @@ function screenAfter(
  * What comes before any room: a finished room's story lines not yet told (story 2.5), then
  * the naming after room 1 (story 2.4). Null when nothing is owed.
  */
-function owed(save: SaveState): 'story' | 'naming' | null {
-  const { roomsDone, told } = save.progress;
+function owed(save: SaveState): 'opening' | 'story' | 'naming' | null {
+  const { roomsDone, told, introSeen } = save.progress;
+  if (!introSeen) return 'opening';
   if (roomsDone.some((id) => !told.includes(id))) return 'story';
   return named(save) === false ? 'naming' : null;
 }
@@ -570,7 +504,8 @@ function withTold(
  * name, so the naming comes next; true once named; null before room 1 is finished.
  */
 function named(save: SaveState): boolean | null {
-  if (needsName(save.progress.roomsDone, save.character.name)) return false;
+  const { roomsDone, introSeen } = save.progress;
+  if (needsName(roomsDone, save.character.name, introSeen)) return false;
   return save.character.name === null ? null : true;
 }
 
@@ -587,6 +522,7 @@ function withOnMap(save: SaveState, screen: GameState['ui']['screen']): SaveStat
   // A fight is entered from the map and left back to it, so he stays on the map.
   if (
     screen === 'loading' ||
+    screen === 'opening' ||
     screen === 'story' ||
     screen === 'naming' ||
     screen === 'fight' ||
@@ -628,7 +564,7 @@ function withStarted(
 /** He can leave for the map from any phase before the stage locks (story 2.2). */
 function leavingRoom(state: GameState, action: Action): RoomState | null {
   if (action.type !== 'map/open' || state.ui.screen !== 'room' || !state.room) return null;
-  return resetWorks(state.room.stage.phase) ? state.room : null;
+  return leaveWorks(state.room.stage.phase) ? state.room : null;
 }
 
 /**
@@ -639,10 +575,17 @@ export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return withShop(withFights(createRoomReducer(roomList), roomList), roomList);
 }
 
+/** The opening's end (story 5.0): it is seen, and never shows again. */
+function withOpening(state: GameState, action: Action, save: SaveState): SaveState {
+  if (action.type !== 'opening/done' || state.ui.screen !== 'opening') return save;
+  if (save.progress.introSeen) return save;
+  return { ...save, progress: { ...save.progress, introSeen: true } };
+}
+
 function createRoomReducer(roomList: readonly RoomSpec[]): Reduce {
   return (state, action, ctx) => {
     const character = namedCharacter(state, action);
-    const saved = saveBefore(state.save, action, ctx.now);
+    const saved = withOpening(state, action, saveBefore(state.save, action, ctx.now));
     const before = withTold(state, action, character ? { ...saved, character } : saved, roomList);
     const change = withRefusalDown(
       withToolMemory(roomStep(state, action, ctx.now, roomList, before), before),

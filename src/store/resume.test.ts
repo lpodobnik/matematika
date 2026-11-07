@@ -32,7 +32,8 @@ function game(tools: ToolId[] = []) {
       save: {
         ...newSave(at),
         character: { name: 'Ivo', look: 'look-1' as const },
-        progress: { ...newSave().progress, tools },
+        // An existing game: past the opening (story 5.0) and the naming.
+        progress: { ...newSave().progress, introSeen: true, tools },
       },
     },
   });
@@ -246,7 +247,7 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
     expect(splitterOffered(store.getState().room as RoomState, ['balance'])).toBe(true);
   });
 
-  it('a reload in a restart comes back to the room’s story card, before the next room (stories 2.2, 2.5)', () => {
+  it('a reload in a restart comes back to the room’s story card, before the town (stories 2.2, 2.5, 5.0)', () => {
     const g = game();
     g.act({ type: 'room/enter', roomId: 'r01' });
     g.act({ type: 'machine/touch' });
@@ -266,6 +267,7 @@ describe('a reload resumes at the last written line (story 2.1)', () => {
       character: { name: 'Ivo', look: 'look-1' as const },
       progress: {
         ...newSave().progress,
+        introSeen: true,
         roomsDone: ['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07'] as const,
         told: ['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07'] as const,
       },

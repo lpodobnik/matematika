@@ -65,14 +65,22 @@ describe('the save effect', () => {
     const g = savingGame();
     g.act({ type: 'boot/start', save: null, room: null });
     expect(g.written).toHaveLength(1);
-    expect(g.written[0]?.progress.room).toEqual({
+    // A new game opens on the opening, with no room (story 5.0).
+    expect(g.written[0]?.progress).toMatchObject({ room: null, introSeen: false });
+    expect(g.written[0]?.createdAt).toBe('2026-11-06T10:00:00.500Z');
+    // The opening's end is kept, then his name, then room 1 as he walks into it.
+    g.act({ type: 'opening/done' });
+    expect(g.written.at(-1)?.progress.introSeen).toBe(true);
+    g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
+    expect(g.written.at(-1)?.character).toEqual({ name: 'Ivo', look: 'look-1' });
+    g.act({ type: 'map/travel', node: 'r01' });
+    expect(g.written.at(-1)?.progress.room).toEqual({
       id: 'r01',
       stage: 0,
       lines: [],
       pin: null,
       splitterSeen: false,
     });
-    expect(g.written[0]?.createdAt).toBe('2026-11-06T10:00:00.500Z');
     g.act({ type: 'machine/touch' });
     g.act({ type: 'dial/set', x: 1 });
     const afterFirstNotch = g.written.length;
@@ -109,14 +117,14 @@ describe('the save effect', () => {
 });
 
 describe('starting the game (boot/start)', () => {
-  it('starts a new game at room 1, stamped with the first launch', () => {
+  it('starts a new game on the opening, with no room, stamped with the first launch', () => {
     const store = createGameStore({
       effects: [],
       makeCtx: () => ({ now: Date.parse(at), rng: { next: () => 0 } }),
     });
     store.getState().dispatch({ type: 'boot/start', save: null, room: null });
-    expect(store.getState().ui.screen).toBe('room');
-    expect(store.getState().room?.spec.id).toBe('r01');
+    expect(store.getState().ui.screen).toBe('opening');
+    expect(store.getState().room).toBeNull();
     expect(store.getState().save.createdAt).toBe(at);
   });
 
@@ -137,6 +145,7 @@ describe('starting the game (boot/start)', () => {
         character: { name: 'Ivo', look: 'look-1' as const },
         progress: {
           ...save.progress,
+          introSeen: true,
           roomsDone: ['r01', 'r02'],
           onMap: true,
           told: ['r01', 'r02'],
@@ -159,17 +168,21 @@ describe('starting the game (boot/start)', () => {
 });
 
 describe('a new game from the dev panel', () => {
-  it('clears his progress, keeps the settings, and starts room 1', () => {
+  it('clears his progress, keeps the settings, and opens on the opening', () => {
     const g = savingGame();
     const save = { ...newSave(at), settings: { muted: true, quality: 'medium' as const } };
     g.act({
       type: 'boot/start',
-      save: { ...save, progress: { ...save.progress, roomsDone: ['r01'], tools: ['balance'] } },
+      save: {
+        ...save,
+        progress: { ...save.progress, introSeen: true, roomsDone: ['r01'], tools: ['balance'] },
+      },
       room: { id: 'r02', stage: 1, lines: [], pin: null, splitterSeen: false },
     });
     g.act({ type: 'dev/new-game' });
     const state = g.store.getState();
-    expect(state.room?.spec.id).toBe('r01');
+    expect(state.ui.screen).toBe('opening');
+    expect(state.room).toBeNull();
     expect(state.save.progress).toEqual({
       roomsDone: [],
       tools: [],
@@ -179,8 +192,9 @@ describe('a new game from the dev panel', () => {
       told: [],
       ideasSeen: [],
       tornPages: [],
+      introSeen: false,
     });
     expect(state.save.settings).toEqual({ muted: true, quality: 'medium' });
-    expect(g.written.at(-1)?.progress.room?.id).toBe('r01');
+    expect(g.written.at(-1)?.progress).toMatchObject({ room: null, introSeen: false });
   });
 });

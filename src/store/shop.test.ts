@@ -26,6 +26,7 @@ function game(roomsDone: RoomsDone = toSix, parts = 0, tools = ['balance', 'work
       character: { name: 'Ivo', look: 'look-1' as const },
       progress: {
         ...save.progress,
+        introSeen: true,
         roomsDone,
         tools: [...tools],
         onMap: true,

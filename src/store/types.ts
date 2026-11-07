@@ -30,9 +30,11 @@ export interface Ctx {
  * "to be continued" screen. `naming` comes once, after room 1's restart (story 2.4).
  * `story` tells a room's lines the first time its restart ends (story 2.5). `fight` is an
  * automaton fight, entered from a lair on the map and left back to it (story 3.1). `shop` is
- * the old mechanic's counter at the workshop, for upgrades (story 3.5).
+ * the old mechanic's counter at the workshop, for upgrades (story 3.5). `opening` is the
+ * illustrated opening a new game starts with (story 5.0); `map` now shows the town (story
+ * 5.0), with the district map a tap away.
  */
-export type Screen = 'loading' | 'room' | 'map' | 'naming' | 'story' | 'fight' | 'shop';
+export type Screen = 'loading' | 'opening' | 'room' | 'map' | 'naming' | 'story' | 'fight' | 'shop';
 
 /**
  * How many copies of the scene the scene area draws side by side: 3 only for the tablet
@@ -100,6 +102,8 @@ export interface SaveState {
     ideasSeen: IdeaId[];
     /** Torn logbook pages returned by fights, in the order he won them (story 3.4). */
     tornPages: PageId[];
+    /** He has seen the opening (story 5.0; `SaveV1.progress.introSeen`). */
+    introSeen: boolean;
   };
   /**
    * Parts, upgrades and piles (`createEconomy()`). From story 1.14 a right prediction pays

@@ -1,4 +1,5 @@
 // Story 2.5: a room's story card the first time its restart ends, through the real store.
+// Since story 5.0 the card hands over to the town, never straight to the next room.
 
 import { describe, expect, it } from 'vitest';
 import { tokenFromChar } from '@/math/tokens';
@@ -29,6 +30,12 @@ function game(save: SaveState | null = null) {
     }
     act({ type: 'notebook/enter' });
   };
+  /** A new game through the opening and the naming (story 5.0), walked into room 1. */
+  const begin = () => {
+    act({ type: 'opening/done' });
+    act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
+    act({ type: 'map/travel', node: 'r01' });
+  };
   const playRoomOne = () => {
     act({ type: 'machine/touch' });
     for (const x of [1, 2, 3, 4, 5]) act({ type: 'dial/set', x });
@@ -49,7 +56,7 @@ function game(save: SaveState | null = null) {
     act({ type: 'presentation/done', roomId: 'r02', stage: 1, phase: 'locked' });
     act({ type: 'presentation/done', roomId: 'r02', stage: 1, phase: 'restart' });
   };
-  return { store, act, playRoomOne, playRoomTwo };
+  return { store, act, begin, playRoomOne, playRoomTwo };
 }
 
 function reload(state: GameState): GameState {
@@ -62,46 +69,55 @@ function reload(state: GameState): GameState {
 }
 
 describe('the story card (story 2.5)', () => {
-  it('tells room 1’s lines when its restart ends, then the naming, then room 2', () => {
+  it('tells room 1’s lines when its restart ends, then the town', () => {
     const g = game();
+    g.begin();
     g.playRoomOne();
     expect(g.store.getState().ui.screen).toBe('story');
     expect(g.store.getState().room).toBeNull();
     g.act({ type: 'story/next' });
     expect(g.store.getState().save.progress.told).toEqual(['r01']);
-    expect(g.store.getState().ui.screen).toBe('naming');
-    g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
-    expect(g.store.getState().room?.spec.id).toBe('r02');
+    expect(g.store.getState().ui.screen).toBe('map');
+    expect(g.store.getState().room).toBeNull();
   });
 
-  it('tells room 2’s lines, then room 3 follows', () => {
+  it('tells room 2’s lines, then the town', () => {
     const g = game();
+    g.begin();
     g.playRoomOne();
     g.act({ type: 'story/next' });
-    g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
+    g.act({ type: 'map/travel', node: 'r02' });
     g.playRoomTwo();
     expect(g.store.getState().ui.screen).toBe('story');
     g.act({ type: 'story/next' });
     expect(g.store.getState().save.progress.told).toEqual(['r01', 'r02']);
-    expect(g.store.getState().room?.spec.id).toBe('r03');
+    expect(g.store.getState().ui.screen).toBe('map');
+    expect(g.store.getState().room).toBeNull();
   });
 
-  it('tells a room once: a replay goes straight on', () => {
+  it('tells a room once: a replay goes straight back to the town', () => {
     const save = newSave(at);
     const g = game({
       ...save,
       character: { name: 'Ivo', look: 'look-1' },
-      progress: { ...save.progress, roomsDone: ['r01'], told: ['r01'], onMap: true },
+      progress: {
+        ...save.progress,
+        introSeen: true,
+        roomsDone: ['r01'],
+        told: ['r01'],
+        onMap: true,
+      },
     });
     g.act({ type: 'map/travel', node: 'r01' });
     g.playRoomOne();
-    // Room 2 is next, with no card for room 1 again.
-    expect(g.store.getState().ui.screen).toBe('room');
-    expect(g.store.getState().room?.spec.id).toBe('r02');
+    // The town, with no card for room 1 again.
+    expect(g.store.getState().ui.screen).toBe('map');
+    expect(g.store.getState().room).toBeNull();
   });
 
   it('comes back to the card after a reload, and a tap on it is the only way on', () => {
     const g = game();
+    g.begin();
     g.playRoomOne();
     const state = reload(g.store.getState());
     expect(state.ui.screen).toBe('story');
@@ -121,14 +137,16 @@ describe('the story card (story 2.5)', () => {
     const g = game({
       ...save,
       character: { name: 'Ivo', look: 'look-1' },
-      progress: { ...save.progress, roomsDone: ['r01', 'r02'], tools: [] },
+      progress: { ...save.progress, introSeen: true, roomsDone: ['r01', 'r02'], tools: [] },
     });
     expect(g.store.getState().ui.screen).toBe('story');
     g.act({ type: 'story/next' });
     expect(g.store.getState().ui.screen).toBe('story');
     g.act({ type: 'story/next' });
     expect(g.store.getState().save.progress.told).toEqual(['r01', 'r02']);
-    expect(g.store.getState().room?.spec.id).toBe('r03');
+    // Then the town (story 5.0): room 3 waits for him to walk to it.
+    expect(g.store.getState().ui.screen).toBe('map');
+    expect(g.store.getState().room).toBeNull();
   });
 
   it('brings a save from before this story back to the map after its cards, if he was there', () => {
@@ -136,7 +154,7 @@ describe('the story card (story 2.5)', () => {
     const g = game({
       ...save,
       character: { name: 'Ivo', look: 'look-1' },
-      progress: { ...save.progress, roomsDone: ['r01', 'r02'], onMap: true },
+      progress: { ...save.progress, introSeen: true, roomsDone: ['r01', 'r02'], onMap: true },
     });
     g.act({ type: 'story/next' });
     expect(reload(g.store.getState()).ui.screen).toBe('story');
@@ -153,7 +171,12 @@ describe('the story card (story 2.5)', () => {
       save: {
         ...save,
         character: { name: 'Ivo', look: 'look-1' },
-        progress: { ...save.progress, roomsDone: ['r01', 'r02', 'r03'], tools: ['balance'] },
+        progress: {
+          ...save.progress,
+          introSeen: true,
+          roomsDone: ['r01', 'r02', 'r03'],
+          tools: ['balance'],
+        },
       },
       room: { id: 'r01', stage: 0, lines: [], pin: null, splitterSeen: false },
     });
@@ -168,21 +191,25 @@ describe('the story card (story 2.5)', () => {
 
   it('starts the log over with a new game from the dev panel', () => {
     const g = game();
+    g.begin();
     g.playRoomOne();
     g.act({ type: 'story/next' });
     g.act({ type: 'dev/new-game' });
     expect(g.store.getState().save.progress.told).toEqual([]);
-    expect(g.store.getState().room?.spec.id).toBe('r01');
+    // A new game opens on the opening (story 5.0), with no room.
+    expect(g.store.getState().ui.screen).toBe('opening');
+    expect(g.store.getState().room).toBeNull();
   });
 });
 
 describe('explanation cards with the story card (story 2.6)', () => {
   it('marks a room’s ideas seen when its card is told, and never explains one twice', () => {
     const g = game();
+    g.begin();
     g.playRoomOne();
     g.act({ type: 'story/next' });
     expect(g.store.getState().save.progress.ideasSeen).toEqual(['equal']);
-    g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
+    g.act({ type: 'map/travel', node: 'r02' });
     g.playRoomTwo();
     g.act({ type: 'story/next' });
     expect(g.store.getState().save.progress.ideasSeen).toEqual(['equal', 'notch']);

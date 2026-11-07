@@ -16,6 +16,7 @@ const save: SaveV1 = {
     told: [],
     ideasSeen: [],
     tornPages: [],
+    introSeen: true,
     firstUse: [],
     room: { id: 'r02', stage: 0, lines: [], pin: null, splitterSeen: false },
   },

@@ -11,12 +11,13 @@ import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
 import { FightScreen } from '@/ui/fight/FightScreen';
-import { MapScreen } from '@/ui/map/MapScreen';
 import { NamingScreen } from '@/ui/naming/NamingScreen';
 import { Notebook } from '@/ui/notebook/Notebook';
+import { OpeningScreen } from '@/ui/opening/OpeningScreen';
 import { SceneRoot } from '@/ui/scene/SceneRoot';
 import { ShopScreen } from '@/ui/shop/ShopScreen';
 import { StoryScreen } from '@/ui/story/StoryScreen';
+import { TownScreen } from '@/ui/town/TownScreen';
 
 // Development builds only, loaded on demand (architecture, Debug Tools): production builds
 // drop this branch, and the panel's code with it.
@@ -34,6 +35,8 @@ const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : nu
 // room (story 2.2), when the scene unmounts until he travels into a room again; and, once,
 // the naming after room 1 (story 2.4); and a room's story card the first time its restart
 // ends (story 2.5); and an automaton fight, entered from a lair on the map (story 3.1).
+// Story 5.0: a new game opens on the opening, and the map screen now shows the town, with
+// the district map a tap away.
 export function App() {
   const dispatch = useGame((s) => s.dispatch);
   const screen = useGame((s) => s.ui.screen);
@@ -46,7 +49,8 @@ export function App() {
 
 function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
   if (screen === 'loading') return <LoadingScreen loaded={loaded} />;
-  if (screen === 'map') return <MapScreen />;
+  if (screen === 'opening') return <OpeningScreen />;
+  if (screen === 'map') return <TownScreen />;
   if (screen === 'naming') return <NamingScreen />;
   if (screen === 'story') return <StoryScreen />;
   if (screen === 'fight') return <FightScreen />;

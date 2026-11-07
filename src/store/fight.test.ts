@@ -32,7 +32,13 @@ function game(roomsDone: RoomsDone = ['r01', 'r02'], parts = 0, seed: number | n
     save: {
       ...save,
       character: { name: 'Ivo', look: 'look-1' as const },
-      progress: { ...save.progress, roomsDone, onMap: true, told: [...roomsDone] },
+      progress: {
+        ...save.progress,
+        introSeen: true,
+        roomsDone,
+        onMap: true,
+        told: [...roomsDone],
+      },
       economy: { ...save.economy, parts },
     },
     room: null,

@@ -26,7 +26,7 @@ import type { Action } from '@/store/actions';
 import { type DomainEvent, isRoomEvent } from '@/store/events';
 import { createGameStore } from '@/store/store';
 
-/** A fresh game, as main.tsx starts it (room 1), with a clock and every event recorded. */
+/** A fresh game, as main.tsx starts it, walked into room 1, with a clock and every event recorded. */
 function freshGame() {
   const clock = { now: 0 };
   const seen: DomainEvent[] = [];
@@ -60,7 +60,12 @@ function freshGame() {
     act({ type: 'presentation/done', roomId: room.spec.id, stage: room.stageIndex, phase });
   };
   const stage = () => (store.getState().room as RoomState).stage;
-  act({ type: 'room/enter', roomId: 'r01' });
+  // Story 5.0: a new game opens on the opening, then the naming, then the town, where he
+  // walks to room 1's gate.
+  act({ type: 'boot/start', save: null, room: null });
+  act({ type: 'opening/done' });
+  act({ type: 'character/set', name: 'Ivo', look: 'look-3' });
+  act({ type: 'map/travel', node: 'r01' });
   return { store, seen, phases, act, write, presented, stage };
 }
 
@@ -81,7 +86,6 @@ function playRoomOne(game: Game) {
   game.presented();
   // Story 2.5: the room's lines; story 2.4: Penkala asks who he is.
   game.act({ type: 'story/next' });
-  game.act({ type: 'character/set', name: 'Ivo', look: 'look-3' });
 }
 
 /** Room 2, the street lamps: 3x = 12, then x : 3 = 5 on a dial in 3s. */
@@ -377,11 +381,13 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomTwelve(game);
     playRoomThirteen(game);
     expect(game.phases).toEqual([
+      // Story 5.0: the opening, the naming and the town, with no room.
+      'none',
       'r01.0:arrive',
       'r01.0:open',
       'r01.0:locked',
       'r01.0:restart',
-      // Story 2.4: the naming, with no room.
+      // Room 1's lines, then the town (story 5.0), with no room.
       'none',
       'r02.0:arrive',
       'r02.0:open',
@@ -863,8 +869,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     game.act = act;
     // Typing and the presentations go round `game.act`, so only his moves on the machine show.
     expect(offered).toEqual(['machine/touch: tray', 'tray/drop: tray splitter']);
-    // The restart ended, and room 5 follows (story 2.8).
-    expect(game.store.getState().room?.spec.id).toBe('r05');
+    // The restart ended: its lines, then the town (story 5.0), with no room.
+    expect(game.store.getState().room).toBeNull();
   });
 
   it('tests each pin as he confirms it: the machine turns the dial, firing no dial events', () => {
@@ -913,16 +919,19 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(game.store.getState().save.progress.tools).toEqual([]);
     playRoomThree(game);
     expect(game.store.getState().save.progress.tools).toEqual(['balance']);
+    travel(game, 'r04');
     expect(game.store.getState().room?.spec.id).toBe('r04');
   });
 
-  it('goes from room to room, with the naming after room 1, then the map with every room restored', () => {
+  it('goes from the opening and the naming to the town, and back to it after every room', () => {
     const game = freshGame();
     const screens: string[] = [];
     const unsubscribe = game.store.subscribe((state) => {
       if (screens.at(-1) !== state.ui.screen) screens.push(state.ui.screen);
     });
     playRoomOne(game);
+    expect(game.store.getState().ui.screen).toBe('map');
+    travel(game, 'r02');
     expect(game.store.getState().room?.spec.id).toBe('r02');
     playRoomTwo(game);
     playRoomThree(game);
@@ -937,32 +946,44 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomTwelve(game);
     playRoomThirteen(game);
     unsubscribe();
+    // Story 5.0: each room's lines, then the town, where he walks to the next machine.
     expect(screens).toEqual([
       'room',
       'story',
-      'naming',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
+      'map',
       'room',
       'story',
       'map',
@@ -1015,11 +1036,12 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(game.stage().phase).toBe('arrive');
   });
 
-  it('gets to room 4’s story, then room 5, on the clock too, if the machine never reports its restart', () => {
+  it('gets to room 4’s story, then the town, on the clock too, if the machine never reports its restart', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
     playRoomThree(game);
+    travel(game, 'r04');
     // Story 1.16: no pin, and x = 9 waits for Balance (it pinned, then typed both lines).
     game.act({ type: 'machine/touch' });
     balanceRoomFour(game);
@@ -1028,7 +1050,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     for (let i = 0; i < 40; i += 1) game.act({ type: 'clock/tick' });
     expect(game.store.getState().ui.screen).toBe('story');
     game.act({ type: 'story/next' });
-    expect(game.store.getState().ui.screen).toBe('room');
+    expect(game.store.getState().ui.screen).toBe('map');
+    travel(game, 'r05');
     expect(game.store.getState().room?.spec.id).toBe('r05');
   });
 });

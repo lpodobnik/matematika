@@ -6,7 +6,8 @@
 // pin must be right (it pays). The scene is drawn on the canvas, so its moves (the dial, an
 // x pin's value, the tray's x-gear) go to the game's store as the scene would send them; the
 // first touch on the canvas and the pin's confirm are real taps. Locks and restarts play
-// out on their own, within the scene's time. Each room's key moments are screenshotted.
+// out on their own, within the scene's time. Every room is left back to the town (story 5.0)
+// and the next is reached through its district map. Each room's key moments are screenshotted.
 //
 //   npm run e2e                                       (starts its own server on 5291)
 //   E2E_URL=http://localhost:5290/ npm run e2e        (uses a server already running)
@@ -92,6 +93,7 @@ async function startOnTheMap(page: Page) {
             told: done,
             tools: ['balance', 'workshop', 'chain'],
             onMap: true,
+            introSeen: true,
             firstUse: met,
           },
         },
@@ -101,7 +103,13 @@ async function startOnTheMap(page: Page) {
     },
     { done: toSeven, met },
   );
-  await expect(page.locator('.map')).toBeVisible();
+  await expect(page.locator('.town__board')).toBeVisible();
+}
+
+/** The town's corner button opens the district map over it (story 5.0). */
+async function openMap(page: Page) {
+  await page.getByRole('button', { name: 'Karta četvrti' }).click();
+  await expect(page.locator('.town__overlay .map__board')).toBeVisible();
 }
 
 const key = (page: Page, name: string) => page.locator(`.pad__key[data-key="${name}"]`);
@@ -189,11 +197,12 @@ async function finish(page: Page, room: string, shot: (name: string) => Promise<
   await page.locator('.story__next').click();
 }
 
+/** The next room, from the town he is back in after every story card (story 5.0). */
 async function arrive(page: Page, room: string) {
-  await expect.poll(async () => (await state(page)).screen).not.toBe('story');
-  if ((await state(page)).screen === 'map') {
-    await page.locator(`button.map__node[data-node="${room}"]`).click();
-  }
+  await expect.poll(async () => (await state(page)).screen).toBe('map');
+  expect((await state(page)).room).toBeNull();
+  await openMap(page);
+  await page.locator(`button.map__node[data-node="${room}"]`).click();
   await expect.poll(async () => (await state(page)).room).toBe(room);
   await touch(page);
 }
@@ -335,9 +344,11 @@ test('rooms 8–13 back to back, through the line reveal', async ({ page }, test
   await shot('r13-reveal');
   await page.locator('.story__next').click();
 
-  // The district restored: every room done, the note, and the armour 60 lair open.
-  await expect(page.locator('.map')).toBeVisible();
+  // The district restored: every room done, the note, and the armour 60 lair open, on the
+  // district map over the town.
+  await expect(page.locator('.town__board')).toBeVisible();
   expect((await state(page)).done).toHaveLength(13);
+  await openMap(page);
   await expect(page.locator('.map__node[data-node="lair-60"]')).toHaveAttribute(
     'data-state',
     'open',

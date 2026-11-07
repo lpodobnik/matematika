@@ -126,6 +126,7 @@ function wiredSplitter() {
           told: [],
           ideasSeen: [],
           tornPages: [],
+          introSeen: true,
           tools: ['balance'],
           firstUse: [],
         },

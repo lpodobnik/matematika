@@ -15,12 +15,22 @@ describe('App screens (story 1.13)', () => {
     expect(html).not.toContain(hr.app.toBeContinued);
   });
 
-  it('shows the city map in place of the scene and the notebook (story 2.2)', () => {
+  it('shows the town in place of the scene and the notebook (stories 2.2, 5.0)', () => {
     const html = renderToString(<AppScreen screen="map" />);
-    expect(html).toContain(hr.map.title);
+    expect(html).toContain('town__board');
+    expect(html).toContain(hr.town.map);
     expect(html).not.toContain('scene-area');
     expect(html).not.toContain(hr.notebook.label);
     expect(html).toContain('portrait-overlay');
+  });
+});
+
+describe('the opening (story 5.0)', () => {
+  it('shows its first panel, its skip, and nothing of a room', () => {
+    const html = renderToString(<AppScreen screen="opening" />);
+    expect(html).toContain(hr.opening.panels[0]);
+    expect(html).toContain(hr.opening.skip);
+    expect(html).not.toContain('scene-area');
   });
 });
 

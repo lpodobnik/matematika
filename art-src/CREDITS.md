@@ -1,4 +1,4 @@
-images generated: 28/30
+images generated: 38/70
 
 # Art credits
 
@@ -518,3 +518,173 @@ nothing. Each names its source and the exact command.
 - Origin and licence: as entry 22
 - Notes: Story 2.12, the template backdrop. t22 put the wall's foot at about y 730; the refit keeps the top band as it is, stretches the wall (y 200–730) to y 200–800 and squeezes the ground (y 730–1000) into y 800–1000.
 - Review: Passes the overlay check: pan zones 0.9 % ink and no busy cell each, opening 2.7 % (max 3) with no busy cell, dial ground 9.0 % (max 12). The grey preview reads by value alone, all four corners are empty, and under the live room-1 scale at x = 1 and x = 10 the pans, pieces and tags sit on plain wall and the stand in the gateway (`tests/backdrop-r01-door-lift.t22-refit.mock-x1.webp` and `…mock-x10.webp`, from `art-src/tools/scene-mock.mjs` on the grey preview; mocks, not images, so they count toward nothing). Left as they are: paper fibres from t22, a thin cord above the keystone and a faint construction rectangle on the right wall, all too light to count. The arch's jambs stand just inside the opening, so the check passes there with little margin.
+
+### 29. `tests/town-square-ink.t29.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 52, 294 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice style test (2026-11-07): ink-and-watercolour v4 against pixel art px1, same subject and seed, isometric.
+- Review: Good isometric square and the style test Luka is shown. Drew the lamps lit and the fountain running although the prompt said still; no workshop. Superseded by t33, edited from it.
+- Prompt:
+
+  ```text
+  A small town square in the lower district of a gear-and-steam city, as the opening area of an adventure game. Cobbled streets meet at a square with a dry round stone fountain in the middle. On the north side runs the old town wall with a tall heavy oak-and-iron gate, closed, that is lifted by a counterweight machine: chains run up from the gate over two big pulley wheels on a beam above it. Along the east street stand four tall cast-iron oil street lamps with brass lanterns, unlit. In the west corner stands the inventor's workshop: a narrow two-storey house with a big round window and a brass weathervane, its door ajar. Plastered town houses with green shutters and terracotta roofs line the streets; a few crates and barrels, a bench, a tree in a stone planter. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The square and its streets fill the whole picture edge to edge. The cobbled ground is large open walkable space in the middle, with the buildings around the edges. Everything is at one scale: a house is about a sixth of the picture's width. Everything is still: no people, no animals, no vehicles, no smoke, no steam, no light from the lamps. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 30. `tests/town-square-pixel.t30.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 70, 289 KB
+- References: none
+- Style block: px1
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice style test (2026-11-07): ink-and-watercolour v4 against pixel art px1, same subject and seed, isometric.
+- Review: Style test only: pixel art, the same subject and seed. Reads well and has the workshop, but a stray digit on the wall and lamps lit. Not used unless Luka picks pixel art.
+- Prompt:
+
+  ```text
+  A small town square in the lower district of a gear-and-steam city, as the opening area of an adventure game. Cobbled streets meet at a square with a dry round stone fountain in the middle. On the north side runs the old town wall with a tall heavy oak-and-iron gate, closed, that is lifted by a counterweight machine: chains run up from the gate over two big pulley wheels on a beam above it. Along the east street stand four tall cast-iron oil street lamps with brass lanterns, unlit. In the west corner stands the inventor's workshop: a narrow two-storey house with a big round window and a brass weathervane, its door ajar. Plastered town houses with green shutters and terracotta roofs line the streets; a few crates and barrels, a bench, a tree in a stone planter. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The square and its streets fill the whole picture edge to edge. The cobbled ground is large open walkable space in the middle, with the buildings around the edges. Everything is at one scale: a house is about a sixth of the picture's width. Everything is still: no people, no animals, no vehicles, no smoke, no steam, no light from the lamps. Pixel art game graphics like a 16-bit era adventure game: crisp hand-placed square pixels, a limited palette of about 32 colours, clean dark outlines, simple dithered shading, no anti-aliasing blur, no gradients, no painterly texture. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), cobbles and walls in warm greys, leafy greens for trees; brass and copper are the most saturated colours. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere.
+  ```
+
+### 31. `tests/person-penkala.t31.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5100
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 156 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice townsperson (story 5.0), the looks' template.
+- Review: Good. Penkala with the Book, cap and moustache; the pencil behind the ear is missing. Cut out with tools/cutout.mjs for the town.
+- Prompt:
+
+  ```text
+  A game character: Gospon Penkala, a tram conductor in his fifties, a stout man standing stiffly and clutching a thick worn leather-bound rule book to his chest with both hands. A dark blue conductor's uniform jacket with two rows of brass buttons, a peaked conductor's cap, round wire spectacles, a neat grey moustache, a yellow pencil tucked behind one ear, a brass ticket punch on a chain at his belt, polished black boots. A simple picture-book face with small dark dot eyes and a doubtful, raised-eyebrow look; dry and a little comic, never mean. Slightly stylised proportions, the head about one sixth of the height; not chibi. Full-body three-quarter view at eye level, with little perspective. The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 32. `tests/person-nikola.t32.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5200
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 96 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice townsperson (story 5.0), the looks' template.
+- Review: Good. Nikola with the lamplighter’s pole. Cut out for the town.
+- Prompt:
+
+  ```text
+  A game character: Nikola, the lamplighter's son, an eager eight-year-old boy standing on tiptoe, holding a long thin brass lamplighter's pole with a small hook at the top, taller than himself. An oversized grey flat cap, a patched brown wool coat a size too big with rolled sleeves, short trousers, knee socks and scuffed boots, a small oil can hanging from his belt. Short dark hair, light skin. A simple picture-book face with small dark dot eyes and an excited open smile. Slightly stylised proportions of a real eight-year-old, the head about one fifth of the height; not chibi. Full-body three-quarter view at eye level, with little perspective. The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 33. `tests/town-square.t33.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 7102
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 52, 298 KB
+- References: `town-square-ink.t29.png`
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice: the square for the game, edited from t29 so positions hold (story 5.0).
+- Review: Used: src/ui/town/art/square.webp. The edit kept every position of t29; lamps unlit, fountain dry, a brass-knocker door at the left for the workshop (no round window). Warmer colours, as asked.
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, streets, ground, scale and drawing style. Change only what follows. All five street lamps are unlit: their glass is plain, cold and dark, with no light, no glow and no flame. The fountain in the middle is dry: an empty stone basin and a dry spout, with no water at all. The small arched wooden door in the wall at the far left becomes the front of the inventor's workshop: a narrow tall door of dark wood with a brass gear-shaped knocker, a large round window above it, and a small blank brass plate beside it. The colours are a little richer and warmer: honey-coloured limestone, warm terracotta roofs, gleaming brass and copper on the gate machine. Everything is still: no people, no animals, no smoke, no steam. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 34. `tests/town-square-gate-open.t34.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 7103
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 58, 299 KB
+- References: `town-square.t33.png`
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice: the square after room 1, the gate raised (story 5.0).
+- Review: Used: src/ui/town/art/square-gate-open.webp. Same layout as t33 with the gate raised, the counterweights down and the road through the arch.
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, streets, ground, scale and drawing style. Change only what follows. The big double gate in the town wall is now lifted open: both wooden gate leaves are raised high up inside the archway, hanging from their taut chains, and through the open archway a cobbled road leads on beyond the wall. The counterweights on the chains hang low. Everything is still: no people, no animals, no smoke, no steam. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 35. `tests/opening-1-city.t35.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7201
+- Generated at 1920 × 1080 PNG; saved as WebP 1600 × 893, quality 52, 290 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice opening panel (story 5.0).
+- Review: Used: opening panel 1. A lively isometric city; small figures and steam are allowed here (the opening, not a room).
+- Prompt:
+
+  ```text
+  Satograd, a city of gears and steam on a river, seen from above: tiled roofs, stone bridges, chimneys with thin plumes, big brass gear wheels turning on towers, a water wheel, a tram on rails, a clock tower on a hill. Morning light, busy and alive, everything running. High isometric bird's-eye view, parallel projection. The city fills the picture edge to edge. Calm, small plumes of steam are allowed. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 36. `tests/opening-2-book.t36.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7202
+- Generated at 1920 × 1080 PNG; saved as WebP 1600 × 893, quality 76, 287 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice opening panel (story 5.0).
+- Review: Used: opening panel 2. The Book on its lectern; a light bulb on a shelf and a scribble on a wall card slipped through.
+- Prompt:
+
+  ```text
+  The inside of an inventor's workshop: shelves full of small notebooks, gears and tools on the walls, a big round window. On a tall wooden lectern in the middle lies a huge thick rule book, open, its pages full of tiny step-by-step diagrams of machines drawn as plain lines with no writing. Isometric three-quarter view from above into the room, parallel projection. The lectern and the book are the centre of the picture. Warm and tidy, at rest, nobody there. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 37. `tests/opening-3-empty.t37.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7203
+- Generated at 1920 × 1080 PNG; saved as WebP 1600 × 893, quality 76, 277 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice opening panel (story 5.0).
+- Review: Used: opening panel 3, shown grey. Strong; a light bulb, a clock face and pseudo-letters on papers slipped through, small at panel size.
+- Prompt:
+
+  ```text
+  The same inventor's workshop, abandoned in a hurry: the chair knocked over, papers and notebooks scattered on the floor, the door hanging open, a lamp on its side, the big rule book still on its lectern. A long curling strip of blank punched paper tape lies across the floorboards. Outside the round window, the city's machines stand still. Isometric three-quarter view from above into the room, parallel projection. The empty room, with the paper tape leading to the open door. Still and quiet, nobody there, no smoke. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 38. `tests/opening-4-notebook.t38.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7204
+- Generated at 1920 × 1080 PNG; saved as WebP 1600 × 893, quality 82, 239 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town slice opening panel (story 5.0).
+- Review: Used: opening panel 4. The notebook and the reaching hand, as asked.
+- Prompt:
+
+  ```text
+  A small worn leather notebook with a brass clasp lies alone on old wooden floorboards, next to a stub of pencil, among scattered loose pages. A child's hand reaches in from the edge of the picture to pick it up. Close view from above at a slight angle. The notebook in the centre, large. Still and quiet. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```

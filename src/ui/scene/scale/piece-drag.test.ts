@@ -200,6 +200,7 @@ function wiredTray(scale = 0.54) {
           told: [],
           ideasSeen: [],
           tornPages: [],
+          introSeen: true,
           tools: ['balance'],
           firstUse: [],
         },

@@ -180,6 +180,14 @@ export function resetWorks(phase: Phase): boolean {
 }
 
 /**
+ * He can leave a room for the town from any phase before the stage locks, the arrival
+ * included (story 5.0): a new player must never find the way out dead.
+ */
+export function leaveWorks(phase: Phase): boolean {
+  return phase === 'arrive' || resetWorks(phase);
+}
+
+/**
  * Reset (`stage/reset`): the stage in play goes back to line 0, with its blanks to fill
  * again, the dial where it starts (room/room.ts, `startingDial`), every machine of the stage at 0, and exploratory moves and
  * jams cleared; it opens at once, so a reset in arrive also ends arrive. A locked pin stays

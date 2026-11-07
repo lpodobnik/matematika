@@ -35,6 +35,7 @@ const sample: SaveV1 = {
     told: [],
     ideasSeen: [],
     tornPages: [],
+    introSeen: true,
     firstUse: ['pin', 'handover-dial'],
     room: {
       id: 'r03',
@@ -73,6 +74,7 @@ describe('decodeSave', () => {
         told: [],
         ideasSeen: [],
         tornPages: [],
+        introSeen: false,
       },
       economy: { parts: 0, upgrades: [], paidPredictions: [], piles: {}, lairs: {}, seeds: {} },
       fight: null,

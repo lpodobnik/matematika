@@ -1,0 +1,447 @@
+/* Story 5.0: the town. The board keeps the square's 16 : 10 shape and fits the screen.
+   The square is drawn twice: in grey ink, and in colour under a mask that opens a soft
+   circle over each restored machine. Figures stand on their feet at their point, and sort
+   by depth through z-index. Buttons act on release and have no hover states. */
+@property --bloom {
+  syntax: "<length-percentage>";
+  inherits: true;
+  initial-value: 0cqw;
+}
+
+.town {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  background: var(--table);
+  overflow: hidden;
+}
+
+.town__board {
+  position: relative;
+  width: min(100vw, 100dvh * 1.6);
+  aspect-ratio: 1600 / 1000;
+  container-type: inline-size;
+  /* Figures sort by depth through z-index; this keeps them inside the board, under the
+     district map's overlay and the buttons. */
+  isolation: isolate;
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  cursor: pointer;
+  --bloom: 20.6cqw;
+  animation: town-bloom 2.4s ease-out both;
+}
+
+@keyframes town-bloom {
+  from {
+    --bloom: 0cqw;
+  }
+  to {
+    --bloom: 20.6cqw;
+  }
+}
+
+.town__ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.town__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.town__art--grey {
+  /* The stopped city: a pale blue-grey blueprint (narrative design, Atmosphere). */
+  filter: grayscale(1) sepia(0.25) hue-rotate(175deg) saturate(0.55) contrast(0.85) brightness(1.1);
+}
+
+.town__art--closing {
+  filter: grayscale(1) sepia(0.25) hue-rotate(175deg) saturate(0.55) contrast(0.85) brightness(1.1);
+  animation: town-fade-out 1.4s ease-in 0.3s both;
+}
+
+@keyframes town-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.town__art--colour {
+  filter: saturate(1.15);
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.town__place {
+  position: absolute;
+  z-index: 1;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.town__figure {
+  position: absolute;
+  display: block;
+  aspect-ratio: 2 / 3;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -96%);
+  cursor: pointer;
+}
+
+.town__figure img {
+  display: block;
+  width: auto;
+  height: 100%;
+  margin: 0 auto;
+  pointer-events: none;
+}
+
+.town__figure--automaton {
+  aspect-ratio: 1;
+}
+
+.town__figure--me {
+  pointer-events: none;
+}
+
+.town__figure--me::after,
+.town__figure--person::after,
+.town__figure--automaton::after {
+  /* A soft contact shadow under the feet. */
+  content: "";
+  position: absolute;
+  bottom: -3%;
+  left: 50%;
+  z-index: -1;
+  width: 70%;
+  height: 9%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  transform: translateX(-50%);
+}
+
+.town__doll {
+  position: relative;
+  display: block;
+  height: 100%;
+}
+
+.town__figure .town__doll .town__part {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: auto;
+  height: 100%;
+  margin: 0;
+  translate: -50% 0;
+}
+
+/* The body keeps the doll's width in the flow; the legs lie over it. The hip is at 64% of
+   his height; the legs start a little above it so no seam shows as they swing. */
+.town__figure .town__doll .town__part--body {
+  position: relative;
+  left: 0;
+  translate: none;
+  clip-path: inset(0 0 34% 0);
+}
+
+.town__figure .town__doll .town__part--leg-l {
+  clip-path: polygon(0 62%, 50% 62%, 50% 100%, 0 100%);
+  transform-origin: 50% 64%;
+}
+
+.town__figure .town__doll .town__part--leg-r {
+  clip-path: polygon(50% 62%, 100% 62%, 100% 100%, 50% 100%);
+  transform-origin: 50% 64%;
+}
+
+.town__figure--me[data-walking="true"] .town__doll {
+  animation: town-step 0.42s ease-in-out infinite;
+}
+
+.town__figure--me[data-walking="true"] .town__doll .town__part--leg-l {
+  animation: town-leg 0.42s ease-in-out infinite;
+}
+
+.town__figure--me[data-walking="true"] .town__doll .town__part--leg-r {
+  /* Half a step behind the left leg, so the two swing opposite ways. */
+  animation: town-leg 0.42s ease-in-out -0.21s infinite;
+}
+
+@keyframes town-leg {
+  0%,
+  100% {
+    rotate: 14deg;
+  }
+  50% {
+    rotate: -14deg;
+  }
+}
+
+.town__figure--automaton img {
+  animation: town-clank 0.9s ease-in-out infinite;
+}
+
+.town__figure--person img {
+  transform-origin: 50% 100%;
+  animation: town-idle 3.2s ease-in-out infinite;
+}
+
+@keyframes town-idle {
+  0%,
+  100% {
+    scale: 1 1;
+  }
+  50% {
+    scale: 1 1.015;
+  }
+}
+
+@keyframes town-step {
+  0%,
+  50%,
+  100% {
+    translate: 0 0;
+  }
+  25%,
+  75% {
+    translate: 0 -3%;
+  }
+}
+
+@keyframes town-clank {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -3%;
+  }
+}
+
+.town__glow {
+  position: absolute;
+  z-index: 2;
+  width: 10cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--lamp) 95%, white) 0%,
+    color-mix(in srgb, var(--lamp) 55%, transparent) 22%,
+    color-mix(in srgb, var(--lamp) 18%, transparent) 48%,
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: town-flicker 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes town-flicker {
+  0% {
+    opacity: 0.75;
+  }
+  45% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0.95;
+  }
+}
+
+.town__next {
+  position: absolute;
+  z-index: 3000;
+  width: 3.2cqw;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  animation: town-bob 1.1s ease-in-out infinite;
+}
+
+.town__next svg {
+  display: block;
+  width: 100%;
+  fill: var(--brass);
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+@keyframes town-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -30%;
+  }
+}
+
+.town__bubble {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  max-width: 34cqw;
+  min-width: 18cqw;
+  padding: 0.7em 1em;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--sheet);
+  color: var(--ink);
+  font: inherit;
+  font-size: max(15px, 1.5cqw);
+  line-height: 1.3;
+  text-align: left;
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--ink) 25%, transparent);
+  transform: translate(-50%, calc(-100% - 11cqw));
+  cursor: pointer;
+  animation: town-pop 0.18s ease-out both;
+}
+
+.town__bubble[data-above="false"] {
+  transform: translate(-50%, 2cqw);
+}
+
+.town__intro {
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--brass-dark, var(--ink));
+  letter-spacing: 0.02em;
+}
+
+@keyframes town-pop {
+  from {
+    opacity: 0;
+    scale: 0.92;
+  }
+}
+
+.town__map-button {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--sheet);
+  cursor: pointer;
+}
+
+.town__map-button svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.town__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  background: var(--table);
+}
+
+.town__close {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 21;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 1em;
+  border: 2px solid var(--ink);
+  border-radius: 24px;
+  background: var(--sheet);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .town__board,
+  .town__art--closing,
+  .town__figure img,
+  .town__doll,
+  .town__part,
+  .town__next,
+  .town__glow,
+  .town__bubble {
+    animation: none;
+  }
+}
+
+/* The parts counter sits above the map button in the town (story 5.0 review). */
+.town .parts-counter {
+  bottom: 76px;
+}
+
+/* The next room has no street yet: the map button calls. */
+.town__map-button[data-next="true"] {
+  border-color: var(--brass);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brass) 45%, transparent);
+  animation: town-call 1.4s ease-in-out infinite;
+}
+
+@keyframes town-call {
+  50% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--brass) 15%, transparent);
+  }
+}
+
+/* People and the automaton stay easy to tap on a phone. */
+.town__figure--person,
+.town__figure--automaton {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+/* The story from the start, in the top-left corner. */
+.town__intro-button {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--sheet);
+  cursor: pointer;
+}
+
+.town__intro-button svg {
+  width: 32px;
+  height: 26px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}

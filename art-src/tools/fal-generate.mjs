@@ -11,15 +11,13 @@
 // records the key that was used.
 //
 // The key comes only from process.env.FAL_KEY. It is never printed, logged or written.
-// The script refuses to run past the cap: 30 images in all, and 24 unless the job says
-// reserve: true (6 are kept for review fixes).
+// The script refuses to run past the cap in CREDITS' first line ("images generated: N/CAP").
+// The style guide had 30; the town slice (2026-11-07) raised it to 70.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, resolve, basename } from 'node:path';
 import sharp from 'sharp';
 
-const CAP = 30;
-const RESERVE = 6;
 const MODEL = 'FLUX.2 [max]';
 const TEXT_ENDPOINT = 'fal-ai/flux-2-max';
 const EDIT_ENDPOINT = 'fal-ai/flux-2-max/edit';
@@ -81,6 +79,22 @@ export const STYLE = {
     'The image contains no text, no letters, no numbers, no labels and no logo; every dial, plate and sign is blank.',
     'No signature, initials, monogram or date anywhere; all four corners are empty.',
   ].join(' '),
+  // px1: the pixel-art option for the walkable town (2026-11-07), tested against v4 in the
+  // isometric view. Kept before v4 so a job without `style` still gets the ink block.
+  px1: [
+    'Pixel art game graphics like a 16-bit era adventure game: crisp hand-placed square pixels,',
+    'a limited palette of about 32 colours, clean dark outlines, simple dithered shading,',
+    'no anti-aliasing blur, no gradients, no painterly texture.',
+    'Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F),',
+    'dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A),',
+    'cobbles and walls in warm greys, leafy greens for trees; brass and copper are the most saturated colours.',
+    'Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting.',
+    'Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity:',
+    'no wires, antennas, light bulbs, cars or other modern objects.',
+    'Friendly and a little whimsical, never grim.',
+    'The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank.',
+    'No signature, initials, monogram or date anywhere.',
+  ].join(' '),
   // v4: "clockwork" drew clock faces with numerals on t02 and t08, so the technology line
   // now says gears and steam, and clock faces are named among the things left out.
   v4: [
@@ -133,11 +147,12 @@ export function buildPrompt(job) {
   return parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 }
 
+/** The count and the cap from CREDITS' first line, "images generated: N/CAP". */
 function readCount() {
   const text = readFileSync(CREDITS, 'utf8');
-  const m = text.match(/images generated: (\d+)\/30/);
-  if (!m) throw new Error('CREDITS.md has no "images generated: N/30" line');
-  return Number(m[1]);
+  const m = text.match(/images generated: (\d+)\/(\d+)/);
+  if (!m) throw new Error('CREDITS.md has no "images generated: N/CAP" line');
+  return { count: Number(m[1]), cap: Number(m[2]) };
 }
 
 async function toDataUri(path) {
@@ -196,11 +211,8 @@ async function main() {
   const [jobPath, originalsDir] = process.argv.slice(2);
   if (!jobPath || !originalsDir) throw new Error('usage: fal-generate.mjs <job.json> <originals-dir>');
   const job = JSON.parse(readFileSync(jobPath, 'utf8'));
-  const count = readCount();
-  if (count >= CAP) throw new Error(`cap reached: ${count}/${CAP}`);
-  if (count >= CAP - RESERVE && !job.reserve) {
-    throw new Error(`${count}/${CAP} used; the last ${RESERVE} are reserved (set reserve: true)`);
-  }
+  const { count, cap } = readCount();
+  if (count >= cap) throw new Error(`cap reached: ${count}/${cap}`);
   const n = count + 1;
   const nn = String(n).padStart(2, '0');
   const prompt = buildPrompt(job);
@@ -220,7 +232,7 @@ async function main() {
   // Count the image as soon as fal returns it, so a later failure can't hide it from the cap.
   writeFileSync(
     CREDITS,
-    readFileSync(CREDITS, 'utf8').replace(/images generated: \d+\/30/, `images generated: ${n}/30`),
+    readFileSync(CREDITS, 'utf8').replace(/images generated: \d+\/\d+/, `images generated: ${n}/${cap}`),
   );
   const image = result.images?.[0];
   if (!image?.url) throw new Error(`no image in result: ${JSON.stringify(result).slice(0, 300)}`);
@@ -261,7 +273,7 @@ async function main() {
   const credits = readFileSync(CREDITS, 'utf8');
   writeFileSync(CREDITS, `${credits.trimEnd()}\n${entry}`);
   console.log(`saved art-src/tests/${file} (${webp.info.width}x${webp.info.height}, q${webp.quality}, ${Math.round(webp.data.length / 1000)} KB); original ${original}`);
-  console.log(`images generated: ${n}/30`);
+  console.log(`images generated: ${n}/${cap}`);
 }
 
 if (import.meta.main) {

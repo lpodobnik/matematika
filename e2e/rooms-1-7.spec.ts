@@ -1,7 +1,9 @@
 // Story 2.13: rooms 1–7 back to back from a fresh start, in a real browser, at the tablet's
-// 1280 × 800 and the phone's 640 × 360. Every DOM control is tapped for real: the number pad,
-// the pin's confirm, the logbook's flag, the hint and map buttons, the story cards' "next",
-// the naming form and the map's nodes, and the scene's canvas for the first touch. The rest
+// 1280 × 800 and the phone's 640 × 360. Every DOM control is tapped for real: the opening's
+// panel and skip, the naming form, the number pad, the pin's confirm, the logbook's flag, the
+// hint button, the story cards' "next", the town's places (story 5.0: every room is left back
+// to the town), its district map and the map's nodes, and the scene's canvas for the first
+// touch. The rest
 // of the scene is drawn on the canvas, so its moves (the dial, a pin's value, the tray and
 // splitter) go to the game's store as the scene would send them. Locks and restarts play out
 // on their own: a scene that never reports them done fails the test. Every room's restart
@@ -138,14 +140,26 @@ async function finish(page: Page, room: string, shot: (name: string) => Promise<
   await page.locator('.story__next').click();
 }
 
+/** The town's corner button opens the district map over it (story 5.0). */
+async function openMap(page: Page) {
+  await page.getByRole('button', { name: 'Karta četvrti' }).click();
+  await expect(page.locator('.town__overlay .map__board')).toBeVisible();
+}
+
 /**
- * The next room, arriving the way it should: loaded straight after the story card (Luka's
- * call in story 2.2), or by a tap on its node on the map.
+ * The next room, from the town he is back in after every story card (story 5.0): he walks
+ * to its place in the town, or taps its node on the district map.
  */
-async function arrive(page: Page, room: string, via: 'room' | 'map') {
-  await expect.poll(async () => (await state(page)).screen).toBe(via);
-  if (via === 'map') await page.locator(`button.map__node[data-node="${room}"]`).click();
-  await expect.poll(async () => (await state(page)).room).toBe(room);
+async function arrive(page: Page, room: string, via: 'town' | 'map') {
+  await expect.poll(async () => (await state(page)).screen).toBe('map');
+  await expect(page.locator('.town__board')).toBeVisible();
+  if (via === 'town') {
+    await page.locator(`.town__place[data-node="${room}"]`).click();
+  } else {
+    if ((await page.locator('.town__overlay').count()) === 0) await openMap(page);
+    await page.locator(`button.map__node[data-node="${room}"]`).click();
+  }
+  await expect.poll(async () => (await state(page)).room, { timeout: 10_000 }).toBe(room);
   await expect.poll(async () => (await state(page)).screen).toBe('room');
   await touch(page);
 }
@@ -170,15 +184,13 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
 
   await page.goto('/');
   await hook(page);
-  expect((await state(page)).room).toBe('r01');
 
-  // Room 1, the door lift: 5 on the dial, both blanks; then the story card and the naming.
-  await touch(page);
-  await dial(page, [1, 2, 3, 4, 5]);
-  await write(page, '5');
-  await write(page, '5');
-  await presented(page);
-  await finish(page, 'r01', shot);
+  // Story 5.0: the opening first (one panel tapped on, then skipped), then the naming.
+  expect((await state(page)).screen).toBe('opening');
+  expect((await state(page)).room).toBeNull();
+  await page.locator('.opening__panel').click();
+  await shot('opening');
+  await page.getByRole('button', { name: 'Preskoči' }).click();
   await expect(page.locator('.naming__form')).toBeVisible();
   await page.locator('.naming__input').fill('Ivo');
   await page.locator('.naming__look').nth(2).click();
@@ -187,9 +199,17 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await expect(page.locator('.naming__reply')).toContainText('Ivo');
   await page.locator('.naming__reply .naming__button').click();
 
+  // Room 1, the door lift, through the town's gate: 5 on the dial, both blanks.
+  await arrive(page, 'r01', 'town');
+  await dial(page, [1, 2, 3, 4, 5]);
+  await write(page, '5');
+  await write(page, '5');
+  await presented(page);
+  await finish(page, 'r01', shot);
+
   // Room 2, the street lamps: 3x = 12, then x : 3 = 5 on a dial in 3s. Stuck at first, he
   // asks for a hint twice (story 2.7): the step's tag, then the exact next move.
-  await arrive(page, 'r02', 'room');
+  await arrive(page, 'r02', 'town');
   await page.locator('button.hint').click();
   expect((await state(page)).hint).toBe(1);
   await page.locator('button.hint').click();
@@ -209,7 +229,7 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
 
   // Room 3, the sluice gate: the pin where it levels (the dial keeps turning while it
   // waits), then the direction pin.
-  await arrive(page, 'r03', 'room');
+  await arrive(page, 'r03', 'map');
   await dial(page, [7, 8, 9]);
   await dispatch(page, { type: 'pin/set', value: { kind: 'x', x: 14 } });
   await dial(page, [8, 9]);
@@ -226,14 +246,15 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await finish(page, 'r03', shot);
 
   // The tablet is closed and opened again (story 2.1): his rooms and his name are kept, and
-  // room 4 is where he left off.
+  // he is back in the town, where he left off.
   await page.reload();
   await hook(page);
   expect((await state(page)).done).toEqual(['r01', 'r02', 'r03']);
   expect((await state(page)).name).toBe('Ivo');
+  expect((await state(page)).screen).toBe('map');
 
   // Room 4, the water wheel: x = 9 refused until simplified, then Balance.
-  await arrive(page, 'r04', 'room');
+  await arrive(page, 'r04', 'map');
   await dialUpTo(page, 9);
   await write(page, 'x=9');
   expect((await state(page)).refused).toBe(1);
@@ -247,11 +268,12 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await presented(page);
   await finish(page, 'r04', shot);
 
-  // Room 5 loads, and he opens the map (story 2.2) to see the gates (story 2.3): Balance,
-  // from room 3, opened the bridge; the old logbook waits for the bridge and the weighing
-  // yard; the tram waits for the gear chain. He travels to the bridge from there.
-  await expect.poll(async () => (await state(page)).room).toBe('r05');
-  await page.locator('button.map-button').click();
+  // Back in the town, he opens the district map (story 2.2) to see the gates (story 2.3):
+  // Balance, from room 3, opened the bridge; the old logbook waits for the bridge and the
+  // weighing yard; the tram waits for the gear chain. He travels to the bridge from there.
+  await expect.poll(async () => (await state(page)).screen).toBe('map');
+  expect((await state(page)).room).toBeNull();
+  await openMap(page);
   const node = (id: string) => page.locator(`button.map__node[data-node="${id}"]`);
   await expect(node('r04')).toHaveAttribute('data-state', 'restored');
   await expect(node('r05')).toHaveAttribute('data-state', 'open');
@@ -276,7 +298,7 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await finish(page, 'r05', shot);
 
   // Room 6, the weighing yard: the readouts hidden, the pin at 29.
-  await arrive(page, 'r06', 'room');
+  await arrive(page, 'r06', 'map');
   await pin(page, { kind: 'x', x: 29 });
   await write(page, 'x=29');
   await write(page, '29');
@@ -285,7 +307,7 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
 
   // Room 7, the old logbook: the logbook's lines tapped onto the scale, the wrong one flagged
   // and confirmed in the notebook, then the rewrite.
-  await arrive(page, 'r07', 'room');
+  await arrive(page, 'r07', 'map');
   await dial(page, [2, 3, 4, 5, 6]);
   const logbook = page.locator('li.line--logbook');
   await logbook.nth(0).locator('button.line__tap').click();
@@ -299,9 +321,13 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await presented(page);
   await finish(page, 'r07', shot);
 
-  // Story 4.9: room 8, the tram, comes next (rooms 8–13 are e2e/rooms-8-13.spec.ts).
-  await expect.poll(async () => (await state(page)).room).toBe('r08');
-  await expect.poll(async () => (await state(page)).screen).toBe('room');
+  // Story 4.9: room 8, the tram, is open next (rooms 8–13 are e2e/rooms-8-13.spec.ts); he
+  // is back in the town, never carried into it (story 5.0).
+  await expect.poll(async () => (await state(page)).screen).toBe('map');
+  expect((await state(page)).room).toBeNull();
+  await openMap(page);
+  await expect(node('r07')).toHaveAttribute('data-state', 'restored');
+  await expect(node('r08')).toHaveAttribute('data-state', 'open');
   await shot('r08-next');
   expect((await state(page)).done).toEqual(['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07']);
   expect(errors).toEqual([]);

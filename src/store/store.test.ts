@@ -340,10 +340,15 @@ describe('a room from arrival to restart (story 1.8)', () => {
       makeCtx: () => ({ now: clock.now, rng: { next: () => 0.5 } }),
       effects: [(event) => isRoomEvent(event) && seen.push(event)],
       ...(list ? { reduce: createReducer(list) } : {}),
-      // Named already, so room 2 follows room 1 (the naming has its own tests, naming.test.ts).
+      // Past the opening and named already, so a restart ends in the town (story 5.0; the
+      // opening and the naming have their own tests, naming.test.ts).
       initialState: {
         ...initialGameState(),
-        save: { ...initialGameState().save, character: { name: 'Ivo', look: 'look-1' as const } },
+        save: {
+          ...initialGameState().save,
+          character: { name: 'Ivo', look: 'look-1' as const },
+          progress: { ...initialGameState().save.progress, introSeen: true },
+        },
       },
     });
     const phases: string[] = [];
@@ -388,7 +393,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
       'r01.0:open',
       'r01.0:locked',
       'r01.0:restart',
-      // Story 2.2: the restart ends on the map.
+      // Story 2.2: the restart ends on the map (its story card tapped on).
       'none',
     ]);
     expect(game.seen.map((event) => event.type)).toEqual([
@@ -412,7 +417,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     expect(game.store.getState().room?.stage.draft).toEqual(['5']);
   });
 
-  it('loads the next room when a restart ends: room 1, then room 2', () => {
+  it('goes to the town when a restart ends, and room 2 waits for him to walk to it (story 5.0)', () => {
     const game = playing();
     game.act({ type: 'room/enter', roomId: 'r01' });
     game.act({ type: 'machine/touch' });
@@ -420,6 +425,10 @@ describe('a room from arrival to restart (story 1.8)', () => {
     game.presented();
     game.seen.length = 0;
     game.presented();
+    expect(game.store.getState().ui.screen).toBe('map');
+    expect(game.store.getState().room).toBeNull();
+    expect(game.seen).toEqual([]);
+    game.act({ type: 'map/travel', node: 'r02' });
     expect(game.store.getState().ui.screen).toBe('room');
     const room = game.store.getState().room as RoomState;
     expect(room.spec.id).toBe('r02');
@@ -428,7 +437,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     expect(game.seen).toEqual([{ type: 'StageArrived', roomId: 'r02', stage: 0 }]);
   });
 
-  it('plays room 2: the first lamp lights, the second stage arrives, the machine restarts, then room 3', () => {
+  it('plays room 2: the first lamp lights, the second stage arrives, the machine restarts, then the town', () => {
     const game = playing();
     game.act({ type: 'room/enter', roomId: 'r02' });
     game.act({ type: 'machine/touch' });
@@ -436,7 +445,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     game.solve('4');
     expect(machineView(game.store.getState().room)).toMatchObject({ parts: 2, partsStarted: 1 });
     game.presented();
-    let room = game.store.getState().room as RoomState;
+    const room = game.store.getState().room as RoomState;
     expect(room.stageIndex).toBe(1);
     expect(room.stage.phase).toBe('arrive');
     expect(dialView(room)).toMatchObject({ min: 0, max: 30, step: 3, x: 0 });
@@ -447,9 +456,8 @@ describe('a room from arrival to restart (story 1.8)', () => {
     game.presented();
     expect(game.store.getState().room?.stage.phase).toBe('restart');
     game.presented();
-    room = game.store.getState().room as RoomState;
-    expect(room.spec.id).toBe('r03');
-    expect(room.stage.phase).toBe('arrive');
+    expect(game.store.getState().ui.screen).toBe('map');
+    expect(game.store.getState().room).toBeNull();
     expect(game.seen.filter((event) => event.type !== 'DialNotch')).toEqual([
       { type: 'StageArrived', roomId: 'r02', stage: 0 },
       { type: 'PansLevel', roomId: 'r02', stage: 0, x: 4 },
@@ -462,7 +470,6 @@ describe('a room from arrival to restart (story 1.8)', () => {
       { type: 'LineAccepted', roomId: 'r02', stage: 1, source: 'typed', progress: true },
       { type: 'StageLocked', roomId: 'r02', stage: 1 },
       { type: 'RoomRestarted', roomId: 'r02' },
-      { type: 'StageArrived', roomId: 'r03', stage: 0 },
     ]);
   });
 
@@ -482,7 +489,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
       'r01.0:locked',
       'r01.0:locked',
       'r01.0:restart',
-      'r02.0:arrive',
+      'none',
     ]);
   });
 
@@ -552,9 +559,19 @@ describe('a room from arrival to restart (story 1.8)', () => {
 describe('predict before the dial opens (story 1.9)', () => {
   function inRoomThree(stage = 0) {
     const seen: DomainEvent[] = [];
+    const initial = initialGameState();
     const store = createGameStore({
       makeCtx: () => fixedCtx,
       effects: [(event) => isRoomEvent(event) && seen.push(event)],
+      // Past the opening and named, so room 3's restart ends in the town (story 5.0).
+      initialState: {
+        ...initial,
+        save: {
+          ...initial.save,
+          character: { name: 'Ivo', look: 'look-1' as const },
+          progress: { ...initial.save.progress, introSeen: true },
+        },
+      },
     });
     const act = (action: Action) => store.getState().dispatch(action);
     const solve = (answer: string) => {
@@ -733,8 +750,11 @@ describe('predict before the dial opens (story 1.9)', () => {
     expect(game.stage()?.phase).toBe('restart');
     expect(game.store.getState().save.progress.tools).toEqual(['balance']);
     game.presented();
-    // Room 3's story card (story 2.5), then room 4, the water wheel, with Balance kept.
+    // Room 3's story card (story 2.5), then the town (story 5.0), and room 4, the water
+    // wheel, with Balance kept.
     game.act({ type: 'story/next' });
+    expect(game.store.getState().ui.screen).toBe('map');
+    game.act({ type: 'map/travel', node: 'r04' });
     expect(game.store.getState().room?.spec.id).toBe('r04');
     expect(game.stage()?.phase).toBe('arrive');
     expect(game.store.getState().save.progress.tools).toEqual(['balance']);
@@ -788,6 +808,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
             told: [],
             ideasSeen: [],
             tornPages: [],
+            introSeen: true,
             tools: ['balance'],
             firstUse,
           },
@@ -949,6 +970,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
       told: [],
       ideasSeen: [],
       tornPages: [],
+      introSeen: false,
       tools: ['balance'],
       firstUse: [],
     });
@@ -963,6 +985,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
       told: [],
       ideasSeen: [],
       tornPages: [],
+      introSeen: false,
       tools: ['balance'],
       firstUse: ['tray'],
     });
@@ -999,6 +1022,7 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
             told: [],
             ideasSeen: [],
             tornPages: [],
+            introSeen: true,
             tools: ['balance'],
             firstUse: ['pin', 'tray'],
           },

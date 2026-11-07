@@ -6,16 +6,37 @@ import { recordError } from '@/lib/error-log';
 import type { LoadResult, SaveStorage } from '@/save/storage';
 import type { Action } from '@/store/actions';
 import { fromSaveV1 } from '@/store/persist';
+import { openingArt } from '@/ui/opening/art';
+import { townImages } from '@/ui/town/art';
 
 /** Loads the assets, reporting how much has loaded, 0–1. */
 export type AssetLoader = (onProgress: (loaded: number) => void) => Promise<void>;
 
 /**
- * Epic 2 has no image bundles yet (the art arrives with story 2.12 and epic 6), so the
- * assets are loaded at once; Pixi `Assets` bundles join here.
+ * The pictures the game shows outside the scene (story 5.0): the opening's panels and the
+ * town, fetched and decoded behind the loading screen so nothing pops in. One that fails is
+ * skipped; the browser fetches it again when it shows. Pixi `Assets` bundles join here.
  */
 export const loadAssets: AssetLoader = async (onProgress) => {
-  onProgress(1);
+  const urls = [...openingArt.map((art) => art.src), ...townImages];
+  if (typeof Image === 'undefined' || urls.length === 0) {
+    onProgress(1);
+    return;
+  }
+  let done = 0;
+  await Promise.all(
+    urls.map(async (url) => {
+      const image = new Image();
+      image.src = url;
+      try {
+        await image.decode();
+      } catch {
+        // Skipped: see above.
+      }
+      done += 1;
+      onProgress(done / urls.length);
+    }),
+  );
 };
 
 /**

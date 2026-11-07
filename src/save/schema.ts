@@ -58,6 +58,10 @@ export interface SaveProgress {
   ideasSeen: IdeaId[];
   /** Torn logbook pages returned by fights, in the order he won them (story 3.4). */
   tornPages: PageId[];
+  /**
+   * He has seen the opening (story 5.0). A save from before it hasn't, so it shows once.
+   */
+  introSeen: boolean;
 }
 
 export interface SaveV1 {

@@ -30,6 +30,8 @@ const screens = [
   ['640 × 360', phoneFit],
 ] as const;
 const balance: ToolId[] = ['balance'];
+// The sweeps over every situation take 1-3 s alone, and more beside the whole suite.
+const sweepTimeoutMs = 30_000;
 
 function step(result: RoomStep | null): RoomStep {
   if (!result) throw new Error('the action was ignored');
@@ -185,6 +187,7 @@ describe('handover tags in the scene (story 1.15)', () => {
         }
       }
     },
+    sweepTimeoutMs,
   );
 
   it.each(screens)(
@@ -211,6 +214,7 @@ describe('handover tags in the scene (story 1.15)', () => {
         }
       }
     },
+    sweepTimeoutMs,
   );
 
   it('ties room 1’s dial tag to the knob’s label from right above it, on the tablet', () => {

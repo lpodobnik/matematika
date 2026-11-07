@@ -23,6 +23,7 @@ export function newSave(createdAt: string | null = null): SaveState {
       told: [],
       ideasSeen: [],
       tornPages: [],
+      introSeen: false,
     },
     economy: createEconomy(),
     settings: { muted: false, quality: null },

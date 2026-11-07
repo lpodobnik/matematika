@@ -30,6 +30,7 @@ function playing(tools: ToolId[] = []) {
           told: [],
           ideasSeen: [],
           tornPages: [],
+          introSeen: true,
           tools,
           firstUse: [],
         },

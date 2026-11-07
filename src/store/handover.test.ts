@@ -27,6 +27,7 @@ function playing(firstUse: FirstUseId[] = [], tools: ToolId[] = []) {
           told: [],
           ideasSeen: [],
           tornPages: [],
+          introSeen: true,
           tools,
           firstUse,
         },

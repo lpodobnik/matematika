@@ -1,6 +1,6 @@
 import '@/ui/common/common.css';
 import { hr } from '@/content/text/hr';
-import { resetWorks } from '@/room/phases';
+import { leaveWorks } from '@/room/phases';
 import { useGame } from '@/store/store';
 
 /**
@@ -11,7 +11,7 @@ import { useGame } from '@/store/store';
  */
 export function MapButton() {
   const present = useGame((s) => s.room !== null);
-  const works = useGame((s) => (s.room ? resetWorks(s.room.stage.phase) : false));
+  const works = useGame((s) => (s.room ? leaveWorks(s.room.stage.phase) : false));
   const dispatch = useGame((s) => s.dispatch);
   if (!present) return null;
   return <MapControl works={works} onOpen={() => dispatch({ type: 'map/open' })} />;

@@ -1,5 +1,6 @@
-// Story 2.4: the naming after room 1, through the real store. Room 1's restart ends on the
-// naming; his name and look are saved and the next room follows; a reload comes back to it.
+// Stories 5.0 and 2.4: the opening and the naming, through the real store. A new game opens
+// on the opening, then the naming (moved from after room 1 by story 5.0), then the town; his
+// name and look are saved; a reload comes back to whichever is owed.
 
 import { describe, expect, it } from 'vitest';
 import { tokenFromChar } from '@/math/tokens';
@@ -34,6 +35,7 @@ function game(save: SaveState | null = null) {
   };
   /** Room 1 from the start, to the end of its restart. */
   const playRoomOne = () => {
+    act({ type: 'map/travel', node: 'r01' });
     act({ type: 'machine/touch' });
     for (const x of [1, 2, 3, 4, 5]) act({ type: 'dial/set', x });
     write('5');
@@ -55,78 +57,104 @@ function reload(state: GameState): GameState {
   return store.getState();
 }
 
-describe('the naming after room 1 (story 2.4)', () => {
-  it('comes when room 1’s restart ends, before room 2', () => {
+describe('the opening and the naming (stories 5.0, 2.4)', () => {
+  it('opens a new game on the opening, with no room, and shows it once', () => {
     const g = game();
-    expect(g.store.getState().room?.spec.id).toBe('r01');
-    g.playRoomOne();
-    expect(g.store.getState().ui.screen).toBe('naming');
+    expect(g.store.getState().ui.screen).toBe('opening');
     expect(g.store.getState().room).toBeNull();
-    expect(g.store.getState().save.progress.roomsDone).toEqual(['r01']);
+    expect(reload(g.store.getState()).ui.screen).toBe('opening');
+    g.act({ type: 'opening/done' });
+    expect(g.store.getState().save.progress.introSeen).toBe(true);
+    expect(g.store.getState().ui.screen).toBe('naming');
+    expect(reload(g.store.getState()).ui.screen).toBe('naming');
   });
 
-  it('saves his name and look, then room 2 follows', () => {
+  it('saves his name and look, then shows the town, with no room', () => {
     const g = game();
-    g.playRoomOne();
-    g.seen.length = 0;
+    g.act({ type: 'opening/done' });
     g.act({ type: 'character/set', name: '  Ivo   Horvat ', look: 'look-4' });
     const state = g.store.getState();
     expect(state.save.character).toEqual({ name: 'Ivo Horvat', look: 'look-4' });
-    expect(state.ui.screen).toBe('room');
-    expect(state.room?.spec.id).toBe('r02');
-    expect(g.seen.map((event) => event.type)).toEqual(['StageArrived', 'SaveChanged']);
+    expect(state.ui.screen).toBe('map');
+    expect(state.room).toBeNull();
   });
 
   it('keeps the name and look through a reload, and never asks again', () => {
     const g = game();
-    g.playRoomOne();
+    g.act({ type: 'opening/done' });
     g.act({ type: 'character/set', name: 'Lana', look: 'look-2' });
+    g.playRoomOne();
     const state = reload(g.store.getState());
     expect(state.save.character).toEqual({ name: 'Lana', look: 'look-2' });
-    expect(state.ui.screen).toBe('room');
-    expect(state.room?.spec.id).toBe('r02');
+    expect(state.ui.screen).toBe('map');
+    expect(state.save.progress.roomsDone).toEqual(['r01']);
   });
 
   it('refuses an empty name, an unknown look, and a naming outside the naming screen', () => {
     const g = game();
-    // In room 1, before the naming: nothing happens.
+    // On the opening: nothing happens.
     g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
     expect(g.store.getState().save.character).toEqual({ name: null, look: null });
-    expect(g.store.getState().room?.spec.id).toBe('r01');
-    g.playRoomOne();
+    expect(g.store.getState().ui.screen).toBe('opening');
+    g.act({ type: 'opening/done' });
     const before = g.store.getState();
     g.act({ type: 'character/set', name: '   ', look: 'look-1' });
     g.act({ type: 'character/set', name: 'Ivo', look: 'look-9' as never });
     const after = g.store.getState();
     expect(after.save).toBe(before.save);
     expect(after.ui).toBe(before.ui);
-    expect(after.room).toBeNull();
   });
 
-  it('comes back after a reload on the naming, or in room 1’s restart', () => {
+  it('ignores the opening’s end anywhere but the opening', () => {
     const g = game();
+    g.act({ type: 'opening/done' });
+    g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
+    const before = g.store.getState();
+    g.act({ type: 'opening/done' });
+    expect(g.store.getState().save).toBe(before.save);
+    expect(g.store.getState().ui).toBe(before.ui);
+  });
+
+  it('goes back to the town after room 1’s lines, through a reload too', () => {
+    const g = game();
+    g.act({ type: 'opening/done' });
+    g.act({ type: 'character/set', name: 'Ivo', look: 'look-1' });
+    g.act({ type: 'map/travel', node: 'r01' });
     g.act({ type: 'machine/touch' });
     for (const x of [1, 2, 3, 4, 5]) g.act({ type: 'dial/set', x });
     g.write('5');
     g.write('5');
     g.act({ type: 'presentation/done', roomId: 'r01', stage: 0, phase: 'locked' });
     expect(g.store.getState().room?.stage.phase).toBe('restart');
-    // Room 1's story card comes first (story 2.5), then the naming.
     expect(reload(g.store.getState()).ui.screen).toBe('story');
     g.act({ type: 'presentation/done', roomId: 'r01', stage: 0, phase: 'restart' });
     expect(reload(g.store.getState()).ui.screen).toBe('story');
     g.act({ type: 'story/next' });
-    expect(reload(g.store.getState()).ui.screen).toBe('naming');
+    expect(g.store.getState().ui.screen).toBe('map');
+    expect(reload(g.store.getState()).ui.screen).toBe('map');
   });
 
-  it('asks a save from before the naming first, even with a room in progress, then resumes it', () => {
-    const save = newSave(at);
+  it('shows a save from before the opening the opening once, then its naming, then resumes its room', () => {
+    // A save from before story 5.0 hasn't seen the opening (save/decode.ts).
+    const decoded = decodeSave(
+      {
+        v: 1,
+        progress: {
+          roomsDone: ['r01'],
+          told: ['r01'],
+          room: { id: 'r02', stage: 1, lines: [], pin: null, splitterSeen: false },
+        },
+      },
+      at,
+    );
+    if (!decoded) throw new Error('the save did not decode');
+    expect(decoded.progress.introSeen).toBe(false);
+    const { save, room } = fromSaveV1(decoded);
     const g = game();
-    g.store.getState().dispatch({
-      type: 'boot/start',
-      save: { ...save, progress: { ...save.progress, roomsDone: ['r01'], told: ['r01'] } },
-      room: { id: 'r02', stage: 1, lines: [], pin: null, splitterSeen: false },
-    });
+    g.store.getState().dispatch({ type: 'boot/start', save, room });
+    expect(g.store.getState().ui.screen).toBe('opening');
+    expect(g.store.getState().room?.spec.id).toBe('r02');
+    g.act({ type: 'opening/done' });
     // The room waits under the naming, and is still saved as the room in progress.
     expect(g.store.getState().ui.screen).toBe('naming');
     expect(g.store.getState().room?.spec.id).toBe('r02');
@@ -138,12 +166,13 @@ describe('the naming after room 1 (story 2.4)', () => {
     expect(g.store.getState().save.progress.started).toEqual([]);
   });
 
-  it('asks a save from before the naming once, then shows the map when no room is left', () => {
+  it('asks a save from before the naming once, then shows the town when no room is in progress', () => {
     const save = newSave(at);
     const g = game({
       ...save,
       progress: {
         ...save.progress,
+        introSeen: true,
         roomsDone: ['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07'],
         told: ['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07'],
         tools: ['balance'],

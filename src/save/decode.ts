@@ -227,6 +227,9 @@ export function decodeSave(value: unknown, now: string): SaveV1 | null {
         ? known(progress.ideasSeen, isIdea)
         : toldIdeas(known(progress.told, isRoomId)),
       tornPages: known(progress.tornPages, isPage),
+      // Every save sees the opening once, a save from before story 5.0 too. (`openingSeen`,
+      // its first name, was written as seen for old saves by mistake, so it is not read.)
+      introSeen: progress.introSeen === true,
     },
     economy: decodeEconomy(value.economy),
     fight: decodeFight(value.fight),
