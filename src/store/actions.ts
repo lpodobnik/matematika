@@ -2,6 +2,7 @@
 
 import type { LookId } from '@/city/character';
 import type { NodeId } from '@/city/types';
+import type { AreaId } from '@/content/town';
 import type { UpgradeId } from '@/economy/types';
 import type { FightAction, FightState } from '@/fight/types';
 import type { LinkOp } from '@/math/chain';
@@ -112,6 +113,13 @@ export type Action =
   | { type: 'fight/close' }
   /** The guided first fight's "Dalje": the next step, or the guide is over (fight/guide.ts). */
   | { type: 'fight/guide-next' }
+  /** Story 6.2: the mute control, always on screen; kept in `save.settings.muted`. */
+  | { type: 'settings/mute'; muted: boolean }
+  /**
+   * Story 6.2: the town street on screen, as the town shows it, or null as the town goes;
+   * the machine loops heard follow it (store/effects/audio.ts). Changes no state.
+   */
+  | { type: 'town/area'; area: AreaId | null }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */
   | { type: 'dev/set-parts'; parts: number }
   /** The dev panel only: every winding-down automaton rewinds now. */

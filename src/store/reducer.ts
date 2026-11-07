@@ -39,6 +39,7 @@ import type { DomainEvent } from '@/store/events';
 import { withFights } from '@/store/fight-reducer';
 import { newSave } from '@/store/persist';
 import { initialQuality, type QualityState, reduceQuality } from '@/store/quality';
+import { withSettings } from '@/store/settings-reducer';
 import { withShop } from '@/store/shop-reducer';
 import type { GameState, Reduce, SaveState } from '@/store/types';
 
@@ -570,10 +571,10 @@ function leavingRoom(state: GameState, action: Action): RoomState | null {
 
 /**
  * The root reducer, over a given list of rooms so tests can bring their own, with the
- * fights over it (store/fight-reducer.ts).
+ * fights over it (store/fight-reducer.ts), the shop over those, and the settings outermost.
  */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
-  return withShop(withFights(createRoomReducer(roomList), roomList), roomList);
+  return withSettings(withShop(withFights(createRoomReducer(roomList), roomList), roomList));
 }
 
 /** The opening's end (story 5.0): it is seen, and never shows again. */

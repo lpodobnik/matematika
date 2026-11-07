@@ -1228,8 +1228,8 @@ describe('the tablet profile (story 1.13)', () => {
 });
 
 describe('effects', () => {
-  it('has two effects so far: saving (story 2.1) and the play log (story 2.11)', () => {
-    expect(effects).toHaveLength(2);
+  it('has three effects: saving (story 2.1), the play log (story 2.11) and sound (story 6.2)', () => {
+    expect(effects).toHaveLength(3);
   });
 
   it('runs events in order through effects in order', () => {

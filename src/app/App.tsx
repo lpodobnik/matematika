@@ -2,11 +2,14 @@ import { lazy, Suspense, useEffect, useRef } from 'react';
 import { startClock } from '@/app/clock';
 import { LoadingScreen } from '@/app/LoadingScreen';
 import { PortraitOverlay } from '@/app/PortraitOverlay';
+import { installSound } from '@/app/sound';
+import { audio } from '@/audio/index';
 import { useGame } from '@/store/store';
 import type { Screen } from '@/store/types';
 import { GoalBanner } from '@/ui/common/GoalBanner';
 import { HintButton } from '@/ui/common/HintButton';
 import { MapButton } from '@/ui/common/MapButton';
+import { MuteButton } from '@/ui/common/MuteButton';
 import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
@@ -36,13 +39,16 @@ const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : nu
 // the naming after room 1 (story 2.4); and a room's story card the first time its restart
 // ends (story 2.5); and an automaton fight, entered from a lair on the map (story 3.1).
 // Story 5.0: a new game opens on the opening, and the map screen now shows the town, with
-// the district map a tap away.
+// the district map a tap away. Story 6.2: the mute control sits in the top-right corner of
+// every screen but the loading one.
 export function App() {
   const dispatch = useGame((s) => s.dispatch);
   const screen = useGame((s) => s.ui.screen);
   const loaded = useGame((s) => s.ui.loaded);
 
   useEffect(() => startClock(window, dispatch), [dispatch]);
+  // Story 6.2: the first tap starts the sound; buttons tap.
+  useEffect(() => installSound(window, audio), []);
 
   return <AppScreen screen={screen} loaded={loaded} />;
 }
@@ -63,6 +69,7 @@ export function AppScreen({ screen, loaded = 1 }: { screen: Screen; loaded?: num
   return (
     <div className="app">
       <ScreenInPlay screen={screen} loaded={loaded} />
+      <MuteButton />
       <PortraitOverlay />
       {DevPanel && (
         <Suspense fallback={null}>
