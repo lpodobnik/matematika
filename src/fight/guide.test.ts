@@ -59,25 +59,17 @@ describe('the guided first fight (fight/guide.ts)', () => {
     for (const step of GUIDE_STEPS) expect(guideFocus(step).length).toBeGreaterThan(0);
   });
 
-  it('puts the biggest die on blade, the smaller of the other two on charge, the last on reach', () => {
+  it('lets him choose any free die for each slot, in turn', () => {
     const f = rolled([2, 6, 4]);
-    expect(guideDice('blade', f)).toEqual([1]);
-    const bladed = act(f, { type: 'fight/place', die: 1, slot: 'blade' });
-    expect(guideDice('charge', bladed)).toEqual([0]);
-    const charged = act(bladed, { type: 'fight/place', die: 0, slot: 'charge' });
-    expect(guideDice('reach', charged)).toEqual([2]);
+    expect(guideDice('blade', f)).toEqual([0, 1, 2]);
+    // He puts the small die on blade: his choice, and the banner will show what it did.
+    const bladed = act(f, { type: 'fight/place', die: 0, slot: 'blade' });
+    expect(guideDice('charge', bladed)).toEqual([1, 2]);
+    const charged = act(bladed, { type: 'fight/place', die: 2, slot: 'charge' });
+    expect(guideDice('reach', charged)).toEqual([1]);
     // Not outside its slot steps, nor outside placing.
     expect(guideDice('roll', f)).toEqual([]);
     expect(guideDice('blade', fresh())).toEqual([]);
-  });
-
-  it('lets any of equal dice go, and with a 4th die keeps the smallest aside', () => {
-    expect(guideDice('blade', rolled([5, 3, 5]))).toEqual([0, 2]);
-    const four = act(rolled([1, 6, 3, 5]), { type: 'fight/place', die: 1, slot: 'blade' });
-    // Charge takes the 3: reach keeps the 5, and the 1 stays aside.
-    expect(guideDice('charge', four)).toEqual([2]);
-    const charged = act(four, { type: 'fight/place', die: 2, slot: 'charge' });
-    expect(guideDice('reach', charged)).toEqual([3]);
   });
 
   it('lets through only the move its step asks for; leaving is always allowed', () => {
@@ -89,7 +81,7 @@ describe('the guided first fight (fight/guide.ts)', () => {
     expect(guideAllows('roll', start, { type: 'fight/roll' })).toBe(true);
     const f = rolled([2, 6, 4]);
     // The wrong die, or the right die in the wrong slot, is refused.
-    expect(guideAllows('blade', f, { type: 'fight/place', die: 0, slot: 'blade' })).toBe(false);
+    expect(guideAllows('blade', f, { type: 'fight/place', die: 0, slot: 'blade' })).toBe(true);
     expect(guideAllows('blade', f, { type: 'fight/place', die: 1, slot: 'reach' })).toBe(false);
     expect(guideAllows('blade', f, { type: 'fight/place', die: 1, slot: 'blade' })).toBe(true);
     expect(guideAllows('blade', f, { type: 'fight/unplace', slot: 'blade' })).toBe(false);

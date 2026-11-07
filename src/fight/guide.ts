@@ -1,5 +1,5 @@
 // The guided first fight. The first time he fights, at any lair, Nikola talks him through
-// one round a step at a time: what armour is and the goal, the roll, the biggest die on
+// one round a step at a time: what armour is and the goal, the roll, a die of his choice on
 // blade, the charge, the reach, the blows, the strike and its banner, the dent, steam and
 // the clean cut. Some steps are read and then closed with "Dalje" (talking steps); the
 // others wait for the move they ask for, and only that move is let through, so the guided
@@ -92,21 +92,14 @@ export function guideFocus(step: GuideStep): readonly GuideTarget[] {
 const isSlotStep = (step: GuideStep): step is Slot => (SLOTS as readonly string[]).includes(step);
 
 /**
- * The dice the guide lets him put in its slot now, as indices into the roll. Blade and reach
- * take the biggest die still free; charge takes the second biggest of the two (or, with a
- * 4th die, three) still free, so reach keeps the bigger one and a 4th die stays aside.
- * Equal dice are all allowed. Empty outside the blade, charge and reach steps.
+ * The dice the guide lets him put in its slot now, as indices into the roll: any die still
+ * free. He chooses, and the strike's banner shows what his choice did (Luka: "let the kid
+ * choose the die himself to learn"). Empty outside the blade, charge and reach steps.
  */
 export function guideDice(step: GuideStep, fight: FightState): number[] {
   if (!isSlotStep(step) || fight.phase !== 'place') return [];
   const placed = new Set(SLOTS.map((slot) => fight.slots[slot]));
-  const free = fight.dice
-    .map((value, index) => ({ value, index }))
-    .filter(({ index }) => !placed.has(index));
-  const values = free.map(({ value }) => value).sort((a, b) => b - a);
-  const want = step === 'charge' ? values[1] : values[0];
-  if (want === undefined) return [];
-  return free.filter(({ value }) => value === want).map(({ index }) => index);
+  return fight.dice.map((_, index) => index).filter((index) => !placed.has(index));
 }
 
 /**

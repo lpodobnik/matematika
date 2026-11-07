@@ -114,19 +114,17 @@ describe('the guided first fight', () => {
     expect(g.step()).toBe('roll');
     g.act({ type: 'fight/roll' });
     expect(g.step()).toBe('blade');
-    // Not the smallest die on blade, nor the biggest on reach.
+    // Any die he picks, but only into the slot the step asks for.
     const dice = g.fight().dice;
     const smallest = dice.indexOf(Math.min(...dice));
-    const biggest = dice.indexOf(Math.max(...dice));
-    g.act({ type: 'fight/place', die: smallest, slot: 'blade' });
-    g.act({ type: 'fight/place', die: biggest, slot: 'reach' });
+    g.act({ type: 'fight/place', die: smallest, slot: 'reach' });
     expect(g.fight().slots).toEqual({ blade: null, charge: null, reach: null });
-    g.act({ type: 'fight/place', die: biggest, slot: 'blade' });
-    expect(g.fight().slots.blade).toBe(biggest);
+    g.act({ type: 'fight/place', die: smallest, slot: 'blade' });
+    expect(g.fight().slots.blade).toBe(smallest);
     expect(g.step()).toBe('charge');
     // No taking it back during the guide.
     g.act({ type: 'fight/unplace', slot: 'blade' });
-    expect(g.fight().slots.blade).toBe(biggest);
+    expect(g.fight().slots.blade).toBe(smallest);
   });
 
   it('goes through a whole round to the clean cut, then is met and saved', () => {

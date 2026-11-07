@@ -311,15 +311,13 @@ describe('the guided first fight on screen', () => {
     expect(roll).toMatch(/class="fight__roll"[^>]*data-focus/);
   });
 
-  it('lights only the die and slot the step asks for, and dims the rest', () => {
+  it('lets him pick any die, lights the slot the step asks for, and dims the rest', () => {
     const html = guided(rolled, 'blade');
-    const top = Math.max(...rolled.dice);
     const dice = [...html.matchAll(/<button[^>]*class="fight__die"[^>]*>/g)].map((m) => m[0]);
     expect(dice).toHaveLength(3);
-    for (const [i, die] of dice.entries()) {
-      const allowed = rolled.dice[i] === top;
-      expect(die.includes('disabled'), die).toBe(!allowed);
-      expect(die.includes('data-focus'), die).toBe(allowed);
+    for (const die of dice) {
+      expect(die.includes('disabled'), die).toBe(false);
+      expect(die.includes('data-focus'), die).toBe(true);
     }
     expect(html).toMatch(/data-slot="blade"[^>]*data-focus/);
     expect(html).toMatch(/data-slot="reach"[^>]*data-dim/);

@@ -152,8 +152,9 @@ test('the first fight is guided step by step, once', async ({ page }, testInfo) 
     const lit = page.locator('.fight__die[data-focus]');
     await expect(lit.first()).toBeVisible();
     await expect(page.locator(`.fight__slot[data-slot="${slot}"]`)).toHaveAttribute('data-focus');
-    // A die the guide doesn't ask for can't be picked up.
-    await expect(page.locator('.fight__die[data-dim]').first()).toBeDisabled();
+    // He chooses: every die not yet placed can be picked up.
+    const free = 3 - ['blade', 'charge', 'reach'].indexOf(slot);
+    await expect(lit).toHaveCount(free);
     await shot(slot);
     await lit.first().click();
     await page.locator(`.fight__slot[data-slot="${slot}"]`).click();
