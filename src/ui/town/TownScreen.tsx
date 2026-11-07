@@ -196,6 +196,10 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
           onTravel(job.place.node);
           return;
         }
+        if (job.place.node === 'foundry') {
+          setBubble({ who: 'self', at: job.place.marker, lines: hr.town.places.foundry, line: 0 });
+          return;
+        }
         const text =
           job.place.node === 'workshop' ? hr.town.places.workshop : hr.town.places.locked;
         setBubble({ who: 'self', at: job.place.marker, lines: [text], line: 0 });
@@ -339,7 +343,10 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   );
   // The machine to go to next (the map marks one only after room 1; the town from the
   // start): its place here, or the way towards it, or else the map button calls.
-  const nextNode = view.nodes.find((node) => node.next)?.id ?? (done.length === 0 ? 'r01' : null);
+  // With the whole district running, the way on is the sealed foundry gate.
+  const nextNode =
+    view.nodes.find((node) => node.next)?.id ??
+    (done.length === 0 ? 'r01' : view.allDone ? 'foundry' : null);
   const nextPlace = places.find((place) => place.node === nextNode);
   const nextExit = nextPlace ? undefined : exits.find((exit) => exit.to === areaOf(nextNode));
   const nextMarker = nextPlace?.marker ?? nextExit?.marker;

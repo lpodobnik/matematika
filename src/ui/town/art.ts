@@ -11,6 +11,7 @@ import canal from '@/ui/town/art/canal.webp';
 import canalOpen from '@/ui/town/art/canal-open.webp';
 import faust from '@/ui/town/art/faust.webp';
 import hill from '@/ui/town/art/hill.webp';
+import hillRunning from '@/ui/town/art/hill-running.webp';
 import lift from '@/ui/town/art/lift.webp';
 import liftUp from '@/ui/town/art/lift-up.webp';
 import look1 from '@/ui/town/art/look-1.webp';
@@ -28,8 +29,11 @@ import penkala from '@/ui/town/art/penkala.webp';
 import square from '@/ui/town/art/square.webp';
 import squareGateOpen from '@/ui/town/art/square-gate-open.webp';
 import tram from '@/ui/town/art/tram.webp';
+import tramRunning from '@/ui/town/art/tram-running.webp';
 import wheel from '@/ui/town/art/wheel.webp';
+import wheelTurning from '@/ui/town/art/wheel-turning.webp';
 import yard from '@/ui/town/art/yard.webp';
+import yardLevel from '@/ui/town/art/yard-level.webp';
 
 export { automaton20 };
 
@@ -69,12 +73,12 @@ const pictures: Record<AreaId, { base: string; running?: { room: RoomId; src: st
   canal: { base: canal, running: { room: 'r03', src: canalOpen } },
   mill: { base: mill, running: { room: 'r04', src: millRunning } },
   bridge: { base: bridge, running: { room: 'r05', src: bridgeDown } },
-  yard: { base: yard },
-  tram: { base: tram },
+  yard: { base: yard, running: { room: 'r06', src: yardLevel } },
+  tram: { base: tram, running: { room: 'r08', src: tramRunning } },
   lift: { base: lift, running: { room: 'r09', src: liftUp } },
   market: { base: market, running: { room: 'r10', src: marketLevel } },
-  wheel: { base: wheel },
-  hill: { base: hill },
+  wheel: { base: wheel, running: { room: 'r11', src: wheelTurning } },
+  hill: { base: hill, running: { room: 'r13', src: hillRunning } },
 };
 
 /** An area's picture as it stands now. */

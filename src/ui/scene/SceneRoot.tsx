@@ -24,6 +24,7 @@ import { type CopyPlacement, copyPlacements } from '@/ui/scene/copies';
 import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import { runFrameTest } from '@/ui/scene/frame-test';
 import { Machine } from '@/ui/scene/machine/Machine';
+import { RoomBackdrop } from '@/ui/scene/RoomBackdrop';
 import { rendererPreference } from '@/ui/scene/renderer';
 import { SceneErrorBoundary } from '@/ui/scene/SceneErrorBoundary';
 import { Dial } from '@/ui/scene/scale/Dial';
@@ -271,6 +272,7 @@ function SceneCopy({ placement, sceneScale, sceneOrigin, tools }: SceneCopyProps
   return (
     <pixiContainer ref={copyRef} x={placement.x} y={placement.y} scale={placement.scale}>
       <pixiGraphics draw={drawPaper} />
+      <RoomBackdrop />
       <Machine />
       <Scale sceneScale={copyScale} drag={drag} toScene={toScene} splitShow={splitShow} />
       <Dial sceneScale={copyScale} scroll={dialScroll} plateLayer={plateLayer} />

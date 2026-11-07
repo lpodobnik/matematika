@@ -425,6 +425,15 @@ const yard: TownArea = {
       bloom: { x: 850, y: 450, r: 420 },
     },
     {
+      // The foundry's great doors at the back of the yard, sealed with the First
+      // Automaton's mark: where the clock tower's line points (the district's last beat).
+      node: 'foundry',
+      stand: { x: 700, y: 480 },
+      area: { x: 600, y: 0, w: 260, h: 250 },
+      marker: { x: 730, y: 20 },
+      bloom: { x: 730, y: 130, r: 200 },
+    },
+    {
       // The old archive by the yard, where the logbook is kept.
       node: 'r07',
       stand: { x: 290, y: 640 },
@@ -776,7 +785,7 @@ export const town = {
 };
 
 /** The area that holds a room, so he comes out where he went in. */
-export function areaOf(node: NodeId | null): AreaId | null {
+export function areaOf(node: string | null): AreaId | null {
   if (!node) return null;
   for (const area of Object.values(town.areas)) {
     if (area.places.some((place) => place.node === node)) return area.id;

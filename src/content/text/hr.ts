@@ -497,6 +497,11 @@ export const hr = {
       /** A machine he has fixed: it runs, and there is nothing left to do here. */
       running: (name: string) => `${name}: radi. Ovdje je sve gotovo.`,
       workshop: 'Kristijanova radionica. Zaključana, a ključ je kod nekog drugog.',
+      /** The sealed foundry gate, where the clock tower's line points. */
+      foundry: [
+        'Ljevaonica. Na vratima je pločica: 5 · x = 40, i žig Prvog Automata.',
+        'Za ova vrata treba alat koji još nemaš. Nastavak slijedi…',
+      ],
       automaton: 'Automat skida dijelove sa zida. Bolje ga zasad zaobići.',
       /** The automaton he beat, until it is back (ADR-13). */
       beaten: (minutes: number) => `Ovaj automat je pobijeđen. Opet je tu za ${minutes} min.`,

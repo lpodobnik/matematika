@@ -1,4 +1,4 @@
-images generated: 62/70
+images generated: 67/70
 
 # Art credits
 
@@ -1039,7 +1039,7 @@ nothing. Each names its source and the exact command.
 - Date: 2026-11-07
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Town: an edit of an area picture (story 5.5).
-- Review: Used: the mill after room 4, water on the wheel (the wheel drawn a little glassy).
+- Review: Rejected (Luka: "makes no sense"): the wheel drawn glassy and blurred, water from nowhere. Redrawn as t67.
 - Prompt:
 
   ```text
@@ -1095,4 +1095,89 @@ nothing. Each names its source and the exact command.
 
   ```text
   Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. The big brass balance scale in the middle is now level, both pans at the same height, each holding a sack of grain. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 63. `tests/town-yard-level.t63.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 9001
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 52, 283 KB
+- References: `town-yard.t47.png`
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town: an area's machine running (story 6.3).
+- Review: Used: the yard after room 6, the balance level (redrawn as a beam over the platform; doors and racks where they were).
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. The tall brass balance beam beside the weighbridge is now level, with a crate on the platform and a set of iron weights in its pan balancing it exactly. Remove the letters from the small sign at the top right, leaving it blank. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 64. `tests/town-tram-running.t64.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 9101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 64, 283 KB
+- References: `town-tram-clean.t55.png`
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town: an area's machine running (story 6.3).
+- Review: Used: the tram after room 8, lights on, pole on the wire.
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. The tram's trolley pole now touches the wire above, its lamps glow warmly, its doors are open, and the gears and chain of the cable drum above the depot door are engaged and taut. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 65. `tests/town-wheel-turning.t65.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 9201
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 64, 285 KB
+- References: `town-wheel-clean.t56.png`
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town: an area's machine running (story 6.3).
+- Review: Used: the great wheel after room 11, water streaming off it.
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. The great wheel is turning: water streams off its lower rim in bright splashes, its gear train is engaged, and the river below shows ripples from it. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 66. `tests/town-hill-running.t66.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 9301
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 70, 287 KB
+- References: `town-hill-clean.t57.png`
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town: an area's machine running (story 6.3).
+- Review: Used: the hill after room 13, the machines steaming and the drum’s paper trace running across the square (the drum machine itself left out).
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. The three linked brass machines on the left are running, with thin wisps of steam and engaged gears; the recording drum at the foot of the tower turns with a long strip of paper unrolling from it, drawn with a single straight ink line. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 67. `tests/town-mill-running.t67.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 8602
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 52, 286 KB
+- References: `town-mill.t45.png`
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town: an edit of an area picture (story 5.5). Retry: t59 drew the wheel glassy and blurred, with water from nowhere (Luka: makes no sense).
+- Review: Used: the mill after room 4: water down the chute onto a solid wheel and out below it.
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. Water now runs down the long wooden chute from the canal and spills over its end onto the top of the water wheel, filling the top buckets; a thin stream falls from the lowest buckets into a small stone channel at the foot of the wheel. The wheel itself stays exactly as drawn: solid wooden spokes and buckets, sharp and opaque, not transparent, not blurred, no motion blur. A little steam rises from the copper pipe on the mill wall. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
   ```

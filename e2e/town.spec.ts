@@ -380,3 +380,60 @@ for (const [look, mirrored] of [
     );
   });
 }
+
+test('the district done: the foundry gate is marked, sealed, and to be continued', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    const done = [
+      'r01',
+      'r02',
+      'r03',
+      'r04',
+      'r05',
+      'r06',
+      'r07',
+      'r08',
+      'r09',
+      'r10',
+      'r11',
+      'r12',
+      'r13',
+    ];
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        character: { name: 'Ivo', look: 'look-1' },
+        progress: {
+          ...s.save.progress,
+          introSeen: true,
+          roomsDone: done,
+          told: done,
+          tools: ['balance', 'workshop', 'chain', 'drum'],
+          onMap: true,
+        },
+      },
+      room: null,
+    });
+  });
+  const area = (id: string) => page.locator(`.town__board[data-area="${id}"]`);
+  for (const to of ['canal', 'mill', 'yard']) {
+    await page.locator(`.town__place[data-exit="${to}"]`).click();
+    await expect(area(to)).toBeVisible({ timeout: 12_000 });
+  }
+  await expect(page.locator('.town__next')).toBeVisible();
+  await page.locator('.town__place[data-node="foundry"]').click();
+  await expect(page.locator('.town__bubble')).toContainText('5 · x = 40', { timeout: 8000 });
+  await page.locator('.town__bubble').click();
+  await expect(page.locator('.town__bubble')).toContainText('Nastavak slijedi');
+  await shot(page, '15-foundry');
+  expect((await state(page)).ui.screen).toBe('map');
+});
