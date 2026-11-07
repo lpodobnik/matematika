@@ -4,6 +4,7 @@ import type { LookId } from '@/city/character';
 import type { NodeId } from '@/city/types';
 import type { UpgradeId } from '@/economy/types';
 import type { FightAction, FightState } from '@/fight/types';
+import type { LinkOp } from '@/math/chain';
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
 import type { SavedRoom } from '@/room/resume';
@@ -76,6 +77,11 @@ export type Action =
   | { type: 'splitter/step'; by: 1 | -1 }
   /** He dropped the splitter, at the parts it is set to, anywhere over the scale. */
   | { type: 'splitter/split' }
+  /**
+   * Story 4.1: he ran the gear chain's last link backward with the operation and number he
+   * picked (room/chain.ts).
+   */
+  | { type: 'chain/run'; op: LinkOp; n: number }
   /** A pad key (or its keyboard stand-in) typed at the end of the draft line. */
   | { type: 'notebook/type'; token: Token }
   /** Delete: the draft's last token. */

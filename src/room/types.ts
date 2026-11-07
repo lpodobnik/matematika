@@ -45,9 +45,9 @@ export type Side = 'left' | 'right';
 export const toolIds = ['balance', 'workshop', 'chain', 'drum'] as const;
 
 /**
- * The ideas of rooms 1-7 that an explanation card names as school does (story 2.6): level
+ * The ideas of the rooms that an explanation card names as school does (story 2.6): level
  * means equal, the same step per notch, a prediction, Balance, a split, judging without
- * adding, and finding a mistake.
+ * adding, finding a mistake; and from epic 4, inverse operations (room 8).
  */
 export const ideaIds = [
   'equal',
@@ -57,6 +57,7 @@ export const ideaIds = [
   'split',
   'compare',
   'mistake',
+  'inverse',
 ] as const;
 export type IdeaId = (typeof ideaIds)[number];
 export type ToolId = (typeof toolIds)[number];
@@ -164,6 +165,7 @@ export const handoverIds = [
   'tray',
   'balance-goal',
   'splitter',
+  'chain',
 ] as const;
 
 export type HandoverId = (typeof handoverIds)[number];
@@ -203,7 +205,15 @@ export interface NotebookLine {
  * Pattern 2: a wrong line jams the machine until he edits it. A split that doesn't divide
  * evenly is refused, never jammed (story 1.15).
  */
-export type Jam = { kind: 'line' };
+export type Jam = {
+  kind: 'line';
+  /**
+   * Story 4.1: the jam is a gear chain run's wrong move, and these are the pans from before
+   * it: an edit takes the whole move back and returns the pans here (with Undo `blank`, the
+   * pans are ahead of the committed lines).
+   */
+  back?: Equation;
+};
 
 /**
  * Why enter refused a line with a tag, beyond the wiggle (story 1.16): `simplify`, an answer

@@ -35,10 +35,12 @@ export function openingTemplates(stage: StageSpec, machine: number): LineToken[]
 
 /**
  * Whether a stage gives him the last two lines as blanks once x is alone (story 1.16):
- * Balance `auto`, where Try values doesn't already open with them (room 4).
+ * Balance `auto` (room 4) or Undo `auto` (room 8, story 4.1), where Try values doesn't
+ * already open with them.
  */
 export function blanksOnceAlone(stage: StageSpec): boolean {
-  return stage.fading.balance === 'auto' && stage.fading.try !== 'blanks';
+  const auto = stage.fading.balance === 'auto' || stage.fading.undo === 'auto';
+  return auto && stage.fading.try !== 'blanks';
 }
 
 /**

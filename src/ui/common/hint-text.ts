@@ -4,6 +4,7 @@
 // notebook, which hangs the ones about writing.
 
 import { hr } from '@/content/text/hr';
+import { inverseOf, linkText } from '@/math/chain';
 import { add, div, maxNumber, num, sub, xVar } from '@/math/expr';
 import { formatEquation, formatNumber } from '@/math/format';
 import * as q from '@/math/rational';
@@ -56,6 +57,16 @@ function moveSpot(move: HintMove): HintSpot {
       return { place: 'pin' };
     case 'jam':
       return { place: 'notebook', text: hr.hint.jam.fix, key: 'delete' };
+    case 'blank':
+      return { place: 'notebook', text: hr.hint.blank(formatNumber(move.value)) };
+    case 'chain': {
+      // The link he taps is the inverse's inverse (`n − ☐` undoes itself).
+      const inverse = { op: move.op, n: move.n };
+      return {
+        place: 'notebook',
+        text: hr.hint.chain(linkText(inverseOf(inverse)), linkText(inverse)),
+      };
+    }
   }
 }
 
@@ -64,6 +75,7 @@ export function hintSpot(view: HintView): HintSpot {
   if (view.move) return moveSpot(view.move);
   if (view.step === 'pin') return { place: 'pin' };
   if (view.step === 'jam') return { place: 'notebook', text: hr.hint.jam.what, key: 'delete' };
+  if (view.step === 'blank') return { place: 'notebook', text: hr.hint.blankWhat };
   const text = hr.handover[view.step];
   return isSceneHandover(view.step)
     ? { place: 'scene', about: view.step, text }
@@ -99,6 +111,17 @@ export function notebookHint(state: Pick<GameState, 'room' | 'save' | 'ui'>): st
   if (!view) return null;
   const spot = spotIn(state, view);
   return spot.place === 'notebook' ? spot.text : null;
+}
+
+/**
+ * The kind of the move the hint shows now, or null (story 4.1: the chain's last link pulses
+ * for a `chain` move, and also for the `chain` step's tag): a primitive, for a selector.
+ */
+export function hintMoveKind(state: Pick<GameState, 'room' | 'save' | 'ui'>): string | null {
+  const view = hintOf(state);
+  if (!view) return null;
+  if (view.move) return view.move.kind;
+  return view.step === 'chain' ? 'chain' : null;
 }
 
 /** The pad key the hint pulses now, or null: a primitive, for a selector. */

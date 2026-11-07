@@ -38,7 +38,15 @@ import { openingDial } from '@/room/room';
 import { splitOutcome } from '@/room/splitter';
 import { isLevel, sideValues, tiltFor } from '@/room/tilt';
 import { sameLayout, trayMinNumber } from '@/room/tray';
-import type { DialSpec, FadingMode, PinSpec, RoomSpec, StageSpec, WayId } from '@/room/types';
+import {
+  type DialSpec,
+  type FadingMode,
+  type PinSpec,
+  type RoomSpec,
+  roomIds,
+  type StageSpec,
+  type WayId,
+} from '@/room/types';
 
 function stageEquation(stage: StageSpec | undefined) {
   const parsed = parse(stage?.machines[0]?.equation ?? '');
@@ -189,6 +197,19 @@ const gddRooms: readonly {
     ways: ['balance'],
     earns: 'chain',
   },
+  {
+    id: 'r08',
+    machine: 'tram',
+    xIs: 'Length per rail',
+    equations: ['4x + 9 = 41'],
+    answers: [8],
+    types: ['solve'],
+    dials: [{ min: 0, max: 10, step: 1 }],
+    pokeNotches: [4],
+    pins: [{ kind: 'level-x' }],
+    ways: ['balance', 'undo'],
+    earns: null,
+  },
 ];
 
 /** The x values the dial reaches before the pin is locked: the poke window. */
@@ -305,8 +326,8 @@ describe('rooms', () => {
     expect(rooms[0]?.stages[0]?.readouts).toBe(true);
   });
 
-  it('lists the rooms in play order: rooms 1–7', () => {
-    expect(rooms.map((room) => room.id)).toEqual(['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07']);
+  it('lists the rooms in play order, from room 1', () => {
+    expect(rooms.map((room) => room.id)).toEqual(roomIds.slice(0, rooms.length));
   });
 
   describe("room 4, the water wheel (GDD's Puzzle Progression tables)", () => {
@@ -436,7 +457,8 @@ describe('rooms', () => {
 
   // GDD, Notebook, Fading: Try values gives blanks in rooms 1–3 and a blank page from
   // room 4; Balance writes its lines in rooms 4–5, gives blanks in rooms 6–7 and a blank
-  // page from room 8.
+  // page from room 8; Undo writes its lines in room 8, gives blanks in room 9 and a blank
+  // page from room 10 (epic 4).
   it('fades each way as the GDD table says, room by room', () => {
     const fadingFor = (index: number): Partial<Record<WayId, FadingMode>> => {
       const number = index + 1;
@@ -447,6 +469,8 @@ describe('rooms', () => {
         // filling in each move's numbers would be doing the sums room 6 is about not doing,
         // and room 7's rewrite needs no Balance move.
         balance: number <= 3 ? undefined : number <= 7 ? 'auto' : 'blank',
+        // The gear chain is earned at the end of room 7.
+        undo: number <= 7 ? undefined : number === 8 ? 'auto' : number === 9 ? 'blanks' : 'blank',
       };
     };
     rooms.forEach((room, index) => {
@@ -454,6 +478,7 @@ describe('rooms', () => {
       for (const stage of room.stages) {
         expect(stage.fading.try, room.id).toBe(expected.try);
         expect(stage.fading.balance, room.id).toBe(expected.balance);
+        expect(stage.fading.undo, room.id).toBe(expected.undo);
       }
     });
   });
@@ -651,7 +676,6 @@ describe('rooms', () => {
     it('is finished by the canonical solution of every way it lists (steps.ts)', () => {
       const equation = stageEquation(stage);
       for (const way of stage.ways) {
-        if (way === 'undo') throw new Error('Undo comes with the gear chain in epic 4');
         const lines = canonicalSolution(equation, way);
         expect(lines, way).not.toBeNull();
         const committed = [equation];

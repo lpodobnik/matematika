@@ -71,9 +71,8 @@ describe('the map screen (story 2.2)', () => {
 
   it('shows the "to be continued" note once every room so far is restored', () => {
     expect(board(['r01', 'r02', 'r03', 'r04', 'r05', 'r06'])).not.toContain(hr.app.toBeContinued);
-    expect(board(['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07'])).toContain(
-      hr.app.toBeContinued,
-    );
+    expect(board(authored.slice(0, -1))).not.toContain(hr.app.toBeContinued);
+    expect(board(authored)).toContain(hr.app.toBeContinued);
   });
 
   it('keeps every node at least 48 CSS px, and still under reduced motion', () => {

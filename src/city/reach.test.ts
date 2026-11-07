@@ -185,7 +185,10 @@ describe('where he can go (city/reach.ts, stories 2.2 and 2.3)', () => {
     expect(nextRoomOnMap(districtMap, reach(toSix, ['balance', 'workshop'], authored))).toBe('r07');
     const toSeven = [...toSix, 'r07'];
     const chained = ['balance', 'workshop', 'chain'];
-    expect(nextRoomOnMap(districtMap, reach(toSeven, chained, authored))).toBeNull();
+    // Then room 8, once the chain is earned (story 4.3).
+    expect(nextRoomOnMap(districtMap, reach(toSeven, chained, authored))).toBe('r08');
+    // Once every room in content is done, nothing yet.
+    expect(nextRoomOnMap(districtMap, reach(authored, chained, authored))).toBeNull();
   });
 });
 
@@ -263,7 +266,8 @@ describe('what the map shows (mapView)', () => {
     expect(view(['r01', 'r02', 'r03', 'r04']).allDone).toBe(false);
     expect(view(['r01', 'r02', 'r03', 'r04', 'r05']).allDone).toBe(false);
     expect(view(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']).allDone).toBe(false);
-    expect(view(['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07']).allDone).toBe(true);
+    expect(view(authored.slice(0, -1)).allDone).toBe(false);
+    expect(view(authored).allDone).toBe(true);
   });
 });
 

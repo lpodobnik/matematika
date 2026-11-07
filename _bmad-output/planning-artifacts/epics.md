@@ -1174,19 +1174,91 @@ So that my son has somewhere to go between rooms.
 
 ## Epic 4: The whole district
 
-Finish the solo game through the line reveal. **Stories are detailed before the epic starts.** From the GDD:
+Finish the solo game through the line reveal. Detailed on 2026-11-07, after epic 3.
 
-1. The chain shows the equation as links, and he sets each inverse himself.
-2. Running a link backward also acts on the pans and writes the undo line.
-3. The chain handles `a − bx` forms, including the `135 − ☐` link.
-4. The story room builds pans from a story and matches pans to a story.
-5. One machine's answer becomes a weight in the next.
-6. The drum plots dots and the level line, and the reveal follows.
-7. Rooms 8–13 play, with their map changes, gates, hints, cards, story lines and line-checker rows.
-8. From the design pass before epic 2:
-   - Room 11's coarse slider: 0–300 in tens, with ± for single steps, and simplify-first as in room 4.
-   - The tray's x-gear from room 9.
-   - Room 8's slider at 0–10.
+Every room story follows the GDD's "Rules from the playtests":
+- one x, and a slider that reaches the answer;
+- one new idea per room, with its handover tag;
+- both-sided Balance with the goal banner;
+- pictures that mean one thing;
+- the last two lines as blanks while a way writes lines for him.
+
+The gear chain, the story cards and the drum are HTML and SVG in the notebook column, like the fights and the map are HTML (epic 3's call 1): the scene has no free space under the scale, since the dial takes it, and the phone has none at all: real buttons he can tap, readable by the browser test. The pans, pieces and dial stay in the Pixi scene. Each story ends with a headless play of its room at 1280 × 800 and 640 × 360, and its screenshots are looked at, not only the tests. The epic ends with Luka's son playing rooms 8–13 on the tablet.
+
+### Story 4.1: The gear chain runs backward
+
+As Luka's son,
+I want to undo the machine one link at a time,
+So that I see why undoing works: it is balancing both sides.
+
+**Covers:** FR12 (links, inverses, jams), FR13; FR20 (Undo `auto`, `blanks`, `blank`); architecture `math/chain.ts`, The gear chain.
+
+**Acceptance Criteria:**
+
+**Given** a stage whose ways include Undo, with the gear chain earned
+**Then** a strip at the top of the notebook column shows the pans' equation as links, `x → ·4 → +9 → 41`, whenever x appears once on one side; links already undone in the stage are dark
+
+**When** he taps the last link
+**Then** a picker asks for an operation (`+`, `−`, `·`, `:`, `☐ −`) and a number he types; it never offers the answer
+
+**When** he runs the link's inverse
+**Then** the pans take the result at the slider's x, the link goes dark, the output turns, and (Undo `auto`) the move and its result are written as `4x = 41 − 9`, `4x = 32`; with `blanks` the result comes as `4x = ☐`; with `blank` nothing is written and he writes the lines himself
+
+**When** he runs a wrong one
+**Then** the move is acted out on the pans, tipped, and the machine jams like a wrong line, until he takes the move back
+
+**And** the hint ladder, the help ladder and the worked example know Undo; the chain's first use has a handover tag; Undo moves are saved and resumed, and logged as a way used
+
+### Story 4.2: `a − bx` forms and the tray's x-gear
+
+As Luka's son,
+I want x to lighten the pan and still undo it,
+So that I see the inverse of `135 − ☐` is `135 − 100`, not `+ 135`.
+
+**Covers:** FR12 (`a − bx`); FR18 (x-balloons); GDD room 9's tray x-gear.
+
+**Acceptance Criteria:**
+
+**Given** `135 − 5x = 100`
+**Then** the pans show five x-balloons under the 135 weight, and the chain shows `x → ·5 → 135 − ☐ → 100`
+
+**When** he runs `135 − ☐` on the last link
+**Then** the move is `5x = 135 − 100`; `+ 135` jams
+
+**Given** a stage from room 9 on, with Balance
+**Then** the tray also holds an x-gear, with a stepper for how many: dropped on the scale it adds that many x to both sides, so `135 − 5x = 100` becomes `135 = 100 + 5x`; an x-balloon dragged off takes as many x off both
+
+**And** Balance's canonical solution, its hints and the content tests use the x-gear where x is subtracted
+
+### Story 4.3: Room 8, the tram
+
+`4x + 9 = 41` (x = 8): the chain arrives. Slider 0–10, poke window 4, pin where it levels; Balance and Undo can finish; Undo `auto`, Balance blank page. Map change, gate (the chain), story lines, card ("Obrnute operacije"), hints, line-checker rows; the armour 45 lair opens beside it.
+
+### Story 4.4: Room 9, the steam lift
+
+`135 − 5x = 100` (x = 7): x lightens the pan. Slider 0–10, poke window 4, pin where it levels; all three ways; Undo `blanks`; the tray's x-gear. Seen from room 3 with its chain case locked. Map change, story lines, card, hints, rows.
+
+### Story 4.5: Room 10, the market scales: the story room
+
+Stage 1: a story ("A wrench costs 60, and 3 equal cogs with it cost 90") and empty pans; he writes the story's equation as the notebook's first line, and the pans build themselves from it; then he solves `60 + 3x = 90` (x = 10). Stage 2: pans for `5 + 2x = 19`; he pins the story that fits from three, before the slider opens, then solves (x = 7). Slider 0–15; all three ways; Undo blank page. Map change, story lines, card ("Jednadžba iz priče"), hints, rows.
+
+### Story 4.6: Room 11, the great wheel
+
+`5 905 − 27x = 316` (x = 207): too slow to drag. The slider runs 0–300 in tens, with − and + on its plate for single steps; poke window 4; the pin asks whether x is under 100, 100–300 or over 300. Balance and Undo; x = 207 counts only after he simplifies, and the slider is his check. Map change, story lines, card, hints, rows.
+
+### Story 4.7: Room 12, the junction: linked machines
+
+`2x + 3 = 11` (x = 4) feeds `3x + ☐ = 19`: when the first machine locks, its answer rides into the second as a weight, `3x + 4 = 19` (x = 5). Slider 0–10 each, poke window 4, pin where each levels; all three ways. Earns the recording drum. The armour 60 lair opens beside it. Map change, story lines, card ("Povezani strojevi"), hints, rows.
+
+### Story 4.8: Room 13, the clock tower: the drum and the line reveal
+
+The drum draws a dot (x, left side) for each x he tries, with the right side as a level line; before dragging further he pins the next dot. `3x + 5 = 20` (x = 5) draws a rising line; `50 − 4x = 34` (x = 4) a falling one; each crosses the level line at the answer. Then the reveal card: "linearna" comes from "linija". The clock tower runs, the story points to the foundry gate, and the map shows the district restored.
+
+### Story 4.9: Play rooms 8–13 on the tablet
+
+**Given** a game with rooms 1–7 done
+**Then** a headless test at 1280 × 800 and 640 × 360 plays rooms 8–13 back to back with real taps, through the line reveal
+**And** Luka's son plays them on the tablet, and what he runs into becomes the next story. This is Luka's step.
 
 ## Epic 5: Rooms for friends
 

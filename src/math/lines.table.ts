@@ -32,6 +32,7 @@ const r05a = '3x + 4 = 22';
 const r05b = '3x + 4 = 25';
 const r06 = 'x + 56 = 58 + 27';
 const r07 = '3x − 1 = 17';
+const r08 = '4x + 9 = 41';
 /** U+202F, the thousands separator the notebook writes. */
 const nnbsp = ' ';
 const r11 = `5${nnbsp}905 − 27x = 316`;
@@ -288,6 +289,40 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r07, before: ['3x = 18'], line: 'x = 15', verdict: 'wrong', note: '3x read as 3 + x' },
     { stage: r07, line: '3x = 16', verdict: 'wrong', note: '17 − 1' },
     { stage: r07, before: ['3x = 18'], line: 'x = 54', verdict: 'wrong', note: 'multiplied' },
+  ],
+  'r08 tram (4x + 9 = 41)': [
+    // Story 4.3: the gear chain's lines (Undo writes the move, then its result), Balance's
+    // (a float of 9, then a split by 4), and the wrong ones the chain and the pad can make.
+    { stage: r08, line: '4x = 41 − 9', verdict: 'valid', progress: true, move: 'move-across' },
+    { stage: r08, before: ['4x = 41 − 9'], line: '4x = 32', verdict: 'valid', progress: true },
+    {
+      stage: r08,
+      before: ['4x = 41 − 9', '4x = 32'],
+      line: 'x = 32 : 4',
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r08,
+      before: ['4x = 41 − 9', '4x = 32', 'x = 32 : 4'],
+      line: 'x = 8',
+      verdict: 'answer',
+    },
+    {
+      stage: r08,
+      before: ['4x = 41 − 9', '4x = 32', 'x = 32 : 4', 'x = 8'],
+      line: '4 · 8 + 9 = 41',
+      verdict: 'check',
+    },
+    { stage: r08, line: '4x = 32', verdict: 'valid', progress: true, move: 'add-both' },
+    { stage: r08, before: ['4x = 32'], line: 'x = 8', verdict: 'answer' },
+    { stage: r08, before: ['4x = 32', 'x = 8'], line: '4 · 8 + 9 = 41', verdict: 'check' },
+    { stage: r08, line: 'x = 8', verdict: 'answer', note: 'a skipped step' },
+    { stage: r08, before: ['x = 8'], line: '4 · 8 + 9 = 41', verdict: 'check' },
+    { stage: r08, line: '4x = 41 + 9', verdict: 'wrong', note: 'the chain run the wrong way' },
+    { stage: r08, line: '4x = 50', verdict: 'wrong', note: '41 + 9' },
+    { stage: r08, before: ['4x = 32'], line: 'x = 32 · 4', verdict: 'wrong', note: 'multiplied' },
+    { stage: r08, before: ['4x = 32'], line: 'x = 28', verdict: 'wrong', note: '4x read as 4 + x' },
   ],
   // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,
   // copied as a line, is valid without progress (stories 1.2, 1.4 and 1.8–1.11 name them);

@@ -152,3 +152,26 @@ describe('canonical solutions pass the checker (fast-check)', () => {
     );
   });
 });
+
+describe('canonicalSolution for Undo (epic 4)', () => {
+  it('runs the chain backward, writing each move and its result', () => {
+    expect(solution('2x + 7 = 25', 'undo')).toEqual([
+      '2x = 25 − 7',
+      '2x = 18',
+      'x = 18 : 2',
+      'x = 9',
+      '2 · 9 + 7 = 25',
+    ]);
+    expect(solution('135 − 5x = 100', 'undo')).toEqual([
+      '5x = 135 − 100',
+      '5x = 35',
+      'x = 35 : 5',
+      'x = 7',
+      '135 − 5 · 7 = 100',
+    ]);
+  });
+
+  it('gets stuck where x is not a chain', () => {
+    expect(solution('2x + 1 = x + 5', 'undo')).toBeNull();
+  });
+});

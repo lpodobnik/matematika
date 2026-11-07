@@ -390,6 +390,7 @@
   .line--pulse,
   .line--pulse.line--wiggle,
   .pad__key[data-pulse="true"],
+  .chain__link--last[data-pulse="true"],
   .notebook-area[data-aside="true"] .notebook__handle[data-pulse="true"] {
     animation: pulse-blink 1600ms steps(2, jump-none) infinite;
   }
@@ -464,4 +465,229 @@
   padding: 0 12px;
   background: var(--ink);
   color: var(--paper);
+}
+
+/* Story 4.1: the gear chain at the top of the notebook, x → · 4 → + 9 → 41. The last link is
+   a button; undone links are dark (filled ink), not only a colour change. */
+.chain {
+  flex: 0 0 auto;
+  padding: 6px 4px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.chain__note {
+  margin: 6px 0 0;
+  padding: 4px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--sheet);
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.chain__off {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.chain__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: clamp(18px, 3dvh, 24px);
+  font-variant-numeric: tabular-nums;
+}
+
+.chain__step {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.chain__arrow {
+  padding: 0 2px;
+  opacity: 0.7;
+}
+
+.chain__end {
+  font-weight: 700;
+}
+
+.chain__link {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  white-space: nowrap;
+}
+
+.chain__link[data-dark="true"] {
+  background: var(--ink);
+  color: var(--paper);
+  opacity: 0.75;
+}
+
+/* The link he can undo: a real touch target, raised like a key. */
+.chain__link--last {
+  min-width: 48px;
+  min-height: 48px;
+  border-width: 3px;
+  box-shadow: 0 3px 0 var(--ink);
+  touch-action: manipulation;
+}
+
+.chain__link--last[aria-pressed="true"] {
+  background: var(--lamp-wash);
+  box-shadow: none;
+  transform: translateY(3px);
+}
+
+.chain__link--last[data-pulse="true"] {
+  animation: key-pulse 1600ms ease-in-out infinite;
+}
+
+.chain-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.chain-pick__ops,
+.chain-pick__row {
+  display: flex;
+  gap: 6px;
+}
+
+.chain-pick__op,
+.chain-pick__run,
+.chain-pick__cancel {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 8px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(18px, 3dvh, 24px);
+  touch-action: manipulation;
+}
+
+.chain-pick__op {
+  flex: 1 1 0;
+  white-space: nowrap;
+}
+
+.chain-pick__op[data-op="from"] {
+  flex-grow: 1.6;
+  padding: 0 4px;
+  font-size: clamp(15px, 2.4dvh, 20px);
+}
+
+.chain-pick__op[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.chain-pick__show {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  padding: 0 8px;
+  border-bottom: 2px solid var(--ink);
+  font-size: clamp(18px, 3dvh, 24px);
+  font-variant-numeric: tabular-nums;
+}
+
+.chain-pick__for {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--lamp-wash);
+  font-size: clamp(16px, 2.6dvh, 22px);
+  white-space: nowrap;
+}
+
+.chain-pick__run {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.chain-pick__run:disabled {
+  opacity: 0.4;
+}
+
+@media (max-height: 499.98px) {
+  .chain {
+    padding: 2px;
+  }
+
+  /* While he picks, the picker takes the lines' place: the phone has no room for both. */
+  .notebook[data-picking="true"] {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .notebook[data-picking="true"] .notebook__lines,
+  .notebook[data-picking="true"] .help-note,
+  .notebook[data-picking="true"] .chain__links {
+    display: none;
+  }
+
+  .notebook[data-picking="true"] .chain-pick {
+    margin-top: 0;
+  }
+
+  .chain__note {
+    margin-top: 2px;
+    padding: 2px 6px;
+    font-size: 15px;
+  }
+
+  .chain__links {
+    font-size: 16px;
+  }
+
+  .chain__link {
+    min-height: 32px;
+    padding: 0 6px;
+  }
+
+  .chain__link--last {
+    min-height: 48px;
+  }
+
+  .chain-pick {
+    margin-top: 4px;
+    gap: 4px;
+  }
+
+  .chain-pick__op,
+  .chain-pick__run,
+  .chain-pick__cancel {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .chain-pick__op[data-op="from"] {
+    font-size: 13px;
+  }
 }

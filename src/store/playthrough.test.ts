@@ -67,7 +67,7 @@ function freshGame() {
 type Game = ReturnType<typeof freshGame>;
 
 /** From the map, a tap on a room (story 2.2); in a room already (a test that went there), nothing. */
-function travel(game: Game, node: 'r02' | 'r03' | 'r04' | 'r05' | 'r06' | 'r07') {
+function travel(game: Game, node: 'r02' | 'r03' | 'r04' | 'r05' | 'r06' | 'r07' | 'r08') {
   if (game.store.getState().ui.screen === 'map') game.act({ type: 'map/travel', node });
 }
 
@@ -224,8 +224,28 @@ function playRoomSeven(game: Game) {
   game.act({ type: 'story/next' });
 }
 
+/**
+ * Room 8, the tram (story 4.3): he pokes the window, pins 8 and confirms (the machine turns
+ * the dial to 8), then runs the gear chain backward, `− 9` and `: 4`, which writes the
+ * moves and their results for him, and fills the last two blanks.
+ */
+function playRoomEight(game: Game) {
+  travel(game, 'r08');
+  game.act({ type: 'machine/touch' });
+  for (const x of [1, 2, 3]) game.act({ type: 'dial/set', x });
+  game.act({ type: 'pin/set', value: { kind: 'x', x: 8 } });
+  game.act({ type: 'pin/confirm' });
+  game.act({ type: 'chain/run', op: 'sub', n: 9 });
+  game.act({ type: 'chain/run', op: 'div', n: 4 });
+  game.write('8');
+  game.write('8');
+  game.presented();
+  game.presented();
+  game.act({ type: 'story/next' });
+}
+
 describe('rooms 1–4 back to back (story 1.13)', () => {
-  it('runs rooms 1–7 in order, each from arrival to restart', () => {
+  it('runs rooms 1–8 in order, each from arrival to restart', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
@@ -234,6 +254,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFive(game);
     playRoomSix(game);
     playRoomSeven(game);
+    playRoomEight(game);
     expect(game.phases).toEqual([
       'r01.0:arrive',
       'r01.0:open',
@@ -294,6 +315,14 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r07.0:open',
       'r07.0:locked',
       'r07.0:restart',
+      'none',
+      // Story 4.3: room 8, a poke window, the pin, then the gear chain.
+      'r08.0:arrive',
+      'r08.0:poke',
+      'r08.0:pin',
+      'r08.0:open',
+      'r08.0:locked',
+      'r08.0:restart',
       // No room left to play: the story card, then the map.
       'none',
     ]);
@@ -308,6 +337,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFive(game);
     playRoomSix(game);
     playRoomSeven(game);
+    playRoomEight(game);
     const milestones = game.seen.flatMap((event) => {
       if (event.type === 'StageArrived') return [`arrive ${event.roomId}.${event.stage}`];
       if (event.type === 'StageLocked') return [`lock ${event.roomId}.${event.stage}`];
@@ -342,6 +372,9 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'arrive r07.0',
       'lock r07.0',
       'restart r07',
+      'arrive r08.0',
+      'lock r08.0',
+      'restart r08',
     ]);
   });
 
@@ -393,6 +426,39 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       ['x = 9', 'typed'],
       ['2 · 9 + 5 = 23', 'typed'],
     ]);
+  });
+
+  it('writes room 8 the Undo way: each move and its result, then his two lines (story 4.3)', () => {
+    const game = freshGame();
+    for (const play of [
+      playRoomOne,
+      playRoomTwo,
+      playRoomThree,
+      playRoomFour,
+      playRoomFive,
+      playRoomSix,
+      playRoomSeven,
+    ]) {
+      play(game);
+    }
+    let last: RoomState | null = null;
+    const unsubscribe = game.store.subscribe((state) => {
+      if (state.room?.spec.id === 'r08') last = state.room;
+    });
+    playRoomEight(game);
+    unsubscribe();
+    const lines = (last as RoomState | null)?.stage.lines ?? [];
+    expect(lines.map((line) => [formatTokens(line.tokens), line.source])).toEqual([
+      ['4x + 9 = 41', 'given'],
+      ['4x = 41 − 9', 'undo'],
+      ['4x = 32', 'undo'],
+      ['x = 32 : 4', 'undo'],
+      ['x = 8', 'typed'],
+      ['4 · 8 + 9 = 41', 'typed'],
+    ]);
+    const used = game.seen.filter((event) => event.type === 'WayUsed' && event.roomId === 'r08');
+    expect(used).toHaveLength(2);
+    expect(game.seen.filter((event) => event.type === 'MachineJammed')).toEqual([]);
   });
 
   // Story 1.16, AC 8: the refused early answer. Since Luka ran room 4's dial to 0–12, the
@@ -595,6 +661,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFive(game);
     playRoomSix(game);
     playRoomSeven(game);
+    playRoomEight(game);
     unsubscribe();
     expect(screens).toEqual([
       'room',
@@ -612,10 +679,12 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'story',
       'room',
       'story',
+      'room',
+      'story',
       'map',
     ]);
     const state = game.store.getState();
-    expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r07' });
+    expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r08' });
     expect(state.room).toBeNull();
     expect(state.save.progress.roomsDone).toEqual([
       'r01',
@@ -625,6 +694,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r05',
       'r06',
       'r07',
+      'r08',
     ]);
     // Room 7 earns the gear chain (story 2.3's gates).
     expect(state.save.progress.tools).toContain('chain');
@@ -639,6 +709,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomFive(game);
     playRoomSix(game);
     playRoomSeven(game);
+    playRoomEight(game);
     const done = game.store.getState();
     game.act({ type: 'clock/tick' });
     game.act({ type: 'machine/touch' });

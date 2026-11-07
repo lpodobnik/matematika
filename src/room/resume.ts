@@ -10,6 +10,7 @@
 import { check } from '@/math/check';
 import type { Equation } from '@/math/expr';
 import { tokenize } from '@/math/tokens';
+import { undoBlanksAfter } from '@/room/chain';
 import { withLastLines } from '@/room/fading';
 import {
   commitLine,
@@ -142,8 +143,10 @@ function replayLine(room: RoomState, line: SavedLine, now: number): RoomState | 
     ...verdict,
     progress: line.progress,
   });
-  // Only whether a move was made counts (room/tray.ts, room/handover.ts), so each way line counts one.
-  const balance = { ...written.balance, moves: written.balance.moves + 1 };
+  // Only whether a Balance move was made counts (room/tray.ts, room/handover.ts), so each
+  // Balance line counts one. A gear chain's line (story 4.1) is no Balance move.
+  const moved = line.source === 'balance' ? 1 : 0;
+  const balance = { ...written.balance, moves: written.balance.moves + moved };
   const stage = withLastLines(currentStageSpec(room), {
     ...written,
     pans: moveResult(written.pans),
@@ -166,6 +169,10 @@ export function resumeRoom(spec: RoomSpec, saved: SavedRoom, now: number): RoomS
   for (const line of saved.lines) {
     if (!room) return null;
     room = replayLine(room, line, now);
+  }
+  // Story 4.1 review: with Undo `blanks`, the blank a chain run left him comes back.
+  if (room && room.stage.phase === 'open') {
+    room = { ...room, stage: undoBlanksAfter(currentStageSpec(room), room.stage) };
   }
   if (!room || !saved.splitterSeen) return room;
   const { stage } = room;

@@ -10,6 +10,7 @@ import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { payPrediction, predictionKey } from '@/economy/predictions';
 import { assert } from '@/lib/assert';
+import { runLink } from '@/room/chain';
 import { setDial } from '@/room/dial';
 import { meetControls } from '@/room/first-use';
 import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } from '@/room/handover';
@@ -249,6 +250,8 @@ function roomStep(
       return stepSplitter(room, tools, action.by);
     case 'splitter/split':
       return splitBothPans(unshown(room), tools);
+    case 'chain/run':
+      return runLink(room, tools, { op: action.op, n: action.n });
     case 'notebook/type':
       return typeToken(room, action.token);
     case 'notebook/delete':
@@ -403,6 +406,8 @@ function handoverMove(action: Action): HandoverMove {
       return 'tray';
     case 'splitter/split':
       return 'split';
+    case 'chain/run':
+      return 'chain';
     default:
       return 'other';
   }

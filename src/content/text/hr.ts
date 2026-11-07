@@ -140,6 +140,13 @@ export const hr = {
         { who: 'kristijan', text: 'Pišem kako mi kažu. Tko razumije, vidjet će grešku.' },
         { who: 'faust', text: 'Kristijan ne griješi. Ova je greška namjerna. Netko ga je odveo.' },
       ],
+      r08: [
+        {
+          who: 'nikola',
+          text: (name: string) => `Ljudi u tramvaju pitaju za tebe. Kažu: „Gdje je ${name}?“`,
+        },
+        { who: 'penkala', text: 'Vožnja unatrag do početka? Toga sigurno nema u Knjizi.' },
+      ],
     },
     /** The city's log on the map: every line he has been told, to read again. */
     log: {
@@ -179,6 +186,10 @@ export const hr = {
       compare: {
         term: 'Usporedba',
         text: 'Jednakost se ponekad vidi bez računanja: usporediš ono što se razlikuje.',
+      },
+      inverse: {
+        term: 'Obrnute operacije',
+        text: '− poništava +, a : poništava ·. Napravi to na objema stranama i vaga ostaje ravna.',
       },
       mistake: {
         term: 'Traženje pogreške',
@@ -337,6 +348,31 @@ export const hr = {
     'balance-goal': 'Ostavi x samog na jednoj strani, kao na kartici Cilj.',
     /** At the splitter, when it is first offered. */
     splitter: 'Razdjelnik dijeli obje strane na jednake dijelove.',
+    /** Story 4.1: at the gear chain, when it first works: undo its last link. */
+    chain: 'Dodirni zadnju kariku lanca i poništi je.',
+  },
+  /** Story 4.1: the gear chain at the top of the notebook (GDD, Gear chain). */
+  chain: {
+    label: 'Lanac',
+    /** When the pans aren't a chain (x on both sides, or a sum not yet worked out). */
+    off: 'Lanac čeka: x mora biti samo s jedne strane.',
+    /** For screen readers: the last link, to tap. */
+    tap: (link: string) => `Karika ${link}: dodirni je i poništi`,
+    /** For screen readers: a link already undone, dark. */
+    undone: (link: string) => `${link}, poništeno`,
+    /** The picker's name, for screen readers. */
+    undo: (link: string) => `Što poništava ${link}?`,
+    /** Before he picks an operation. */
+    pickOp: 'Odaberi operaciju, pa upiši broj.',
+    ops: {
+      add: 'plus',
+      sub: 'minus',
+      mul: 'puta',
+      div: 'podijeljeno',
+      from: 'broj minus lanac',
+    },
+    run: 'Pokreni',
+    cancel: 'Zatvori',
   },
   /** Story 1.16: the goal card in the scene while the tray is offered: what Balance aims for. */
   goal: {
@@ -377,6 +413,11 @@ export const hr = {
       what: 'Stroj je zapeo: ovaj redak ne vrijedi.',
       fix: 'Obriši ga tipkom ⌫ i napiši ponovno.',
     },
+    /** Story 4.1 review: at the notebook, the blank a chain run left (Undo `blanks`). */
+    blankWhat: 'Lanac je napravio korak. Upiši što je ostalo na vagi.',
+    blank: (n: string) => `Upiši ${n} u prazno polje.`,
+    /** Story 4.1, at the gear chain: the last link, and what undoes it. */
+    chain: (link: string, inverse: string) => `Dodirni kariku ${link} i odaberi ${inverse}.`,
   },
   /**
    * Epic 3: automaton fights (GDD, Automaton fights). He rolls dice, places them as blade

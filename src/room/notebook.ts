@@ -167,6 +167,12 @@ function withStage(room: RoomState, stage: StageState): RoomState {
  */
 function edited(stage: StageState, draft: Token[]): StageState {
   if (stage.jam?.kind !== 'line') return { ...stage, draft, refusal: null };
+  const { back } = stage.jam;
+  if (back) {
+    // A chain run's wrong move goes in one go (story 4.1 review); a key he typed stays.
+    const typed = draft.length > stage.draft.length ? draft.slice(-1) : [];
+    return { ...stage, draft: typed, refusal: null, jam: null, pans: back };
+  }
   return { ...stage, draft, refusal: null, jam: null, pans: lastCommitted(stage) };
 }
 

@@ -13,12 +13,16 @@ import { StoryCard } from '@/ui/story/StoryScreen';
 const longestName = 'W'.repeat(16);
 
 describe('the story lines (hr.story, story 2.5)', () => {
-  it('has one or two lines for each of rooms 1–7, and none beyond yet', () => {
-    for (const id of roomIds.slice(0, 7)) {
+  it('has one or two lines for each room in content, and none for rooms still to come', () => {
+    const playable = new Set<string>(rooms.map((room) => room.id));
+    for (const id of roomIds) {
+      if (!playable.has(id)) {
+        expect(storyLines(id), id).toEqual([]);
+        continue;
+      }
       expect(storyLines(id).length, id).toBeGreaterThanOrEqual(1);
       expect(storyLines(id).length, id).toBeLessThanOrEqual(2);
     }
-    for (const id of roomIds.slice(7)) expect(storyLines(id), id).toEqual([]);
     // Every room he can play has lines.
     for (const room of rooms) {
       expect(storyLines(room.id as RoomId).length, room.id).toBeGreaterThan(0);

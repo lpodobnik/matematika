@@ -47,7 +47,7 @@ describe.each(Object.entries(LINE_TABLE))('%s', (_name, rows) => {
 describe('the line table', () => {
   const rows = Object.values(LINE_TABLE).flat();
 
-  it('covers every stage of rooms 1–7', () => {
+  it('covers every stage of rooms 1–8', () => {
     const stages = new Set(rows.map((row) => row.stage));
     for (const stage of [
       'x + 4 = 9',
@@ -60,6 +60,7 @@ describe('the line table', () => {
       '3x + 4 = 25',
       'x + 56 = 58 + 27',
       '3x − 1 = 17',
+      '4x + 9 = 41',
     ]) {
       expect(stages, stage).toContain(stage);
     }
@@ -202,7 +203,6 @@ describe('epic 1 in the table (story 1.13)', () => {
 
     it('has the canonical solution of every way that finishes it (steps.ts), line by line', () => {
       for (const way of ways) {
-        if (way === 'undo') throw new Error('Undo comes with the gear chain in epic 4');
         const lines = canonicalSolution(stage, way) ?? [];
         expect(lines.length, way).toBeGreaterThanOrEqual(2);
         lines.forEach((line, index) => {

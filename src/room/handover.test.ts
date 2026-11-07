@@ -222,13 +222,14 @@ describe('which handover applies (story 1.15)', () => {
     expect(handoverApplies('answer', split, balance)).toBe(true);
   });
 
-  it('has the answer step in its place, after write and before check (story 1.16)', () => {
+  it('has the answer step after write and before check (1.16), and the chain before the tray (4.1)', () => {
     expect(handoverOrder).toEqual([
       'dial',
       'rewrite',
       'write',
       'answer',
       'check',
+      'chain',
       'tray',
       'balance-goal',
       'splitter',

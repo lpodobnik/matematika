@@ -12,6 +12,8 @@
 //   balance-goal  after a Balance move, until a side holds only x and the other no x
 //   splitter      the splitter is offered and a side holds only x, more than one x (story
 //                 1.16 review: not `x = 23 − 14`, where x is single but not yet alone)
+//   chain         the gear chain works and he hasn't answered (story 4.1); it comes before
+//                 the tray, since the chain is room 8's new idea
 //
 // Only one tag shows at a time: the earliest step that applies and that he hasn't met
 // (`save.progress.firstUse` holds `handover-<id>`). Once he takes the step it is met, and
@@ -24,6 +26,7 @@ import { tuning } from '@/config/tuning';
 import type { Equation, Expr } from '@/math/expr';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
+import { chainWorks } from '@/room/chain';
 import { dialTurnsNow } from '@/room/dial';
 import { answerAllowed, notebookWrites } from '@/room/notebook';
 import { aloneAgainst } from '@/room/pieces';
@@ -41,6 +44,7 @@ export const handoverOrder: readonly HandoverId[] = [
   'write',
   'answer',
   'check',
+  'chain',
   'tray',
   'balance-goal',
   'splitter',
@@ -134,6 +138,8 @@ interface Situation {
   splitter: boolean;
   /** Story 2.10: the logbook's wrong line is found, for him to rewrite. */
   rewrites: boolean;
+  /** Story 4.1: the gear chain works now (room/chain.ts). */
+  chain: boolean;
 }
 
 function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
@@ -155,6 +161,7 @@ function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
     tray: trayOffered(room, tools),
     splitter: splitterOffered(room, tools),
     rewrites: stage.planted?.found === true,
+    chain: chainWorks(room, tools),
   };
 }
 
@@ -185,6 +192,8 @@ function applies(id: HandoverId, s: Situation): boolean {
       return s.open && !s.answered && s.balanced && !s.isolated;
     case 'splitter':
       return s.splitter && !s.answered && s.isolated && s.splittable;
+    case 'chain':
+      return s.chain && !s.answered;
   }
 }
 
@@ -216,7 +225,7 @@ export function handoverView(
 }
 
 /** What his action was, as far as the handovers care: the root reducer names it. */
-export type HandoverMove = 'dial' | 'tray' | 'split' | 'other';
+export type HandoverMove = 'dial' | 'tray' | 'split' | 'chain' | 'other';
 
 /**
  * The handover steps an action of his took, which count as met from now on:
@@ -226,7 +235,8 @@ export type HandoverMove = 'dial' | 'tray' | 'split' | 'other';
  *   answer written after his dial levelled the pans in room 1 doesn't meet it;
  * - `tray`: a weight or balloon moved between the tray and the scale;
  * - `balance-goal`: the step applied, and his Balance move left x isolated;
- * - `splitter`: he split the pans.
+ * - `splitter`: he split the pans;
+ * - `chain`: he ran a link of the gear chain backward, and it didn't jam (story 4.1).
  * `before` and `after` are the same stage; `move` is null when the action did nothing.
  */
 export function stepsTaken(
@@ -251,6 +261,8 @@ export function stepsTaken(
     taken.push('balance-goal');
   }
   if (move === 'split') taken.push('splitter');
+  // A run of the chain that didn't jam (story 4.1).
+  if (move === 'chain' && after.stage.jam === null) taken.push('chain');
   return taken;
 }
 

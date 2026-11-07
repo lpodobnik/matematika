@@ -10,8 +10,10 @@ import {
 } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { hr } from '@/content/text/hr';
+import type { LinkOp } from '@/math/chain';
 import type { LineSegment } from '@/math/format';
 import type { LineToken, Token } from '@/math/tokens';
+import { type ChainView, chainView } from '@/room/chain';
 import { handoverView } from '@/room/handover';
 import { type LogbookView, logbookView } from '@/room/logbook';
 import {
@@ -28,11 +30,19 @@ import {
   helpExample,
   helpStructure,
   hintKey,
+  hintMoveKind,
   hintOf,
   hintPlace,
   notebookHint,
   notebookRefusal,
 } from '@/ui/common/hint-text';
+import {
+  type ChainPick,
+  ChainStrip,
+  pickAfterKey,
+  pickedLink,
+  pickFor,
+} from '@/ui/notebook/ChainStrip';
 import {
   HandoverNote,
   isNotebookHandover,
@@ -101,10 +111,53 @@ export function Notebook() {
   const [broughtBack, setBroughtBack] = useState<string | null>(null);
   const aside = shownAside(choice, waiting, broughtBack);
   const dispatch = useGame((s) => s.dispatch);
+  // Story 4.1: the gear chain, and his pick for its last link while the picker is open.
+  // Its links are a fresh array on every read, so the selector returns them as text.
+  const chainKey = useGame((s) => JSON.stringify(chainView(s.room, s.save.progress.tools)));
+  const chain = useMemo(() => JSON.parse(chainKey) as ChainView | null, [chainKey]);
+  const chainHint = useGame((s) => hintMoveKind(s) === 'chain');
+  const [pick, setPick] = useState<ChainPick | null>(null);
+  const openFor = pickFor(chain);
+  const picking = pick !== null && openFor !== null && pick.for === openFor;
+  // The picker closes once the link it was opened for changes or goes (a Balance move, a
+  // jam, a tapped line: story 4.1 review).
+  useEffect(() => {
+    if (pick !== null && pick.for !== openFor) setPick(null);
+  }, [pick, openFor]);
+  // A computer's Escape closes it.
+  useEffect(() => {
+    if (!picking) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPick(null);
+    };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [picking]);
+  const runPick = useCallback(
+    (current: ChainPick) => {
+      const link = pickedLink(current);
+      if (!link) return;
+      setPick(null);
+      dispatch({ type: 'chain/run', op: link.op, n: link.n });
+    },
+    [dispatch],
+  );
 
   const shown = useMemo(() => lineDisplays(lines), [lines]);
   const display = useMemo(() => draftDisplay({ draft, templates }), [draft, templates]);
-  const send = useCallback((key: NotebookKey) => dispatch(keyAction(key)), [dispatch]);
+  const send = useCallback(
+    (key: NotebookKey) => {
+      // While the chain's picker is open, the pad types its number (story 4.1).
+      if (picking && pick) {
+        const next = pickAfterKey(pick, key);
+        if (next.run) runPick(next.pick);
+        else setPick(next.pick);
+        return;
+      }
+      dispatch(keyAction(key));
+    },
+    [dispatch, picking, pick, runPick],
+  );
   // The page asks for the opposite of what it shows; the waiting pin (or the scene's
   // handover tag) decides what that means.
   const slide = useCallback(() => {
@@ -133,6 +186,15 @@ export function Notebook() {
       onShowLine={(line) => dispatch({ type: 'notebook/show-line', line })}
       onPinLine={(index) => dispatch({ type: 'pin/set', value: { kind: 'line', index } })}
       onConfirmPin={() => dispatch({ type: 'pin/confirm' })}
+      chain={chain}
+      pick={picking ? pick : null}
+      chainPulse={chainHint}
+      onChainTap={() =>
+        setPick(picking || openFor === null ? null : { op: null, digits: '', for: openFor })
+      }
+      onChainOp={(op) => setPick((current) => (current ? { ...current, op } : current))}
+      onChainRun={() => pick && runPick(pick)}
+      onChainCancel={() => setPick(null)}
       onKey={send}
       onSlide={slide}
     />
@@ -140,6 +202,16 @@ export function Notebook() {
 }
 
 export interface NotebookPageProps {
+  /** Story 4.1: the gear chain, or null in a stage without it. */
+  chain?: ChainView | null;
+  /** His pick for the chain's last link while its picker is open. */
+  pick?: ChainPick | null;
+  /** The hint points at the chain's last link. */
+  chainPulse?: boolean;
+  onChainTap?(): void;
+  onChainOp?(op: LinkOp): void;
+  onChainRun?(): void;
+  onChainCancel?(): void;
   /** Story 2.10: room 7's logbook, or null in any other stage. */
   logbook?: LogbookView | null;
   onShowLine?(line: number): void;
@@ -200,6 +272,13 @@ export function NotebookPage({
   refusal = null,
   help = null,
   logbook = null,
+  chain = null,
+  pick = null,
+  chainPulse = false,
+  onChainTap = () => {},
+  onChainOp = () => {},
+  onChainRun = () => {},
+  onChainCancel = () => {},
   onShowLine = () => {},
   onPinLine = () => {},
   onConfirmPin = () => {},
@@ -234,6 +313,16 @@ export function NotebookPage({
   // handover's or a hint's makes the line to write pulse; a refusal's doesn't.
   const pulsing = handover !== null || hint !== null;
   const tagged = refusal !== null || pulsing;
+  // Story 4.1: a tag about the gear chain hangs at the chain, as one line under its links,
+  // not as a card under the lines (the phone has no room for both).
+  const chainNote =
+    chain === null || refusal !== null
+      ? null
+      : hint && chainPulse
+        ? hint.text
+        : !hint && handover === 'chain'
+          ? hr.handover.chain
+          : null;
 
   // The draft stays in view as lines are added, as it grows, and as a handover tag takes
   // room: the list scrolls to its end, but never so far that the draft's top is cut off.
@@ -263,7 +352,19 @@ export function NotebookPage({
           <path d={aside ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
         </svg>
       </button>
-      <div className="notebook" data-handover={tagged}>
+      <div className="notebook" data-handover={tagged} data-picking={pick !== null || undefined}>
+        {chain && (
+          <ChainStrip
+            view={chain}
+            pick={pick}
+            note={chainNote}
+            pulse={chainPulse || chainNote !== null}
+            onTap={onChainTap}
+            onOp={onChainOp}
+            onRun={onChainRun}
+            onCancel={onChainCancel}
+          />
+        )}
         <ol className="notebook__lines" ref={listRef}>
           {lines.map((line) =>
             logbook && line.source === 'logbook' ? (
@@ -290,7 +391,7 @@ export function NotebookPage({
             kind="draft"
             wrong={wrong}
             wiggle={refused > 0}
-            pulse={pulsing}
+            pulse={pulsing && chainNote === null}
             caret={writes}
           />
           {upcoming.map((segments, i) => (
@@ -298,7 +399,7 @@ export function NotebookPage({
             <LineView key={`upcoming-${i}`} segments={segments} kind="upcoming" />
           ))}
         </ol>
-        {refusal ? (
+        {chainNote !== null ? null : refusal ? (
           <RefusalNote refusal={refusal} />
         ) : logbookTag && !hint ? (
           <HintNote text={logbookTag} />
@@ -308,7 +409,12 @@ export function NotebookPage({
           handover && <HandoverNote step={handover} />
         )}
         {help && <HelpNote structure={help.structure} example={help.example} />}
-        <NumberPad writes={writes} blank={blank} pulse={hint?.key ?? null} onKey={onKey} />
+        <NumberPad
+          writes={writes || pick !== null}
+          blank={blank || pick !== null}
+          pulse={hint?.key ?? null}
+          onKey={onKey}
+        />
       </div>
     </aside>
   );

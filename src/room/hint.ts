@@ -30,13 +30,16 @@
 //   split   Balance: x's count on its side, with no number beside it (`2x = 18`: by 2);
 //           never fewer than 2 parts
 //   pin     while the pin is offered: a prediction has no next move to show
+//   chain   Undo (story 4.1): the last link's inverse, the operation and its number
 
 import { tuning } from '@/config/tuning';
+import { inverseOf, type LinkOp, lastLink } from '@/math/chain';
 import { stageSolution } from '@/math/check';
 import { type Equation, hasX } from '@/math/expr';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
 import { nextStep, type StepWay } from '@/math/steps';
+import { chainWorks, pansChain, undoFading } from '@/room/chain';
 import { isOnDial } from '@/room/dial';
 import { answerOnPans, handoverApplies, handoverOrder } from '@/room/handover';
 import { workedExample } from '@/room/help';
@@ -73,13 +76,17 @@ export type HintMove =
   /** The pin's question again. */
   | { kind: 'pin' }
   /** The jammed line: delete it and write again (the draft and the delete key pulse). */
-  | { kind: 'jam' };
+  | { kind: 'jam' }
+  /** Story 4.1: the gear chain's last link, run backward with this operation and number. */
+  | { kind: 'chain'; op: LinkOp; n: number }
+  /** Story 4.1 review: the number for the blank a chain run left (Undo `blanks`, `4x = ☐`). */
+  | { kind: 'blank'; value: number };
 
 /**
  * What a press shows a tag for: a handover step, the pin's question, or the jam (the line
  * doesn't hold; story 1.16 review).
  */
-export type HintStep = HandoverId | 'pin' | 'jam';
+export type HintStep = HandoverId | 'pin' | 'jam' | 'blank';
 
 /** What the hint shows now. */
 export interface HintView {
@@ -118,15 +125,19 @@ function solutionOf(room: RoomState): number {
 
 /**
  * The way the hint shows: Balance once he has made a Balance move in the stage (story 2.8
- * review: room 5 takes both ways, and a hint mid-Balance must go on with Balance); else Try
- * values where the stage lists it and the dial reaches the solution; else Balance, once he
- * has earned it; else Try where listed. Null for none.
+ * review: room 5 takes both ways, and a hint mid-Balance must go on with Balance); else Undo
+ * where the stage lists it, the chain is earned and the pans are a chain (story 4.1: the
+ * chain is the new idea from room 8 on); else Try values where the stage lists it and the
+ * dial reaches the solution; else Balance, once he has earned it; else Try where listed.
+ * Null for none.
  */
 export function wayOf(room: RoomState, tools: readonly ToolId[], n: number): StepWay | null {
   const spec = currentStageSpec(room);
   const tries = spec.ways.includes('try');
   const balances = spec.ways.includes('balance') && tools.includes('balance');
+  const undoes = spec.ways.includes('undo') && tools.includes('chain');
   if (balances && room.stage.balance.moves > 0) return 'balance';
+  if (undoes && pansChain(room) !== null) return 'undo';
   if (tries && spec.dial !== 'locked' && isOnDial(spec.dial, n)) return 'try';
   if (balances) return 'balance';
   return tries ? 'try' : null;
@@ -195,6 +206,31 @@ function balanceMove(room: RoomState, tools: readonly ToolId[], n: number): Hint
   return { kind: 'split', parts };
 }
 
+/**
+ * A chain run's result waits as a blank (Undo `blanks`, `4x = ☐`; story 4.1 review): the
+ * hint points at it, never at a Balance tool.
+ */
+function undoBlankWaits(room: RoomState): boolean {
+  const { stage } = room;
+  if (stage.templates.length === 0 || answerOnPans(room)) return false;
+  if (undoFading(currentStageSpec(room)) !== 'blanks') return false;
+  return stage.lines[stage.lines.length - 1]?.source === 'undo';
+}
+
+/**
+ * Undo's next move (story 4.1): the answer once x is alone against the solution; else the
+ * last link's inverse, while the chain works. Null where it doesn't (a blank waits, which
+ * the notebook's own tag and blank pulse cover).
+ */
+function chainMove(room: RoomState, tools: readonly ToolId[], n: number): HintMove | null {
+  if (answerOnPans(room)) return { kind: 'answer', x: n };
+  const chain = pansChain(room);
+  if (chain && undoBlankWaits(room)) return { kind: 'blank', value: chain.output };
+  const link = chain ? lastLink(chain) : null;
+  if (!link || !chainWorks(room, tools)) return null;
+  return { kind: 'chain', ...inverseOf(link) };
+}
+
 /** The exact next move from where he is, or null where there is none to show. */
 export function nextMove(room: RoomState, tools: readonly ToolId[]): HintMove | null {
   if (!hintPhases.has(room.stage.phase)) return null;
@@ -209,6 +245,7 @@ export function nextMove(room: RoomState, tools: readonly ToolId[]): HintMove | 
   if (way === 'try') {
     return room.stage.dialX === n ? { kind: 'answer', x: n } : slideToward(n, room.stage.dialX);
   }
+  if (way === 'undo') return chainMove(room, tools, n);
   return way === 'balance' ? balanceMove(room, tools, n) : null;
 }
 
@@ -229,6 +266,10 @@ function stepOfMove(move: HintMove, room: RoomState, tools: readonly ToolId[]): 
       return 'pin';
     case 'jam':
       return 'jam';
+    case 'chain':
+      return 'chain';
+    case 'blank':
+      return 'blank';
   }
 }
 
@@ -242,6 +283,7 @@ export function hintStep(room: RoomState, tools: readonly ToolId[]): HintStep | 
   if (!hintPhases.has(room.stage.phase)) return null;
   if (room.stage.jam !== null) return 'jam';
   if (pinOffered(room)) return 'pin';
+  if (undoBlankWaits(room)) return 'blank';
   const applying = handoverOrder.find((id) => handoverApplies(id, room, tools));
   if (applying) return applying;
   const move = nextMove(room, tools);
@@ -310,9 +352,15 @@ export function hintView(
 }
 
 /**
- * Whether the next move is in the notebook: the answer line, the check line, or deleting
- * the jammed line.
+ * Whether the next move is in the notebook: the answer line, the check line, deleting the
+ * jammed line, or the gear chain, which sits at the top of the notebook (story 4.1).
  */
 export function inNotebook(move: HintMove): boolean {
-  return move.kind === 'answer' || move.kind === 'check' || move.kind === 'jam';
+  return (
+    move.kind === 'answer' ||
+    move.kind === 'check' ||
+    move.kind === 'jam' ||
+    move.kind === 'chain' ||
+    move.kind === 'blank'
+  );
 }

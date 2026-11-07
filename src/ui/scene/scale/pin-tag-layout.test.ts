@@ -103,14 +103,10 @@ describe('pinTagLayout (story 1.14)', () => {
   ])('never covers the pans, the dial, the pin or the machine in rooms 1–4 on %s', (_, scale) => {
     const stages = stagesWithPins();
     // Story 1.16: room 4 has no pin; r04.0 is the pinned wheel, as room 4 was.
-    expect(stages.map(({ spec, stage }) => `${spec.id}.${stage}`)).toEqual([
-      'r03.0',
-      'r03.1',
-      'r05.0',
-      'r05.1',
-      'r06.0',
-      'r04.0',
-    ]);
+    // Every scene pin of the rooms in content (epic 4 adds rooms 8 on), and these.
+    expect(stages.map(({ spec, stage }) => `${spec.id}.${stage}`)).toEqual(
+      expect.arrayContaining(['r03.0', 'r03.1', 'r05.0', 'r05.1', 'r06.0', 'r04.0']),
+    );
     expect(rooms[3]?.stages[0]?.pin).toBeUndefined();
     for (const { spec, stage } of stages) {
       const { tag, obstacles } = tagFor(spec, stage, scale);
