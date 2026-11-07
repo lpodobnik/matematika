@@ -26,7 +26,7 @@ import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { Automaton } from '@/ui/fight/fight-art';
 import { MapScreen } from '@/ui/map/MapScreen';
 import { OpeningPanels } from '@/ui/opening/OpeningScreen';
-import { areaArt, lookFacing, looks, personArt, personFacing, square } from '@/ui/town/art';
+import { areaArt, areaChange, lookFacing, looks, personArt, personFacing } from '@/ui/town/art';
 
 const authored = rooms.map((room) => room.id);
 
@@ -326,8 +326,11 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   const restored = area.places.filter((place) => nodes.get(place.node)?.state === 'restored');
   const lampsLit = done.includes('r02');
   const art = areaArt(areaId, done);
+  const change = areaChange(areaId);
   const people = area.people.filter(
-    (person) => person.after === null || done.includes(person.after),
+    (person) =>
+      (person.after === null || done.includes(person.after)) &&
+      !(person.until && done.includes(person.until)),
   );
   const exits = area.exits.filter((exit) => done.includes(exit.opensWith));
   // An open way on takes the tap over its area (the raised gate is now a way through).
@@ -367,9 +370,14 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 WebkitMaskImage: bloomMask(restored, fresh),
               }}
             />
-            {areaId === 'square' && fresh === 'r01' && (
-              // Room 1 just restarted: the closed gate fades, and the gate stands open.
-              <img className="town__art town__art--closing" src={square} alt="" draggable={false} />
+            {change && fresh === change.room && (
+              // Its machine just restarted: the picture before fades, and it stands running.
+              <img
+                className="town__art town__art--closing"
+                src={change.before}
+                alt=""
+                draggable={false}
+              />
             )}
           </button>
           {lampsLit &&
@@ -591,7 +599,7 @@ function place(el: HTMLElement | null, at: Point, facing: 1 | -1, picture: 1 | -
 
 /** A person's lines: before the room that changes them, or after. */
 function personLines(person: TownPerson, done: readonly RoomId[]): readonly string[] {
-  const text = hr.town.people[person.id];
+  const text = person.scene ? hr.town.scenes[person.scene] : hr.town.people[person.id];
   return done.includes(person.changesWith) ? text.after : text.before;
 }
 

@@ -63,7 +63,20 @@ export interface TownPerson {
   after: RoomId | null;
   /** The room whose restart changes what the person says. */
   changesWith: RoomId;
+  /** Gone once this room is done (they have moved on to another street). */
+  until?: RoomId;
+  /** Lines of their own for this street (hr.town.scenes), in place of their usual ones. */
+  scene?: SceneId;
 }
+
+/** A person's lines in one street, before and after its room. */
+export type SceneId =
+  | 'canalNikola'
+  | 'millNikola'
+  | 'yardFaust'
+  | 'tramPenkala'
+  | 'marketPenkala'
+  | 'hillNikola';
 
 export interface TownArea {
   id: AreaId;
@@ -162,8 +175,24 @@ const square: TownArea = {
     },
   ],
   people: [
-    { id: 'penkala', at: { x: 420, y: 600 }, facing: 1, after: null, changesWith: 'r01' },
-    { id: 'nikola', at: { x: 1060, y: 450 }, facing: 1, after: 'r01', changesWith: 'r02' },
+    // Penkala keeps to the square until the tram needs its conductor (room 7 on).
+    {
+      id: 'penkala',
+      at: { x: 420, y: 600 },
+      facing: 1,
+      after: null,
+      changesWith: 'r01',
+      until: 'r07',
+    },
+    // Nikola waits by the lamps, then follows the repairs down the canal.
+    {
+      id: 'nikola',
+      at: { x: 1060, y: 450 },
+      facing: 1,
+      after: 'r01',
+      changesWith: 'r02',
+      until: 'r03',
+    },
     // Faust hands over Kristijan's workshop once room 6 is done (narrative design).
     { id: 'faust', at: { x: 300, y: 700 }, facing: 1, after: 'r06', changesWith: 'r06' },
   ],
@@ -230,7 +259,17 @@ const canal: TownArea = {
       marker: { x: 60, y: 420 },
     },
   ],
-  people: [],
+  people: [
+    {
+      id: 'nikola',
+      at: { x: 650, y: 770 },
+      facing: -1,
+      after: 'r03',
+      changesWith: 'r03',
+      until: 'r04',
+      scene: 'canalNikola',
+    },
+  ],
   // The first automaton, stripping the lamp on the near quay for parts (narrative design,
   // room 3's beat).
   lair: 'lair-20',
@@ -290,7 +329,17 @@ const mill: TownArea = {
       marker: { x: 1460, y: 590 },
     },
   ],
-  people: [],
+  people: [
+    {
+      id: 'nikola',
+      at: { x: 800, y: 700 },
+      facing: -1,
+      after: 'r04',
+      changesWith: 'r04',
+      until: 'r07',
+      scene: 'millNikola',
+    },
+  ],
   lair: null,
   patrol: [],
   lamps: [],
@@ -403,7 +452,17 @@ const yard: TownArea = {
       marker: { x: 1520, y: 170 },
     },
   ],
-  people: [],
+  people: [
+    {
+      id: 'faust',
+      at: { x: 600, y: 720 },
+      facing: 1,
+      after: 'r04',
+      changesWith: 'r06',
+      until: 'r06',
+      scene: 'yardFaust',
+    },
+  ],
   lair: null,
   patrol: [],
   lamps: [],
@@ -454,11 +513,24 @@ const tram: TownArea = {
       marker: { x: 1540, y: 550 },
     },
   ],
-  people: [],
-  // The armour-45 automaton in the gap behind the shed, drawn in the picture.
+  people: [
+    {
+      id: 'penkala',
+      at: { x: 450, y: 620 },
+      facing: 1,
+      after: 'r07',
+      changesWith: 'r08',
+      until: 'r08',
+      scene: 'tramPenkala',
+    },
+  ],
+  // The armour-45 automaton picks through the scrap behind the shed.
   lair: 'lair-45',
-  patrol: [],
-  lairSpot: { area: { x: 1330, y: 150, w: 180, h: 200 }, stand: { x: 1300, y: 390 } },
+  patrol: [
+    { x: 1380, y: 330 },
+    { x: 1500, y: 380 },
+    { x: 1440, y: 410 },
+  ],
   lamps: [],
 };
 
@@ -564,7 +636,17 @@ const market: TownArea = {
       marker: { x: 1540, y: 550 },
     },
   ],
-  people: [],
+  people: [
+    // His room 10 beat: he settles up, grudgingly (narrative design).
+    {
+      id: 'penkala',
+      at: { x: 560, y: 760 },
+      facing: 1,
+      after: 'r08',
+      changesWith: 'r10',
+      scene: 'marketPenkala',
+    },
+  ],
   lair: null,
   patrol: [],
   lamps: [],
@@ -661,11 +743,23 @@ const hill: TownArea = {
       marker: { x: 200, y: 770 },
     },
   ],
-  people: [],
-  // The huge armour-60 automaton in the tower's back room, drawn in the picture.
+  people: [
+    {
+      id: 'nikola',
+      at: { x: 900, y: 720 },
+      facing: -1,
+      after: 'r11',
+      changesWith: 'r13',
+      scene: 'hillNikola',
+    },
+  ],
+  // The huge armour-60 automaton guards the scrap behind the tower.
   lair: 'lair-60',
-  patrol: [],
-  lairSpot: { area: { x: 1360, y: 90, w: 240, h: 460 }, stand: { x: 1240, y: 760 } },
+  patrol: [
+    { x: 1470, y: 720 },
+    { x: 1560, y: 770 },
+    { x: 1400, y: 760 },
+  ],
   lamps: [],
 };
 

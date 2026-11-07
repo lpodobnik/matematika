@@ -324,15 +324,17 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
   await go('mill');
   await go('yard');
   await go('tram');
-  await expect(page.locator('.town__place[data-lair="lair-45"]')).toBeVisible();
+  await expect(page.locator('.town__figure--automaton')).toBeVisible();
   await shot(page, '11-tram');
   await go('market');
+  // Penkala has come to the market for his scene.
+  await expect(page.locator('[data-person="penkala"]')).toBeVisible();
   await shot(page, '12-market');
   await go('wheel');
   await shot(page, '13-wheel');
   await go('hill');
   await expect(page.locator('.town__place[data-node="r13"]')).toHaveAttribute('data-state', 'open');
-  await expect(page.locator('.town__place[data-lair="lair-60"]')).toBeVisible();
+  await expect(page.locator('.town__figure--automaton')).toBeVisible();
   await shot(page, '14-hill');
   // The clock tower opens room 13.
   await page.locator('.town__place[data-node="r13"]').click();

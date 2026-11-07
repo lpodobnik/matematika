@@ -443,6 +443,54 @@ export const hr = {
         ],
       },
     },
+    /** A person's lines in one street (content/town.ts, `scene`). */
+    scenes: {
+      canalNikola: {
+        before: [
+          'Voda teče! Automat se uplašio i pobjegao niz ulicu.',
+          'Kako to radi? Ustava je ista, a voda sad ide.',
+        ],
+        after: [
+          'Voda teče! Automat se uplašio i pobjegao niz ulicu.',
+          'Kako to radi? Ustava je ista, a voda sad ide.',
+        ],
+      },
+      millNikola: {
+        before: ['Cijela ulica izlazi gledati kolo.', 'Probao sam kod kuće s kantom. Nije išlo.'],
+        after: ['Cijela ulica izlazi gledati kolo.', 'Probao sam kod kuće s kantom. Nije išlo.'],
+      },
+      yardFaust: {
+        before: [
+          'Vagaonica je bila Kristijanova najdraža.',
+          'Pazi na utege. Svaki ima svoju priču.',
+        ],
+        after: [
+          'Vagaonica je bila Kristijanova najdraža.',
+          'Pazi na utege. Svaki ima svoju priču.',
+        ],
+      },
+      tramPenkala: {
+        before: [
+          'Tramvaj stoji. Prema Knjizi, kreće u sedam. Sad je osam.',
+          'Ja sam kondukter. Bez tramvaja sam samo gospon s Knjigom.',
+        ],
+        after: ['Vozi! Ljudi pitaju tko je to napravio.', 'Kažem da ne znam. A znam.'],
+      },
+      marketPenkala: {
+        before: [
+          'Prema Knjizi, vaga na trgu mjeri točno. A ne mjeri.',
+          'Ako ovo popraviš, častim te kiflom.',
+        ],
+        after: ['Dobro. Priznajem. Nije bila sreća.', 'Kifla je tvoja. Knjigu ipak ne bacam.'],
+      },
+      hillNikola: {
+        before: [
+          'Toranj nije zvonio otkad je Kristijan otišao.',
+          'Kažu da bubanj pamti sve što stroj radi.',
+        ],
+        after: ['Čuješ? Svi strojevi odjednom!', 'Crta s bubnja vodi do ljevaonice. Što je tamo?'],
+      },
+    },
     places: {
       /** A machine he can play: its name is enough; this is what a locked one says. */
       locked: 'Ovaj stroj čeka. Prvo neki drugi.',
