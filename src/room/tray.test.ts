@@ -209,7 +209,13 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
     expect(open.stage.dialX).toBe(0);
     expect(open.stage.balance).toMatchObject({ trayMet: false, dialMaxed: false, moves: 0 });
     expect(trayOffered(open, balance)).toBe(true);
-    expect(trayView(open, balance)).toEqual({ weight: 1, float: 1, works: true, wiggle: false });
+    expect(trayView(open, balance)).toEqual({
+      weight: 1,
+      float: 1,
+      gear: null,
+      works: true,
+      wiggle: false,
+    });
     expect(written(drop(open, 'float', 5).room).at(-1)).toBe('2x = 18');
     // Still not without Balance, nor before the stage opens.
     expect(trayOffered(open, [])).toBe(false);
@@ -285,6 +291,7 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
     expect(trayView(waterWheel(), balance)).toEqual({
       weight: 1,
       float: 1,
+      gear: null,
       works: true,
       wiggle: false,
     });
@@ -326,7 +333,7 @@ describe('the stepper', () => {
     let room = waterWheel();
     room = step(stepTray(room, balance, 'float', 1)).room;
     room = step(stepTray(room, balance, 'float', 1)).room;
-    expect(room.stage.tray).toEqual({ weight: 1, float: 3 });
+    expect(room.stage.tray).toEqual({ weight: 1, float: 3, gear: 1 });
     expect(stepTray(room, balance, 'weight', -1)).toBeNull();
     room = set(room, 'weight', tuning.trayMaxNumber);
     expect(room.stage.tray.weight).toBe(99);
@@ -349,7 +356,7 @@ describe('the stepper', () => {
   it('keeps its numbers when the stage is reset', () => {
     const room = set(set(waterWheel(), 'float', 5), 'weight', 7);
     const reset = step(resetStage(drop(room, 'float', 5).room)).room;
-    expect(reset.stage.tray).toEqual({ weight: 7, float: 5 });
+    expect(reset.stage.tray).toEqual({ weight: 7, float: 5, gear: 1 });
   });
 });
 

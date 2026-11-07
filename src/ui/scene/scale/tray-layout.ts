@@ -23,9 +23,10 @@
 
 import { scaleSkin } from '@/art/skins/scale';
 import { tuning } from '@/config/tuning';
+import { currentStageSpec } from '@/room/room';
 import type { PieceView } from '@/room/scale';
-import { trayPiece } from '@/room/tray';
-import type { Side, TrayKind } from '@/room/types';
+import { trayHasGear, trayPiece } from '@/room/tray';
+import type { RoomState, Side, TrayKind } from '@/room/types';
 import { type Box, minHitCssPx } from '@/ui/scene/scale/dial-layout';
 import { beamPose, grabArea, layoutPan, pieceSize, scaleGeometry } from '@/ui/scene/scale/layout';
 
@@ -77,14 +78,22 @@ export interface TrayLayout {
   unitsPerPx: number;
   /** The shelf. */
   box: Box;
-  /** Where the divider between the weight's column and the float's stands. */
-  dividerX: number;
+  /** Every divider between two columns (story 4.2: the gear's column adds one). */
+  dividers: number[];
   slots: TraySlotLayout[];
   lineWidth: number;
 }
 
 /** The order of the tray's pieces, left to right. */
 export const trayKinds: readonly TrayKind[] = ['weight', 'float'];
+
+/** With an x-gear (story 4.2, room 9 on), it stands left of the weight. */
+export const trayKindsWithGear: readonly TrayKind[] = ['gear', 'weight', 'float'];
+
+/** The tray's pieces for a tray with or without its gear. */
+export function trayKindsOf(gear: boolean): readonly TrayKind[] {
+  return gear ? trayKindsWithGear : trayKinds;
+}
 
 /** A slot's column before it is placed: its size, and where its parts sit from its top. */
 interface Column {
@@ -111,7 +120,7 @@ function column(
 ): Column {
   const size = pieceSize(trayPiece(kind, 99), fontSize);
   const width = Math.max(size.width + gap, button, hit);
-  if (kind === 'weight') {
+  if (kind === 'weight' || kind === 'gear') {
     const between = Math.max(size.height + 2 * gap, hit + gap);
     const pieceBottom = button + (between + size.height) / 2;
     return { width, height: 2 * button + between, pieceBottom, downTop: button + between };
@@ -144,11 +153,12 @@ export function trayLayout(
   sceneScale: number,
   fontSize: number,
   geometry: TrayGeometry = trayGeometry,
+  kinds: readonly TrayKind[] = trayKinds,
 ): TrayLayout {
   const unitsPerPx = sceneScale > 0 && Number.isFinite(sceneScale) ? 1 / sceneScale : 1;
   const hit = minHitCssPx * unitsPerPx;
   const button = Math.max(geometry.buttonSize, hit);
-  const columns = trayKinds.map((kind) => column(kind, fontSize, button, hit, geometry.gap));
+  const columns = kinds.map((kind) => column(kind, fontSize, button, hit, geometry.gap));
   const tallest = Math.max(...columns.map((each) => each.height));
   const width =
     2 * geometry.padding +
@@ -161,7 +171,7 @@ export function trayLayout(
     height: 2 * geometry.padding + tallest,
   };
   let left = box.x + geometry.padding;
-  const slots = trayKinds.map((kind, i): TraySlotLayout => {
+  const slots = kinds.map((kind, i): TraySlotLayout => {
     const each = columns[i] as Column;
     const top = box.y + geometry.padding + (tallest - each.height) / 2;
     const centre = left + each.width / 2;
@@ -186,14 +196,29 @@ export function trayLayout(
       down: buttonAt(top + each.downTop),
     };
   });
-  const first = columns[0] as Column;
+  const dividers: number[] = [];
+  let edge = box.x + geometry.padding;
+  for (const each of columns.slice(0, -1)) {
+    edge += each.width;
+    dividers.push(edge + geometry.slotGap / 2);
+    edge += geometry.slotGap;
+  }
   return {
     unitsPerPx,
     box,
-    dividerX: box.x + geometry.padding + first.width + geometry.slotGap / 2,
+    dividers,
     slots,
     lineWidth: Math.max(geometry.lineWidth, 1.5 * unitsPerPx),
   };
+}
+
+/**
+ * The tray's layout in the stage in play, its gear's column included where the stage's
+ * tray has one (story 4.2): what the goal card, the tags and the ghost keep clear of.
+ */
+export function stageTrayLayout(room: RoomState, sceneScale: number, fontSize: number): TrayLayout {
+  const gear = trayHasGear(currentStageSpec(room));
+  return trayLayout(sceneScale, fontSize, trayGeometry, trayKindsOf(gear));
 }
 
 /**

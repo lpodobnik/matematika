@@ -849,7 +849,7 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     const game = inRoomFour();
     game.act({ type: 'dial/set', x: 6 });
     for (let i = 0; i < 4; i += 1) game.act({ type: 'tray/step', kind: 'float', by: 1 });
-    expect(game.stage()?.tray).toEqual({ weight: 1, float: 5 });
+    expect(game.stage()?.tray).toEqual({ weight: 1, float: 5, gear: 1 });
     game.seen.length = 0;
     game.act({ type: 'tray/drop', kind: 'float' });
     expect(game.lines()).toEqual(['2x+5=23', '2x+5−5=23−5', '2x=18']);

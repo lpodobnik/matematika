@@ -42,7 +42,7 @@ import {
 import { pinLayout, placeX } from '@/ui/scene/scale/pin-layout';
 import { resetCorner, tagFontSize } from '@/ui/scene/scale/pin-tag-layout';
 import { splitterLayout } from '@/ui/scene/scale/splitter-layout';
-import { trayLayout } from '@/ui/scene/scale/tray-layout';
+import { stageTrayLayout } from '@/ui/scene/scale/tray-layout';
 
 /** The handovers whose tags hang in the scene. */
 export type SceneHandover = Exclude<HandoverId, 'write' | 'answer' | 'check' | 'rewrite' | 'chain'>;
@@ -219,7 +219,7 @@ export function handoverObstacles(
   // Story 1.16: the goal card, while the tray is offered.
   const goal = goalCardBounds(room, tools, sceneScale, origin);
   if (goal) hard.push(goal);
-  const tray = trayOffered(room, tools) ? [trayLayout(sceneScale, labelSize).box] : [];
+  const tray = trayOffered(room, tools) ? [stageTrayLayout(room, sceneScale, labelSize).box] : [];
   const splitter = splitterOffered(room, tools) ? [splitterLayout(sceneScale, labelSize).box] : [];
   if (about === 'splitter') {
     hard.push(...splitter);
@@ -270,7 +270,7 @@ export function handoverAnchor(
     // The shelf's and the holder's inner bottom corners, toward the middle of the scene,
     // where there is room for the tag.
     case 'tray': {
-      const { box } = trayLayout(sceneScale, labelSize);
+      const box = stageTrayLayout(room, sceneScale, labelSize).box;
       return { point: { x: box.x, y: box.y + box.height }, nail: false };
     }
     case 'splitter': {

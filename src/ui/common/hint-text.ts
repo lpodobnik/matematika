@@ -11,6 +11,7 @@ import * as q from '@/math/rational';
 import { type HintMove, type HintView, hintView } from '@/room/hint';
 import { refusalView } from '@/room/notebook';
 import { numberPieceLabel } from '@/room/pieces';
+import { xLabel } from '@/room/scale';
 import type { Refusal } from '@/room/types';
 import type { GameState } from '@/store/types';
 import { isSceneHandover, type SceneHandover } from '@/ui/scene/scale/handover-tag-layout';
@@ -37,6 +38,10 @@ function moveSpot(move: HintMove): HintSpot {
         text: move.direction > 0 ? hr.hint.slide.right : hr.hint.slide.left,
       };
     case 'tray': {
+      if (move.piece === 'gear') {
+        const gears = xLabel('gear', BigInt(move.amount));
+        return { place: 'scene', about: 'tray', text: hr.hint.addGear(gears) };
+      }
       const n = formatNumber(move.amount);
       const label = numberPieceLabel({ kind: move.piece, value: q.rational(move.amount) });
       const text = move.piece === 'float' ? hr.hint.take(n, label) : hr.hint.add(n, label);
@@ -57,6 +62,8 @@ function moveSpot(move: HintMove): HintSpot {
       return { place: 'pin' };
     case 'jam':
       return { place: 'notebook', text: hr.hint.jam.fix, key: 'delete' };
+    case 'take-off':
+      return { place: 'scene', about: 'tray', text: hr.hint.takeOff(formatNumber(move.amount)) };
     case 'blank':
       return { place: 'notebook', text: hr.hint.blank(formatNumber(move.value)) };
     case 'chain': {

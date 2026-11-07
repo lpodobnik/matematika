@@ -47,7 +47,7 @@ describe.each(Object.entries(LINE_TABLE))('%s', (_name, rows) => {
 describe('the line table', () => {
   const rows = Object.values(LINE_TABLE).flat();
 
-  it('covers every stage of rooms 1–8', () => {
+  it('covers every stage of rooms 1–9', () => {
     const stages = new Set(rows.map((row) => row.stage));
     for (const stage of [
       'x + 4 = 9',
@@ -61,6 +61,7 @@ describe('the line table', () => {
       'x + 56 = 58 + 27',
       '3x − 1 = 17',
       '4x + 9 = 41',
+      '135 − 5x = 100',
     ]) {
       expect(stages, stage).toContain(stage);
     }
@@ -194,16 +195,17 @@ describe('epic 1 in the table (story 1.13)', () => {
       id: `${room.id} stage ${index + 1}`,
       text: stage.machines[0]?.equation ?? '',
       ways: stage.ways,
+      trayGear: stage.trayGear === true,
     })),
   );
 
-  describe.each(stages)('$id: $text', ({ text, ways }) => {
+  describe.each(stages)('$id: $text', ({ text, ways, trayGear }) => {
     const stage = equation(text);
     const rows = allRows.filter((row) => lineKey(row.stage) === lineKey(text));
 
     it('has the canonical solution of every way that finishes it (steps.ts), line by line', () => {
       for (const way of ways) {
-        const lines = canonicalSolution(stage, way) ?? [];
+        const lines = canonicalSolution(stage, way, { trayGear }) ?? [];
         expect(lines.length, way).toBeGreaterThanOrEqual(2);
         lines.forEach((line, index) => {
           const found = rowsFor(text, lines.slice(0, index), line);

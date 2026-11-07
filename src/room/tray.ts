@@ -10,8 +10,9 @@
 //              leaving it there: room/dial.ts, `dialMaxedAt`); a Balance move was made
 //              this stage. Each is remembered, so it stays for the rest of the stage. It
 //              does nothing while the machine is jammed (Pattern 2, Jams)
-//   pieces     weights and floats only, each numbered 1–99 by a stepper (− and +); x-gears
-//              and springs can't be added or dragged off
+//   pieces     weights and floats, each numbered 1–99 by a stepper (− and +); from room 9 an
+//              x-gear too (story 4.2), which lands only where it cancels a side's x-balloons.
+//              Gears and springs on the pans can't be dragged off
 //   a drop     a piece from the tray let go anywhere over the scale sends one copy to each
 //              side; the number pieces on each side then combine into one piece of their sum
 //              (a weight if positive, a float if negative, nothing if 0)
@@ -37,12 +38,13 @@ import { isAnswerLine, stageSolution } from '@/math/check';
 import { add, div, type Equation, type Expr, maxNumber, mul, num, sub, xVar } from '@/math/expr';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
+import { chainBlankWaits } from '@/room/chain';
 import type { RoomEvent } from '@/room/events';
 import { withLastLines } from '@/room/fading';
 import { writeWayLine } from '@/room/notebook';
 import { isNumberPiece, numberPieceLabel, sidePieces } from '@/room/pieces';
 import { currentStageSpec, machineEquation, type RoomStep } from '@/room/room';
-import type { PieceView } from '@/room/scale';
+import { type PieceView, xLabel } from '@/room/scale';
 import type {
   FadingMode,
   FirstUseId,
@@ -75,7 +77,8 @@ export function trayOffered(room: RoomState, tools: readonly ToolId[]): boolean 
  * jammed he can only edit the draft, reset or leave).
  */
 export function trayWorks(room: RoomState, tools: readonly ToolId[]): boolean {
-  return trayOffered(room, tools) && room.stage.jam === null;
+  // Story 4.2 review: nor while a chain run's result waits as a blank (Undo `blanks`).
+  return trayOffered(room, tools) && room.stage.jam === null && !chainBlankWaits(room);
 }
 
 /**
@@ -117,6 +120,7 @@ export function stepTray(
 ): RoomStep | null {
   const { stage } = room;
   if (!trayWorks(room, tools) || !canStep(stage.tray[kind], by)) return null;
+  if (kind === 'gear' && !trayHasGear(currentStageSpec(room))) return null;
   const tray = { ...stage.tray, [kind]: stage.tray[kind] + by };
   return { room: withStage(room, { ...stage, tray }), events: [] };
 }
@@ -234,6 +238,35 @@ export function onBothSides(pans: Equation, delta: q.Rational): BalanceChange | 
   };
 }
 
+/** Whether the stage's tray holds an x-gear (story 4.2; GDD room 9 on). */
+export function trayHasGear(stage: StageSpec): boolean {
+  return stage.trayGear === true;
+}
+
+/**
+ * `count` x-gears on both sides at once (story 4.2): `135 − 5x = 100` with 5 becomes
+ * `135 − 5x + 5x = 100 + 5x`, then `135 = 5x + 100`, the gears and balloons on each pan
+ * gathered as `sideExpr` writes them. Null, so the gear slides back, unless the count
+ * cancels one side's x-balloons exactly, or when a number would be too long for a line.
+ */
+export function xOnBothSides(pans: Equation, count: q.Rational): BalanceChange | null {
+  const [left, right] = [linearSide(pans.left), linearSide(pans.right)];
+  // Story 4.2 review: it lands only where it cancels a side's x taken away exactly, so x is
+  // never left on both sides; any other count slides back.
+  const cancels = [left, right].some((side) => q.equals(q.add(side.a, count), q.zero));
+  if (!cancels) return null;
+  const gearsOf = gears(count);
+  const result = {
+    left: sideExpr(q.add(left.a, count), left.b),
+    right: sideExpr(q.add(right.a, count), right.b),
+  };
+  if (!gearsOf || !result.left || !result.right || q.isZero(count)) return null;
+  return {
+    line: { left: add(pans.left, gearsOf), right: add(pans.right, gearsOf) },
+    pans: { left: result.left, right: result.right },
+  };
+}
+
 /**
  * The stage after a Balance move (a tray drop, a drag-off, or an even split:
  * room/splitter.ts). The pans take the move's result, still weighed at the dial's x (story
@@ -279,6 +312,11 @@ export function dropOnScale(
   kind: TrayKind,
 ): RoomStep | null {
   if (!trayWorks(room, tools)) return null;
+  if (kind === 'gear') {
+    if (!trayHasGear(currentStageSpec(room))) return null;
+    const change = xOnBothSides(room.stage.pans, q.rational(room.stage.tray.gear));
+    return change ? balanceMove(room, change) : null;
+  }
   const value = q.rational(room.stage.tray[kind]);
   const change = onBothSides(room.stage.pans, kind === 'weight' ? value : q.neg(value));
   return change ? balanceMove(room, change) : null;
@@ -304,8 +342,19 @@ export function takeOffPan(
   return change ? balanceMove(room, change) : null;
 }
 
-/** A piece on the tray as the scale draws pieces: the weight or float with its number. */
+/** A piece on the tray as the scale draws pieces: the weight or float with its number, or the gear with its count of x. */
 export function trayPiece(kind: TrayKind, value: number): PieceView {
+  if (kind === 'gear') {
+    const count = BigInt(value);
+    return {
+      key: 'tray-gear',
+      kind,
+      count,
+      divisor: null,
+      label: xLabel(kind, count),
+      divisorLabel: null,
+    };
+  }
   return {
     key: `tray-${kind}`,
     kind,
@@ -320,6 +369,8 @@ export interface TrayView {
   /** The number on the tray's weight, and on its float. */
   weight: number;
   float: number;
+  /** Story 4.2: how many x its gear adds, or null where the stage's tray has no gear. */
+  gear: number | null;
   /** Whether a drag or the stepper does anything now (not while the machine is jammed). */
   works: boolean;
   /** It wiggles once (hint level 1): the game offers it for the first time. */
@@ -333,6 +384,7 @@ export function trayView(room: RoomState | null, tools: readonly ToolId[]): Tray
   return {
     weight: stage.tray.weight,
     float: stage.tray.float,
+    gear: trayHasGear(currentStageSpec(room)) ? stage.tray.gear : null,
     works: trayWorks(room, tools),
     wiggle: stage.hintLevel >= 1,
   };

@@ -37,7 +37,7 @@ describe('traySkin', () => {
           y: 20,
           width: 460,
           height: 220,
-          dividerX: 1330,
+          dividers: [1330],
           lineWidth: 4,
         }),
       (g: Graphics) => traySkin.button(g, 89, 1, true, 4),

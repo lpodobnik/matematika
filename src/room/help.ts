@@ -18,6 +18,7 @@ import { canonicalSolution } from '@/math/steps';
 import { wayOf } from '@/room/hint';
 import { lineProgress } from '@/room/notebook';
 import { currentStageSpec, machineEquation } from '@/room/room';
+import { trayHasGear } from '@/room/tray';
 import type { HintLevel, RoomState, ToolId } from '@/room/types';
 
 /** Help one level up, to 4 at most. */
@@ -102,7 +103,7 @@ export function workedExample(room: RoomState, tools: readonly ToolId[]): Equati
     const value = valueAt(left, q.rational(x));
     if (!q.isInteger(value) || value.n <= 0n || value.n > 99n) continue;
     const example: Equation = { left: stage.left, right: num(Number(value.n)) };
-    const lines = canonicalSolution(example, way);
+    const lines = canonicalSolution(example, way, { trayGear: trayHasGear(spec) });
     if (lines) return [example, ...lines];
   }
   return null;

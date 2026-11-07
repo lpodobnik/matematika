@@ -54,7 +54,7 @@ describe('enterRoom', () => {
       jamsInARow: 0,
       machineProgress: [0],
       pans: equation('x + 4 = 9'),
-      tray: { weight: 1, float: 1 },
+      tray: { weight: 1, float: 1, gear: 1 },
       splitter: 2,
       balance: { moves: 0, dialMaxed: false, trayMet: false, splitterSeen: false },
       dialX: 0,

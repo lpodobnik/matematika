@@ -33,6 +33,7 @@ const r05b = '3x + 4 = 25';
 const r06 = 'x + 56 = 58 + 27';
 const r07 = '3x − 1 = 17';
 const r08 = '4x + 9 = 41';
+const r09 = '135 − 5x = 100';
 /** U+202F, the thousands separator the notebook writes. */
 const nnbsp = ' ';
 const r11 = `5${nnbsp}905 − 27x = 316`;
@@ -323,6 +324,46 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r08, line: '4x = 50', verdict: 'wrong', note: '41 + 9' },
     { stage: r08, before: ['4x = 32'], line: 'x = 32 · 4', verdict: 'wrong', note: 'multiplied' },
     { stage: r08, before: ['4x = 32'], line: 'x = 28', verdict: 'wrong', note: '4x read as 4 + x' },
+  ],
+  'r09 steam lift (135 − 5x = 100)': [
+    // Story 4.4: x taken away. The chain's 135 − ☐ is undone by 135 − 100; Balance's x-gear
+    // adds 5x to both sides first (story 4.2); and the wrong lines x read as added makes.
+    { stage: r09, line: '5x = 135 − 100', verdict: 'valid', progress: true },
+    { stage: r09, before: ['5x = 135 − 100'], line: '5x = 35', verdict: 'valid', progress: true },
+    {
+      stage: r09,
+      before: ['5x = 135 − 100', '5x = 35'],
+      line: 'x = 35 : 5',
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r09,
+      before: ['5x = 135 − 100', '5x = 35', 'x = 35 : 5'],
+      line: 'x = 7',
+      verdict: 'answer',
+    },
+    {
+      stage: r09,
+      before: ['5x = 135 − 100', '5x = 35', 'x = 35 : 5', 'x = 7'],
+      line: '135 − 5 · 7 = 100',
+      verdict: 'check',
+    },
+    { stage: r09, line: '135 = 5x + 100', verdict: 'valid', progress: false, move: 'add-both' },
+    { stage: r09, before: ['135 = 5x + 100'], line: '35 = 5x', verdict: 'valid', progress: true },
+    { stage: r09, before: ['135 = 5x + 100', '35 = 5x'], line: '7 = x', verdict: 'answer' },
+    {
+      stage: r09,
+      before: ['135 = 5x + 100', '35 = 5x', '7 = x'],
+      line: '135 − 5 · 7 = 100',
+      verdict: 'check',
+    },
+    { stage: r09, line: 'x = 7', verdict: 'answer', note: 'a skipped step' },
+    { stage: r09, before: ['x = 7'], line: '135 − 5 · 7 = 100', verdict: 'check' },
+    { stage: r09, line: '5x = 100 + 135', verdict: 'wrong', note: 'the chain’s + 135' },
+    { stage: r09, line: '5x = 235', verdict: 'wrong', note: '100 + 135' },
+    { stage: r09, line: '5x = 135 + 100', verdict: 'wrong', note: 'the 100 added' },
+    { stage: r09, before: ['5x = 35'], line: 'x = 30', verdict: 'wrong', note: '5x read as 5 + x' },
   ],
   // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,
   // copied as a line, is valid without progress (stories 1.2, 1.4 and 1.8–1.11 name them);

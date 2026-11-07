@@ -61,11 +61,11 @@ export type Action =
   | { type: 'pin/set'; value: PinValue }
   /** He confirmed the pin where it is: it locks and the stage opens. */
   | { type: 'pin/confirm' }
-  /** The tray's − or + for its weight or float; the UI repeats it while the button is held. */
+  /** The tray's − or + for its weight, float or gear; the UI repeats it while the button is held. */
   | { type: 'tray/step'; kind: TrayKind; by: 1 | -1 }
   /**
-   * He dropped the tray's weight or float, with its number, anywhere over the scale: one
-   * copy goes to each side (story 1.15).
+   * He dropped the tray's weight or float, with its number, or its gear (story 4.2), anywhere
+   * over the scale: one copy goes to each side (story 1.15).
    */
   | { type: 'tray/drop'; kind: TrayKind }
   /**

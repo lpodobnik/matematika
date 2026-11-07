@@ -181,6 +181,17 @@ export function undoBlanksAfter(spec: StageSpec, stage: StageState): StageState 
   return stage;
 }
 
+/**
+ * A chain run's result waits as a blank (Undo `blanks`, `4x = ☐`; story 4.1 review): the
+ * hint points at it, and the tray and splitter wait for it (story 4.2 review).
+ */
+export function chainBlankWaits(room: RoomState): boolean {
+  const { stage } = room;
+  if (stage.templates.length === 0) return false;
+  if (undoFading(currentStageSpec(room)) !== 'blanks') return false;
+  return stage.lines[stage.lines.length - 1]?.source === 'undo';
+}
+
 /** One link as the strip draws it. */
 export interface LinkView extends Link {
   /** Undone in this stage: dark. */

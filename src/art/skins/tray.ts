@@ -20,8 +20,8 @@ export interface ShelfShape {
   y: number;
   width: number;
   height: number;
-  /** Where the divider between the two pieces stands, in scene x. */
-  dividerX: number;
+  /** Where the dividers between the pieces stand, in scene x. */
+  dividers: readonly number[];
   lineWidth: number;
 }
 
@@ -29,14 +29,16 @@ export const traySkin = {
   /** The shelf: a tray with a lip along its bottom and a divider between its two pieces. */
   shelf(g: Graphics, shape: ShelfShape): void {
     g.clear();
-    const { x, y, width, height, dividerX, lineWidth } = shape;
+    const { x, y, width, height, dividers, lineWidth } = shape;
     const ink = { width: lineWidth, color: palette.ink };
     g.roundRect(x, y, width, height, 14).fill(lightFill).stroke(ink);
     const lip = Math.min(18, height * 0.1);
     g.rect(x + lineWidth, y + height - lip, width - lineWidth * 2, lip - lineWidth).fill(heavyFill);
-    g.moveTo(dividerX, y + lineWidth * 3)
-      .lineTo(dividerX, y + height - lineWidth * 3)
-      .stroke({ width: lineWidth / 2, color: palette.ink, alpha: 0.5 });
+    for (const dividerX of dividers) {
+      g.moveTo(dividerX, y + lineWidth * 3)
+        .lineTo(dividerX, y + height - lineWidth * 3)
+        .stroke({ width: lineWidth / 2, color: palette.ink, alpha: 0.5 });
+    }
   },
 
   /** A stepper button of `size`, with − (`by` −1) or + (`by` 1), faint when it does nothing. */

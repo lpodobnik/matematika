@@ -35,6 +35,8 @@ import {
   type TrayLayout,
   type TraySlotLayout,
   tapSlopCssPx,
+  trayGeometry,
+  trayKindsOf,
   trayLayout,
   trayWiggleMs,
 } from '@/ui/scene/scale/tray-layout';
@@ -77,9 +79,11 @@ export function Tray({ sceneScale, drag, toScene }: Props) {
   const stageKey = room ? `${room.spec.id}.${room.stageIndex}` : null;
   const dispatch = useGame((s) => s.dispatch);
   const fontSize = labelFontSize(sceneScale);
+  const gear = view?.gear != null;
   const layout = useMemo(
-    () => (sceneScale > 0 ? trayLayout(sceneScale, fontSize) : null),
-    [sceneScale, fontSize],
+    () =>
+      sceneScale > 0 ? trayLayout(sceneScale, fontSize, trayGeometry, trayKindsOf(gear)) : null,
+    [sceneScale, fontSize, gear],
   );
   const carry = useCarry(drag);
 
@@ -175,7 +179,7 @@ export function Tray({ sceneScale, drag, toScene }: Props) {
             <TraySlot
               key={slot.kind}
               slot={slot}
-              value={view[slot.kind]}
+              value={view[slot.kind] ?? 1}
               works={view.works}
               fontSize={fontSize}
               lineWidth={layout.lineWidth}
@@ -193,10 +197,10 @@ export function Tray({ sceneScale, drag, toScene }: Props) {
 }
 
 function Shelf({ layout }: { layout: TrayLayout }) {
-  const { box, dividerX, lineWidth } = layout;
+  const { box, dividers, lineWidth } = layout;
   const draw = useCallback(
-    (g: Graphics) => traySkin.shelf(g, { ...box, dividerX, lineWidth }),
-    [box, dividerX, lineWidth],
+    (g: Graphics) => traySkin.shelf(g, { ...box, dividers, lineWidth }),
+    [box, dividers, lineWidth],
   );
   return <pixiGraphics draw={draw} />;
 }

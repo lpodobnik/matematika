@@ -147,6 +147,10 @@ export const hr = {
         },
         { who: 'penkala', text: 'Vožnja unatrag do početka? Toga sigurno nema u Knjizi.' },
       ],
+      r09: [
+        { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO KORACIMA. OTVARANJE NIJE PREDVIĐENO.' },
+        { who: 'nikola', text: 'Pečat je pao. Ali tko lijepi te papire po cijelom gradu?' },
+      ],
     },
     /** The city's log on the map: every line he has been told, to read again. */
     log: {
@@ -190,6 +194,10 @@ export const hr = {
       inverse: {
         term: 'Obrnute operacije',
         text: '− poništava +, a : poništava ·. Napravi to na objema stranama i vaga ostaje ravna.',
+      },
+      'take-away': {
+        term: 'Oduzimanje nepoznanice',
+        text: 'Kad se x oduzima, veći x čini stranu lakšom. Zato 135 − 5x = 100 vraćaš sa 135 − 100.',
       },
       mistake: {
         term: 'Traženje pogreške',
@@ -313,6 +321,8 @@ export const hr = {
      */
     questions: {
       'level-x': 'Postavi zastavicu na mjesto gdje će vaga biti u ravnoteži.',
+      /** Story 4.4: from room 8 on, once he knows the flag (room 9's pans leave less room). */
+      'level-x-short': 'Gdje će vaga biti u ravnoteži?',
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
       /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
       change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
@@ -397,6 +407,10 @@ export const hr = {
       `Skini ${n} s obje strane: stavi balon ${balloon} na vagu.`,
     /** At the tray: a weight of n adds n to both sides. */
     add: (n: string, weight: string) => `Dodaj ${n} na obje strane: stavi uteg ${weight} na vagu.`,
+    /** Story 4.2 review: a weight too big for the tray, dragged off its pan. */
+    takeOff: (n: string) => `Odvuci uteg ${n} s vage: skine se s obje strane.`,
+    /** Story 4.2, at the tray: its x-gear adds that many x to both sides. */
+    addGear: (gears: string) => `Dodaj ${gears} na obje strane: stavi zupčanik ${gears} na vagu.`,
     /** At the splitter. */
     split: (n: string) => `Podijeli obje strane ${withS(n)}.`,
     /** At the notebook: the answer line, `x = 9`. */

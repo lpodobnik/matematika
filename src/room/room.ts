@@ -91,8 +91,8 @@ export function openingDial(stage: StageSpec): { min: number; max: number } {
   return { min, max: Math.min(full.max, min + (Math.max(1, notches) - 1) * step) };
 }
 
-/** The tray's numbers as a stage arrives: its weight and its float both show 1. */
-export const trayStart: Readonly<TrayNumbers> = { weight: 1, float: 1 };
+/** The tray's numbers as a stage arrives: its weight, its float and its gear all show 1. */
+export const trayStart: Readonly<TrayNumbers> = { weight: 1, float: 1, gear: 1 };
 
 /**
  * Where the slider starts: at its lowest notch; or, on a stage after a change (room 5,

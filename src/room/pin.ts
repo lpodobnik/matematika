@@ -285,7 +285,9 @@ function resultOf(right: boolean): 'right' | 'wrong' {
 export type PinQuestion =
   | Extract<PinSpec['kind'], 'level-x' | 'effect' | 'wrong-line'>
   | 'change'
-  | 'hidden';
+  | 'hidden'
+  /** Story 4.4: from room 8 on (a stage with Undo) he knows the flag, so it asks only where. */
+  | 'level-x-short';
 
 /** What the pin shows. Flat, for selectors. */
 export interface PinView {
@@ -333,7 +335,9 @@ export function pinView(room: RoomState | null): PinView | null {
         ? 'change'
         : // As the scale shows them (room/scale.ts, `showsReadouts`), without importing it back.
           spec.readouts && !spec.blinds?.readouts
-          ? 'level-x'
+          ? spec.ways.includes('undo')
+            ? 'level-x-short'
+            : 'level-x'
           : 'hidden';
   const { stage } = room;
   const offered = pinOffered(room);

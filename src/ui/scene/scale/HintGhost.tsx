@@ -32,7 +32,7 @@ import {
 } from '@/ui/scene/scale/layout';
 import { Piece } from '@/ui/scene/scale/Piece';
 import { splitterLayout } from '@/ui/scene/scale/splitter-layout';
-import { trayLayout } from '@/ui/scene/scale/tray-layout';
+import { trayGeometry, trayKindsOf, trayLayout } from '@/ui/scene/scale/tray-layout';
 import { usePrefersReducedMotion } from '@/ui/scene/scale/use-balloon-bob';
 
 extend({ Container, Graphics, Text });
@@ -182,7 +182,11 @@ function PieceGhost({ kind, amount, tilt, sceneScale }: PieceProps) {
     [piece, fontSize],
   );
   const path: PiecePath | null = useMemo(() => {
-    const slot = trayLayout(sceneScale, fontSize).slots.find((each) => each.kind === kind);
+    // The gear's ghost is only shown where the tray has one (story 4.2).
+    const kinds = trayKindsOf(kind === 'gear');
+    const slot = trayLayout(sceneScale, fontSize, trayGeometry, kinds).slots.find(
+      (each) => each.kind === kind,
+    );
     if (!slot) return null;
     const pose = beamPose(tilt);
     const { pivot, postHeight } = scaleGeometry;

@@ -47,7 +47,8 @@ export const toolIds = ['balance', 'workshop', 'chain', 'drum'] as const;
 /**
  * The ideas of the rooms that an explanation card names as school does (story 2.6): level
  * means equal, the same step per notch, a prediction, Balance, a split, judging without
- * adding, finding a mistake; and from epic 4, inverse operations (room 8).
+ * adding, finding a mistake; and from epic 4, inverse operations (room 8) and x taken
+ * away (room 9).
  */
 export const ideaIds = [
   'equal',
@@ -58,6 +59,7 @@ export const ideaIds = [
   'compare',
   'mistake',
   'inverse',
+  'take-away',
 ] as const;
 export type IdeaId = (typeof ideaIds)[number];
 export type ToolId = (typeof toolIds)[number];
@@ -114,6 +116,8 @@ export interface StageSpec {
   /** Room 5: 22 becomes 25. */
   change?: { after: 'locked'; from: number; to: number };
   blinds?: { readouts?: true; stillPans?: true; shortDial?: number };
+  /** Story 4.2: the tray also holds an x-gear (GDD room 9: from here on). */
+  trayGear?: true;
   drum?: true;
 }
 
@@ -178,10 +182,13 @@ export type HandoverId = (typeof handoverIds)[number];
  */
 export type FirstUseId = 'pin' | 'tray' | 'splitter' | `handover-${HandoverId}`;
 
-/** What the tray holds (Pattern 1, Balance moves): weights and floats only, never gears or springs. */
-export type TrayKind = 'weight' | 'float';
+/**
+ * What the tray holds (Pattern 1, Balance moves): weights and floats, and from room 9 an
+ * x-gear (story 4.2; GDD room 9), which adds as many x as its stepper says to both sides.
+ */
+export type TrayKind = 'weight' | 'float' | 'gear';
 
-/** The numbers set on the tray's weight and float, each 1–`tuning.trayMaxNumber`. */
+/** The numbers set on the tray's weight and float, and its gear's count, each 1–`tuning.trayMaxNumber`. */
 export type TrayNumbers = Record<TrayKind, number>;
 
 /**

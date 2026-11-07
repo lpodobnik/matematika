@@ -40,7 +40,7 @@ import {
 import { pinLayout, placeX } from '@/ui/scene/scale/pin-layout';
 import { resetCorner, tagFontSize, wrapWords } from '@/ui/scene/scale/pin-tag-layout';
 import { splitterLayout } from '@/ui/scene/scale/splitter-layout';
-import { trayLayout } from '@/ui/scene/scale/tray-layout';
+import { stageTrayLayout } from '@/ui/scene/scale/tray-layout';
 
 export const goalCardGeometry = {
   /** An estimate of a character's width, in em, on the generous side (as the tags'). */
@@ -243,7 +243,10 @@ export function goalCardObstacles(
     ...controlBoxes(sceneScale, origin),
   ];
   if (tools.includes('balance')) {
-    hard.push(trayLayout(sceneScale, labelSize).box, splitterLayout(sceneScale, labelSize).box);
+    hard.push(
+      stageTrayLayout(room, sceneScale, labelSize).box,
+      splitterLayout(sceneScale, labelSize).box,
+    );
   }
   const { pivot, floorY, beamHalfLength } = scaleGeometry;
   const lift = beamHalfLength * Math.sin((tuning.tiltMax * Math.PI) / 180) + 12;

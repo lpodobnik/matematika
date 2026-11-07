@@ -5,7 +5,16 @@
 import { assert } from '@/lib/assert';
 import { chainOf, inverseOf, lastLink, undoLast } from '@/math/chain';
 import { checkLineFor, isAnswerLine, isCheckLine, stageSolution } from '@/math/check';
-import { type Equation, type Expr, equationHasX, hasX, maxNumber, num, xVar } from '@/math/expr';
+import {
+  add,
+  type Equation,
+  type Expr,
+  equationHasX,
+  hasX,
+  maxNumber,
+  num,
+  xVar,
+} from '@/math/expr';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
 
@@ -34,10 +43,12 @@ function onSide(xOnLeft: boolean, xSide: Expr, numberSide: Expr): Equation {
  * side (the pans combine their numbers, so `2x + 5 = 23` gives `2x = 18`), then the
  * splitter divides by x's coefficient. One drop and one split, as in the architecture's
  * worked sequence for room 4; the tray's and splitter's limits are the content tests'
- * business. The tray holds no gears or springs, so Balance can't finish when x is
- * subtracted or divided (`20 − x = 6`, `x : 3 = 5`) or on both sides: that is `null`.
+ * business. Until room 9 the tray holds no gears or springs, so Balance can't finish when
+ * x is subtracted or divided (`20 − x = 6`, `x : 3 = 5`) or on both sides: that is `null`.
+ * With the tray's x-gear (story 4.2, `gear`), x taken away is added back to both sides
+ * first: `135 − 5x = 100` gives `135 = 5x + 100`, x now on the other side.
  */
-function balanceStep(current: Equation): Equation | null {
+function balanceStep(current: Equation, gear: boolean): Equation | null {
   const xOnLeft = hasX(current.left);
   if (xOnLeft === hasX(current.right)) return null;
   const [xSide, numberSide] = xOnLeft
@@ -46,6 +57,12 @@ function balanceStep(current: Equation): Equation | null {
   const xs = toLinear(xSide);
   const ns = toLinear(numberSide);
   if (xs.kind !== 'linear' || ns.kind !== 'linear') return null;
+  if (gear && q.compare(xs.a, q.zero) < 0 && q.isZero(ns.a)) {
+    const [count, kept, gained] = [whole(q.neg(xs.a)), whole(xs.b), whole(ns.b)];
+    if (count === null || kept === null || gained === null) return null;
+    const moved = gained === 0 ? xTerm(count) : add(xTerm(count), num(gained));
+    return onSide(!xOnLeft, moved, num(kept));
+  }
   const coefficient = whole(xs.a);
   if (coefficient === null || coefficient === 0) return null;
 
@@ -88,24 +105,38 @@ function undoStep(current: Equation): Equation | null {
  * as in `balanceStep`; Undo as in `undoStep`. After the answer line comes the check line, and after the check
  * line nothing (`null`). `null` also means the way can't go on from `current`.
  */
-export function nextStep(stage: Equation, current: Equation, way: StepWay): Equation | null {
+/** What a stage's tools allow beyond the defaults: the tray's x-gear (story 4.2). */
+export interface StepOptions {
+  trayGear?: boolean;
+}
+
+export function nextStep(
+  stage: Equation,
+  current: Equation,
+  way: StepWay,
+  options: StepOptions = {},
+): Equation | null {
   const n = stageSolution(stage);
   if (!equationHasX(current)) return null; // the check line, or nothing he could have written
   if (isAnswerLine(current, n)) return checkLineFor(stage);
   if (way === 'try') return { left: xVar(), right: num(n) };
   if (way === 'undo') return undoStep(current);
-  return balanceStep(current);
+  return balanceStep(current, options.trayGear === true);
 }
 
 /**
  * Every line `way` writes for `stage`, from the first move to the check line, or `null`
  * if the way gets stuck before the check line.
  */
-export function canonicalSolution(stage: Equation, way: StepWay): Equation[] | null {
+export function canonicalSolution(
+  stage: Equation,
+  way: StepWay,
+  options: StepOptions = {},
+): Equation[] | null {
   const lines: Equation[] = [];
   let current = stage;
   for (let i = 0; i < maxSteps; i += 1) {
-    const next = nextStep(stage, current, way);
+    const next = nextStep(stage, current, way, options);
     if (next === null) {
       return current !== stage && isCheckLine(stage, current) ? lines : null;
     }

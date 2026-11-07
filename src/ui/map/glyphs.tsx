@@ -8,7 +8,7 @@ import type { LockKind, NodeId, NodeKind } from '@/city/types';
  * rays, the gate is up with water running under it, the wheel's spokes turn. Grey ink and
  * still until then. Rooms whose stories come later, the lairs, the workshop and the gate
  * get a plain sign of their kind. Story 2.8 adds the bridge, 2.9 the weighing yard, 2.10 the old
- * logbook, 4.3 the tram.
+ * logbook, 4.3 the tram, 4.4 the steam lift.
  */
 export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; state: NodeState }) {
   const restored = state === 'restored';
@@ -29,6 +29,8 @@ export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; sta
       return <OldLogbook restored={restored} />;
     case 'r08':
       return <Tram restored={restored} />;
+    case 'r09':
+      return <SteamLift restored={restored} />;
     default:
       return <KindSign kind={kind} />;
   }
@@ -223,6 +225,19 @@ function Tram({ restored }: { restored: boolean }) {
       <circle cx="-18" cy="22" r="7" />
       <circle cx="18" cy="22" r="7" />
       {restored && <path d="M-48 -8 H-38 M-50 4 H-38" />}
+    </g>
+  );
+}
+
+/** Room 9: a lift cage between two rails; restored, it stands at the top, lit, with steam. */
+function SteamLift({ restored }: { restored: boolean }) {
+  const y = restored ? -30 : 8;
+  return (
+    <g>
+      <path d="M-26 40 V-40 M26 40 V-40 M-34 40 H34" />
+      <rect x="-18" y={y} width="36" height="28" className={restored ? 'glyph__lit' : undefined} />
+      <path d={`M-18 ${y + 14} H18`} />
+      {restored && <path d="M30 -38 q8 -6 0 -12 q-8 -6 0 -12" />}
     </g>
   );
 }

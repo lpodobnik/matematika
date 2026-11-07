@@ -46,8 +46,8 @@ describe('trayLayout', () => {
     expect(weight?.piece.x).toBeLessThan(float?.piece.x ?? 0);
     expect(layout.box.x + layout.box.width).toBe(1580);
     expect(layout.box.y).toBe(20);
-    expect(layout.dividerX).toBeGreaterThan(weight?.up.x ?? 0);
-    expect(layout.dividerX).toBeLessThan(float?.grab.x ?? 0);
+    expect(layout.dividers[0] ?? 0).toBeGreaterThan(weight?.up.x ?? 0);
+    expect(layout.dividers[0] ?? 0).toBeLessThan(float?.grab.x ?? 0);
     // Story 1.15: each piece's + stands directly above it, and its − directly below its number.
     for (const slot of layout.slots) {
       const centre = (box: Box) => box.x + box.width / 2;

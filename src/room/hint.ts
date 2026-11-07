@@ -39,7 +39,7 @@ import { type Equation, hasX } from '@/math/expr';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
 import { nextStep, type StepWay } from '@/math/steps';
-import { chainWorks, pansChain, undoFading } from '@/room/chain';
+import { chainBlankWaits, chainWorks, pansChain } from '@/room/chain';
 import { isOnDial } from '@/room/dial';
 import { answerOnPans, handoverApplies, handoverOrder } from '@/room/handover';
 import { workedExample } from '@/room/help';
@@ -47,7 +47,7 @@ import { isNumberPiece, type NumberPiece, panPieces } from '@/room/pieces';
 import { pinOffered } from '@/room/pin';
 import { currentStageSpec, machineEquation } from '@/room/room';
 import { splitterOffered } from '@/room/splitter';
-import { trayOffered } from '@/room/tray';
+import { trayHasGear, trayOffered } from '@/room/tray';
 import type { HandoverId, Phase, RoomState, ToolId, TrayKind } from '@/room/types';
 
 /** The hint button's presses in the stage in play, until an action of his ends them. */
@@ -79,6 +79,11 @@ export type HintMove =
   | { kind: 'jam' }
   /** Story 4.1: the gear chain's last link, run backward with this operation and number. */
   | { kind: 'chain'; op: LinkOp; n: number }
+  /**
+   * Story 4.2 review: a weight beside x bigger than the tray's largest, dragged off its pan,
+   * which takes it off both sides in one move (room 9's 100).
+   */
+  | { kind: 'take-off'; amount: number }
   /** Story 4.1 review: the number for the blank a chain run left (Undo `blanks`, `4x = ☐`). */
   | { kind: 'blank'; value: number };
 
@@ -189,10 +194,19 @@ function balanceMove(room: RoomState, tools: readonly ToolId[], n: number): Hint
   const spec = currentStageSpec(room);
   const pans = stage.pans;
   if (answerOnPans(room)) return { kind: 'answer', x: n };
-  const next = nextStep(machineEquation(spec, stage.machine), pans, 'balance');
+  const gear = trayHasGear(spec);
+  const next = nextStep(machineEquation(spec, stage.machine), pans, 'balance', { trayGear: gear });
   if (next === null) return null;
   const xSide = toLinear(hasX(pans.left) ? pans.left : pans.right);
   if (xSide.kind !== 'linear') return null;
+  // Story 4.2: x taken away comes back onto both sides with the tray's gear.
+  if (gear && xSide.a.n < 0n && trayOffered(room, tools)) {
+    return {
+      kind: 'tray',
+      piece: 'gear',
+      amount: Math.min(Number(-xSide.a.n), tuning.trayMaxNumber),
+    };
+  }
   const parts = Number(xSide.a.n);
   const splits = q.isZero(xSide.b) && parts >= tuning.splitterMinParts;
   if (!splits && !trayOffered(room, tools)) {
@@ -200,21 +214,19 @@ function balanceMove(room: RoomState, tools: readonly ToolId[], n: number): Hint
     const { dial } = spec;
     return dial === 'locked' ? null : slideToward(dial.max, stage.dialX);
   }
-  if (!q.isZero(xSide.b)) return trayMove(xSide.b.n > 0n ? 'float' : 'weight', xSide.b);
+  if (!q.isZero(xSide.b)) {
+    const big = xSide.b.n > BigInt(tuning.trayMaxNumber) && q.isInteger(xSide.b);
+    if (big) return { kind: 'take-off', amount: Number(xSide.b.n) };
+    return trayMove(xSide.b.n > 0n ? 'float' : 'weight', xSide.b);
+  }
   if (!splits) return clearingMove(pans);
   if (!splitterOffered(room, tools) || parts > tuning.splitterMaxParts) return null;
   return { kind: 'split', parts };
 }
 
-/**
- * A chain run's result waits as a blank (Undo `blanks`, `4x = ☐`; story 4.1 review): the
- * hint points at it, never at a Balance tool.
- */
-function undoBlankWaits(room: RoomState): boolean {
-  const { stage } = room;
-  if (stage.templates.length === 0 || answerOnPans(room)) return false;
-  if (undoFading(currentStageSpec(room)) !== 'blanks') return false;
-  return stage.lines[stage.lines.length - 1]?.source === 'undo';
+/** A chain run's result waits as a blank, before x is alone (then the answer's tag takes over). */
+function resultBlankWaits(room: RoomState): boolean {
+  return chainBlankWaits(room) && !answerOnPans(room);
 }
 
 /**
@@ -225,7 +237,7 @@ function undoBlankWaits(room: RoomState): boolean {
 function chainMove(room: RoomState, tools: readonly ToolId[], n: number): HintMove | null {
   if (answerOnPans(room)) return { kind: 'answer', x: n };
   const chain = pansChain(room);
-  if (chain && undoBlankWaits(room)) return { kind: 'blank', value: chain.output };
+  if (chain && resultBlankWaits(room)) return { kind: 'blank', value: chain.output };
   const link = chain ? lastLink(chain) : null;
   if (!link || !chainWorks(room, tools)) return null;
   return { kind: 'chain', ...inverseOf(link) };
@@ -259,6 +271,7 @@ function stepOfMove(move: HintMove, room: RoomState, tools: readonly ToolId[]): 
     case 'check':
       return 'check';
     case 'tray':
+    case 'take-off':
       return room.stage.balance.moves > 0 ? 'balance-goal' : 'tray';
     case 'split':
       return 'splitter';
@@ -283,7 +296,7 @@ export function hintStep(room: RoomState, tools: readonly ToolId[]): HintStep | 
   if (!hintPhases.has(room.stage.phase)) return null;
   if (room.stage.jam !== null) return 'jam';
   if (pinOffered(room)) return 'pin';
-  if (undoBlankWaits(room)) return 'blank';
+  if (resultBlankWaits(room)) return 'blank';
   const applying = handoverOrder.find((id) => handoverApplies(id, room, tools));
   if (applying) return applying;
   const move = nextMove(room, tools);

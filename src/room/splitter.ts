@@ -27,6 +27,7 @@
 import { tuning } from '@/config/tuning';
 import { div, type Equation, type Expr, num } from '@/math/expr';
 import * as q from '@/math/rational';
+import { chainBlankWaits } from '@/room/chain';
 import { committedEquations } from '@/room/notebook';
 import type { RoomStep } from '@/room/room';
 import { type PieceView, sideViews } from '@/room/scale';
@@ -66,7 +67,8 @@ export function rememberSplitter(room: RoomState, tools: readonly ToolId[]): Roo
  * machine isn't jammed (while jammed he can only edit the draft, reset or leave).
  */
 export function splitterWorks(room: RoomState, tools: readonly ToolId[]): boolean {
-  return splitterOffered(room, tools) && room.stage.jam === null;
+  // Story 4.2 review: nor while a chain run's result waits as a blank (Undo `blanks`).
+  return splitterOffered(room, tools) && room.stage.jam === null && !chainBlankWaits(room);
 }
 
 /** Whether a step of the stepper changes the parts: not below 2, nor above 9. */

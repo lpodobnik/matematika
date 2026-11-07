@@ -25,7 +25,7 @@ import { fillBlanks, tokenize } from '@/math/tokens';
 import { dialValue, isOnDial, notchCount } from '@/room/dial';
 import { blanksOnceAlone, lastLines, openingTemplates } from '@/room/fading';
 import { answerAllowed } from '@/room/notebook';
-import { panPieces } from '@/room/pieces';
+import { panPieces, sidePieces } from '@/room/pieces';
 import {
   machineTestX,
   pinSupported,
@@ -208,6 +208,19 @@ const gddRooms: readonly {
     pokeNotches: [4],
     pins: [{ kind: 'level-x' }],
     ways: ['balance', 'undo'],
+    earns: null,
+  },
+  {
+    id: 'r09',
+    machine: 'steam-lift',
+    xIs: 'Pressure per valve',
+    equations: ['135 − 5x = 100'],
+    answers: [7],
+    types: ['predict'],
+    dials: [{ min: 0, max: 10, step: 1 }],
+    pokeNotches: [4],
+    pins: [{ kind: 'level-x' }],
+    ways: ['try', 'balance', 'undo'],
     earns: null,
   },
 ];
@@ -411,7 +424,11 @@ describe('rooms', () => {
       const dial = stage.dial as DialSpec;
       const balanceLines = [
         stageEquation(stage),
-        ...(canonicalSolution(stageEquation(stage), 'balance') ?? []).slice(0, -1),
+        ...(
+          canonicalSolution(stageEquation(stage), 'balance', {
+            trayGear: stage.trayGear === true,
+          }) ?? []
+        ).slice(0, -1),
         equationOf('2x : 2 = 18 : 2'),
       ];
       for (let notch = 0; notch <= notchCount(dial); notch += 1) {
@@ -446,7 +463,9 @@ describe('rooms', () => {
     });
 
     it('is balanced by a float of 5 on both pans, then a split by 2', () => {
-      const lines = canonicalSolution(stageEquation(stage), 'balance');
+      const lines = canonicalSolution(stageEquation(stage), 'balance', {
+        trayGear: stage.trayGear === true,
+      });
       expect(lines?.map((line) => formatEquation(line))).toEqual([
         '2x = 18',
         'x = 9',
@@ -459,6 +478,15 @@ describe('rooms', () => {
   // room 4; Balance writes its lines in rooms 4–5, gives blanks in rooms 6–7 and a blank
   // page from room 8; Undo writes its lines in room 8, gives blanks in room 9 and a blank
   // page from room 10 (epic 4).
+  it('gives the tray its x-gear from room 9 on, where Balance is listed (GDD room 9)', () => {
+    rooms.forEach((room, index) => {
+      for (const stage of room.stages) {
+        const expected = index + 1 >= 9 && stage.ways.includes('balance') ? true : undefined;
+        expect(stage.trayGear, room.id).toBe(expected);
+      }
+    });
+  });
+
   it('fades each way as the GDD table says, room by room', () => {
     const fadingFor = (index: number): Partial<Record<WayId, FadingMode>> => {
       const number = index + 1;
@@ -676,7 +704,7 @@ describe('rooms', () => {
     it('is finished by the canonical solution of every way it lists (steps.ts)', () => {
       const equation = stageEquation(stage);
       for (const way of stage.ways) {
-        const lines = canonicalSolution(equation, way);
+        const lines = canonicalSolution(equation, way, { trayGear: stage.trayGear === true });
         expect(lines, way).not.toBeNull();
         const committed = [equation];
         const verdicts = (lines ?? []).map((line) => {
@@ -700,16 +728,33 @@ describe('rooms', () => {
           ).toBe(true);
         }
         if (way === 'balance') {
-          const lines = canonicalSolution(equation, 'balance');
+          const lines = canonicalSolution(equation, 'balance', {
+            trayGear: stage.trayGear === true,
+          });
           expect(lines, 'Balance finishes').not.toBeNull();
           let previous = equation;
           for (const line of lines ?? []) {
             const move = classifyMove(previous, line);
             if (move.kind === 'add-both') {
-              expect(move.term.kind).toBe('num');
+              // Story 4.2: x-gears only where the stage's tray holds one.
+              expect(move.term.kind === 'num' || stage.trayGear === true).toBe(true);
+              if (move.term.kind === 'x') {
+                expect(move.term.coef).toBeLessThanOrEqual(tuning.trayMaxNumber);
+              }
               if (move.term.kind === 'num') {
                 expect(move.term.value).toBeGreaterThanOrEqual(trayMinNumber);
-                expect(move.term.value).toBeLessThanOrEqual(tuning.trayMaxNumber);
+                // A number taken off both sides can also be a weight dragged off a pan,
+                // which has no stepper limit (story 4.4: room 9's 100).
+                const value = move.term.value;
+                const draggedOff =
+                  move.term.sign === -1 &&
+                  (['left', 'right'] as const).some((side) =>
+                    sidePieces(previous[side], side).some(
+                      (piece) =>
+                        piece.kind === 'weight' && q.equals(piece.value, q.rational(value)),
+                    ),
+                  );
+                if (!draggedOff) expect(value).toBeLessThanOrEqual(tuning.trayMaxNumber);
               }
             }
             if (move.kind === 'split-both') {
@@ -751,7 +796,12 @@ describe('rooms', () => {
       });
       const digits = tokenize(String(answer));
       if (!digits.ok) throw new Error('no answer');
-      const lines = [equation, ...(canonicalSolution(equation, 'balance') ?? []).slice(0, -2)];
+      const lines = [
+        equation,
+        ...(
+          canonicalSolution(equation, 'balance', { trayGear: stage.trayGear === true }) ?? []
+        ).slice(0, -2),
+      ];
       const verdicts = (templates ?? []).map((template) => {
         const line = fillBlanks(template, digits.tokens);
         const verdict = check(lines, line);

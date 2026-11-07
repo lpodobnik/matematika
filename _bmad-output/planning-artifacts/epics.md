@@ -1226,7 +1226,7 @@ So that I see the inverse of `135 − ☐` is `135 − 100`, not `+ 135`.
 **Then** the move is `5x = 135 − 100`; `+ 135` jams
 
 **Given** a stage from room 9 on, with Balance
-**Then** the tray also holds an x-gear, with a stepper for how many: dropped on the scale it adds that many x to both sides, so `135 − 5x = 100` becomes `135 = 100 + 5x`; an x-balloon dragged off takes as many x off both
+**Then** the tray also holds an x-gear, with a stepper for how many: dropped on the scale it adds that many x to both sides, so `135 − 5x = 100` becomes `135 = 5x + 100`
 
 **And** Balance's canonical solution, its hints and the content tests use the x-gear where x is subtracted
 
