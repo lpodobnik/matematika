@@ -8,7 +8,7 @@ import type { Ground, Point } from '@/city/walk';
 import type { LairId } from '@/fight/types';
 import type { RoomId } from '@/room/types';
 
-export type PersonId = 'penkala' | 'nikola' | 'faust';
+export type PersonId = 'penkala' | 'nikola' | 'faust' | 'milka' | 'vucetic' | 'zagorka';
 
 export type AreaId =
   | 'square'
@@ -76,7 +76,12 @@ export type SceneId =
   | 'yardFaust'
   | 'tramPenkala'
   | 'marketPenkala'
-  | 'hillNikola';
+  | 'hillNikola'
+  | 'canalMilka'
+  | 'millMilka'
+  | 'bridgeVucetic'
+  | 'liftZagorka'
+  | 'wheelZagorka';
 
 export interface TownArea {
   id: AreaId;
@@ -260,6 +265,16 @@ const canal: TownArea = {
     },
   ],
   people: [
+    // Milka asks for the sluice: her mill stands without water.
+    {
+      id: 'milka',
+      at: { x: 650, y: 770 },
+      facing: -1,
+      after: 'r01',
+      changesWith: 'r03',
+      until: 'r03',
+      scene: 'canalMilka',
+    },
     {
       id: 'nikola',
       at: { x: 650, y: 770 },
@@ -330,13 +345,22 @@ const mill: TownArea = {
     },
   ],
   people: [
+    // Then she waits at the mill for its wheel, and stays to grind.
+    {
+      id: 'milka',
+      at: { x: 560, y: 760 },
+      facing: 1,
+      after: 'r03',
+      changesWith: 'r04',
+      scene: 'millMilka',
+    },
     {
       id: 'nikola',
       at: { x: 800, y: 700 },
       facing: -1,
       after: 'r04',
       changesWith: 'r04',
-      until: 'r07',
+      until: 'r11',
       scene: 'millNikola',
     },
   ],
@@ -380,7 +404,17 @@ const bridge: TownArea = {
       marker: { x: 120, y: 800 },
     },
   ],
-  people: [],
+  people: [
+    // The bridge guard asks for the drawbridge, and notes everything down.
+    {
+      id: 'vucetic',
+      at: { x: 450, y: 720 },
+      facing: 1,
+      after: 'r02',
+      changesWith: 'r05',
+      scene: 'bridgeVucetic',
+    },
+  ],
   // The armour-30 automaton picks through the scrap alley by the bridge.
   lair: 'lair-30',
   patrol: [
@@ -586,7 +620,18 @@ const lift: TownArea = {
       marker: { x: 170, y: 690 },
     },
   ],
-  people: [],
+  people: [
+    // Zagorka wants her story about the steam lift; then she follows the next one.
+    {
+      id: 'zagorka',
+      at: { x: 560, y: 760 },
+      facing: 1,
+      after: 'r07',
+      changesWith: 'r09',
+      until: 'r10',
+      scene: 'liftZagorka',
+    },
+  ],
   lair: null,
   patrol: [],
   lamps: [],
@@ -702,7 +747,16 @@ const wheel: TownArea = {
       marker: { x: 200, y: 370 },
     },
   ],
-  people: [],
+  people: [
+    {
+      id: 'zagorka',
+      at: { x: 450, y: 760 },
+      facing: 1,
+      after: 'r10',
+      changesWith: 'r11',
+      scene: 'wheelZagorka',
+    },
+  ],
   lair: null,
   patrol: [],
   lamps: [],

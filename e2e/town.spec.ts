@@ -229,6 +229,55 @@ test('fixed machines open the way on: square, canal, mill', async ({ page }) => 
   );
 });
 
+test('people ask for help with their street machine: Milka at the canal, Vučetić at the bridge', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    const done = ['r01', 'r02'];
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        character: { name: 'Ivo', look: 'look-1' },
+        progress: {
+          ...s.save.progress,
+          introSeen: true,
+          roomsDone: done,
+          told: done,
+          tools: ['balance'],
+          onMap: true,
+        },
+      },
+      room: null,
+    });
+  });
+  await page.locator('.town__place[data-exit="canal"]').click();
+  await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
+  const milka = page.locator('[data-person="milka"]');
+  await expect(milka).toHaveAttribute('data-asks', 'true');
+  await expect(milka.locator('.town__ask')).toBeVisible();
+  await milka.click();
+  await expect(page.locator('.town__bubble')).toContainText('mlin', { timeout: 8000 });
+  await page.waitForTimeout(300);
+  await shot(page, '8-milka-asks');
+  await page.locator('.town__bubble').click();
+  await page.locator('.town__bubble').click();
+  await page.locator('.town__place[data-exit="square"]').click();
+  await expect(page.locator('.town__board[data-area="square"]')).toBeVisible({ timeout: 8000 });
+  await page.locator('.town__place[data-exit="bridge"]').click();
+  await expect(page.locator('.town__board[data-area="bridge"]')).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('[data-person="vucetic"]')).toHaveAttribute('data-asks', 'true');
+  await page.waitForTimeout(300);
+  await shot(page, '9-vucetic');
+});
+
 test('the town to the midpoint: bridge, yard, the logbook house and Faust', async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto('/');

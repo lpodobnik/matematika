@@ -1,0 +1,17 @@
+{
+ "name": "person-vucetic",
+ "seed": 5500,
+ "size": {
+  "width": 1024,
+  "height": 1536
+ },
+ "style": "v4",
+ "slots": {
+  "subject": "A game character: Vučetić, a tall thin fair-skinned Croatian bridge guard in his sixties, standing upright and peering at a small notebook through a brass magnifying glass held in one hand. A long dark green guard's coat with brass buttons and a belt, a stiff round guard's cap with a blank brass badge, a long curled grey moustache, high black boots. A simple picture-book face with small dark dot eyes and a fussy, careful look; dry and a little comic, never mean. Slightly stylised proportions, the head about one sixth of the height; not chibi.",
+  "camera": "Full-body three-quarter view at eye level, with little perspective.",
+  "composition": "The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side.",
+  "state": "Calm and at rest.",
+  "background": "Isolated on plain flat cream paper with no ground, no scenery and no shadow."
+ },
+ "notes": "Town townsperson: Stražar Vučetić, the bridge guard, asks for the drawbridge."
+}

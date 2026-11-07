@@ -434,6 +434,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               type="button"
               className="town__figure town__figure--person"
               data-person={person.id}
+              data-asks={!done.includes(person.changesWith)}
               style={{
                 ...pct(person.at),
                 zIndex: Math.round(person.at.y),
@@ -456,6 +457,12 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 draggable={false}
                 style={{ transform: `scaleX(${person.facing * personFacing[person.id]})` }}
               />
+              {!done.includes(person.changesWith) && (
+                // Still waiting on their machine: a "!" over the head, like a raised hand.
+                <span className="town__ask" aria-hidden="true">
+                  !
+                </span>
+              )}
             </button>
           ))}
           {area.lair && area.lairSpot && (

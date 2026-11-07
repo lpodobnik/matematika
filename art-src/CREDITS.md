@@ -1,4 +1,4 @@
-images generated: 67/70
+images generated: 70/70
 
 # Art credits
 
@@ -1180,4 +1180,55 @@ nothing. Each names its source and the exact command.
 
   ```text
   Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. Water now runs down the long wooden chute from the canal and spills over its end onto the top of the water wheel, filling the top buckets; a thin stream falls from the lowest buckets into a small stone channel at the foot of the wheel. The wheel itself stays exactly as drawn: solid wooden spokes and buckets, sharp and opaque, not transparent, not blurred, no motion blur. A little steam rises from the copper pipe on the mill wall. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 68. `tests/person-milka.t68.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5400
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 131 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town townsperson: Milka, the miller, asks for the sluice and the mill wheel.
+- Review: Used: Milka, cut out for the canal (before room 3) and the mill.
+- Prompt:
+
+  ```text
+  A game character: Milka, a sturdy fair-skinned Croatian woman miller in her forties, standing with her hands on her hips, a small cloth sack of flour slung over one shoulder. A headscarf tied at the back over brown hair in a bun, a white blouse with rolled sleeves dusted with flour, a long brown skirt, a wide flour-dusted canvas apron, sturdy boots. A simple picture-book face with small dark dot eyes, rosy cheeks and a determined, friendly look. Slightly stylised proportions, the head about one sixth of the height; not chibi. Full-body three-quarter view at eye level, with little perspective. The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 69. `tests/person-vucetic.t69.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5500
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 94 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town townsperson: Stražar Vučetić, the bridge guard, asks for the drawbridge.
+- Review: Used: Vučetić, cut out for the bridge.
+- Prompt:
+
+  ```text
+  A game character: Vučetić, a tall thin fair-skinned Croatian bridge guard in his sixties, standing upright and peering at a small notebook through a brass magnifying glass held in one hand. A long dark green guard's coat with brass buttons and a belt, a stiff round guard's cap with a blank brass badge, a long curled grey moustache, high black boots. A simple picture-book face with small dark dot eyes and a fussy, careful look; dry and a little comic, never mean. Slightly stylised proportions, the head about one sixth of the height; not chibi. Full-body three-quarter view at eye level, with little perspective. The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 70. `tests/person-zagorka.t70.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 5600
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 100 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-07
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town townsperson: Zagorka, the newspaper reporter, asks for the steam lift.
+- Review: Used: Zagorka, cut out for the lift and the great wheel. Her newspaper's masthead came out with lettering, too small to read at game size; kept, as the cap is spent.
+- Prompt:
+
+  ```text
+  A game character: Zagorka, a lively fair-skinned Croatian woman newspaper reporter in her thirties, standing mid-step with a small notepad in one hand and a pencil raised in the other, a folded blank newspaper under her arm. A fitted dark plum jacket over a high-collared white blouse, a long grey skirt, a small brimmed hat with a feather, dark hair pinned up, buttoned ankle boots. A simple picture-book face with small dark dot eyes and a curious, eager look. Slightly stylised proportions, the head about one sixth of the height; not chibi. Full-body three-quarter view at eye level, with little perspective. The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side. Calm and at rest. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
   ```

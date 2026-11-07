@@ -1,0 +1,17 @@
+{
+ "name": "person-milka",
+ "seed": 5400,
+ "size": {
+  "width": 1024,
+  "height": 1536
+ },
+ "style": "v4",
+ "slots": {
+  "subject": "A game character: Milka, a sturdy fair-skinned Croatian woman miller in her forties, standing with her hands on her hips, a small cloth sack of flour slung over one shoulder. A headscarf tied at the back over brown hair in a bun, a white blouse with rolled sleeves dusted with flour, a long brown skirt, a wide flour-dusted canvas apron, sturdy boots. A simple picture-book face with small dark dot eyes, rosy cheeks and a determined, friendly look. Slightly stylised proportions, the head about one sixth of the height; not chibi.",
+  "camera": "Full-body three-quarter view at eye level, with little perspective.",
+  "composition": "The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side.",
+  "state": "Calm and at rest.",
+  "background": "Isolated on plain flat cream paper with no ground, no scenery and no shadow."
+ },
+ "notes": "Town townsperson: Milka, the miller, asks for the sluice and the mill wheel."
+}

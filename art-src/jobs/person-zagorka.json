@@ -1,0 +1,17 @@
+{
+ "name": "person-zagorka",
+ "seed": 5600,
+ "size": {
+  "width": 1024,
+  "height": 1536
+ },
+ "style": "v4",
+ "slots": {
+  "subject": "A game character: Zagorka, a lively fair-skinned Croatian woman newspaper reporter in her thirties, standing mid-step with a small notepad in one hand and a pencil raised in the other, a folded blank newspaper under her arm. A fitted dark plum jacket over a high-collared white blouse, a long grey skirt, a small brimmed hat with a feather, dark hair pinned up, buttoned ankle boots. A simple picture-book face with small dark dot eyes and a curious, eager look. Slightly stylised proportions, the head about one sixth of the height; not chibi.",
+  "camera": "Full-body three-quarter view at eye level, with little perspective.",
+  "composition": "The figure is centred and fills about nine tenths of the picture's height, with a clear margin on every side.",
+  "state": "Calm and at rest.",
+  "background": "Isolated on plain flat cream paper with no ground, no scenery and no shadow."
+ },
+ "notes": "Town townsperson: Zagorka, the newspaper reporter, asks for the steam lift."
+}

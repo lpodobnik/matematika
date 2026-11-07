@@ -22,6 +22,7 @@ import look5 from '@/ui/town/art/look-5.webp';
 import look6 from '@/ui/town/art/look-6.webp';
 import market from '@/ui/town/art/market.webp';
 import marketLevel from '@/ui/town/art/market-level.webp';
+import milka from '@/ui/town/art/milka.webp';
 import mill from '@/ui/town/art/mill.webp';
 import millRunning from '@/ui/town/art/mill-running.webp';
 import nikola from '@/ui/town/art/nikola.webp';
@@ -30,10 +31,12 @@ import square from '@/ui/town/art/square.webp';
 import squareGateOpen from '@/ui/town/art/square-gate-open.webp';
 import tram from '@/ui/town/art/tram.webp';
 import tramRunning from '@/ui/town/art/tram-running.webp';
+import vucetic from '@/ui/town/art/vucetic.webp';
 import wheel from '@/ui/town/art/wheel.webp';
 import wheelTurning from '@/ui/town/art/wheel-turning.webp';
 import yard from '@/ui/town/art/yard.webp';
 import yardLevel from '@/ui/town/art/yard-level.webp';
+import zagorka from '@/ui/town/art/zagorka.webp';
 
 export { automaton20 };
 
@@ -58,10 +61,24 @@ export const lookFacing: Record<LookId, 1 | -1> = {
   'look-5': -1,
   'look-6': 1,
 };
-export const personFacing: Record<PersonId, 1 | -1> = { penkala: -1, nikola: 1, faust: 1 };
+export const personFacing: Record<PersonId, 1 | -1> = {
+  penkala: -1,
+  nikola: 1,
+  faust: 1,
+  milka: 1,
+  vucetic: -1,
+  zagorka: -1,
+};
 
 /** Each person's figure (t31 and t32). */
-export const personArt: Record<PersonId, string> = { penkala, nikola, faust };
+export const personArt: Record<PersonId, string> = {
+  penkala,
+  nikola,
+  faust,
+  milka,
+  vucetic,
+  zagorka,
+};
 
 /**
  * Each area's picture, and the picture of its machine running once its room is done (the

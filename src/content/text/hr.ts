@@ -457,9 +457,65 @@ export const hr = {
           'Za dijelove ti napravim nešto korisno. Svrati unutra.',
         ],
       },
+      milka: {
+        name: 'Milka',
+        who: 'mlinarica',
+        before: ['Bez vode mi mlin stoji.', 'Pomogneš li?'],
+        after: ['Melje!', 'Hvala ti.'],
+      },
+      vucetic: {
+        name: 'Stražar Vučetić',
+        who: 'stražar na mostu, sve zapisuje',
+        before: ['Most je gore i neće dolje.', 'Pomogneš li?'],
+        after: ['Most je dolje. Zapisano.', 'Hvala ti.'],
+      },
+      zagorka: {
+        name: 'Zagorka',
+        who: 'novinarka, traži priču',
+        before: ['Pišem o strojevima koji stoje.', 'Pomogneš li?'],
+        after: ['Ovo ide na prvu stranicu!', 'Hvala ti.'],
+      },
     },
     /** A person's lines in one street (content/town.ts, `scene`). */
     scenes: {
+      canalMilka: {
+        before: [
+          'Ustava je zapela, a bez vode mi mlin stoji.',
+          'Možeš li je pokrenuti? Ja guram, a ona ni makac.',
+        ],
+        after: ['Voda ide! Trčim u mlin.', 'Kolo još stoji. Dođi i tamo, molim te.'],
+      },
+      millMilka: {
+        before: [
+          'Voda teče, a kolo i dalje stoji.',
+          'Pogledaj ga, molim te. Bez brašna nema ni kifli.',
+        ],
+        after: ['Melje! Cijeli mlin pjeva.', 'Prvo brašno je tvoje. Dobro, pola.'],
+      },
+      bridgeVucetic: {
+        before: [
+          'Most je gore i neće dolje. Sve sam zapisao.',
+          'Pomozi, molim te. Bez mosta nitko ne prelazi.',
+        ],
+        after: [
+          'Most je dolje. Zapisano: radi.',
+          'Na poluzi su otisci prstiju. Tvoji, pretpostavljam.',
+        ],
+      },
+      liftZagorka: {
+        before: [
+          'Pišem o parnom dizalu. Samo, ono ne vozi.',
+          'Pokreni ga, molim te, i ideš na naslovnicu.',
+        ],
+        after: ['Vozi! Ovo ide na prvu stranicu.', 'Kako to radi? Reci polako, da zapišem.'],
+      },
+      wheelZagorka: {
+        before: [
+          'Veliki kotač stoji. Ljudi kažu da je uklet.',
+          'Ja kažem da treba pametna glava. Probaš?',
+        ],
+        after: ['Okreće se! Sutra naslov: kotač opet radi.', 'A ime? Napisat ću: netko pametan.'],
+      },
       canalNikola: {
         before: [
           'Voda teče! Automat se uplašio i pobjegao niz ulicu.',
