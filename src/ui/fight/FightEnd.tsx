@@ -6,12 +6,18 @@ import type { FightEnd } from '@/store/fight-end';
 /**
  * The strike's banner (story 3.2; GDD: "the banner shows the sum, such as 6 · 3 + 2 = 20"):
  * his `a · x + b` with the total, and what it did: a clean cut, the armour it took, or the
- * automaton denting him back.
+ * automaton denting him back. `mark` lights or dims it for the guided first fight.
  */
-export function StrikeBanner({ strike }: { strike: StrikeRecord }) {
+export function StrikeBanner({
+  strike,
+  mark = {},
+}: {
+  strike: StrikeRecord;
+  mark?: { 'data-focus'?: true; 'data-dim'?: true };
+}) {
   const { blade, blows, charge, damage, armourBefore, armourAfter, clean, dented } = strike;
   return (
-    <div className="fight__banner" role="status" data-clean={clean || undefined}>
+    <div className="fight__banner" role="status" data-clean={clean || undefined} {...mark}>
       <p className="fight__sum">
         {blade} · {blows} + {charge} = <b>{formatNumber(damage)}</b>
       </p>
@@ -24,20 +30,29 @@ export function StrikeBanner({ strike }: { strike: StrikeRecord }) {
   );
 }
 
-/** How the fight ended, and the way back to the map (story 3.2; parts join in story 3.3). */
+/**
+ * How the fight ended, and the way back to the map (story 3.2; parts join in story 3.3).
+ * `locked` while the guided first fight still has lines to say: the way back waits for it.
+ */
 export function FightEndPanel({
   fight,
   end,
+  locked = false,
   onClose,
 }: {
   fight: FightState;
   end: FightEnd | null;
+  locked?: boolean;
   onClose(): void;
 }) {
   const won = fight.phase === 'won';
   const reason = end?.reason ?? (fight.outcome && !fight.outcome.won ? fight.outcome.reason : null);
   return (
-    <section className="fight__end" aria-label={won ? hr.fight.won : hr.fight.lost}>
+    <section
+      className="fight__end"
+      aria-label={won ? hr.fight.won : hr.fight.lost}
+      data-dim={locked || undefined}
+    >
       <h2 className="fight__end-title">{won ? hr.fight.won : hr.fight.lost}</h2>
       {!won && reason && <p className="fight__end-reason">{hr.fight.reasons[reason]}</p>}
       {end && won && (
@@ -55,7 +70,7 @@ export function FightEndPanel({
           {end.dropped > 0 ? hr.fight.dropped(end.dropped) : hr.fight.droppedNone}
         </p>
       )}
-      <button type="button" className="fight__close" onClick={onClose}>
+      <button type="button" className="fight__close" disabled={locked} onClick={onClose}>
         {hr.fight.back}
       </button>
     </section>

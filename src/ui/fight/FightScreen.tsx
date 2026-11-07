@@ -3,12 +3,14 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { lairs } from '@/content/lairs';
 import { hr } from '@/content/text/hr';
 import { blowRange, blowsAffordable, placedValues, SLOTS } from '@/fight/fight';
+import { type GuideStep, guideDice } from '@/fight/guide';
 import type { FightAction, FightState, Slot } from '@/fight/types';
 import { formatNumber } from '@/math/format';
 import type { FightEnd } from '@/store/fight-end';
 import { useGame } from '@/store/store';
 import { PartsCounterView, partsFlightMs } from '@/ui/common/PartsCounter';
 import { FightEndPanel, LeaveConfirm, StrikeBanner } from '@/ui/fight/FightEnd';
+import { FightGuide, guideMark } from '@/ui/fight/FightGuide';
 import { Automaton, DieFace, PunchedTape } from '@/ui/fight/fight-art';
 import { type Tap, tapDie, tapLeave, tapSlot } from '@/ui/fight/taps';
 import { PageReturned } from '@/ui/pages/TornPages';
@@ -18,11 +20,13 @@ import { PageReturned } from '@/ui/pages/TornPages';
  * left, his bench on the right. He rolls, taps a die and then a slot to place it as blade
  * `a`, charge `b` or reach, and sets his blows on the dial, seeing `a · x + b` with his
  * numbers but never the total. HTML and SVG like the map, so every control is a real
- * button at least 48 CSS px.
+ * button at least 48 CSS px. Every stat and slot carries a one-line caption, and the first
+ * fight is guided by Nikola (fight/guide.ts).
  */
 export function FightScreen() {
   const fight = useGame((s) => s.fight);
   const end = useGame((s) => s.ui.fightEnd);
+  const guide = useGame((s) => s.ui.fightGuide);
   const parts = useGame((s) => s.save.economy.parts);
   const piles = useGame((s) => s.save.economy.piles);
   const dispatch = useGame((s) => s.dispatch);
@@ -31,6 +35,7 @@ export function FightScreen() {
     <FightBoard
       fight={fight}
       end={end}
+      guide={guide}
       pile={fight.strikes === 0 ? (piles[fight.lairId] ?? 0) : 0}
       onAction={dispatch}
     >
@@ -63,6 +68,8 @@ function FightParts({ parts, end }: { parts: number; end: FightEnd | null }) {
   );
 }
 
+type BoardAction = FightAction | { type: 'fight/close' } | { type: 'fight/guide-next' };
+
 interface BoardProps {
   fight: FightState;
   /** Parts he left at this lair by losing before, waiting to be won back (story 3.3). */
@@ -71,11 +78,20 @@ interface BoardProps {
   children?: ReactNode;
   /** How the fight ended, once it has (store/fight-end.ts). */
   end?: FightEnd | null;
-  onAction(action: FightAction | { type: 'fight/close' }): void;
+  /** The guided first fight's step, or null with no guide (fight/guide.ts). */
+  guide?: GuideStep | null;
+  onAction(action: BoardAction): void;
 }
 
 /** The fight from props only. */
-export function FightBoard({ fight, end = null, pile = 0, onAction, children }: BoardProps) {
+export function FightBoard({
+  fight,
+  end = null,
+  guide = null,
+  pile = 0,
+  onAction,
+  children,
+}: BoardProps) {
   const lair = lairs[fight.lairId];
   // Leaving after a strike loses the fight, so he is asked first (story 3.2).
   const [askLeave, setAskLeave] = useState(false);
@@ -116,9 +132,16 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
   };
   const onDie = (die: number) => apply(tapDie(held, die));
   const onSlot = (slot: Slot) => apply(tapSlot(held, slot, fight.slots));
+  // While the guide shows, only what its step asks for can be tapped (fight/guide.ts).
+  const guideLets = (step: GuideStep) => guide === null || guide === step;
+  const guidedDice = guide === null ? null : guideDice(guide, fight);
 
   return (
-    <main className="fight" aria-label={hr.fight.title(lair.armour)}>
+    <main
+      className="fight"
+      aria-label={hr.fight.title(lair.armour)}
+      data-guide={guide ?? undefined}
+    >
       <section className="fight__foe">
         {!over && (
           <button type="button" className="fight__leave" onClick={leave}>
@@ -135,18 +158,24 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
           }
         />
         {fight.phase === 'won' && <PunchedTape className="fight__tape" />}
-        <Armour armour={fight.armour} full={lair.armour} />
+        <Armour armour={fight.armour} full={lair.armour} guide={guide} />
         {pile > 0 && <p className="fight__pile">{hr.fight.pileHere(pile)}</p>}
+        {guide && <FightGuide step={guide} onNext={() => onAction({ type: 'fight/guide-next' })} />}
       </section>
       <section className="fight__bench">
-        <Gauges key={`hull-${fight.hull}`} fight={fight} />
+        <Gauges key={`hull-${fight.hull}`} fight={fight} guide={guide} />
         {fight.lastStrike && (fight.phase === 'strike' || (over && !leftEarly)) && (
-          <StrikeBanner key={fight.strikes} strike={fight.lastStrike} />
+          <StrikeBanner
+            key={fight.strikes}
+            strike={fight.lastStrike}
+            mark={guideMark(guide, 'banner')}
+          />
         )}
         {over ? (
           <FightEndPanel
             fight={fight}
             end={end}
+            locked={guide !== null}
             onClose={() => onAction({ type: 'fight/close' })}
           />
         ) : (
@@ -178,6 +207,8 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
             <button
               type="button"
               className="fight__roll"
+              disabled={!guideLets('roll')}
+              {...guideMark(guide, 'roll')}
               onClick={() => onAction({ type: 'fight/roll' })}
             >
               {hr.fight.roll}
@@ -185,6 +216,14 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
           ) : (
             fight.dice.map((value, die) => {
               const slot = slotOf(die);
+              // The guide lets him pick up only the die it asks for, and lights it.
+              const guided = guidedDice === null || guidedDice.includes(die);
+              const mark =
+                guidedDice === null || guidedDice.length === 0
+                  ? guideMark(guide, 'dice')
+                  : guided
+                    ? { 'data-focus': true as const }
+                    : { 'data-dim': true as const };
               return (
                 <button
                   // biome-ignore lint/suspicious/noArrayIndexKey: a die is its place in the roll
@@ -195,7 +234,8 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
                   data-held={held === die || undefined}
                   data-placed={slot !== null || undefined}
                   aria-pressed={held === die}
-                  disabled={!placing}
+                  disabled={!placing || !guided}
+                  {...mark}
                   aria-label={
                     slot ? hr.fight.dieIn(value, hr.fight.slots[slot]) : hr.fight.die(value)
                   }
@@ -207,7 +247,7 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
             })
           )}
         </div>
-        {placing && fight.slots.blade === null && held === null && (
+        {placing && fight.slots.blade === null && held === null && guide === null && (
           <p className="fight__tag">
             {fight.dice.length > 3 ? hr.fight.placeTagFour : hr.fight.placeTag}
           </p>
@@ -224,7 +264,12 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
                 data-filled={value !== null || undefined}
                 data-ready={held !== null || undefined}
                 data-off={!placing || undefined}
-                disabled={!placing || (held === null && value === null)}
+                disabled={
+                  !placing ||
+                  (held === null && value === null) ||
+                  (guide !== null && (guide !== slot || held === null))
+                }
+                {...guideMark(guide, slot)}
                 aria-label={`${hr.fight.slots[slot]}: ${value === null ? hr.fight.emptySlot : value}`}
                 onClick={() => onSlot(slot)}
               >
@@ -243,12 +288,17 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
         </div>
         {fight.phase !== 'strike' && (
           <>
-            <Formula fight={fight} />
-            <Blows fight={fight} onBlows={(x) => onAction({ type: 'fight/blows', x })} />
+            <Formula fight={fight} guide={guide} />
+            <Blows
+              fight={fight}
+              guide={guide}
+              onBlows={(x) => onAction({ type: 'fight/blows', x })}
+            />
             <button
               type="button"
               className="fight__strike"
-              disabled={fight.phase !== 'set'}
+              disabled={fight.phase !== 'set' || !guideLets('strike')}
+              {...guideMark(guide, 'strike')}
               onClick={() => {
                 setHeld(null);
                 onAction({ type: 'fight/strike' });
@@ -275,21 +325,40 @@ export function showsPage(
   return end?.page != null && due === end && read !== end;
 }
 
-/** The automaton's armour: what is left, as a number and a bar. */
-function Armour({ armour, full }: { armour: number; full: number }) {
+/** The automaton's armour: what is left, as a number and a bar, and what it means. */
+function Armour({
+  armour,
+  full,
+  guide,
+}: {
+  armour: number;
+  full: number;
+  guide: GuideStep | null;
+}) {
   return (
-    <div className="fight__armour" role="status">
+    <div className="fight__armour" role="status" {...guideMark(guide, 'armour')}>
       <span className="fight__armour-label">{hr.fight.armour}</span>
       <span className="fight__armour-number">{formatNumber(armour)}</span>
       <span className="fight__armour-bar" aria-hidden="true">
         <span style={{ width: `${(armour / full) * 100}%` }} />
       </span>
+      <span className="fight__caption fight__armour-caption">{hr.fight.captions.armour}</span>
     </div>
   );
 }
 
+/** A stat's or control's name, with its one-line caption under it. */
+function Named({ name, caption }: { name: ReactNode; caption: string }) {
+  return (
+    <span className="fight__named">
+      <span className="fight__gauge-label">{name}</span>
+      <span className="fight__caption">{caption}</span>
+    </span>
+  );
+}
+
 /** His hull (a plate for each dent he can take) and steam (a pip for each blow). */
-function Gauges({ fight }: { fight: FightState }) {
+function Gauges({ fight, guide }: { fight: FightState; guide: GuideStep | null }) {
   const { limits } = fight;
   const hit = fight.phase === 'strike' && fight.lastStrike?.dented === true;
   return (
@@ -298,19 +367,23 @@ function Gauges({ fight }: { fight: FightState }) {
         className="fight__gauge"
         role="img"
         aria-label={hr.fight.left(hr.fight.hull, fight.hull, limits.hull)}
+        {...guideMark(guide, 'hull')}
       >
-        <span className="fight__gauge-label">{hr.fight.hull}</span>
-        {Array.from({ length: limits.hull }, (_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: plates are places, not items
-          <span key={i} className="fight__plate" data-dented={i >= fight.hull || undefined} />
-        ))}
+        <Named name={hr.fight.hull} caption={hr.fight.captions.hull} />
+        <span className="fight__plates">
+          {Array.from({ length: limits.hull }, (_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: plates are places, not items
+            <span key={i} className="fight__plate" data-dented={i >= fight.hull || undefined} />
+          ))}
+        </span>
       </div>
       <div
         className="fight__gauge"
         role="img"
         aria-label={hr.fight.left(hr.fight.steam, fight.steam, limits.steam)}
+        {...guideMark(guide, 'steam')}
       >
-        <span className="fight__gauge-label">{hr.fight.steam}</span>
+        <Named name={hr.fight.steam} caption={hr.fight.captions.steam} />
         <span className="fight__pips">
           {Array.from({ length: limits.steam }, (_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: pips are places, not items
@@ -324,53 +397,73 @@ function Gauges({ fight }: { fight: FightState }) {
 
 /**
  * `a · x + b` with his numbers as he places them, and the blows for x once the dial is open.
- * Never the total: that comes only with the strike (story 3.2).
+ * Never the total: that comes only with the strike (story 3.2), and its caption says so.
  */
-function Formula({ fight }: { fight: FightState }) {
+function Formula({ fight, guide }: { fight: FightState; guide: GuideStep | null }) {
   const { blade, charge } = placedValues(fight);
   const set = fight.phase === 'set';
   const part = (value: number | null, letter: string) =>
     value === null ? <var>{letter}</var> : <b>{value}</b>;
   return (
-    <p className="fight__formula" data-testid="formula">
-      {part(blade, 'a')} · {set ? <b>{fight.blows}</b> : <var>x</var>} + {part(charge, 'b')}
-    </p>
+    <div className="fight__formula-box" {...guideMark(guide, 'formula')}>
+      <p className="fight__formula" data-testid="formula">
+        {part(blade, 'a')} · {set ? <b>{fight.blows}</b> : <var>x</var>} + {part(charge, 'b')}
+      </p>
+      <p className="fight__caption">{hr.fight.captions.formula}</p>
+    </div>
   );
 }
 
 /**
  * The blows dial: a notch for each blow up to the reach die, past what steam pays for
- * shown off. Open only once all three slots are filled.
+ * shown off. Open only once all three slots are filled, and in the guided fight only from
+ * the guide's blows step on.
  */
-function Blows({ fight, onBlows }: { fight: FightState; onBlows(x: number): void }) {
+function Blows({
+  fight,
+  guide,
+  onBlows,
+}: {
+  fight: FightState;
+  guide: GuideStep | null;
+  onBlows(x: number): void;
+}) {
   const range = blowRange(fight);
   const reach = placedValues(fight).reach;
   const notches = reach ?? 6;
   const affordable = blowsAffordable(fight.steam);
+  const guideOpen = guide === null || guide === 'blows' || guide === 'strike';
   return (
-    <fieldset className="fight__blows" aria-label={hr.fight.blows}>
-      <span className="fight__blows-label">
-        {hr.fight.blows} <var>x</var>
+    <fieldset className="fight__blows" aria-label={hr.fight.blows} {...guideMark(guide, 'blows')}>
+      <Named
+        name={
+          <>
+            {hr.fight.blows} <var>x</var>
+          </>
+        }
+        caption={hr.fight.captions.blows}
+      />
+      <span className="fight__notches">
+        {Array.from({ length: notches }, (_, i) => {
+          const x = i + 1;
+          const open = guideOpen && range !== null && x >= range.min && x <= range.max;
+          return (
+            <button
+              key={x}
+              type="button"
+              className="fight__notch"
+              data-x={x}
+              aria-pressed={range !== null && fight.blows === x}
+              aria-label={hr.fight.blowsNotch(x)}
+              data-unaffordable={x > affordable || undefined}
+              disabled={!open}
+              onClick={() => onBlows(x)}
+            >
+              {x}
+            </button>
+          );
+        })}
       </span>
-      {Array.from({ length: notches }, (_, i) => {
-        const x = i + 1;
-        const open = range !== null && x >= range.min && x <= range.max;
-        return (
-          <button
-            key={x}
-            type="button"
-            className="fight__notch"
-            data-x={x}
-            aria-pressed={range !== null && fight.blows === x}
-            aria-label={hr.fight.blowsNotch(x)}
-            data-unaffordable={x > affordable || undefined}
-            disabled={!open}
-            onClick={() => onBlows(x)}
-          >
-            {x}
-          </button>
-        );
-      })}
     </fieldset>
   );
 }

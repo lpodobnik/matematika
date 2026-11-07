@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { lairs } from '@/content/lairs';
 import { hr } from '@/content/text/hr';
 import { reduceFight, startFight } from '@/fight/fight';
+import type { GuideStep } from '@/fight/guide';
 import type { FightAction, FightState } from '@/fight/types';
 import { LeaveConfirm } from '@/ui/fight/FightEnd';
 import { FightBoard, showsPage } from '@/ui/fight/FightScreen';
@@ -271,5 +272,70 @@ describe('a torn page returned by a win (story 3.4)', () => {
     const html = renderToString(<FightBoard fight={won} end={end} onAction={() => undefined} />);
     expect(html).not.toContain('data-page=');
     expect(text(html)).toContain(hr.fight.paid(9));
+  });
+});
+
+describe('labels that explain the fight (every fight)', () => {
+  it('captions the armour, hull, steam, slots, formula and blows in plain words', () => {
+    const page = text(board(rolled));
+    for (const caption of Object.values(hr.fight.captions)) expect(page).toContain(caption);
+    for (const hint of Object.values(hr.fight.slotHints)) expect(page).toContain(hint);
+  });
+
+  it('keeps every caption and slot hint visible on a phone', () => {
+    const phone = css.slice(css.indexOf('@media (max-height: 499.98px)'));
+    const hidden = phone.match(/([^{}]+)\{\s*display:\s*none;?\s*\}/g) ?? [];
+    for (const rule of hidden) expect(rule).not.toMatch(/fight__(caption|slot-hint|named)/);
+  });
+});
+
+describe('the guided first fight on screen', () => {
+  const guided = (fight: FightState, step: GuideStep) =>
+    renderToString(<FightBoard fight={fight} guide={step} onAction={() => undefined} />);
+
+  it('shows nothing of the guide without one', () => {
+    expect(board(fresh)).not.toContain('fight__guide');
+    expect(board(fresh)).not.toContain('data-focus');
+  });
+
+  it('shows Nikola’s line, and "Dalje" only on a step he reads', () => {
+    const armour = guided(fresh, 'armour');
+    expect(text(armour)).toContain(hr.story.speakers.nikola);
+    expect(text(armour)).toContain(hr.fightGuide.steps.armour[0]);
+    expect(armour).toContain(`>${hr.fightGuide.next}<`);
+    // The roll waits for the guide.
+    expect(armour).toMatch(/<button type="button" class="fight__roll" disabled=""/);
+    const roll = guided(fresh, 'roll');
+    expect(roll).not.toContain('fight__guide-next');
+    expect(roll).not.toMatch(/class="fight__roll" disabled/);
+    expect(roll).toMatch(/class="fight__roll"[^>]*data-focus/);
+  });
+
+  it('lights only the die and slot the step asks for, and dims the rest', () => {
+    const html = guided(rolled, 'blade');
+    const top = Math.max(...rolled.dice);
+    const dice = [...html.matchAll(/<button[^>]*class="fight__die"[^>]*>/g)].map((m) => m[0]);
+    expect(dice).toHaveLength(3);
+    for (const [i, die] of dice.entries()) {
+      const allowed = rolled.dice[i] === top;
+      expect(die.includes('disabled'), die).toBe(!allowed);
+      expect(die.includes('data-focus'), die).toBe(allowed);
+    }
+    expect(html).toMatch(/data-slot="blade"[^>]*data-focus/);
+    expect(html).toMatch(/data-slot="reach"[^>]*data-dim/);
+    expect(html).toMatch(/class="fight__formula-box" data-dim/);
+  });
+
+  it('keeps the way back shut over a won fight while the guide still talks', () => {
+    const won = {
+      ...struck,
+      phase: 'won' as const,
+      outcome: { won: true as const, clean: false, reward: 9 },
+    };
+    const html = renderToString(
+      <FightBoard fight={won} guide="steam" onAction={() => undefined} />,
+    );
+    expect(html).toMatch(/class="fight__close" disabled/);
+    expect(text(html)).toContain(hr.fightGuide.steps.steam[1]);
   });
 });

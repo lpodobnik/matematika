@@ -3,13 +3,22 @@
 // other action on. The fight's rules are pure (fight/fight.ts, fight/settle.ts); this layer
 // only starts a fight, keeps it in `state.fight`, settles it once in the same step that it
 // ends (so the save, which never holds a finished fight, can't settle it twice), and moves
-// between the map and the fight screen.
+// between the map and the fight screen. The guided first fight (fight/guide.ts) rides on
+// it: while a guide step shows, only the move it asks for reaches the fight.
 
 import { castDraft, produce } from 'immer';
 import { nodeState, type Reach } from '@/city/reach';
 import { LAIR_ORDER, lairs } from '@/content/lairs';
 import { districtMap } from '@/content/map';
 import { fightInProgress, reduceFight, startFight } from '@/fight/fight';
+import {
+  GUIDE_START,
+  guideAfter,
+  guideAllows,
+  guideNext,
+  guideResume,
+  guideTalks,
+} from '@/fight/guide';
 import { seedFrom } from '@/fight/rng';
 import { asleepLairs, settleFight } from '@/fight/settle';
 import type { FightAction, FightState, LairId } from '@/fight/types';
@@ -35,6 +44,20 @@ const fightActions: ReadonlySet<Action['type']> = new Set<Action['type']>([
 const isFightAction = (action: Action): action is FightAction => fightActions.has(action.type);
 
 const unchanged = (state: GameState): Step => ({ state, events: [] });
+
+/** He has been through the guided first fight (`fight-guide` in his first uses). */
+const guideMet = (state: GameState): boolean =>
+  state.save.progress.firstUse.includes('fight-guide');
+
+/** The guide is over: it goes, and is met for good, so it never shows again. */
+function endGuide(state: GameState): GameState {
+  return produce(state, (draft) => {
+    draft.ui.fightGuide = null;
+    if (!draft.save.progress.firstUse.includes('fight-guide')) {
+      draft.save.progress.firstUse.push('fight-guide');
+    }
+  });
+}
 
 /**
  * Whether he can walk into a lair now: from the map, with no fight on, a lair he has seen
@@ -69,13 +92,62 @@ function enterLair(state: GameState, lairId: LairId, authored: readonly string[]
     draft.save.economy.seeds[lairId] = seed;
     draft.ui.fightEnd = null;
     draft.ui.fresh = null;
+    draft.ui.fightGuide = guideMet(state) ? null : GUIDE_START;
     draft.ui.screen = 'fight';
   });
   return { state: next, events: [{ type: 'FightStarted', lairId }, { type: 'SaveChanged' }] };
 }
 
-/** A fight action on the fight screen; a fight that ends is settled in the same step. */
+/**
+ * A fight action on the fight screen, with the guided first fight around it: the guide lets
+ * through only the move its step asks for, and moves on with it.
+ */
 function fightStep(state: GameState, action: FightAction, now: number): Step {
+  const fight = state.fight;
+  const guide = state.ui.fightGuide;
+  if (state.ui.screen !== 'fight' || !fightInProgress(fight) || guide === null) {
+    return ruleStep(state, action, now);
+  }
+  if (!guideAllows(guide, fight, action)) return unchanged(state);
+  const result = ruleStep(state, action, now);
+  if (action.type === 'fight/leave') {
+    // Leaving after a strike ends the fight: he has seen a whole round, so the guide is met.
+    // Leaving before it is free, and the guide comes back with the next fight.
+    if (fight.strikes > 0) return { state: endGuide(result.state), events: guideSaved(result) };
+    return result;
+  }
+  const after = result.state.fight;
+  const nextStep = after ? guideAfter(guide, after, action) : guide;
+  if (nextStep === guide) return result;
+  const next = produce(result.state, (draft) => {
+    draft.ui.fightGuide = nextStep;
+  });
+  return { state: next, events: result.events };
+}
+
+/** The events of a step that also met the guide: the save is written for it. */
+function guideSaved(result: Step): DomainEvent[] {
+  return result.events.some((event) => event.type === 'SaveChanged')
+    ? result.events
+    : [...result.events, { type: 'SaveChanged' }];
+}
+
+/** "Dalje" on a talking step of the guide: the next step, or the guide is over and met. */
+function guideStep(state: GameState): Step {
+  const guide = state.ui.fightGuide;
+  if (state.ui.screen !== 'fight' || !state.fight || guide === null || !guideTalks(guide)) {
+    return unchanged(state);
+  }
+  const nextStep = guideNext(guide, state.fight);
+  if (nextStep === null) return { state: endGuide(state), events: [{ type: 'SaveChanged' }] };
+  const next = produce(state, (draft) => {
+    draft.ui.fightGuide = nextStep;
+  });
+  return { state: next, events: [] };
+}
+
+/** A fight action by the fight's rules; a fight that ends is settled in the same step. */
+function ruleStep(state: GameState, action: FightAction, now: number): Step {
   const fight = state.fight;
   if (state.ui.screen !== 'fight' || !fightInProgress(fight)) return unchanged(state);
   const step = reduceFight(fight, action);
@@ -85,6 +157,7 @@ function fightStep(state: GameState, action: FightAction, now: number): Step {
     const next = produce(state, (draft) => {
       draft.fight = null;
       draft.ui.fightEnd = null;
+      draft.ui.fightGuide = null;
       draft.ui.screen = 'map';
     });
     return { state: next, events: [...step.events, { type: 'FightLeft', lairId: fight.lairId }] };
@@ -138,11 +211,12 @@ function settle(
   };
 }
 
-/** Off the end of a fight, back to the map. */
+/** Off the end of a fight, back to the map; not while the guide still has something to say. */
 function closeFight(state: GameState): Step {
   if (state.ui.screen !== 'fight' || !state.fight || fightInProgress(state.fight)) {
     return unchanged(state);
   }
+  if (state.ui.fightGuide !== null) return unchanged(state);
   const next = produce(state, (draft) => {
     draft.fight = null;
     draft.ui.fightEnd = null;
@@ -158,6 +232,7 @@ function resumeFight(result: Step, fight: FightState | null): Step {
   const next = produce(state, (draft) => {
     draft.fight = castDraft(fight);
     draft.ui.fightEnd = null;
+    draft.ui.fightGuide = guideMet(state) ? null : guideResume(fight);
     draft.ui.screen = 'fight';
   });
   return { state: next, events: result.events };
@@ -182,6 +257,8 @@ export function withFights(inner: Reduce, roomList: readonly RoomSpec[]): Reduce
     switch (action.type) {
       case 'fight/close':
         return closeFight(state);
+      case 'fight/guide-next':
+        return guideStep(state);
       case 'map/travel':
         if (isLair(action.node)) return enterLair(state, action.node, authored, ctx);
         break;
@@ -210,6 +287,7 @@ export function withFights(inner: Reduce, roomList: readonly RoomSpec[]): Reduce
       const next = produce(result.state, (draft) => {
         draft.fight = null;
         draft.ui.fightEnd = null;
+        draft.ui.fightGuide = null;
       });
       return { state: next, events: result.events };
     }

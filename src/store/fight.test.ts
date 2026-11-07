@@ -35,6 +35,8 @@ function game(roomsDone: RoomsDone = ['r01', 'r02'], parts = 0, seed: number | n
       progress: {
         ...save.progress,
         introSeen: true,
+        // Past the guided first fight (fight/guide.ts), which has its own tests.
+        firstUse: ['fight-guide'],
         roomsDone,
         onMap: true,
         told: [...roomsDone],

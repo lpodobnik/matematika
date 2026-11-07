@@ -35,6 +35,7 @@ describe('the store', () => {
       copies: 1,
       hint: null,
       fightEnd: null,
+      fightGuide: null,
       fightSeed: null,
     });
   });
