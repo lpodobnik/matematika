@@ -7,6 +7,7 @@ import * as q from '@/math/rational';
 import type { RoomEvent } from '@/room/events';
 import { openingPhase, touchMachine } from '@/room/phases';
 import { currentStageSpec, hasPin, pokeNotches } from '@/room/room';
+import { storyWaits } from '@/room/story';
 import { isLevel, sideValues } from '@/room/tilt';
 import type {
   BalanceMemory,
@@ -66,7 +67,10 @@ export function dialTurnsIn(stage: StageSpec, phase: Phase): boolean {
  */
 export function dialTurnsNow(room: RoomState): boolean {
   const { stage } = room;
-  return stage.jam === null && dialTurnsIn(currentStageSpec(room), stage.phase);
+  // Story 4.5: nor while the story waits to be written.
+  return (
+    stage.jam === null && dialTurnsIn(currentStageSpec(room), stage.phase) && !storyWaits(room)
+  );
 }
 
 /**

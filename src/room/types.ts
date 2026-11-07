@@ -60,6 +60,7 @@ export const ideaIds = [
   'mistake',
   'inverse',
   'take-away',
+  'story',
 ] as const;
 export type IdeaId = (typeof ideaIds)[number];
 export type ToolId = (typeof toolIds)[number];
@@ -118,8 +119,18 @@ export interface StageSpec {
   blinds?: { readouts?: true; stillPans?: true; shortDial?: number };
   /** Story 4.2: the tray also holds an x-gear (GDD room 9: from here on). */
   trayGear?: true;
+  /**
+   * Story 4.5, a story stage (room 10): `build`, a story he writes as the stage's equation
+   * before the pans fill; or `options`, the stories a `story-choice` pin chooses among, each
+   * with the equation it tells (content tests: exactly one is the stage's).
+   */
+  story?: { build?: StoryKey; options?: { key: StoryKey; equation: string }[] };
   drum?: true;
 }
+
+/** The stories of story stages (story 4.5), the keys of their text in `hr.stories`. */
+export const storyKeys = ['wrench', 'five-cogs', 'box-two-cogs', 'box-nineteen'] as const;
+export type StoryKey = (typeof storyKeys)[number];
 
 /**
  * What an `effect` pin's options say will happen as x grows (story 1.15): the whole scale
@@ -161,6 +172,7 @@ export interface PinState {
  * the pans, so he writes how much x is.
  */
 export const handoverIds = [
+  'story',
   'dial',
   'rewrite',
   'write',
@@ -227,7 +239,7 @@ export type Jam = {
  * line before the pans are simplified, in a stage that Try values can't finish
  * (room/notebook.ts, `answerAllowed`). Its text is in hr.ts (`hr.refusal`).
  */
-export type Refusal = 'simplify';
+export type Refusal = 'simplify' | 'story';
 
 /**
  * What the stage remembers about Balance, so the tray and the splitter appear one at a

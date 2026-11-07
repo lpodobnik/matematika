@@ -18,6 +18,7 @@ import { canonicalSolution } from '@/math/steps';
 import { wayOf } from '@/room/hint';
 import { lineProgress } from '@/room/notebook';
 import { currentStageSpec, machineEquation } from '@/room/room';
+import { storyWaits } from '@/room/story';
 import { trayHasGear } from '@/room/tray';
 import type { HintLevel, RoomState, ToolId } from '@/room/types';
 
@@ -90,6 +91,8 @@ const exampleSolutions = [3, 4, 2, 5, 6, 7, 8, 9, 10, 12, 15, 20];
  * the right, or where no small whole-number example exists.
  */
 export function workedExample(room: RoomState, tools: readonly ToolId[]): Equation[] | null {
+  // Story 4.5 review: while a story waits, the step is writing it, not solving it.
+  if (storyWaits(room)) return null;
   const spec = currentStageSpec(room);
   const stage = machineEquation(spec, room.stage.machine);
   if (spec.type === 'compare') return comparedExample(stage);

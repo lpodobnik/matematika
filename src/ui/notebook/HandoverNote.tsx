@@ -9,10 +9,11 @@ import { hr } from '@/content/text/hr';
 import type { Refusal } from '@/room/types';
 
 /** The handover steps whose tags hang at the notebook. */
-export type NotebookHandover = 'write' | 'answer' | 'check' | 'rewrite' | 'chain';
+export type NotebookHandover = 'write' | 'answer' | 'check' | 'rewrite' | 'chain' | 'story';
 
 export function isNotebookHandover(id: string | null): id is NotebookHandover {
-  return id === 'write' || id === 'answer' || id === 'check' || id === 'rewrite' || id === 'chain';
+  const ids: readonly string[] = ['write', 'answer', 'check', 'rewrite', 'chain', 'story'];
+  return id !== null && ids.includes(id);
 }
 
 /** The paper tag with its text, at least 20 CSS px (notebook.css). */

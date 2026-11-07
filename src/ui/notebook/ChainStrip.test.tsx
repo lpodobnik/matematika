@@ -91,7 +91,7 @@ describe('the pick (story 4.1)', () => {
   });
 
   it('keeps every control at least 48 CSS px on a phone too (story 4.1 review)', () => {
-    const phone = css.slice(css.lastIndexOf('@media (max-height: 499.98px)'));
+    const phone = css.slice(css.indexOf('@media (max-height: 499.98px) {\n  .chain {'));
     expect(phone).toMatch(/\.chain__link--last \{[^}]*min-height: 48px/);
     expect(phone).toMatch(/\.chain-pick__cancel \{[^}]*min-height: 48px/);
     expect(phone).toMatch(/\.chain-pick__op,\s*\.chain-pick__run,[^}]*min-height: 48px/);

@@ -36,6 +36,7 @@ import { tuning } from '@/config/tuning';
 import { inverseOf, type LinkOp, lastLink } from '@/math/chain';
 import { stageSolution } from '@/math/check';
 import { type Equation, hasX } from '@/math/expr';
+import { formatEquation } from '@/math/format';
 import { toLinear } from '@/math/linear';
 import * as q from '@/math/rational';
 import { nextStep, type StepWay } from '@/math/steps';
@@ -47,6 +48,7 @@ import { isNumberPiece, type NumberPiece, panPieces } from '@/room/pieces';
 import { pinOffered } from '@/room/pin';
 import { currentStageSpec, machineEquation } from '@/room/room';
 import { splitterOffered } from '@/room/splitter';
+import { storyWaits } from '@/room/story';
 import { trayHasGear, trayOffered } from '@/room/tray';
 import type { HandoverId, Phase, RoomState, ToolId, TrayKind } from '@/room/types';
 
@@ -84,6 +86,8 @@ export type HintMove =
    * which takes it off both sides in one move (room 9's 100).
    */
   | { kind: 'take-off'; amount: number }
+  /** Story 4.5: the story as its equation, the line to write while it waits. */
+  | { kind: 'story'; line: string }
   /** Story 4.1 review: the number for the blank a chain run left (Undo `blanks`, `4x = ☐`). */
   | { kind: 'blank'; value: number };
 
@@ -249,6 +253,9 @@ export function nextMove(room: RoomState, tools: readonly ToolId[]): HintMove | 
   if (room.stage.jam !== null) return { kind: 'jam' };
   if (pinOffered(room)) return { kind: 'pin' };
   if (hasLine(room, 'check')) return null;
+  if (storyWaits(room)) {
+    return { kind: 'story', line: formatEquation(machineEquation(currentStageSpec(room), 0)) };
+  }
   const n = solutionOf(room);
   if (hasLine(room, 'answer')) {
     return { kind: 'check', x: n, template: room.stage.templates.length > 0 };
@@ -283,6 +290,8 @@ function stepOfMove(move: HintMove, room: RoomState, tools: readonly ToolId[]): 
       return 'chain';
     case 'blank':
       return 'blank';
+    case 'story':
+      return 'story';
   }
 }
 
@@ -374,6 +383,7 @@ export function inNotebook(move: HintMove): boolean {
     move.kind === 'check' ||
     move.kind === 'jam' ||
     move.kind === 'chain' ||
-    move.kind === 'blank'
+    move.kind === 'blank' ||
+    move.kind === 'story'
   );
 }

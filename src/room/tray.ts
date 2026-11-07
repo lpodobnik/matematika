@@ -45,6 +45,7 @@ import { writeWayLine } from '@/room/notebook';
 import { isNumberPiece, numberPieceLabel, sidePieces } from '@/room/pieces';
 import { currentStageSpec, machineEquation, type RoomStep } from '@/room/room';
 import { type PieceView, xLabel } from '@/room/scale';
+import { storyWaits } from '@/room/story';
 import type {
   FadingMode,
   FirstUseId,
@@ -66,6 +67,7 @@ export const trayMinNumber = 1;
  */
 export function trayOffered(room: RoomState, tools: readonly ToolId[]): boolean {
   if (!tools.includes('balance') || room.stage.phase !== 'open') return false;
+  if (storyWaits(room)) return false;
   // A stage Try values can't finish (room 4) offers it from the start (story 1.16).
   if (!currentStageSpec(room).ways.includes('try')) return true;
   const { balance } = room.stage;

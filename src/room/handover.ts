@@ -12,6 +12,7 @@
 //   balance-goal  after a Balance move, until a side holds only x and the other no x
 //   splitter      the splitter is offered and a side holds only x, more than one x (story
 //                 1.16 review: not `x = 23 − 14`, where x is single but not yet alone)
+//   story         a story stage waits for its story to be written (story 4.5)
 //   chain         the gear chain works and he hasn't answered (story 4.1); it comes before
 //                 the tray, since the chain is room 8's new idea
 //
@@ -34,11 +35,13 @@ import { pinOffered } from '@/room/pin';
 import { currentStageSpec } from '@/room/room';
 import { scaleView, stageX } from '@/room/scale';
 import { splitterOffered } from '@/room/splitter';
+import { storyWaits } from '@/room/story';
 import { readyToSplit, trayOffered } from '@/room/tray';
 import type { FirstUseId, HandoverId, Phase, RoomState, ToolId } from '@/room/types';
 
 /** The handover steps in the order he meets them; the earliest that applies comes first. */
 export const handoverOrder: readonly HandoverId[] = [
+  'story',
   'dial',
   'rewrite',
   'write',
@@ -140,6 +143,8 @@ interface Situation {
   rewrites: boolean;
   /** Story 4.1: the gear chain works now (room/chain.ts). */
   chain: boolean;
+  /** Story 4.5: the stage's story waits to be written (room/story.ts). */
+  story: boolean;
 }
 
 function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
@@ -162,6 +167,7 @@ function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
     splitter: splitterOffered(room, tools),
     rewrites: stage.planted?.found === true,
     chain: chainWorks(room, tools),
+    story: storyWaits(room),
   };
 }
 
@@ -194,6 +200,8 @@ function applies(id: HandoverId, s: Situation): boolean {
       return s.splitter && !s.answered && s.isolated && s.splittable;
     case 'chain':
       return s.chain && !s.answered;
+    case 'story':
+      return s.open && s.story;
   }
 }
 
@@ -261,6 +269,8 @@ export function stepsTaken(
     taken.push('balance-goal');
   }
   if (move === 'split') taken.push('splitter');
+  // The story written (story 4.5).
+  if (handoverApplies('story', before, tools) && !storyWaits(after)) taken.push('story');
   // A run of the chain that didn't jam (story 4.1).
   if (move === 'chain' && after.stage.jam === null) taken.push('chain');
   return taken;

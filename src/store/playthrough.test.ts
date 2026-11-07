@@ -67,7 +67,10 @@ function freshGame() {
 type Game = ReturnType<typeof freshGame>;
 
 /** From the map, a tap on a room (story 2.2); in a room already (a test that went there), nothing. */
-function travel(game: Game, node: 'r02' | 'r03' | 'r04' | 'r05' | 'r06' | 'r07' | 'r08' | 'r09') {
+function travel(
+  game: Game,
+  node: 'r02' | 'r03' | 'r04' | 'r05' | 'r06' | 'r07' | 'r08' | 'r09' | 'r10',
+) {
   if (game.store.getState().ui.screen === 'map') game.act({ type: 'map/travel', node });
 }
 
@@ -265,8 +268,32 @@ function playRoomNine(game: Game) {
   game.act({ type: 'story/next' });
 }
 
+/**
+ * Room 10, the market scales (story 4.5): he writes the story as its equation, then finds
+ * 10 on the dial and writes both lines; then he flags the story that fits the second pans,
+ * finds 7 and writes both lines.
+ */
+function playRoomTen(game: Game) {
+  travel(game, 'r10');
+  game.act({ type: 'machine/touch' });
+  game.write('60+3x=90');
+  for (let x = 1; x <= 10; x += 1) game.act({ type: 'dial/set', x });
+  game.write('x=10');
+  game.write('60+3·10=90');
+  game.presented();
+  game.act({ type: 'machine/touch' });
+  game.act({ type: 'pin/set', value: { kind: 'choice', index: 1 } });
+  game.act({ type: 'pin/confirm' });
+  for (let x = 1; x <= 7; x += 1) game.act({ type: 'dial/set', x });
+  game.write('x=7');
+  game.write('5+2·7=19');
+  game.presented();
+  game.presented();
+  game.act({ type: 'story/next' });
+}
+
 describe('rooms 1–4 back to back (story 1.13)', () => {
-  it('runs rooms 1–9 in order, each from arrival to restart', () => {
+  it('runs rooms 1–10 in order, each from arrival to restart', () => {
     const game = freshGame();
     playRoomOne(game);
     playRoomTwo(game);
@@ -277,6 +304,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomSeven(game);
     playRoomEight(game);
     playRoomNine(game);
+    playRoomTen(game);
     expect(game.phases).toEqual([
       'r01.0:arrive',
       'r01.0:open',
@@ -353,6 +381,16 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r09.0:open',
       'r09.0:locked',
       'r09.0:restart',
+      'none',
+      // Story 4.5: room 10, the story written before the dial moves, then the story pin.
+      'r10.0:arrive',
+      'r10.0:open',
+      'r10.0:locked',
+      'r10.1:arrive',
+      'r10.1:pin',
+      'r10.1:open',
+      'r10.1:locked',
+      'r10.1:restart',
       // No room left to play: the story card, then the map.
       'none',
     ]);
@@ -369,6 +407,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomSeven(game);
     playRoomEight(game);
     playRoomNine(game);
+    playRoomTen(game);
     const milestones = game.seen.flatMap((event) => {
       if (event.type === 'StageArrived') return [`arrive ${event.roomId}.${event.stage}`];
       if (event.type === 'StageLocked') return [`lock ${event.roomId}.${event.stage}`];
@@ -409,6 +448,11 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'arrive r09.0',
       'lock r09.0',
       'restart r09',
+      'arrive r10.0',
+      'lock r10.0',
+      'arrive r10.1',
+      'lock r10.1',
+      'restart r10',
     ]);
   });
 
@@ -481,6 +525,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     });
     playRoomEight(game);
     playRoomNine(game);
+    playRoomTen(game);
     unsubscribe();
     const lines = (last as RoomState | null)?.stage.lines ?? [];
     expect(lines.map((line) => [formatTokens(line.tokens), line.source])).toEqual([
@@ -515,6 +560,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       if (state.room?.spec.id === 'r09') last = state.room;
     });
     playRoomNine(game);
+    playRoomTen(game);
     unsubscribe();
     const lines = (last as RoomState | null)?.stage.lines ?? [];
     expect(lines.map((line) => [formatTokens(line.tokens), line.source])).toEqual([
@@ -729,6 +775,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomSeven(game);
     playRoomEight(game);
     playRoomNine(game);
+    playRoomTen(game);
     unsubscribe();
     expect(screens).toEqual([
       'room',
@@ -750,10 +797,12 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'story',
       'room',
       'story',
+      'room',
+      'story',
       'map',
     ]);
     const state = game.store.getState();
-    expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r09' });
+    expect(state.ui).toMatchObject({ screen: 'map', fresh: 'r10' });
     expect(state.room).toBeNull();
     expect(state.save.progress.roomsDone).toEqual([
       'r01',
@@ -765,6 +814,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r07',
       'r08',
       'r09',
+      'r10',
     ]);
     // Room 7 earns the gear chain (story 2.3's gates).
     expect(state.save.progress.tools).toContain('chain');
@@ -781,6 +831,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     playRoomSeven(game);
     playRoomEight(game);
     playRoomNine(game);
+    playRoomTen(game);
     const done = game.store.getState();
     game.act({ type: 'clock/tick' });
     game.act({ type: 'machine/touch' });

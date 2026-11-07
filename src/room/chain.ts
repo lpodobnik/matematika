@@ -27,6 +27,7 @@ import type { RoomEvent } from '@/room/events';
 import { answerTemplate, checkTemplate, withLastLines } from '@/room/fading';
 import { writeWayLine } from '@/room/notebook';
 import { currentStageSpec, machineEquation, type RoomStep } from '@/room/room';
+import { storyWaits } from '@/room/story';
 import type { FadingMode, RoomState, StageSpec, StageState, ToolId } from '@/room/types';
 
 /** The stage's Undo line mode; a stage that lists none writes nothing for Undo. */
@@ -39,7 +40,8 @@ export function chainOffered(room: RoomState, tools: readonly ToolId[]): boolean
   return (
     tools.includes('chain') &&
     room.stage.phase === 'open' &&
-    currentStageSpec(room).ways.includes('undo')
+    currentStageSpec(room).ways.includes('undo') &&
+    !storyWaits(room)
   );
 }
 

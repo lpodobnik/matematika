@@ -45,7 +45,10 @@ import { splitterLayout } from '@/ui/scene/scale/splitter-layout';
 import { stageTrayLayout } from '@/ui/scene/scale/tray-layout';
 
 /** The handovers whose tags hang in the scene. */
-export type SceneHandover = Exclude<HandoverId, 'write' | 'answer' | 'check' | 'rewrite' | 'chain'>;
+export type SceneHandover = Exclude<
+  HandoverId,
+  'write' | 'answer' | 'check' | 'rewrite' | 'chain' | 'story'
+>;
 
 export function isSceneHandover(id: HandoverId | null): id is SceneHandover {
   return (
@@ -54,7 +57,8 @@ export function isSceneHandover(id: HandoverId | null): id is SceneHandover {
     id !== 'answer' &&
     id !== 'check' &&
     id !== 'rewrite' &&
-    id !== 'chain'
+    id !== 'chain' &&
+    id !== 'story'
   );
 }
 

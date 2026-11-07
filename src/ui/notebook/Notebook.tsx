@@ -24,6 +24,7 @@ import {
   notebookWrites,
 } from '@/room/notebook';
 import { pinOffered } from '@/room/pin';
+import { type StoryView, storyView } from '@/room/story';
 import type { NotebookLine, Refusal } from '@/room/types';
 import { useGame } from '@/store/store';
 import {
@@ -57,6 +58,7 @@ import { LogbookLine } from '@/ui/notebook/LogbookLine';
 import { NumberPad } from '@/ui/notebook/NumberPad';
 import { pressHandle, shownAside } from '@/ui/notebook/notebook-aside';
 import { keyAction, primaryPress } from '@/ui/notebook/pad-keys';
+import { StoryPanel } from '@/ui/notebook/StoryPanel';
 
 const noLines: readonly NotebookLine[] = [];
 const noTokens: Token[] = [];
@@ -94,7 +96,12 @@ export function Notebook() {
   const stageAt = useGame((s) => (s.room ? `${s.room.spec.id}.${s.room.stageIndex}` : null));
   const pinWaits = useGame((s) =>
     // A line pin (room 7) waits in the notebook itself, so it keeps the notebook out.
-    s.room ? pinOffered(s.room) && s.room.stage.planted === null : false,
+    // So does a story pin (room 10, story 4.5).
+    s.room
+      ? pinOffered(s.room) &&
+        s.room.stage.planted === null &&
+        !s.room.spec.stages[s.room.stageIndex]?.story
+      : false,
   );
   const hinting = useGame((s) => hintOf(s) !== null);
   const hintNote = useGame(notebookHint);
@@ -105,11 +112,15 @@ export function Notebook() {
   const presses = useGame((s) => s.ui.hint?.presses ?? 0);
   // Story 2.10: room 7's logbook, its lines to tap and its mistake pin, in the notebook.
   const logbook = useGame(useShallow((s) => logbookView(s.room)));
+  // Story 4.5: a story stage's story, and its story pin (room 10).
+  const storyKey = useGame((s) => JSON.stringify(storyView(s.room)));
+  const story = useMemo(() => JSON.parse(storyKey) as StoryView | null, [storyKey]);
   const onScene = hinting ? hintOnScene : step !== null && !isNotebookHandover(step);
   const shownStep = hinting ? `hint-${presses}` : step;
   const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${shownStep}` : null;
   const [broughtBack, setBroughtBack] = useState<string | null>(null);
-  const aside = shownAside(choice, waiting, broughtBack);
+  // Story 4.5 review: a story pin waits in the notebook itself, so it is always shown then.
+  const aside = shownAside(choice, waiting, broughtBack) && !story?.asks;
   const dispatch = useGame((s) => s.dispatch);
   // Story 4.1: the gear chain, and his pick for its last link while the picker is open.
   // Its links are a fresh array on every read, so the selector returns them as text.
@@ -143,7 +154,12 @@ export function Notebook() {
     [dispatch],
   );
 
-  const shown = useMemo(() => lineDisplays(lines), [lines]);
+  // While a story is built, his line is the stage's equation: line 0 stays hidden.
+  const building = story?.build != null;
+  const shown = useMemo(
+    () => lineDisplays(lines).filter((line) => !building || line.source !== 'given'),
+    [lines, building],
+  );
   const display = useMemo(() => draftDisplay({ draft, templates }), [draft, templates]);
   const send = useCallback(
     (key: NotebookKey) => {
@@ -186,6 +202,8 @@ export function Notebook() {
       onShowLine={(line) => dispatch({ type: 'notebook/show-line', line })}
       onPinLine={(index) => dispatch({ type: 'pin/set', value: { kind: 'line', index } })}
       onConfirmPin={() => dispatch({ type: 'pin/confirm' })}
+      story={story}
+      onFlagStory={(index) => dispatch({ type: 'pin/set', value: { kind: 'choice', index } })}
       chain={chain}
       pick={picking ? pick : null}
       chainPulse={chainHint}
@@ -202,6 +220,9 @@ export function Notebook() {
 }
 
 export interface NotebookPageProps {
+  /** Story 4.5: a story stage's story, or null. */
+  story?: StoryView | null;
+  onFlagStory?(index: number): void;
   /** Story 4.1: the gear chain, or null in a stage without it. */
   chain?: ChainView | null;
   /** His pick for the chain's last link while its picker is open. */
@@ -272,6 +293,8 @@ export function NotebookPage({
   refusal = null,
   help = null,
   logbook = null,
+  story = null,
+  onFlagStory = () => {},
   chain = null,
   pick = null,
   chainPulse = false,
@@ -307,7 +330,9 @@ export function NotebookPage({
     ? logbook.tapped
       ? hr.pin.questions['wrong-line']
       : hr.logbook.tap
-    : null;
+    : story?.asks
+      ? hr.pin.questions['story-choice']
+      : null;
   const listRef = useRef<HTMLOListElement>(null);
   // A tag hangs under the lines: the refusal's, else the hint's, else the handover's. Only a
   // handover's or a hint's makes the line to write pulse; a refusal's doesn't.
@@ -352,7 +377,13 @@ export function NotebookPage({
           <path d={aside ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
         </svg>
       </button>
-      <div className="notebook" data-handover={tagged} data-picking={pick !== null || undefined}>
+      <div
+        className="notebook"
+        data-handover={tagged}
+        data-picking={pick !== null || undefined}
+        data-choosing={story?.asks || undefined}
+      >
+        {story && <StoryPanel view={story} onFlag={onFlagStory} onConfirm={onConfirmPin} />}
         {chain && (
           <ChainStrip
             view={chain}

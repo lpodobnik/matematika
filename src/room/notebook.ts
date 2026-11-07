@@ -27,6 +27,7 @@ import { progressAfter } from '@/room/machine';
 import { simplified, xAlone } from '@/room/pieces';
 import { resolvePin } from '@/room/pin';
 import { currentStageSpec } from '@/room/room';
+import { storyWaits, writesStory } from '@/room/story';
 import type {
   NotebookLine,
   Phase,
@@ -101,6 +102,8 @@ export function answerAllowed(stage: StageSpec, pans: Equation): boolean {
  */
 export function refusalView(room: RoomState | null): Refusal | null {
   if (!room || room.stage.refusal === null) return null;
+  // Story 4.5: the story's tag holds while the story waits.
+  if (room.stage.refusal === 'story') return storyWaits(room) ? 'story' : null;
   return answerAllowed(currentStageSpec(room), room.stage.pans) ? null : room.stage.refusal;
 }
 
@@ -323,6 +326,11 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
   const refused = refusalOf(room, verdict, tokens);
   if (refused) {
     const next: StageState = { ...stage, refused: stage.refused + 1, refusal: refused.refusal };
+    return { room: withStage(room, next), events: [], verdict };
+  }
+  // Story 4.5: while the story waits, only the story's own equation writes it.
+  if (storyWaits(room) && verdict.kind !== 'wrong' && !writesStory(verdict)) {
+    const next: StageState = { ...stage, refused: stage.refused + 1, refusal: 'story' };
     return { room: withStage(room, next), events: [], verdict };
   }
   if (verdict.kind === 'wrong') {

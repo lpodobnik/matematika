@@ -147,6 +147,13 @@ export const hr = {
         },
         { who: 'penkala', text: 'Vožnja unatrag do početka? Toga sigurno nema u Knjizi.' },
       ],
+      r10: [
+        {
+          who: 'penkala',
+          text: (name: string) => `Vaga na tržnici je točna. Dobro, ${name}. Priznajem.`,
+        },
+        { who: 'nikola', text: 'Gospon Penkala je nešto priznao? To treba zapisati u Knjigu!' },
+      ],
       r09: [
         { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO KORACIMA. OTVARANJE NIJE PREDVIĐENO.' },
         { who: 'nikola', text: 'Pečat je pao. Ali tko lijepi te papire po cijelom gradu?' },
@@ -198,6 +205,10 @@ export const hr = {
       'take-away': {
         term: 'Oduzimanje nepoznanice',
         text: 'Kad se x oduzima, veći x čini stranu lakšom. Zato 135 − 5x = 100 vraćaš sa 135 − 100.',
+      },
+      story: {
+        term: 'Jednadžba iz priče',
+        text: 'Ono što ne znaš postaje x. Ono što je jednako stavi s obje strane znaka =.',
       },
       mistake: {
         term: 'Traženje pogreške',
@@ -323,6 +334,8 @@ export const hr = {
       'level-x': 'Postavi zastavicu na mjesto gdje će vaga biti u ravnoteži.',
       /** Story 4.4: from room 8 on, once he knows the flag (room 9's pans leave less room). */
       'level-x-short': 'Gdje će vaga biti u ravnoteži?',
+      /** Story 4.5: room 10's story pin, at the notebook: which story fits the pans. */
+      'story-choice': 'Koja priča odgovara vagi? Stavi zastavicu na nju.',
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
       /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
       change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
@@ -360,6 +373,27 @@ export const hr = {
     splitter: 'Razdjelnik dijeli obje strane na jednake dijelove.',
     /** Story 4.1: at the gear chain, when it first works: undo its last link. */
     chain: 'Dodirni zadnju kariku lanca i poništi je.',
+    /** Story 4.5: at the notebook, while a story waits to be written as its equation. */
+    story: 'Pročitaj priču i zapiši je kao jednadžbu.',
+  },
+  /**
+   * Story 4.5: the story room's stories (room 10, the market scales; `StoryKey`). Each tells
+   * the equation the room's data gives it.
+   */
+  stories: {
+    label: 'Priča',
+    /** 60 + 3x = 90. */
+    wrench:
+      'Ključ košta 60 dijelova. Ključ i 3 jednaka zupčanika zajedno koštaju 90. Koliko košta jedan zupčanik?',
+    /** 5x + 2 = 19. */
+    'five-cogs': '5 jednakih zupčanika i kutija teška 2 zajedno teže 19.',
+    /** 5 + 2x = 19: the one that fits room 10's second stage. */
+    'box-two-cogs': 'Kutija teži 5. Kutija i 2 jednaka zupčanika zajedno teže 19.',
+    /** 19 + 2x = 5. */
+    'box-nineteen': 'Kutija teži 19. Kutija i 2 jednaka zupčanika zajedno teže 5.',
+    /** For screen readers, on a story's flag. */
+    flag: (n: number) => `Zastavica na priču ${n}`,
+    confirm: 'Potvrdi',
   },
   /** Story 4.1: the gear chain at the top of the notebook (GDD, Gear chain). */
   chain: {
@@ -407,6 +441,8 @@ export const hr = {
       `Skini ${n} s obje strane: stavi balon ${balloon} na vagu.`,
     /** At the tray: a weight of n adds n to both sides. */
     add: (n: string, weight: string) => `Dodaj ${n} na obje strane: stavi uteg ${weight} na vagu.`,
+    /** Story 4.5: at the notebook, the story as its equation. */
+    story: (line: string) => `Zapiši priču kao jednadžbu: ${line}.`,
     /** Story 4.2 review: a weight too big for the tray, dragged off its pan. */
     takeOff: (n: string) => `Odvuci uteg ${n} s vage: skine se s obje strane.`,
     /** Story 4.2, at the tray: its x-gear adds that many x to both sides. */
@@ -585,5 +621,7 @@ export const hr = {
   refusal: {
     /** An answer line before the pans are simplified, where Try values can't finish. */
     simplify: 'Prvo pojednostavi vagu.',
+    /** Story 4.5: while the story waits, a line that isn't the story as it is told. */
+    story: 'Prvo zapiši priču onako kako je ispričana.',
   },
 } as const;

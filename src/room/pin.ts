@@ -35,6 +35,7 @@ import { dialMaxedAt, isOnDial } from '@/room/dial';
 import type { RoomEvent } from '@/room/events';
 import { foundMistake, plantedLineOf, writtenLineCount } from '@/room/logbook';
 import { currentStageSpec, fullDial, givenLine, machineEquation, type RoomStep } from '@/room/room';
+import { rightStory } from '@/room/story';
 import type {
   EffectOption,
   PinSpec,
@@ -60,7 +61,9 @@ export type PinTrack =
     }
   | { kind: 'choice'; options: readonly EffectOption[] }
   /** A `wrong-line` pin (room 7, story 2.10): its places are the written lines, 1 to `lines`. */
-  | { kind: 'line'; lines: number };
+  | { kind: 'line'; lines: number }
+  /** A `story-choice` pin (room 10, story 4.5): its places are the stories, in the notebook. */
+  | { kind: 'story'; options: number };
 
 /**
  * The stage's pin track, or null with no pin, or a pin kind that arrives with its rooms
@@ -77,18 +80,26 @@ export function pinTrack(stage: StageSpec): PinTrack | null {
   }
   if (pin.kind === 'effect') return { kind: 'choice', options: pin.options };
   if (pin.kind === 'wrong-line') return { kind: 'line', lines: writtenLineCount(stage) };
+  if (pin.kind === 'story-choice')
+    return { kind: 'story', options: stage.story?.options?.length ?? 0 };
   return null;
 }
 
 /** Pin kinds the engine can place and resolve so far. */
 export function pinSupported(pin: PinSpec): boolean {
-  return pin.kind === 'level-x' || pin.kind === 'effect' || pin.kind === 'wrong-line';
+  return (
+    pin.kind === 'level-x' ||
+    pin.kind === 'effect' ||
+    pin.kind === 'wrong-line' ||
+    pin.kind === 'story-choice'
+  );
 }
 
 /** How many places the track has: room 3's first stage, 6–20, has 15. */
 export function slotCount(track: PinTrack): number {
   if (track.kind === 'choice') return track.options.length;
   if (track.kind === 'line') return track.lines;
+  if (track.kind === 'story') return track.options;
   return Math.floor((track.max - track.min) / track.step) + 1;
 }
 
@@ -96,13 +107,14 @@ export function slotCount(track: PinTrack): number {
 export function slotsInReach(track: PinTrack): number {
   if (track.kind === 'choice') return track.options.length;
   if (track.kind === 'line') return track.lines;
+  if (track.kind === 'story') return track.options;
   return Math.floor((track.reach - track.min) / track.step) + 1;
 }
 
 /** The value of a place on the track. */
 export function slotValue(track: PinTrack, slot: number): PinValue {
   assert(Number.isInteger(slot) && slot >= 0 && slot < slotCount(track), `no pin place ${slot}`);
-  if (track.kind === 'choice') return { kind: 'choice', index: slot };
+  if (track.kind === 'choice' || track.kind === 'story') return { kind: 'choice', index: slot };
   if (track.kind === 'line') return { kind: 'line', index: slot + 1 };
   return { kind: 'x', x: track.min + slot * track.step };
 }
@@ -239,6 +251,8 @@ export function pinRight(stage: StageSpec, machine: number, value: PinValue): bo
   if (pin?.kind === 'wrong-line') {
     return value.kind === 'line' && value.index === plantedLineOf(stage, givenLine(stage, 0));
   }
+  if (pin?.kind === 'story-choice')
+    return value.kind === 'choice' && value.index === rightStory(stage);
   return false;
 }
 
@@ -283,7 +297,7 @@ function resultOf(right: boolean): 'right' | 'wrong' {
  * their questions in `hr.pin.questions`.
  */
 export type PinQuestion =
-  | Extract<PinSpec['kind'], 'level-x' | 'effect' | 'wrong-line'>
+  | Extract<PinSpec['kind'], 'level-x' | 'effect' | 'wrong-line' | 'story-choice'>
   | 'change'
   | 'hidden'
   /** Story 4.4: from room 8 on (a stage with Undo) he knows the flag, so it asks only where. */
@@ -327,7 +341,10 @@ export function pinView(room: RoomState | null): PinView | null {
   const spec = currentStageSpec(room);
   const track = pinTrack(spec);
   const kind = spec.pin?.kind;
-  if (!track || (kind !== 'level-x' && kind !== 'effect' && kind !== 'wrong-line')) return null;
+  if (!track || !pinSupported(spec.pin ?? { kind: 'level-x' })) return null;
+  if (kind !== 'level-x' && kind !== 'effect' && kind !== 'wrong-line' && kind !== 'story-choice') {
+    return null;
+  }
   const question: PinQuestion =
     kind !== 'level-x'
       ? kind

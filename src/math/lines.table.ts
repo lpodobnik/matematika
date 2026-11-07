@@ -34,6 +34,8 @@ const r06 = 'x + 56 = 58 + 27';
 const r07 = '3x − 1 = 17';
 const r08 = '4x + 9 = 41';
 const r09 = '135 − 5x = 100';
+const r10a = '60 + 3x = 90';
+const r10b = '5 + 2x = 19';
 /** U+202F, the thousands separator the notebook writes. */
 const nnbsp = ' ';
 const r11 = `5${nnbsp}905 − 27x = 316`;
@@ -364,6 +366,76 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r09, line: '5x = 235', verdict: 'wrong', note: '100 + 135' },
     { stage: r09, line: '5x = 135 + 100', verdict: 'wrong', note: 'the 100 added' },
     { stage: r09, before: ['5x = 35'], line: 'x = 30', verdict: 'wrong', note: '5x read as 5 + x' },
+  ],
+  'r10 market scales (60 + 3x = 90, then 5 + 2x = 19)': [
+    // Story 4.5: the story written as told, then solved every way; and the lines a story
+    // misread makes.
+    { stage: r10a, line: '60 + 3x = 90', verdict: 'valid', progress: false, move: 'none' },
+    { stage: r10a, line: '3x + 60 = 90', verdict: 'valid', progress: false, move: 'none' },
+    { stage: r10a, line: '90 = 60 + 3x', verdict: 'valid', progress: false, move: 'swap' },
+    { stage: r10a, line: 'x = 10', verdict: 'answer' },
+    { stage: r10a, before: ['x = 10'], line: '60 + 3 · 10 = 90', verdict: 'check' },
+    { stage: r10a, line: '3x = 30', verdict: 'valid', progress: true, move: 'add-both' },
+    { stage: r10a, before: ['3x = 30'], line: 'x = 10', verdict: 'answer' },
+    { stage: r10a, before: ['3x = 30', 'x = 10'], line: '60 + 3 · 10 = 90', verdict: 'check' },
+    { stage: r10a, line: '3x = 90 − 60', verdict: 'valid', progress: true, move: 'move-across' },
+    { stage: r10a, before: ['3x = 90 − 60'], line: '3x = 30', verdict: 'valid', progress: true },
+    {
+      stage: r10a,
+      before: ['3x = 90 − 60', '3x = 30'],
+      line: 'x = 30 : 3',
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r10a,
+      before: ['3x = 90 − 60', '3x = 30', 'x = 30 : 3'],
+      line: 'x = 10',
+      verdict: 'answer',
+    },
+    {
+      stage: r10a,
+      before: ['3x = 90 − 60', '3x = 30', 'x = 30 : 3', 'x = 10'],
+      line: '60 + 3 · 10 = 90',
+      verdict: 'check',
+    },
+    { stage: r10a, line: '60x + 3 = 90', verdict: 'wrong', note: 'the story misread' },
+    { stage: r10a, line: '3x = 150', verdict: 'wrong', note: '90 + 60' },
+    {
+      stage: r10a,
+      before: ['3x = 30'],
+      line: 'x = 27',
+      verdict: 'wrong',
+      note: '3x read as 3 + x',
+    },
+    { stage: r10b, line: 'x = 7', verdict: 'answer' },
+    { stage: r10b, before: ['x = 7'], line: '5 + 2 · 7 = 19', verdict: 'check' },
+    { stage: r10b, line: '2x = 14', verdict: 'valid', progress: true, move: 'add-both' },
+    { stage: r10b, before: ['2x = 14'], line: 'x = 7', verdict: 'answer' },
+    { stage: r10b, before: ['2x = 14', 'x = 7'], line: '5 + 2 · 7 = 19', verdict: 'check' },
+    { stage: r10b, line: '2x = 19 − 5', verdict: 'valid', progress: true, move: 'move-across' },
+    { stage: r10b, before: ['2x = 19 − 5'], line: '2x = 14', verdict: 'valid', progress: true },
+    {
+      stage: r10b,
+      before: ['2x = 19 − 5', '2x = 14'],
+      line: 'x = 14 : 2',
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r10b,
+      before: ['2x = 19 − 5', '2x = 14', 'x = 14 : 2'],
+      line: 'x = 7',
+      verdict: 'answer',
+    },
+    {
+      stage: r10b,
+      before: ['2x = 19 − 5', '2x = 14', 'x = 14 : 2', 'x = 7'],
+      line: '5 + 2 · 7 = 19',
+      verdict: 'check',
+    },
+    { stage: r10b, line: '2x = 24', verdict: 'wrong', note: '19 + 5' },
+    { stage: r10b, before: ['2x = 14'], line: 'x = 28', verdict: 'wrong', note: 'multiplied' },
   ],
   // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,
   // copied as a line, is valid without progress (stories 1.2, 1.4 and 1.8–1.11 name them);

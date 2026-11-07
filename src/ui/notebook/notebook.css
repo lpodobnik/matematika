@@ -701,3 +701,123 @@
     margin-top: 0;
   }
 }
+
+/* Story 4.5: a story stage's story at the top of the notebook, and its story pin. */
+.story-panel {
+  flex: 0 0 auto;
+  padding: 4px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.story-panel__story {
+  margin: 0;
+  padding: 8px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--sheet);
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.story-panel__options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story-panel__option {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.story-panel__choice {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 6px;
+  align-items: center;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--sheet);
+  color: var(--ink);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1.25;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+.story-panel__choice[aria-pressed="true"] {
+  border-width: 3px;
+  background: var(--lamp-wash);
+}
+
+.story-panel__flag {
+  flex: 0 0 1.2em;
+  font-size: 22px;
+}
+
+.story-panel__confirm {
+  display: block;
+  margin: 6px 0 0 auto;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 10px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: 18px;
+}
+
+@media (max-height: 499.98px) {
+  .story-panel__story {
+    padding: 4px 8px;
+    font-size: 15px;
+  }
+
+  .story-panel__choice {
+    padding: 2px 6px;
+    font-size: 14px;
+  }
+
+  /* The phone's notebook never grows past the screen: what sits over the lines gives way
+     and scrolls inside itself, so the pad always stays whole (story 4.5). */
+  .notebook {
+    overflow: hidden;
+  }
+
+  .story-panel {
+    flex-shrink: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* The line he writes keeps its room; the story scrolls in what is left. */
+  .notebook:has(.story-panel) .notebook__lines {
+    min-height: 1.7em;
+  }
+
+  /* While the story waits, the story says what to do: its tag gives it the room. */
+  .notebook:has(.story-panel[data-build] .story-panel__story:not([data-written]))
+    .handover-note:not(.handover-note--hint) {
+    display: none;
+  }
+
+  /* Once written, the story makes room for the chain and the lines (it is the first line). */
+  .story-panel[data-build]:has(.story-panel__story[data-written="true"]) {
+    display: none;
+  }
+
+  /* While he chooses, the stories take the pad's place: it does nothing until he confirms. */
+  .notebook[data-choosing="true"] .pad,
+  .notebook[data-choosing="true"] .notebook__lines {
+    display: none;
+  }
+}

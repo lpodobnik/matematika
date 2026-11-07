@@ -61,7 +61,11 @@ const wrongAlpha = 0.45;
  */
 export function Pin(props: Props) {
   // A line pin (room 7, story 2.10) lives in the notebook, on the lines: nothing in the scene.
-  const onLine = useGame((s) => pinView(s.room)?.kind === 'line');
+  // A line pin (room 7) and a story pin (room 10) live in the notebook.
+  const onLine = useGame((s) => {
+    const kind = pinView(s.room)?.kind;
+    return kind === 'line' || kind === 'story';
+  });
   return onLine ? null : <PinOnScale {...props} />;
 }
 

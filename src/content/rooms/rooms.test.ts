@@ -223,6 +223,23 @@ const gddRooms: readonly {
     ways: ['try', 'balance', 'undo'],
     earns: null,
   },
+  {
+    id: 'r10',
+    machine: 'market-scales',
+    xIs: 'Price of a cog',
+    equations: ['60 + 3x = 90', '5 + 2x = 19'],
+    answers: [10, 7],
+    types: ['story', 'story'],
+    dials: [
+      { min: 0, max: 15, step: 1 },
+      { min: 0, max: 15, step: 1 },
+    ],
+    // Story 4.5: the story is written before the dial moves, and the story pin before it opens.
+    pokeNotches: [undefined, undefined],
+    pins: [undefined, { kind: 'story-choice' }],
+    ways: ['try', 'balance', 'undo'],
+    earns: null,
+  },
 ];
 
 /** The x values the dial reaches before the pin is locked: the poke window. */
@@ -478,6 +495,27 @@ describe('rooms', () => {
   // room 4; Balance writes its lines in rooms 4–5, gives blanks in rooms 6–7 and a blank
   // page from room 8; Undo writes its lines in room 8, gives blanks in room 9 and a blank
   // page from room 10 (epic 4).
+  // Story 4.5: a story stage writes its story first, or chooses among stories of which
+  // exactly one tells the stage's equation.
+  it('tells each story stage’s equation in exactly one of its stories', () => {
+    for (const room of rooms) {
+      for (const stage of room.stages) {
+        if (!stage.story) continue;
+        expect(stage.type, room.id).toBe('story');
+        if (stage.story.build) {
+          expect(stage.story.options, room.id).toBeUndefined();
+          continue;
+        }
+        const equation = stageEquation(stage);
+        const fits = (stage.story.options ?? []).filter((option) =>
+          sameEquation(equationOf(option.equation), equation),
+        );
+        expect(fits, room.id).toHaveLength(1);
+        expect(stage.pin, room.id).toEqual({ kind: 'story-choice' });
+      }
+    }
+  });
+
   it('gives the tray its x-gear from room 9 on, where Balance is listed (GDD room 9)', () => {
     rooms.forEach((room, index) => {
       for (const stage of room.stages) {

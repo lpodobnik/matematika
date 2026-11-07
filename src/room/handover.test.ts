@@ -224,6 +224,7 @@ describe('which handover applies (story 1.15)', () => {
 
   it('has the answer step after write and before check (1.16), and the chain before the tray (4.1)', () => {
     expect(handoverOrder).toEqual([
+      'story',
       'dial',
       'rewrite',
       'write',

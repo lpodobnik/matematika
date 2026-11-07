@@ -66,6 +66,8 @@ function moveSpot(move: HintMove): HintSpot {
       return { place: 'scene', about: 'tray', text: hr.hint.takeOff(formatNumber(move.amount)) };
     case 'blank':
       return { place: 'notebook', text: hr.hint.blank(formatNumber(move.value)) };
+    case 'story':
+      return { place: 'notebook', text: hr.hint.story(move.line) };
     case 'chain': {
       // The link he taps is the inverse's inverse (`n − ☐` undoes itself).
       const inverse = { op: move.op, n: move.n };
@@ -95,8 +97,14 @@ export function hintSpot(view: HintView): HintSpot {
  */
 function spotIn(state: Pick<GameState, 'room' | 'save' | 'ui'>, view: HintView): HintSpot {
   const spot = hintSpot(view);
-  if (spot.place !== 'pin' || !state.room?.stage.planted) return spot;
-  return { place: 'notebook', text: hr.pin.questions['wrong-line'] };
+  if (spot.place !== 'pin' || !state.room) return spot;
+  if (state.room.stage.planted) return { place: 'notebook', text: hr.pin.questions['wrong-line'] };
+  // Story 4.5: a story pin's question hangs at the notebook too, where the stories are.
+  const stage = state.room.spec.stages[state.room.stageIndex];
+  if (stage?.pin?.kind === 'story-choice') {
+    return { place: 'notebook', text: hr.pin.questions['story-choice'] };
+  }
+  return spot;
 }
 
 /** What the hint shows in the game as it is now, or null. */

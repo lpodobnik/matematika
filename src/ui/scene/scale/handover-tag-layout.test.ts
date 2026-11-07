@@ -96,6 +96,8 @@ function situations(): { name: string; id: SceneHandover; room: RoomState; tools
       // Room 7 (story 2.10): the mistake pin is offered throughout, then the rewrite's tag
       // takes over, so the dial's tag never shows there.
       if (stageSpec.pin?.kind === 'wrong-line') return;
+      // Room 10 (story 4.5): the dial waits for the story, or for the story pin.
+      if (stageSpec.story) return;
       const open = openStage(spec, index);
       for (const x of reachable(open)) {
         list.push({

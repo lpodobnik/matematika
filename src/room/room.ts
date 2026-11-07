@@ -133,7 +133,8 @@ export function arriveAtStage(stage: StageSpec): StageState {
     refusal: null,
     jamsInARow: 0,
     machineProgress: stage.machines.map(() => 0),
-    pans: machineEquation(stage, 0),
+    // Story 4.5: a story to write opens with empty pans (room/story.ts).
+    pans: stage.story?.build ? { left: num(0), right: num(0) } : machineEquation(stage, 0),
     tray: { ...trayStart },
     splitter: tuning.splitterMinParts,
     balance: { moves: 0, dialMaxed: false, trayMet: false, splitterSeen: false },
