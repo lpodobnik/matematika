@@ -26,7 +26,7 @@ import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { Automaton } from '@/ui/fight/fight-art';
 import { MapScreen } from '@/ui/map/MapScreen';
 import { OpeningPanels } from '@/ui/opening/OpeningScreen';
-import { areaArt, looks, personArt, square } from '@/ui/town/art';
+import { areaArt, lookFacing, looks, personArt, personFacing, square } from '@/ui/town/art';
 
 const authored = rooms.map((room) => room.id);
 
@@ -162,6 +162,8 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   const meRef = useRef(start);
   const meFacing = useRef<1 | -1>(1);
   const meEl = useRef<HTMLDivElement>(null);
+  const lookRef = useRef(look);
+  lookRef.current = look;
   const botRef = useRef(botAt(area.patrol));
   const patrol = useRef(area.patrol);
   patrol.current = area.patrol;
@@ -222,7 +224,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
         writeMet(next);
       }
       meFacing.current = person.at.x >= meRef.current.x ? 1 : -1;
-      place(meEl.current, meRef.current, meFacing.current);
+      place(meEl.current, meRef.current, meFacing.current, lookFacing[lookRef.current]);
       setBubble({
         who: person.id,
         at: person.at,
@@ -265,7 +267,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
         } else {
           meRef.current = { x: at.x + (dx / d) * step, y: at.y + (dy / d) * step };
         }
-        place(meEl.current, meRef.current, meFacing.current);
+        place(meEl.current, meRef.current, meFacing.current, lookFacing[lookRef.current]);
       }
       const b = botRef.current;
       const round = patrol.current;
@@ -431,7 +433,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 src={personArt[person.id]}
                 alt=""
                 draggable={false}
-                style={{ transform: `scaleX(${-person.facing})` }}
+                style={{ transform: `scaleX(${person.facing * personFacing[person.id]})` }}
               />
             </button>
           ))}
@@ -574,15 +576,17 @@ function MapOverlay({ onClose }: { onClose(): void }) {
   );
 }
 
-/** Moves a figure to `at`, facing `facing` (1 right, -1 left), in front of what stands behind. */
-function place(el: HTMLElement | null, at: Point, facing: 1 | -1) {
+/**
+ * Moves a figure to `at`, facing `facing` (1 right, -1 left), in front of what stands behind.
+ * `picture` is the way its picture faces: it is mirrored only to face the other way.
+ */
+function place(el: HTMLElement | null, at: Point, facing: 1 | -1, picture: 1 | -1 = -1) {
   if (!el) return;
   el.style.left = `${(at.x / town.width) * 100}%`;
   el.style.top = `${(at.y / town.height) * 100}%`;
   el.style.zIndex = String(Math.round(at.y));
-  // The pictures face left (art-src/CREDITS.md), so facing right is the mirror image.
   const img = el.firstElementChild as HTMLElement | null;
-  if (img) img.style.transform = `scaleX(${-facing})`;
+  if (img) img.style.transform = `scaleX(${facing * picture})`;
 }
 
 /** A person's lines: before the room that changes them, or after. */

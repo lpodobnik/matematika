@@ -342,3 +342,39 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
     { timeout: 12_000 },
   );
 });
+
+for (const [look, mirrored] of [
+  ['look-1', true],
+  ['look-2', false],
+] as const) {
+  test(`he faces where he walks (${look})`, async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await hook(page);
+    await page.evaluate((l) => {
+      const g = window as unknown as Game;
+      const s = g.__s.getState();
+      g.__d({
+        type: 'boot/start',
+        save: {
+          ...s.save,
+          character: { name: 'Ivo', look: l },
+          progress: { ...s.save.progress, introSeen: true, onMap: true },
+        },
+        room: null,
+      });
+    }, look);
+    // From where he arrives, a tap well to his right on open ground.
+    const board = page.locator('.town__board');
+    const box = await board.boundingBox();
+    if (!box) throw new Error('no board');
+    await page.mouse.click(box.x + box.width * 0.62, box.y + box.height * 0.9);
+    await expect(page.locator('.town__figure--me')).toHaveAttribute('data-walking', 'true');
+    // Look 1's picture faces left, so walking right mirrors it; look 2's faces right.
+    await expect(page.locator('.town__doll')).toHaveAttribute(
+      'style',
+      `transform: scaleX(${mirrored ? -1 : 1});`,
+    );
+  });
+}

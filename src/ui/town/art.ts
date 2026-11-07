@@ -37,6 +37,20 @@ export const looks: Record<LookId, string> = {
   'look-6': look6,
 };
 
+/**
+ * Which way each picture faces: 1 right, -1 left. The code mirrors a figure to face where he
+ * walks, so it needs to know where the picture already looks.
+ */
+export const lookFacing: Record<LookId, 1 | -1> = {
+  'look-1': -1,
+  'look-2': 1,
+  'look-3': -1,
+  'look-4': -1,
+  'look-5': -1,
+  'look-6': 1,
+};
+export const personFacing: Record<PersonId, 1 | -1> = { penkala: -1, nikola: 1, faust: 1 };
+
 /** Each person's figure (t31 and t32). */
 export const personArt: Record<PersonId, string> = { penkala, nikola, faust };
 
