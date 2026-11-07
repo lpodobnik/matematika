@@ -102,7 +102,17 @@ development_status:
 
   epic-5: in-progress
   5-0-the-living-town-slice: review
+  5-1-the-canal-behind-the-gate: review
+  5-2-the-mill-yard: review
+  5-3-the-town-to-the-midpoint: review
+  5-4-the-whole-district: review
+  5-5-people-and-running-machines: review
+  5-6-rooms-for-friends: review
   epic-5-retrospective: optional
 
-  epic-6: backlog
+  epic-6: in-progress
+  6-1-rooms-teach-themselves: review
+  6-2-sound: review
+  6-3-rooms-in-their-streets-and-the-ending: review
+  6-4-deploy-to-github-pages: ready-for-luka
   epic-6-retrospective: optional
