@@ -1,0 +1,85 @@
+/* Story 6.2: the mute control, a speaker in the same round paper style as the map control,
+   on every screen but the loading one. Fixed to the window, over whatever screen is up. */
+.mute-button {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 0.85;
+  touch-action: manipulation;
+}
+
+.mute-button:active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.mute-button__icon {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mute-button__speaker {
+  fill: currentColor;
+}
+
+.mute-button[data-muted="true"] .mute-button__off {
+  stroke: var(--jam);
+  stroke-width: 2.5;
+}
+
+/* The opening keeps its skip in the top-right corner, so the speaker takes the top left. */
+.app:has(.opening) .mute-button {
+  right: auto;
+  left: 8px;
+}
+
+/* The shop's parts counter takes the top right: the speaker goes to the empty bottom right. */
+.app:has(.shop) .mute-button {
+  top: auto;
+  bottom: 8px;
+}
+
+/* Over the town, the district map's log button sits near the top right: the speaker drops
+   below it. */
+.app:has(.town__overlay) .mute-button {
+  top: 104px;
+}
+
+/* In a room, the notebook's top line is the equation: the speaker stays in the scene area's
+   top-right corner, left of the notebook (notebook.css: clamp(280px, 32%, 440px) of the app). */
+.app:has(.scene-area) .mute-button {
+  right: calc(clamp(280px, 32vw, 440px) + 8px);
+}
+
+@media (max-height: 499.98px) {
+  .mute-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* A phone's notebook slides over the scene with its handle at the top right, so in a room
+     the speaker goes in the left column, under the reset control and the hint button
+     (common.css and hint-button.css: 48 px each, from 8 and 72 px down). */
+  .app:has(.scene-area) .mute-button {
+    top: 132px;
+    right: auto;
+    left: 8px;
+  }
+}

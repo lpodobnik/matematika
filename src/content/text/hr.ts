@@ -68,6 +68,8 @@ export const hr = {
     hint: 'Pomoć',
     /** Story 2.2: the map control in a room, bottom left. */
     map: 'Karta',
+    /** Story 6.2: the mute control, top right on every screen; pressed while muted. */
+    mute: 'Bez zvuka',
   },
   /**
    * The naming after room 1 (story 2.4; narrative design, Opening): the conductor, Gospon

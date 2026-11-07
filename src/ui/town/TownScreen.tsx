@@ -27,6 +27,7 @@ import { Automaton } from '@/ui/fight/fight-art';
 import { MapScreen } from '@/ui/map/MapScreen';
 import { OpeningPanels } from '@/ui/opening/OpeningScreen';
 import { areaArt, areaChange, lookFacing, looks, personArt, personFacing } from '@/ui/town/art';
+import { useTownSound } from '@/ui/town/use-town-sound';
 
 const authored = rooms.map((room) => room.id);
 
@@ -146,6 +147,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   // He comes out where he went in: the area holding the room just restarted.
   const [areaId, setAreaId] = useState<AreaId>(() => areaOf(fresh) ?? town.start);
   const area = town.areas[areaId];
+  useTownSound(areaId);
   const [start, setStart] = useState<Point>(
     () => area.places.find((place) => place.node === fresh)?.stand ?? area.arrive,
   );
