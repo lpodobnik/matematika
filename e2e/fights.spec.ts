@@ -66,6 +66,8 @@ async function startOnTheMap(page: Page, parts: number) {
             tools: ['balance', 'workshop'],
             onMap: true,
             introSeen: true,
+            // Past the guided first fight, which e2e/fight-guide.spec.ts walks through.
+            firstUse: ['fight-guide'],
           },
           economy: { ...s.economy, parts },
         },

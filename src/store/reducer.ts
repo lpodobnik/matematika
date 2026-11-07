@@ -57,6 +57,7 @@ export function initialGameState(): GameState {
       copies: 1,
       hint: null,
       fightEnd: null,
+      fightGuide: null,
       fightSeed: null,
     },
   };

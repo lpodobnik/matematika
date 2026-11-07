@@ -27,6 +27,8 @@ function game(roomsDone: RoomsDone = toSix, parts = 0, tools = ['balance', 'work
       progress: {
         ...save.progress,
         introSeen: true,
+        // Past the guided first fight (fight/guide.ts), which has its own tests.
+        firstUse: ['fight-guide'],
         roomsDone,
         tools: [...tools],
         onMap: true,

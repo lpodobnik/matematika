@@ -2,6 +2,7 @@
 // every change goes through dispatch, which calls the pure root reducer with ctx.
 
 import type { Economy } from '@/economy/types';
+import type { GuideStep } from '@/fight/guide';
 import type { FightState, PageId } from '@/fight/types';
 import type { HintState } from '@/room/hint';
 import type { SavedRoom } from '@/room/resume';
@@ -68,6 +69,11 @@ export interface UiState {
   hint: HintState | null;
   /** How the fight on screen ended and what it paid or cost (store/fight-end.ts), or null. */
   fightEnd: FightEnd | null;
+  /**
+   * The guided first fight's step (fight/guide.ts), or null when no guide shows. In memory
+   * only: a fight resumed on launch picks the guide up again from the fight.
+   */
+  fightGuide: GuideStep | null;
   /** The dev panel only: the seed every new fight's dice start from, or null for random. */
   fightSeed: number | null;
 }

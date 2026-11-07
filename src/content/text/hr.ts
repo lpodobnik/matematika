@@ -606,6 +606,17 @@ export const hr = {
     armour: 'Oklop',
     hull: 'Trup',
     steam: 'Para',
+    /**
+     * One plain line under each stat and control, so the fight explains itself without the
+     * guide: what the number is for.
+     */
+    captions: {
+      armour: 'koliko još treba do 0',
+      hull: 'koliko još izdržiš',
+      steam: '1 po udarcu, ostatak su dijelovi',
+      formula: 'zbroj vidiš tek kad udariš',
+      blows: 'koliko puta udaraš',
+    },
     /** For screen readers: what is left of his hull and steam. */
     left: (what: string, n: number, of: number) => `${what}: ${n} od ${of}`,
     roll: 'Baci kocke',
@@ -619,8 +630,8 @@ export const hr = {
     },
     /** Under each slot's name: what it does in a · x + b. */
     slotHints: {
-      blade: 'a',
-      charge: 'b',
+      blade: 'a, u svakom udarcu',
+      charge: 'b, doda se jednom',
       reach: 'najviše udaraca',
     },
     /** For screen readers: an empty slot. */
@@ -668,6 +679,35 @@ export const hr = {
     /** On the fight's start: a pile he left here before. */
     pileHere: (n: number) =>
       `Ovdje te ${fewParts(n) ? 'čekaju' : 'čeka'} ${n} ${partsWord(n)} s prošle borbe.`,
+  },
+  /**
+   * The guided first fight (fight/guide.ts): Nikola, the lamplighter's kid, talks him
+   * through his first round, one step at a time. A line or two per step, each under 80
+   * characters, in the present tense, so no line needs his gender.
+   */
+  fightGuide: {
+    /** For screen readers: the guide's card. */
+    label: 'Nikola objašnjava borbu',
+    /** Closes a step he only reads; the last one says so. */
+    next: 'Dalje',
+    last: 'Idemo!',
+    steps: {
+      armour: ['Ovo je automat. Broj ispod njega je oklop: koliko još treba skinuti.'],
+      goal: ['Cilj: spusti oklop na 0. Tada automat staje i dobivaš dijelove.'],
+      roll: ['Baci kocke! Svaki krug počinje bacanjem.'],
+      blade: ['Dodirni najveću kocku, pa Oštricu. Oštrica se broji u svakom udarcu.'],
+      charge: ['Sad stavi manju kocku na Naboj. Naboj se doda samo jednom.'],
+      reach: ['Zadnju kocku stavi na Doseg. Doseg je najviše udaraca u krugu.'],
+      blows: ['Koliko puta udaraš? Odaberi broj. To je x u računu iznad.'],
+      strike: ['Sad udari! Zbroj vidiš tek nakon udarca.'],
+      banner: ['Evo zbroja. Točno toliko pada s oklopa.'],
+      dent: ['Oklop nije na 0, pa automat uzvraća. Kad se trup isprazni, gubiš.'],
+      steam: [
+        'Svaki udarac troši 1 paru. Para koja ostane postaje dijelovi.',
+        'Zato je bolje manje udaraca, a jačih.',
+      ],
+      clean: ['Ako oklop padne točno na 0, to je čisti rez: dvostruka nagrada!'],
+    },
   },
   /**
    * Story 3.5: the old mechanic's counter at the workshop (narrative design: unhurried, with

@@ -204,8 +204,9 @@ export type HandoverId = (typeof handoverIds)[number];
  * that wiggle once, the first time the game offers them (`pin`, `tray`, `splitter`), and
  * the handover steps he has taken (`handover-dial`, …; room/handover.ts). A handover's id
  * is its own, since the tray is met as it is offered and its handover only once he uses it.
+ * `fight-guide` is the guided first fight (fight/guide.ts), met once he has gone through it.
  */
-export type FirstUseId = 'pin' | 'tray' | 'splitter' | `handover-${HandoverId}`;
+export type FirstUseId = 'pin' | 'tray' | 'splitter' | 'fight-guide' | `handover-${HandoverId}`;
 
 /**
  * What the tray holds (Pattern 1, Balance moves): weights and floats, and from room 9 an

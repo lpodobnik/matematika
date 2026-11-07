@@ -68,6 +68,7 @@ const firstUseIds: readonly FirstUseId[] = [
   'pin',
   'tray',
   'splitter',
+  'fight-guide',
   ...handoverIds.map((id): FirstUseId => `handover-${id}`),
 ];
 

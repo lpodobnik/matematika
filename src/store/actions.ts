@@ -110,6 +110,8 @@ export type Action =
   | { type: 'shop/close' }
   /** Off the end of a fight, back to the map (story 3.2). */
   | { type: 'fight/close' }
+  /** The guided first fight's "Dalje": the next step, or the guide is over (fight/guide.ts). */
+  | { type: 'fight/guide-next' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */
   | { type: 'dev/set-parts'; parts: number }
   /** The dev panel only: every winding-down automaton rewinds now. */
