@@ -356,3 +356,22 @@ describe('Dial.tsx', () => {
     expect(source).not.toMatch(/on(Pointer|Mouse)(Over|Enter|Leave|Out)\b|cursor/);
   });
 });
+
+describe('a drag from between two notches (story 4.6 review)', () => {
+  it('sends nothing until the knob has moved half a notch', () => {
+    const notches: number[] = [];
+    const drag = createDialDrag({
+      notchPx: 24,
+      onKnob: () => {},
+      onNotch: (notch) => notches.push(notch),
+    });
+    drag.sync({ notch: 20.7, first: 0, last: 21, enabled: true });
+    drag.start(1, 100);
+    drag.move(1, 100);
+    drag.move(1, 101);
+    drag.move(1, 95);
+    expect(notches).toEqual([]);
+    drag.move(1, 86);
+    expect(notches).toEqual([20]);
+  });
+});

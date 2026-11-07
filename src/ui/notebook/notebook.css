@@ -817,7 +817,44 @@
 
   /* While he chooses, the stories take the pad's place: it does nothing until he confirms. */
   .notebook[data-choosing="true"] .pad,
-  .notebook[data-choosing="true"] .notebook__lines {
+  .notebook[data-choosing="true"] .notebook__lines,
+  .notebook[data-choosing="true"] .fine-dial {
     display: none;
   }
+}
+
+/* Story 4.6: a coarse dial's single steps, − x = 207 +, at the top of the notebook. */
+.fine-dial {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 4px;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+}
+
+.fine-dial__step {
+  min-width: 56px;
+  min-height: 48px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 26px;
+  touch-action: manipulation;
+}
+
+.fine-dial__step:disabled {
+  opacity: 0.4;
+}
+
+.fine-dial__x {
+  min-width: 6em;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }

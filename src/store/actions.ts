@@ -57,6 +57,8 @@ export type Action =
   | { type: 'clock/tick' }
   /** The dial landed on a new notch; the UI sends it once per notch, never per frame. */
   | { type: 'dial/set'; x: number }
+  /** Story 4.6: a coarse dial's − or +, one step down or up (room 11). */
+  | { type: 'dial/nudge'; by: 1 | -1 }
   /** He dragged the prediction pin onto a place of its track; once per place, never per frame. */
   | { type: 'pin/set'; value: PinValue }
   /** He confirmed the pin where it is: it locks and the stage opens. */

@@ -18,19 +18,24 @@ import type {
   StageState,
 } from '@/room/types';
 
+/** How far one notch of the track moves x: its step, or a coarse dial's tens (story 4.6). */
+export function notchSize(dial: Pick<DialSpec, 'step' | 'coarse'>): number {
+  return dial.coarse ?? dial.step;
+}
+
 /** Notches from min to max: room 1's 0–10 has 10, room 2's 0–30 in 3s has 10 too. */
 export function notchCount(dial: DialSpec): number {
-  return Math.floor((dial.max - dial.min) / dial.step);
+  return Math.floor((dial.max - dial.min) / notchSize(dial));
 }
 
-/** The x at a notch: notch 0 is the minimum, and each notch adds one step. */
+/** The x at a notch: notch 0 is the minimum, and each notch adds one notch's size. */
 export function dialValue(dial: DialSpec, notch: number): number {
-  return dial.min + notch * dial.step;
+  return dial.min + notch * notchSize(dial);
 }
 
-/** The notch an x sits on (a fraction if x isn't on the dial). */
+/** The notch an x sits on (a fraction if x is between notches, as 207 on a dial in tens). */
 export function notchOf(dial: DialSpec, x: number): number {
-  return (x - dial.min) / dial.step;
+  return (x - dial.min) / notchSize(dial);
 }
 
 /** Whether the dial can show x: a whole number on one of its notches. */
@@ -102,6 +107,7 @@ export function dialView(room: RoomState | null): DialView | null {
     min: dial.min,
     max: dial.max,
     step: dial.step,
+    ...(dial.coarse !== undefined ? { coarse: dial.coarse } : {}),
     openMin: stage.dialOpen.min,
     openMax: stage.dialOpen.max,
     x: stage.dialX,
@@ -142,6 +148,16 @@ export function setDial(room: RoomState, x: number): DialStep | null {
   const balance = dialMaxedAt(touched, dial, x);
   // The dial moving takes a tapped line off the scale (story 2.10).
   return { room: { ...room, stage: { ...touched, dialX: x, balance, shownLine: null } }, events };
+}
+
+/**
+ * A coarse dial's − or + (`dial/nudge`, story 4.6): x one step down or up, within the part
+ * of the dial he can reach, as a notch would. Null where `setDial` would ignore it.
+ */
+export function nudgeDial(room: RoomState, by: 1 | -1): DialStep | null {
+  const { dial } = currentStageSpec(room);
+  if (dial === 'locked' || dial.coarse === undefined) return null;
+  return setDial(room, room.stage.dialX + by * dial.step);
 }
 
 /**

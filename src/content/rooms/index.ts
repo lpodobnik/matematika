@@ -9,9 +9,10 @@ import { r07 } from './r07-old-logbook';
 import { r08 } from './r08-tram';
 import { r09 } from './r09-steam-lift';
 import { r10 } from './r10-market-scales';
+import { r11 } from './r11-great-wheel';
 
 /**
  * Every authored room, in play order: when a room's restart ends, the next one here loads.
  * The last room so far is followed by the map's "to be continued" note.
  */
-export const rooms: readonly RoomSpec[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10];
+export const rooms: readonly RoomSpec[] = [r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11];

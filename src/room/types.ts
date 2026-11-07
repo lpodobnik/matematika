@@ -61,6 +61,7 @@ export const ideaIds = [
   'inverse',
   'take-away',
   'story',
+  'simplify',
 ] as const;
 export type IdeaId = (typeof ideaIds)[number];
 export type ToolId = (typeof toolIds)[number];
@@ -96,6 +97,11 @@ export interface DialSpec {
   max: number;
   /** In division forms, the divisor, so every notch is a multiple of it. */
   step: number;
+  /**
+   * Story 4.6, too slow to drag (room 11): the track moves this many units per notch, and
+   * − and + step one `step` at a time, so the slider still reaches every x (GDD).
+   */
+  coarse?: number;
 }
 
 export interface StageSpec {

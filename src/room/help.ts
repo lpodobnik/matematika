@@ -10,8 +10,9 @@
 //   4  the same kind of equation with other numbers, solved line by line
 
 import { tuning } from '@/config/tuning';
+import { chainOf, type LinkOp } from '@/math/chain';
 import { stageSolution } from '@/math/check';
-import { add, type Equation, hasX, num, xVar } from '@/math/expr';
+import { add, div, type Equation, type Expr, hasX, mul, num, sub, xVar } from '@/math/expr';
 import { toLinear, valueAt } from '@/math/linear';
 import * as q from '@/math/rational';
 import { canonicalSolution } from '@/math/steps';
@@ -101,13 +102,39 @@ export function workedExample(room: RoomState, tools: readonly ToolId[]): Equati
   if (left.kind !== 'linear') return null;
   const own = stageSolution(stage);
   const way = wayOf(room, tools, own) ?? 'try';
-  for (const x of exampleSolutions) {
-    if (x === own) continue;
-    const value = valueAt(left, q.rational(x));
-    if (!q.isInteger(value) || value.n <= 0n || value.n > 99n) continue;
-    const example: Equation = { left: stage.left, right: num(Number(value.n)) };
-    const lines = canonicalSolution(example, way, { trayGear: trayHasGear(spec) });
-    if (lines) return [example, ...lines];
+  // The stage's own left side; or, when its numbers are too big for a small example (room
+  // 11, story 4.6 review), the same shape with small numbers: `50 − 3x`.
+  for (const side of [stage.left, smallShape(stage.left)]) {
+    if (side === null) continue;
+    const linear = toLinear(side);
+    if (linear.kind !== 'linear') continue;
+    for (const x of exampleSolutions) {
+      if (x === own) continue;
+      const value = valueAt(linear, q.rational(x));
+      if (!q.isInteger(value) || value.n <= 0n || value.n > 99n) continue;
+      const example: Equation = { left: side, right: num(Number(value.n)) };
+      const lines = canonicalSolution(example, way, { trayGear: trayHasGear(spec) });
+      if (lines) return [example, ...lines];
+    }
   }
   return null;
+}
+
+/** Small numbers for each kind of link, so a big-number side keeps its shape. */
+const smallLinks: Record<LinkOp, number> = { add: 7, sub: 4, mul: 3, div: 2, from: 50 };
+
+/** The side's chain rebuilt with small numbers (`5 905 − 27x` → `50 − 3x`), or null. */
+function smallShape(side: Expr): Expr | null {
+  const chain = chainOf({ left: side, right: num(0) });
+  if (!chain) return null;
+  let expr: Expr = xVar();
+  for (const link of chain.links) {
+    const n = num(smallLinks[link.op]);
+    if (link.op === 'add') expr = add(expr, n);
+    else if (link.op === 'sub') expr = sub(expr, n);
+    else if (link.op === 'mul') expr = mul(n, expr);
+    else if (link.op === 'div') expr = div(expr, n);
+    else expr = sub(n, expr);
+  }
+  return expr;
 }

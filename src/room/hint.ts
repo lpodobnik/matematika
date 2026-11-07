@@ -265,7 +265,12 @@ export function nextMove(room: RoomState, tools: readonly ToolId[]): HintMove | 
     return room.stage.dialX === n ? { kind: 'answer', x: n } : slideToward(n, room.stage.dialX);
   }
   if (way === 'undo') return chainMove(room, tools, n);
-  return way === 'balance' ? balanceMove(room, tools, n) : null;
+  if (way !== 'balance') return null;
+  // Story 4.6 review: where Balance can't go on with the tools (room 11's split by 27), the
+  // chain still can.
+  const balance = balanceMove(room, tools, n);
+  const undoes = currentStageSpec(room).ways.includes('undo') && tools.includes('chain');
+  return balance ?? (undoes && pansChain(room) ? chainMove(room, tools, n) : null);
 }
 
 /** The handover step a move belongs to, for a first press where no step applies. */

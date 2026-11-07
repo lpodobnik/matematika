@@ -63,7 +63,9 @@ export type PinTrack =
   /** A `wrong-line` pin (room 7, story 2.10): its places are the written lines, 1 to `lines`. */
   | { kind: 'line'; lines: number }
   /** A `story-choice` pin (room 10, story 4.5): its places are the stories, in the notebook. */
-  | { kind: 'story'; options: number };
+  | { kind: 'story'; options: number }
+  /** A `range` pin (room 11, story 4.6): its places are the ranges its bounds make, in the notebook. */
+  | { kind: 'range'; bounds: readonly number[] };
 
 /**
  * The stage's pin track, or null with no pin, or a pin kind that arrives with its rooms
@@ -82,6 +84,7 @@ export function pinTrack(stage: StageSpec): PinTrack | null {
   if (pin.kind === 'wrong-line') return { kind: 'line', lines: writtenLineCount(stage) };
   if (pin.kind === 'story-choice')
     return { kind: 'story', options: stage.story?.options?.length ?? 0 };
+  if (pin.kind === 'range') return { kind: 'range', bounds: pin.bounds };
   return null;
 }
 
@@ -91,7 +94,8 @@ export function pinSupported(pin: PinSpec): boolean {
     pin.kind === 'level-x' ||
     pin.kind === 'effect' ||
     pin.kind === 'wrong-line' ||
-    pin.kind === 'story-choice'
+    pin.kind === 'story-choice' ||
+    pin.kind === 'range'
   );
 }
 
@@ -100,6 +104,7 @@ export function slotCount(track: PinTrack): number {
   if (track.kind === 'choice') return track.options.length;
   if (track.kind === 'line') return track.lines;
   if (track.kind === 'story') return track.options;
+  if (track.kind === 'range') return track.bounds.length + 1;
   return Math.floor((track.max - track.min) / track.step) + 1;
 }
 
@@ -108,6 +113,7 @@ export function slotsInReach(track: PinTrack): number {
   if (track.kind === 'choice') return track.options.length;
   if (track.kind === 'line') return track.lines;
   if (track.kind === 'story') return track.options;
+  if (track.kind === 'range') return track.bounds.length + 1;
   return Math.floor((track.reach - track.min) / track.step) + 1;
 }
 
@@ -115,6 +121,7 @@ export function slotsInReach(track: PinTrack): number {
 export function slotValue(track: PinTrack, slot: number): PinValue {
   assert(Number.isInteger(slot) && slot >= 0 && slot < slotCount(track), `no pin place ${slot}`);
   if (track.kind === 'choice' || track.kind === 'story') return { kind: 'choice', index: slot };
+  if (track.kind === 'range') return { kind: 'bucket', index: slot };
   if (track.kind === 'line') return { kind: 'line', index: slot + 1 };
   return { kind: 'x', x: track.min + slot * track.step };
 }
@@ -122,6 +129,7 @@ export function slotValue(track: PinTrack, slot: number): PinValue {
 function rawSlot(track: PinTrack, value: PinValue): number | null {
   if (track.kind === 'x') return value.kind === 'x' ? (value.x - track.min) / track.step : null;
   if (track.kind === 'line') return value.kind === 'line' ? value.index - 1 : null;
+  if (track.kind === 'range') return value.kind === 'bucket' ? value.index : null;
   return value.kind === 'choice' ? value.index : null;
 }
 
@@ -240,6 +248,17 @@ export function tiltAsXGrows(equation: Equation): EffectOption {
   return change > 0 ? 'tilt-left' : 'tilt-right';
 }
 
+/**
+ * The range x falls in among `bounds` (story 4.6; room 11's 100 and 300): under the first
+ * is 0; up to each next bound, ends included, the next; over the last, the last range.
+ */
+export function bucketOf(bounds: readonly number[], x: number): number {
+  const first = bounds[0];
+  if (first === undefined || x < first) return 0;
+  const above = bounds.findIndex((bound, i) => i > 0 && x <= bound);
+  return above === -1 ? bounds.length : above;
+}
+
 /** Whether a pin there is right: the stage's solution, or the way x really tilts the scale. */
 export function pinRight(stage: StageSpec, machine: number, value: PinValue): boolean {
   const { pin } = stage;
@@ -253,6 +272,9 @@ export function pinRight(stage: StageSpec, machine: number, value: PinValue): bo
   }
   if (pin?.kind === 'story-choice')
     return value.kind === 'choice' && value.index === rightStory(stage);
+  if (pin?.kind === 'range') {
+    return value.kind === 'bucket' && value.index === bucketOf(pin.bounds, stageSolution(equation));
+  }
   return false;
 }
 
@@ -297,7 +319,7 @@ function resultOf(right: boolean): 'right' | 'wrong' {
  * their questions in `hr.pin.questions`.
  */
 export type PinQuestion =
-  | Extract<PinSpec['kind'], 'level-x' | 'effect' | 'wrong-line' | 'story-choice'>
+  | Extract<PinSpec['kind'], 'level-x' | 'effect' | 'wrong-line' | 'story-choice' | 'range'>
   | 'change'
   | 'hidden'
   /** Story 4.4: from room 8 on (a stage with Undo) he knows the flag, so it asks only where. */
@@ -342,7 +364,13 @@ export function pinView(room: RoomState | null): PinView | null {
   const track = pinTrack(spec);
   const kind = spec.pin?.kind;
   if (!track || !pinSupported(spec.pin ?? { kind: 'level-x' })) return null;
-  if (kind !== 'level-x' && kind !== 'effect' && kind !== 'wrong-line' && kind !== 'story-choice') {
+  if (
+    kind !== 'level-x' &&
+    kind !== 'effect' &&
+    kind !== 'wrong-line' &&
+    kind !== 'story-choice' &&
+    kind !== 'range'
+  ) {
     return null;
   }
   const question: PinQuestion =

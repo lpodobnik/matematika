@@ -154,6 +154,14 @@ export const hr = {
         },
         { who: 'nikola', text: 'Gospon Penkala je nešto priznao? To treba zapisati u Knjigu!' },
       ],
+      r11: [
+        { who: 'automaton', text: 'VELIKO KOLO NIJE ZA ŠEGRTE. BROJEVI SU PREVELIKI. ODUSTANITE.' },
+        {
+          who: 'nikola',
+          text: (name: string) =>
+            `Piše da odustaneš, ${name}. A kolo se vrti. Mislim da ga je strah.`,
+        },
+      ],
       r09: [
         { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO KORACIMA. OTVARANJE NIJE PREDVIĐENO.' },
         { who: 'nikola', text: 'Pečat je pao. Ali tko lijepi te papire po cijelom gradu?' },
@@ -209,6 +217,10 @@ export const hr = {
       story: {
         term: 'Jednadžba iz priče',
         text: 'Ono što ne znaš postaje x. Ono što je jednako stavi s obje strane znaka =.',
+      },
+      simplify: {
+        term: 'Pojednostavljivanje',
+        text: 'Kad su brojevi preveliki za isprobavanje, pojednostavi jednadžbu korak po korak. Klizač je provjera.',
       },
       mistake: {
         term: 'Traženje pogreške',
@@ -336,6 +348,8 @@ export const hr = {
       'level-x-short': 'Gdje će vaga biti u ravnoteži?',
       /** Story 4.5: room 10's story pin, at the notebook: which story fits the pans. */
       'story-choice': 'Koja priča odgovara vagi? Stavi zastavicu na nju.',
+      /** Story 4.6: room 11's range pin, at the notebook: about how big x is. */
+      range: 'Koliki je x otprilike? Stavi zastavicu.',
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
       /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
       change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
@@ -394,6 +408,18 @@ export const hr = {
     /** For screen readers, on a story's flag. */
     flag: (n: number) => `Zastavica na priču ${n}`,
     confirm: 'Potvrdi',
+  },
+  /** Story 4.6: a range pin's places (room 11), and a coarse dial's single steps. */
+  range: {
+    label: 'Koliki je x?',
+    under: (n: string) => `x je manji od ${n}`,
+    between: (from: string, to: string) => `x je od ${from} do ${to}`,
+    over: (n: string) => `x je veći od ${n}`,
+  },
+  fineDial: {
+    label: 'Klizač, korak po korak',
+    down: 'x manji za 1',
+    up: 'x veći za 1',
   },
   /** Story 4.1: the gear chain at the top of the notebook (GDD, Gear chain). */
   chain: {

@@ -240,6 +240,20 @@ const gddRooms: readonly {
     ways: ['try', 'balance', 'undo'],
     earns: null,
   },
+  {
+    id: 'r11',
+    machine: 'great-wheel',
+    xIs: 'Load per spoke',
+    equations: ['5905 − 27x = 316'],
+    answers: [207],
+    types: ['solve'],
+    // Story 4.6: in tens with single steps; to 210, not 300, so no readout goes below 0.
+    dials: [{ min: 0, max: 210, step: 1, coarse: 10 }],
+    pokeNotches: [4],
+    pins: [{ kind: 'range', bounds: [100, 300] }],
+    ways: ['balance', 'undo'],
+    earns: null,
+  },
 ];
 
 /** The x values the dial reaches before the pin is locked: the poke window. */
@@ -512,6 +526,17 @@ describe('rooms', () => {
         );
         expect(fits, room.id).toHaveLength(1);
         expect(stage.pin, room.id).toEqual({ kind: 'story-choice' });
+      }
+    }
+  });
+
+  // Story 4.6 review: a coarse dial ends on a notch, so the knob never stands past the track.
+  it('ends every coarse dial on a notch', () => {
+    for (const room of rooms) {
+      for (const stage of room.stages) {
+        if (stage.dial === 'locked' || stage.dial.coarse === undefined) continue;
+        expect((stage.dial.max - stage.dial.min) % stage.dial.coarse, room.id).toBe(0);
+        expect(stage.dial.coarse % stage.dial.step, room.id).toBe(0);
       }
     }
   });
@@ -795,7 +820,10 @@ describe('rooms', () => {
                 if (!draggedOff) expect(value).toBeLessThanOrEqual(tuning.trayMaxNumber);
               }
             }
-            if (move.kind === 'split-both') {
+            // Story 4.6: on a coarse dial (room 11) the numbers are too big for the tools; a
+            // split by more parts than the splitter has is written by hand.
+            const byHand = stage.dial !== 'locked' && stage.dial.coarse !== undefined;
+            if (move.kind === 'split-both' && !(byHand && move.parts > tuning.splitterMaxParts)) {
               expect(move.parts).toBeGreaterThanOrEqual(tuning.splitterMinParts);
               expect(move.parts).toBeLessThanOrEqual(tuning.splitterMaxParts);
               // The splitter itself gets there: an even split of the line before.

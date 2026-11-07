@@ -14,6 +14,7 @@ import type { LinkOp } from '@/math/chain';
 import type { LineSegment } from '@/math/format';
 import type { LineToken, Token } from '@/math/tokens';
 import { type ChainView, chainView } from '@/room/chain';
+import { type DialView, dialView } from '@/room/dial';
 import { handoverView } from '@/room/handover';
 import { type LogbookView, logbookView } from '@/room/logbook';
 import {
@@ -24,6 +25,7 @@ import {
   notebookWrites,
 } from '@/room/notebook';
 import { pinOffered } from '@/room/pin';
+import { type RangeView, rangeView } from '@/room/range';
 import { type StoryView, storyView } from '@/room/story';
 import type { NotebookLine, Refusal } from '@/room/types';
 import { useGame } from '@/store/store';
@@ -58,6 +60,7 @@ import { LogbookLine } from '@/ui/notebook/LogbookLine';
 import { NumberPad } from '@/ui/notebook/NumberPad';
 import { pressHandle, shownAside } from '@/ui/notebook/notebook-aside';
 import { keyAction, primaryPress } from '@/ui/notebook/pad-keys';
+import { FineDial, RangePanel } from '@/ui/notebook/RangePanel';
 import { StoryPanel } from '@/ui/notebook/StoryPanel';
 
 const noLines: readonly NotebookLine[] = [];
@@ -100,7 +103,8 @@ export function Notebook() {
     s.room
       ? pinOffered(s.room) &&
         s.room.stage.planted === null &&
-        !s.room.spec.stages[s.room.stageIndex]?.story
+        !s.room.spec.stages[s.room.stageIndex]?.story &&
+        s.room.spec.stages[s.room.stageIndex]?.pin?.kind !== 'range'
       : false,
   );
   const hinting = useGame((s) => hintOf(s) !== null);
@@ -115,12 +119,17 @@ export function Notebook() {
   // Story 4.5: a story stage's story, and its story pin (room 10).
   const storyKey = useGame((s) => JSON.stringify(storyView(s.room)));
   const story = useMemo(() => JSON.parse(storyKey) as StoryView | null, [storyKey]);
+  // Story 4.6: room 11's range pin, and a coarse dial's single steps.
+  const rangeKey = useGame((s) => JSON.stringify(rangeView(s.room)));
+  const range = useMemo(() => JSON.parse(rangeKey) as RangeView | null, [rangeKey]);
+  const dial = useGame(useShallow((s) => dialView(s.room)));
+  const fineDial = dial?.coarse !== undefined ? dial : null;
   const onScene = hinting ? hintOnScene : step !== null && !isNotebookHandover(step);
   const shownStep = hinting ? `hint-${presses}` : step;
   const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${shownStep}` : null;
   const [broughtBack, setBroughtBack] = useState<string | null>(null);
   // Story 4.5 review: a story pin waits in the notebook itself, so it is always shown then.
-  const aside = shownAside(choice, waiting, broughtBack) && !story?.asks;
+  const aside = shownAside(choice, waiting, broughtBack) && !story?.asks && !range?.asks;
   const dispatch = useGame((s) => s.dispatch);
   // Story 4.1: the gear chain, and his pick for its last link while the picker is open.
   // Its links are a fresh array on every read, so the selector returns them as text.
@@ -204,6 +213,10 @@ export function Notebook() {
       onConfirmPin={() => dispatch({ type: 'pin/confirm' })}
       story={story}
       onFlagStory={(index) => dispatch({ type: 'pin/set', value: { kind: 'choice', index } })}
+      range={range}
+      onFlagRange={(index) => dispatch({ type: 'pin/set', value: { kind: 'bucket', index } })}
+      fineDial={fineDial}
+      onNudge={(by) => dispatch({ type: 'dial/nudge', by })}
       chain={chain}
       pick={picking ? pick : null}
       chainPulse={chainHint}
@@ -223,6 +236,12 @@ export interface NotebookPageProps {
   /** Story 4.5: a story stage's story, or null. */
   story?: StoryView | null;
   onFlagStory?(index: number): void;
+  /** Story 4.6: a range pin, or null. */
+  range?: RangeView | null;
+  onFlagRange?(index: number): void;
+  /** Story 4.6: a coarse dial, for its single steps, or null. */
+  fineDial?: DialView | null;
+  onNudge?(by: 1 | -1): void;
   /** Story 4.1: the gear chain, or null in a stage without it. */
   chain?: ChainView | null;
   /** His pick for the chain's last link while its picker is open. */
@@ -295,6 +314,10 @@ export function NotebookPage({
   logbook = null,
   story = null,
   onFlagStory = () => {},
+  range = null,
+  onFlagRange = () => {},
+  fineDial = null,
+  onNudge = () => {},
   chain = null,
   pick = null,
   chainPulse = false,
@@ -332,7 +355,9 @@ export function NotebookPage({
       : hr.logbook.tap
     : story?.asks
       ? hr.pin.questions['story-choice']
-      : null;
+      : range?.asks
+        ? hr.pin.questions.range
+        : null;
   const listRef = useRef<HTMLOListElement>(null);
   // A tag hangs under the lines: the refusal's, else the hint's, else the handover's. Only a
   // handover's or a hint's makes the line to write pulse; a refusal's doesn't.
@@ -381,9 +406,11 @@ export function NotebookPage({
         className="notebook"
         data-handover={tagged}
         data-picking={pick !== null || undefined}
-        data-choosing={story?.asks || undefined}
+        data-choosing={story?.asks || range?.asks || undefined}
       >
         {story && <StoryPanel view={story} onFlag={onFlagStory} onConfirm={onConfirmPin} />}
+        {range && <RangePanel view={range} onFlag={onFlagRange} onConfirm={onConfirmPin} />}
+        {fineDial && <FineDial dial={fineDial} onNudge={onNudge} />}
         {chain && (
           <ChainStrip
             view={chain}

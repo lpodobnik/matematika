@@ -64,7 +64,7 @@ export function Pin(props: Props) {
   // A line pin (room 7) and a story pin (room 10) live in the notebook.
   const onLine = useGame((s) => {
     const kind = pinView(s.room)?.kind;
-    return kind === 'line' || kind === 'story';
+    return kind === 'line' || kind === 'story' || kind === 'range';
   });
   return onLine ? null : <PinOnScale {...props} />;
 }

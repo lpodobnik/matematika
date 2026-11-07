@@ -77,6 +77,10 @@ export function createDialDrag(options: DialDragOptions): DialDrag {
         Math.min(state.last * notchPx, drag.startPx + globalX - drag.startX),
       );
       onKnob(px);
+      // Story 4.6 review: from between two notches (207 on a dial in tens), a touch sends
+      // nothing until the knob has moved half a notch, so a resting finger never moves x.
+      const between = !Number.isInteger(drag.startPx / notchPx);
+      if (between && Math.abs(px - drag.startPx) < notchPx / 2) return;
       const notch = Math.round(px / notchPx);
       if (notch !== drag.sent) {
         drag.sent = notch;

@@ -89,7 +89,15 @@ export function PartsCounter({ area }: Props) {
   }, [flying]);
 
   const head =
-    flying && size && pin && pin.slot !== null && notches !== null
+    // A pin placed in the notebook (rooms 7, 10, 11) has no head in the scene.
+    flying &&
+    size &&
+    pin &&
+    pin.slot !== null &&
+    notches !== null &&
+    pin.kind !== 'line' &&
+    pin.kind !== 'story' &&
+    pin.kind !== 'range'
       ? pinHeadSpot(size, copies, notches, pin)
       : null;
   return (

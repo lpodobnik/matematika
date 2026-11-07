@@ -437,6 +437,81 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r10b, line: '2x = 24', verdict: 'wrong', note: '19 + 5' },
     { stage: r10b, before: ['2x = 14'], line: 'x = 28', verdict: 'wrong', note: 'multiplied' },
   ],
+  'r11 great wheel (5 905 − 27x = 316)': [
+    // Story 4.6: simplified first, by the chain or by hand; the gear's Balance, its 316
+    // dragged off and the split by 27 written; and the wrong lines big numbers invite (the
+    // first move, the answer and the check are in epic 1's rows below).
+    {
+      stage: r11,
+      before: [`27x = 5${nnbsp}905 − 316`],
+      line: `27x = 5${nnbsp}589`,
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r11,
+      before: [`27x = 5${nnbsp}905 − 316`, `27x = 5${nnbsp}589`],
+      line: `x = 5${nnbsp}589 : 27`,
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r11,
+      before: [`27x = 5${nnbsp}905 − 316`, `27x = 5${nnbsp}589`, `x = 5${nnbsp}589 : 27`],
+      line: 'x = 207',
+      verdict: 'answer',
+    },
+    {
+      stage: r11,
+      before: [
+        `27x = 5${nnbsp}905 − 316`,
+        `27x = 5${nnbsp}589`,
+        `x = 5${nnbsp}589 : 27`,
+        'x = 207',
+      ],
+      line: `5${nnbsp}905 − 27 · 207 = 316`,
+      verdict: 'check',
+    },
+    {
+      stage: r11,
+      line: `5${nnbsp}905 = 27x + 316`,
+      verdict: 'valid',
+      progress: false,
+      move: 'add-both',
+    },
+    {
+      stage: r11,
+      before: [`5${nnbsp}905 = 27x + 316`],
+      line: `5${nnbsp}589 = 27x`,
+      verdict: 'valid',
+      progress: true,
+    },
+    {
+      stage: r11,
+      before: [`5${nnbsp}905 = 27x + 316`, `5${nnbsp}589 = 27x`],
+      line: '207 = x',
+      verdict: 'answer',
+    },
+    {
+      stage: r11,
+      before: [`5${nnbsp}905 = 27x + 316`, `5${nnbsp}589 = 27x`, '207 = x'],
+      line: `5${nnbsp}905 − 27 · 207 = 316`,
+      verdict: 'check',
+    },
+    {
+      stage: r11,
+      line: `27x = 316 − 5${nnbsp}905`,
+      verdict: 'wrong',
+      note: 'the subtraction turned round',
+    },
+    {
+      stage: r11,
+      before: [`27x = 5${nnbsp}589`],
+      line: 'x = 217',
+      verdict: 'wrong',
+      note: 'divided wrong',
+    },
+  ],
   // Story 1.13: the rest of epic 1's acceptance-criteria lines. A stage's own equation,
   // copied as a line, is valid without progress (stories 1.2, 1.4 and 1.8–1.11 name them);
   // story 1.2's lines that don't parse are refused on the stage they read like.

@@ -11,7 +11,7 @@ import { rooms } from '@/content/rooms';
 import { payPrediction, predictionKey } from '@/economy/predictions';
 import { assert } from '@/lib/assert';
 import { runLink } from '@/room/chain';
-import { setDial } from '@/room/dial';
+import { nudgeDial, setDial } from '@/room/dial';
 import { meetControls } from '@/room/first-use';
 import { actedAt, type HandoverMove, meetHandovers, stampArrival, tickIdle } from '@/room/handover';
 import { withHelp } from '@/room/help';
@@ -234,6 +234,8 @@ function roomStep(
       return moveOn(tickClock(room, now), roomList, save, now);
     case 'dial/set':
       return setDial(room, action.x);
+    case 'dial/nudge':
+      return nudgeDial(room, action.by);
     case 'pin/set':
       return setPin(room, action.value);
     case 'pin/confirm':
@@ -400,6 +402,7 @@ function withRefusalDown(
 function handoverMove(action: Action): HandoverMove {
   switch (action.type) {
     case 'dial/set':
+    case 'dial/nudge':
       return 'dial';
     case 'tray/drop':
     case 'tray/take':

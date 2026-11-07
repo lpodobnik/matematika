@@ -28,7 +28,8 @@ export function PinConfirm({ area }: Props) {
       return view?.confirmable &&
         view.slot !== null &&
         view.kind !== 'line' &&
-        view.kind !== 'story'
+        view.kind !== 'story' &&
+        view.kind !== 'range'
         ? { kind: view.kind, slots: view.slots, slot: view.slot, option: view.option }
         : null;
     }),

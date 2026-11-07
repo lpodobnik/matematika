@@ -87,8 +87,10 @@ export function openingDial(stage: StageSpec): { min: number; max: number } {
   const full = fullDial(stage);
   const notches = pokeNotches(stage);
   if (stage.dial === 'locked' || notches === null || notches === 'all') return full;
-  const { min, step }: DialSpec = stage.dial;
-  return { min, max: Math.min(full.max, min + (Math.max(1, notches) - 1) * step) };
+  const { min } = stage.dial;
+  // A notch of a coarse dial moves x by its tens (story 4.6).
+  const size: DialSpec['step'] = stage.dial.coarse ?? stage.dial.step;
+  return { min, max: Math.min(full.max, min + (Math.max(1, notches) - 1) * size) };
 }
 
 /** The tray's numbers as a stage arrives: its weight, its float and its gear all show 1. */
