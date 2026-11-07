@@ -1,0 +1,207 @@
+/* Story 3.5: the old mechanic's counter. Grey ink on paper (NFR12); a card per upgrade,
+   its buy button at least 48 CSS px. The parts counter sits top right, as in a fight. */
+.shop {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 24px;
+  background:
+    linear-gradient(var(--rule) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--paper);
+  color: var(--ink);
+  overflow-y: auto;
+}
+
+:where(.shop) button {
+  font: inherit;
+  color: inherit;
+  touch-action: manipulation;
+}
+
+.shop .parts-counter {
+  top: 16px;
+  right: 16px;
+  bottom: auto;
+  left: auto;
+}
+
+.shop__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 120px;
+}
+
+.shop__back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 14px 0 6px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 18px;
+}
+
+.shop__back svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shop__title {
+  margin: 0;
+  font-size: 28px;
+}
+
+.shop__speech {
+  max-width: 720px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--sheet);
+  font-size: 20px;
+}
+
+.shop__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shop__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+  text-align: center;
+}
+
+.shop__item[data-offer="owned"] {
+  border-style: dashed;
+}
+
+.shop__icon {
+  width: 88px;
+  height: 88px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shop__icon-new {
+  fill: var(--ink);
+}
+
+.shop__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shop__name {
+  margin: 0;
+  font-size: 22px;
+}
+
+.shop__what {
+  margin: 0;
+  font-size: 17px;
+}
+
+.shop__cost {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.shop__buy {
+  min-width: 140px;
+  min-height: 52px;
+  padding: 0 18px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 20px;
+}
+
+.shop__buy:disabled {
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 0.6;
+}
+
+@media (max-height: 499.98px) {
+  .shop {
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  .shop .parts-counter {
+    top: 8px;
+    right: 8px;
+  }
+
+  .shop__title {
+    font-size: 18px;
+  }
+
+  .shop__back {
+    font-size: 15px;
+  }
+
+  .shop__speech {
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+
+  .shop__list {
+    gap: 8px;
+  }
+
+  .shop__item {
+    gap: 2px;
+    padding: 6px;
+  }
+
+  .shop__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .shop__name {
+    font-size: 15px;
+  }
+
+  .shop__what {
+    font-size: 12px;
+  }
+
+  .shop__cost {
+    font-size: 15px;
+  }
+
+  .shop__buy {
+    min-width: 0;
+    min-height: 48px;
+    font-size: 15px;
+  }
+}

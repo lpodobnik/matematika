@@ -112,7 +112,8 @@ describe('room 6 on the map (story 2.9)', () => {
     );
     const html = renderToString(<MapBoard view={view} onTravel={() => undefined} />);
     expect(html).toContain(`aria-label="${hr.map.nodes.r06}, ${hr.map.states.restored}"`);
-    expect(html).toContain(`aria-label="${hr.map.nodes.workshop}, ${hr.map.states.seen}"`);
+    // The workshop opens into the old mechanic’s counter (story 3.5).
+    expect(html).toContain(`aria-label="${hr.map.nodes.workshop}, ${hr.map.states.open}"`);
     expect(html).toContain(`aria-label="${hr.map.nodes.foundry}, ${hr.map.states.locked}"`);
     expect(html).toContain('5 · x = 40');
   });
@@ -159,5 +160,19 @@ describe('torn pages on the map (story 3.4)', () => {
       <MapBoard view={view} pages={['page-1']} onTravel={() => undefined} />,
     );
     expect(some).toContain(`aria-label="${hr.pages.open}"`);
+  });
+});
+
+describe('parts on the map (story 3.6)', () => {
+  it('shows his parts once he has any', () => {
+    const view = mapView(
+      districtMap,
+      { roomsDone: ['r01', 'r02'], tools: [], started: [], fresh: null },
+      authored,
+    );
+    const none = renderToString(<MapBoard view={view} onTravel={() => undefined} />);
+    expect(none).not.toContain('class="parts-counter"');
+    const some = renderToString(<MapBoard view={view} parts={14} onTravel={() => undefined} />);
+    expect(some).toContain(`aria-label="${hr.parts.label}: 14"`);
   });
 });

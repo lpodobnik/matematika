@@ -29,9 +29,10 @@ export interface Ctx {
  * where he goes after every restart and whenever he leaves a room; it replaced story 1.13's
  * "to be continued" screen. `naming` comes once, after room 1's restart (story 2.4).
  * `story` tells a room's lines the first time its restart ends (story 2.5). `fight` is an
- * automaton fight, entered from a lair on the map and left back to it (story 3.1).
+ * automaton fight, entered from a lair on the map and left back to it (story 3.1). `shop` is
+ * the old mechanic's counter at the workshop, for upgrades (story 3.5).
  */
-export type Screen = 'loading' | 'room' | 'map' | 'naming' | 'story' | 'fight';
+export type Screen = 'loading' | 'room' | 'map' | 'naming' | 'story' | 'fight' | 'shop';
 
 /**
  * How many copies of the scene the scene area draws side by side: 3 only for the tablet

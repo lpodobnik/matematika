@@ -15,6 +15,7 @@ import { MapScreen } from '@/ui/map/MapScreen';
 import { NamingScreen } from '@/ui/naming/NamingScreen';
 import { Notebook } from '@/ui/notebook/Notebook';
 import { SceneRoot } from '@/ui/scene/SceneRoot';
+import { ShopScreen } from '@/ui/shop/ShopScreen';
 import { StoryScreen } from '@/ui/story/StoryScreen';
 
 // Development builds only, loaded on demand (architecture, Debug Tools): production builds
@@ -49,6 +50,7 @@ function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
   if (screen === 'naming') return <NamingScreen />;
   if (screen === 'story') return <StoryScreen />;
   if (screen === 'fight') return <FightScreen />;
+  if (screen === 'shop') return <ShopScreen />;
   return <RoomScreen />;
 }
 

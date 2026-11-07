@@ -689,9 +689,11 @@
     font-size: 18px;
   }
 
+  /* On a phone the gauges run to the top-right corner, so the counter sits bottom right. */
   .fight .parts-counter {
-    top: 8px;
+    top: auto;
     right: 8px;
+    bottom: 8px;
   }
 
   .fight__paid {

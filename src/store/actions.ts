@@ -2,6 +2,7 @@
 
 import type { LookId } from '@/city/character';
 import type { NodeId } from '@/city/types';
+import type { UpgradeId } from '@/economy/types';
 import type { FightAction, FightState } from '@/fight/types';
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
@@ -93,6 +94,10 @@ export type Action =
    * leave (free before the first strike, a loss after it). See fight/types.ts.
    */
   | FightAction
+  /** Story 3.5: buys an upgrade at the old mechanic's counter, with unspent parts. */
+  | { type: 'shop/buy'; upgrade: UpgradeId }
+  /** Story 3.5: off the counter, back to the map. */
+  | { type: 'shop/close' }
   /** Off the end of a fight, back to the map (story 3.2). */
   | { type: 'fight/close' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */

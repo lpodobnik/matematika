@@ -409,6 +409,8 @@ export const hr = {
     emptySlot: 'prazno',
     /** The tag before the dice are placed: tap a die, then a slot. */
     placeTag: 'Dodirni kocku, pa utor.',
+    /** Story 3.5: with the 4th die, the one left out of the slots is discarded. */
+    placeTagFour: 'Dodirni kocku, pa utor. Jedna kocka ostaje sa strane.',
     blows: 'Udarci',
     /** For screen readers: the blows dial's notch. */
     blowsNotch: (x: number) => `${x} ${blowsWord(x)}`,
@@ -448,6 +450,29 @@ export const hr = {
     /** On the fight's start: a pile he left here before. */
     pileHere: (n: number) =>
       `Ovdje te ${fewParts(n) ? 'čekaju' : 'čeka'} ${n} ${partsWord(n)} s prošle borbe.`,
+  },
+  /**
+   * Story 3.5: the old mechanic's counter at the workshop (narrative design: unhurried, with
+   * machine sayings, knows more than he says). Upgrades for parts (GDD, Automaton fights).
+   */
+  shop: {
+    title: 'Radionica',
+    speaker: 'Faust',
+    line: 'Stroj je dobar koliko i njegov najslabiji zupčanik. Dijelove imaš? Onda biraj.',
+    back: 'Natrag na kartu',
+    upgrades: {
+      'fourth-die': {
+        name: 'Četvrta kocka',
+        what: 'Baciš četiri kocke, a jednu ostaviš sa strane.',
+      },
+      steam: { name: 'Para +3', what: 'Tri udarca više u svakoj borbi.' },
+      hull: { name: 'Trup +1', what: 'Jedno udubljenje više prije poraza.' },
+    },
+    cost: (n: number) => `${n} ${partsWord(n)}`,
+    buy: 'Kupi',
+    owned: 'Kupljeno',
+    /** Not enough parts yet: how many more. */
+    short: (n: number) => `Još ${n}`,
   },
   /**
    * Story 3.4: the three torn logbook pages the armour 30, 45 and 60 automatons carry

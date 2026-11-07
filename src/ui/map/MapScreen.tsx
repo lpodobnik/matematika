@@ -12,6 +12,7 @@ import { useGame } from '@/store/store';
 import { LockBadge, NodeGlyph } from '@/ui/map/glyphs';
 import '@/ui/story/story.css';
 import type { PageId } from '@/fight/types';
+import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { PagesReader } from '@/ui/pages/TornPages';
 import { IdeaCards, StoryLines } from '@/ui/story/StoryLines';
 
@@ -68,6 +69,7 @@ export function MapScreen() {
       name={name}
       wakes={wakes}
       pages={pages}
+      parts={economy.parts}
       onTravel={(node) => dispatch({ type: 'map/travel', node })}
     />
   );
@@ -102,6 +104,8 @@ interface BoardProps {
   wakes?: Readonly<Partial<Record<NodeId, number>>>;
   /** Torn pages fights have returned (story 3.4); their button shows once he has one. */
   pages?: readonly PageId[];
+  /** His parts, on the counter in the board's corner once he has any (story 3.6). */
+  parts?: number;
   onTravel(node: NodeId): void;
   /** For tests: the log starts open. */
   logOpen?: boolean;
@@ -119,6 +123,7 @@ export function MapBoard({
   name = null,
   wakes = {},
   pages = [],
+  parts = 0,
   onTravel,
   logOpen = false,
 }: BoardProps) {
@@ -144,6 +149,7 @@ export function MapBoard({
           <MapNode key={node.id} node={node} wake={wakes[node.id] ?? null} onTravel={onTravel} />
         ))}
         {view.allDone && <p className="map__note">{hr.app.toBeContinued}</p>}
+        <PartsCounterView shown={parts} visible={parts > 0} flight={null} />
         {pages.length > 0 && (
           <button
             type="button"

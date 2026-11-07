@@ -208,7 +208,9 @@ export function FightBoard({ fight, end = null, pile = 0, onAction, children }: 
           )}
         </div>
         {placing && fight.slots.blade === null && held === null && (
-          <p className="fight__tag">{hr.fight.placeTag}</p>
+          <p className="fight__tag">
+            {fight.dice.length > 3 ? hr.fight.placeTagFour : hr.fight.placeTag}
+          </p>
         )}
         <div className="fight__slots">
           {SLOTS.map((slot) => {

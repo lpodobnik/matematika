@@ -37,6 +37,7 @@ import type { DomainEvent } from '@/store/events';
 import { withFights } from '@/store/fight-reducer';
 import { newSave } from '@/store/persist';
 import { initialQuality, type QualityState, reduceQuality } from '@/store/quality';
+import { withShop } from '@/store/shop-reducer';
 import type { GameState, Reduce, SaveState } from '@/store/types';
 
 /** The game at launch: loading, until the save is read and the assets are loaded (`boot/start`). */
@@ -575,7 +576,13 @@ function namedCharacter(state: GameState, action: Action): SaveState['character'
 function withOnMap(save: SaveState, screen: GameState['ui']['screen']): SaveState {
   // The card and the naming come between; where he was stays as it was.
   // A fight is entered from the map and left back to it, so he stays on the map.
-  if (screen === 'loading' || screen === 'story' || screen === 'naming' || screen === 'fight') {
+  if (
+    screen === 'loading' ||
+    screen === 'story' ||
+    screen === 'naming' ||
+    screen === 'fight' ||
+    screen === 'shop'
+  ) {
     return save;
   }
   const onMap = screen === 'map';
@@ -620,7 +627,7 @@ function leavingRoom(state: GameState, action: Action): RoomState | null {
  * fights over it (store/fight-reducer.ts).
  */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
-  return withFights(createRoomReducer(roomList), roomList);
+  return withShop(withFights(createRoomReducer(roomList), roomList), roomList);
 }
 
 function createRoomReducer(roomList: readonly RoomSpec[]): Reduce {

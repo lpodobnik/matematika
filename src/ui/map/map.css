@@ -207,6 +207,17 @@
   font-size: clamp(14px, 2cqw, 26px);
 }
 
+/* With the parts counter in the corner (story 3.6), the note sits above it. */
+.map__board:has(.parts-counter) .map__note {
+  bottom: calc(1.5cqw + 52px + 10px);
+}
+
+@media (max-height: 499.98px) {
+  .map__board:has(.parts-counter) .map__note {
+    bottom: calc(1.5cqw + 44px + 8px);
+  }
+}
+
 @keyframes glyph-flow {
   to {
     stroke-dashoffset: -32;
@@ -289,6 +300,14 @@
 /* Story 3.4: the torn pages, under the city's log. */
 .map__pages-button {
   top: calc(2.5cqw + max(48px, 4.5cqw) + 12px);
+}
+
+/* Story 3.6: his parts, in the board's bottom-right corner, where no place sits. */
+.map__board .parts-counter {
+  top: auto;
+  right: 1.5cqw;
+  bottom: 1.5cqw;
+  left: auto;
 }
 
 .map__log-button:active {

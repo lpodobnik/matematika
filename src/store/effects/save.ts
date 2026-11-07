@@ -29,6 +29,7 @@ export const SAVE_TRIGGERS: ReadonlySet<DomainEventType> = new Set<DomainEventTy
   'DiceRolled',
   'StrikeLanded',
   'FightLeft',
+  'UpgradeBought',
 ]);
 
 /**

@@ -2,8 +2,8 @@
 // Structure). Pure: the map, what he has finished and earned, and the rooms that exist come
 // in. A node shows once a room beside it is finished (room 1 from the start). It opens when
 // its gate is met (tools and finished rooms, never parts: FR32) and it is a room that is
-// authored. A lair opens once seen and takes him into a fight (story 3.1); the workshop
-// shows but takes him nowhere until its story.
+// authored. A lair opens once seen and takes him into a fight (story 3.1); the workshop opens
+// on its gate, into the old mechanic's counter (story 3.5).
 
 import type { LockKind, MapSpec, NodeId, NodeKind, NodeSpec } from '@/city/types';
 
@@ -69,7 +69,7 @@ export function nextRoomOnMap(map: MapSpec, reach: Reach): string | null {
  * - `restored`, a room he has finished, its change in colour;
  * - `open`, a room he can travel to;
  * - `locked`, seen with its gate shut, its lock showing what opens it;
- * - `seen`, seen with its gate met but taking him nowhere yet (a lair, the workshop, a room
+ * - `seen`, seen with its gate met but taking him nowhere yet (a room
  *   whose story comes later);
  * - `winding`, a lair whose automaton is winding down after a win, until it rewinds (story 3.3);
  * - `closed`, not seen yet: grey and still (NFR12).
@@ -82,6 +82,8 @@ export function nodeState(map: MapSpec, node: NodeSpec, reach: Reach): NodeState
   if (!nodeSeen(map, node.id, reach)) return 'closed';
   // A lair is open once seen (GDD, Level Structure); fights never need a tool (story 3.1).
   if (node.kind === 'lair') return reach.asleep?.includes(node.id) ? 'winding' : 'open';
+  // The workshop opens on its gate (room 6), into the old mechanic's counter (story 3.5).
+  if (node.kind === 'workshop' && gateMet(node, reach)) return 'open';
   return gateMet(node, reach) ? 'seen' : 'locked';
 }
 

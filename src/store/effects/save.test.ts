@@ -50,6 +50,7 @@ describe('the save effect', () => {
       'StageLocked',
       'StageReset',
       'StrikeLanded',
+      'UpgradeBought',
     ]);
   });
 
