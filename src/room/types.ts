@@ -62,6 +62,7 @@ export const ideaIds = [
   'take-away',
   'story',
   'simplify',
+  'linked',
 ] as const;
 export type IdeaId = (typeof ideaIds)[number];
 export type ToolId = (typeof toolIds)[number];
@@ -125,6 +126,11 @@ export interface StageSpec {
   blinds?: { readouts?: true; stillPans?: true; shortDial?: number };
   /** Story 4.2: the tray also holds an x-gear (GDD room 9: from here on). */
   trayGear?: true;
+  /**
+   * Story 4.7, a linked machine (room 12): this stage's equation holds the answer of stage
+   * `from` as a weight, where `template` has ☐ (room/linked.ts).
+   */
+  fed?: { from: number; template: string };
   /**
    * Story 4.5, a story stage (room 10): `build`, a story he writes as the stage's equation
    * before the pans fill; or `options`, the stories a `story-choice` pin chooses among, each

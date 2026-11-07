@@ -8,7 +8,8 @@ import type { LockKind, NodeId, NodeKind } from '@/city/types';
  * rays, the gate is up with water running under it, the wheel's spokes turn. Grey ink and
  * still until then. Rooms whose stories come later, the lairs, the workshop and the gate
  * get a plain sign of their kind. Story 2.8 adds the bridge, 2.9 the weighing yard, 2.10 the old
- * logbook, 4.3 the tram, 4.4 the steam lift, 4.5 the market scales, 4.6 the great wheel.
+ * logbook, 4.3 the tram, 4.4 the steam lift, 4.5 the market scales, 4.6 the great wheel,
+ * 4.7 the junction.
  */
 export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; state: NodeState }) {
   const restored = state === 'restored';
@@ -35,6 +36,8 @@ export function NodeGlyph({ id, kind, state }: { id: NodeId; kind: NodeKind; sta
       return <MarketScales restored={restored} />;
     case 'r11':
       return <GreatWheel restored={restored} />;
+    case 'r12':
+      return <Junction restored={restored} />;
     default:
       return <KindSign kind={kind} />;
   }
@@ -276,6 +279,19 @@ function GreatWheel({ restored }: { restored: boolean }) {
         <path d={spokes.join(' ')} />
       </g>
       <circle cx="0" cy="-4" r="6" className={restored ? 'glyph__lit' : undefined} />
+    </g>
+  );
+}
+
+/** Room 12: two meshed gears, the first driving the second; restored, both are lit. */
+function Junction({ restored }: { restored: boolean }) {
+  const lit = restored ? 'glyph__lit' : undefined;
+  return (
+    <g>
+      <circle cx="-16" cy="6" r="18" className={lit} />
+      <circle cx="18" cy="-12" r="13" className={lit} />
+      <path d="M-16 -18 V-12 M-16 24 V30 M-40 6 H-34 M2 6 H8 M18 -31 V-25 M18 1 V7 M37 -12 H31" />
+      <path d="M-34 38 H34" />
     </g>
   );
 }

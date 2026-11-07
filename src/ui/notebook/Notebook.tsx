@@ -16,6 +16,7 @@ import type { LineToken, Token } from '@/math/tokens';
 import { type ChainView, chainView } from '@/room/chain';
 import { type DialView, dialView } from '@/room/dial';
 import { handoverView } from '@/room/handover';
+import { type LinkedView, linkedView } from '@/room/linked';
 import { type LogbookView, logbookView } from '@/room/logbook';
 import {
   draftDisplay,
@@ -56,6 +57,7 @@ import { HelpNote } from '@/ui/notebook/HelpNote';
 import { HintNote } from '@/ui/notebook/HintNote';
 import { watchKeyboard } from '@/ui/notebook/keyboard';
 import { LineView, textLine } from '@/ui/notebook/LineView';
+import { LinkedPanel } from '@/ui/notebook/LinkedPanel';
 import { LogbookLine } from '@/ui/notebook/LogbookLine';
 import { NumberPad } from '@/ui/notebook/NumberPad';
 import { pressHandle, shownAside } from '@/ui/notebook/notebook-aside';
@@ -124,6 +126,9 @@ export function Notebook() {
   const range = useMemo(() => JSON.parse(rangeKey) as RangeView | null, [rangeKey]);
   const dial = useGame(useShallow((s) => dialView(s.room)));
   const fineDial = dial?.coarse !== undefined ? dial : null;
+  // Story 4.7: a linked machine (room 12).
+  const linkedKey = useGame((s) => JSON.stringify(linkedView(s.room)));
+  const linked = useMemo(() => JSON.parse(linkedKey) as LinkedView | null, [linkedKey]);
   const onScene = hinting ? hintOnScene : step !== null && !isNotebookHandover(step);
   const shownStep = hinting ? `hint-${presses}` : step;
   const waiting = pinWaits ? stageAt : onScene && stageAt ? `${stageAt}:${shownStep}` : null;
@@ -217,6 +222,7 @@ export function Notebook() {
       onFlagRange={(index) => dispatch({ type: 'pin/set', value: { kind: 'bucket', index } })}
       fineDial={fineDial}
       onNudge={(by) => dispatch({ type: 'dial/nudge', by })}
+      linked={linked}
       chain={chain}
       pick={picking ? pick : null}
       chainPulse={chainHint}
@@ -241,6 +247,8 @@ export interface NotebookPageProps {
   onFlagRange?(index: number): void;
   /** Story 4.6: a coarse dial, for its single steps, or null. */
   fineDial?: DialView | null;
+  /** Story 4.7: a linked machine, or null. */
+  linked?: LinkedView | null;
   onNudge?(by: 1 | -1): void;
   /** Story 4.1: the gear chain, or null in a stage without it. */
   chain?: ChainView | null;
@@ -318,6 +326,7 @@ export function NotebookPage({
   onFlagRange = () => {},
   fineDial = null,
   onNudge = () => {},
+  linked = null,
   chain = null,
   pick = null,
   chainPulse = false,
@@ -410,6 +419,7 @@ export function NotebookPage({
       >
         {story && <StoryPanel view={story} onFlag={onFlagStory} onConfirm={onConfirmPin} />}
         {range && <RangePanel view={range} onFlag={onFlagRange} onConfirm={onConfirmPin} />}
+        {linked && <LinkedPanel view={linked} />}
         {fineDial && <FineDial dial={fineDial} onNudge={onNudge} />}
         {chain && (
           <ChainStrip

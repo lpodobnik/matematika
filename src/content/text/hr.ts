@@ -162,6 +162,10 @@ export const hr = {
             `Piše da odustaneš, ${name}. A kolo se vrti. Mislim da ga je strah.`,
         },
       ],
+      r12: [
+        { who: 'faust', text: 'Ovo je Kristijanov bubanj. Pamti svaki x koji isprobaš.' },
+        { who: 'nikola', text: 'Na njemu su točkice. Kao da nešto crta.' },
+      ],
       r09: [
         { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO KORACIMA. OTVARANJE NIJE PREDVIĐENO.' },
         { who: 'nikola', text: 'Pečat je pao. Ali tko lijepi te papire po cijelom gradu?' },
@@ -221,6 +225,10 @@ export const hr = {
       simplify: {
         term: 'Pojednostavljivanje',
         text: 'Kad su brojevi preveliki za isprobavanje, pojednostavi jednadžbu korak po korak. Klizač je provjera.',
+      },
+      linked: {
+        term: 'Povezane jednadžbe',
+        text: 'Rješenje jedne jednadžbe može biti broj u drugoj. Zato prvu riješi točno.',
       },
       mistake: {
         term: 'Traženje pogreške',
@@ -408,6 +416,14 @@ export const hr = {
     /** For screen readers, on a story's flag. */
     flag: (n: number) => `Zastavica na priču ${n}`,
     confirm: 'Potvrdi',
+  },
+  /** Story 4.7: linked machines (room 12), at the top of the notebook. */
+  linked: {
+    label: 'Povezani strojevi',
+    feeds: 'Rješenje ovog stroja ide u sljedeći:',
+    fed: 'Rješenje prethodnog stroja je ovdje uteg:',
+    /** For screen readers: the ☐ the answer will fill. */
+    slot: 'prazno mjesto',
   },
   /** Story 4.6: a range pin's places (room 11), and a coarse dial's single steps. */
   range: {

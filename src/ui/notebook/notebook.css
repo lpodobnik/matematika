@@ -858,3 +858,49 @@
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
+
+/* Story 4.7: a linked machine's ☐, and the answer that came into it, marked. */
+.linked-panel__lead {
+  display: block;
+  font-size: 0.85em;
+}
+
+.linked-panel__equation {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.linked-panel__slot {
+  display: inline-block;
+  min-width: 1.2em;
+  padding: 0 0.2em;
+  border: 2px dashed var(--ink);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.linked-panel__slot[data-filled="true"] {
+  border-style: solid;
+  background: var(--lamp-wash);
+}
+
+@media (max-height: 499.98px) {
+  /* On a phone the link is one line, its equation: the lead gives way (story 4.7 review). */
+  .linked-panel {
+    flex-shrink: 0;
+  }
+
+  .linked-panel__lead {
+    display: none;
+  }
+
+  .notebook:has(.linked-panel) {
+    gap: 4px;
+    padding: 4px 8px;
+  }
+
+  /* The card is the equation: line 0 makes room for the pad. */
+  .notebook:has(.linked-panel) .line--given {
+    display: none;
+  }
+}

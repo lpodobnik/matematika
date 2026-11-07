@@ -47,7 +47,7 @@ describe.each(Object.entries(LINE_TABLE))('%s', (_name, rows) => {
 describe('the line table', () => {
   const rows = Object.values(LINE_TABLE).flat();
 
-  it('covers every stage of rooms 1–11', () => {
+  it('covers every stage of rooms 1–12', () => {
     const stages = new Set(rows.map((row) => row.stage));
     for (const stage of [
       'x + 4 = 9',
@@ -65,6 +65,8 @@ describe('the line table', () => {
       '60 + 3x = 90',
       '5 + 2x = 19',
       '5 905 − 27x = 316',
+      '2x + 3 = 11',
+      '3x + 4 = 19',
     ]) {
       expect(stages, stage).toContain(stage);
     }

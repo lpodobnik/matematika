@@ -254,6 +254,22 @@ const gddRooms: readonly {
     ways: ['balance', 'undo'],
     earns: null,
   },
+  {
+    id: 'r12',
+    machine: 'junction',
+    xIs: 'Gear sizes, the first passed to the second',
+    equations: ['2x + 3 = 11', '3x + 4 = 19'],
+    answers: [4, 5],
+    types: ['solve', 'solve'],
+    dials: [
+      { min: 0, max: 10, step: 1 },
+      { min: 0, max: 10, step: 1 },
+    ],
+    pokeNotches: [4, 4],
+    pins: [{ kind: 'level-x' }, { kind: 'level-x' }],
+    ways: ['try', 'balance', 'undo'],
+    earns: 'drum',
+  },
 ];
 
 /** The x values the dial reaches before the pin is locked: the poke window. */
@@ -527,6 +543,22 @@ describe('rooms', () => {
         expect(fits, room.id).toHaveLength(1);
         expect(stage.pin, room.id).toEqual({ kind: 'story-choice' });
       }
+    }
+  });
+
+  // Story 4.7: a linked machine's template, filled with the feeding stage's answer, is its
+  // equation, and it is fed by an earlier stage.
+  it('fills each linked machine’s ☐ with the earlier machine’s answer', () => {
+    for (const room of rooms) {
+      room.stages.forEach((stage, index) => {
+        if (!stage.fed) return;
+        const from = room.stages[stage.fed.from];
+        expect(from && stage.fed.from < index, room.id).toBe(true);
+        if (!from) return;
+        const filled = stage.fed.template.replace('☐', String(stageSolution(stageEquation(from))));
+        expect(sameEquation(equationOf(filled), stageEquation(stage)), room.id).toBe(true);
+        expect(stage.fed.template.split('☐'), room.id).toHaveLength(2);
+      });
     }
   });
 
