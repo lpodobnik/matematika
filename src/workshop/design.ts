@@ -40,10 +40,22 @@ export const limits = {
 } as const;
 
 /**
- * The titles he picks from (GDD: "a fixed list, which keeps names and free text out"); their
- * text is `hr.workshop.titles`, and a link carries the index, so the list only grows.
+ * The titles he can pick from; their text is `hr.workshop.titles`. Older links carry the
+ * index, so the list only grows.
  */
 export const titleCount = 12;
+
+/** A room's name: his own words, or the index of a title in the list (older rooms). */
+export type RoomTitle = number | string;
+
+/** The longest name he can write. */
+export const titleMaxLength = 24;
+
+/** Whether a name can go in a link: a title from the list, or his own words, not too long. */
+export function titleOk(title: RoomTitle): boolean {
+  if (typeof title === 'number') return Number.isInteger(title) && title >= 0 && title < titleCount;
+  return title.length > 0 && title === title.trim() && [...title].length <= titleMaxLength;
+}
 
 /** Sending a room is free: making puzzles for friends should never be held back by parts. */
 export const costs: Readonly<Record<Piece | 'blind' | 'planted' | 'linked', number>> = {
@@ -279,7 +291,7 @@ export interface Planted {
 
 /** Everything a room link carries (architecture, Pattern 3): nothing about the sender. */
 export interface RoomPayload {
-  title: number;
+  title: RoomTitle;
   design: RoomDesign;
   planted: Planted | null;
   solution: Solution;

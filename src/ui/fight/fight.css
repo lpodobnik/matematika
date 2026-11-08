@@ -947,3 +947,47 @@
     animation: none;
   }
 }
+
+/* How big will the strike be? Two rows of keys, so it fits a phone held sideways. */
+.fight__guess {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  width: min(92vw, 440px);
+  max-height: 96dvh;
+  overflow-y: auto;
+}
+
+.fight__guess-ask,
+.fight__guess-note {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.fight__guess-answer {
+  font-weight: 700;
+}
+
+.fight__guess-pad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.fight__guess-key {
+  min-height: 48px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 700;
+  touch-action: manipulation;
+}
+
+.fight__guess-key:active {
+  background: var(--ink);
+  color: var(--paper);
+}

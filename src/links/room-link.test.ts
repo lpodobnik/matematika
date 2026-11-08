@@ -152,6 +152,19 @@ describe('room links', () => {
   });
 });
 
+describe('a room with his own name', () => {
+  it('travels there and back, Croatian letters and all', () => {
+    const room = { ...simple, title: 'Šaljivi čvor Ivića' };
+    expect(decodeRoom(encodeRoom(room))).toEqual(room);
+  });
+
+  it('reads as broken when the name is empty, spaces or too long', () => {
+    for (const title of ['', '   ', 'x'.repeat(25)]) {
+      expect(decodeRoom(encodeRoom({ ...simple, title })), title).toBeNull();
+    }
+  });
+});
+
 describe('released link versions', () => {
   it('read a version 1 link as it was sent, forever', () => {
     expect(decodeRoom(roomV1.data)).toEqual(roomV1.room);

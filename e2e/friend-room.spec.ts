@@ -174,7 +174,7 @@ test('a room for a friend: built, solved, sent, cracked and stamped', async ({
 
   // Solved: a title, then send, free of charge, and the link appears.
   await expect(page.locator('.workshop__speech')).toHaveText(hr.workshop.solved);
-  await page.getByRole('button', { name: hr.workshop.titles[2] }).click();
+  await page.locator('.workshop__title-input').fill('Ivin čvor');
   await shot('4-finish');
   await page.getByRole('button', { name: hr.workshop.send }).click();
   await expect(page.locator('.workshop__sent')).toBeVisible();
@@ -192,7 +192,7 @@ test('a room for a friend: built, solved, sent, cracked and stamped', async ({
   await fp.goto(link);
   await hook(fp);
   await expect(fp.locator('.friend__card')).toContainText(
-    hr.friend.welcome(hr.workshop.titles[2] ?? ''),
+    hr.friend.welcome('Ivin čvor'),
   );
   await expect(fp.locator('.friend__card')).toContainText(hr.friend.newHere);
   await fshot('1-welcome');

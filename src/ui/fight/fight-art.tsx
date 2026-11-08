@@ -58,7 +58,7 @@ export function DieFace({ value }: { value: number }) {
 const automatons: Record<number, string> = {
   20: automaton20,
   30: automaton30,
-  45: automaton45,
+  40: automaton45,
   60: automaton60,
 };
 

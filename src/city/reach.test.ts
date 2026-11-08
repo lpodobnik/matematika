@@ -39,7 +39,7 @@ describe('the district map (content/map.ts; GDD, Level Structure)', () => {
       'r02–lair-20',
       'r02–lair-30',
       'r07–lair-45',
-      'r13–lair-60',
+      'r12–lair-60',
       'r06–workshop',
       'r06–foundry',
     ]);

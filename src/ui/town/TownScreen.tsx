@@ -246,7 +246,7 @@ export function TownBoard({
   const [showIntro, setShowIntro] = useState(false);
   const [slides, setSlides] = useState<'logbook' | 'outro' | null>(() => {
     if (fresh === 'r07') return 'logbook';
-    return beaten('lair-60') && !readOutroSeen() ? 'outro' : null;
+    return done.includes('r13') && beaten('lair-60') && !readOutroSeen() ? 'outro' : null;
   });
   const [met, setMet] = useState<PersonId[]>(readMet);
   const path = useRef<Point[]>([]);
@@ -289,8 +289,7 @@ export function TownBoard({
         }
         // The street's automaton took this machine's parts: it comes first.
         const lairId = lairHere.current;
-        // Not the hill: automaton 60 is an optional boss (39% with perfect play, no upgrades).
-        const holds = lairId && lairId !== 'lair-60' && !beaten(lairId);
+        const holds = lairId && !beaten(lairId);
         if (node?.kind === 'room' && node.state === 'open' && holds) {
           setBubble({ who: 'self', at: job.place.marker, lines: [hr.town.places.held], line: 0 });
           return;
@@ -490,7 +489,8 @@ export function TownBoard({
   const nextNode =
     view.nodes.find((node) => node.next)?.id ??
     (done.length === 0 ? 'r01' : view.allDone ? 'foundry' : null);
-  const nextPlace = places.find((place) => place.node === nextNode);
+  // While the boss waits he is the next thing, not the machine he holds.
+  const nextPlace = bossWaits ? undefined : places.find((place) => place.node === nextNode);
   const nextExit = nextPlace ? undefined : exits.find((exit) => exit.to === areaOf(nextNode));
   const nextMarker = nextPlace?.marker ?? nextExit?.marker;
   const nextOffTown = nextNode !== null && !nextMarker;

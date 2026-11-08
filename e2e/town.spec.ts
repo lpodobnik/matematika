@@ -6,7 +6,10 @@
 import { expect, type Page, test } from '@playwright/test';
 import type { GameState } from '../src/store/types';
 
-type Game = { __s: { getState(): GameState }; __d(action: unknown): void };
+type Game = {
+  __s: { getState(): GameState; setState(partial: Partial<GameState>): void };
+  __d(action: unknown): void;
+};
 
 async function hook(page: Page) {
   await page.waitForFunction(() => !document.querySelector('.boot'), null, { timeout: 20_000 });
@@ -515,10 +518,28 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
   await shot(page, '13-wheel');
   await go('hill');
   await expect(page.locator('.town__place[data-node="r13"]')).toHaveAttribute('data-state', 'open');
-  // The final fight waits for the last machine.
-  await expect(page.locator('.town__figure--automaton')).toHaveCount(0);
+  // The boss holds the last machine: the clock tower does not open while he stands.
+  await expect(page.locator('.town__figure--automaton')).toBeVisible();
   await shot(page, '14-hill');
-  // The clock tower opens room 13.
+  await page.locator('.town__place[data-node="r13"]').click();
+  await expect(page.locator('.town__bubble')).toContainText('Pobijedi');
+  await page.locator('.town__bubble').click();
+  await expect(page.locator('.town__bubble')).toHaveCount(0);
+  expect(await page.evaluate(() => (window as unknown as Game).__s.getState().room)).toBeNull();
+  // Once he is beaten, the clock tower opens room 13.
+  await page.evaluate(() => {
+    const { __s } = window as unknown as Game;
+    const s = __s.getState();
+    __s.setState({
+      save: {
+        ...s.save,
+        economy: {
+          ...s.save.economy,
+          lairs: { ...s.save.economy.lairs, 'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' } },
+        },
+      },
+    });
+  });
   await page.locator('.town__place[data-node="r13"]').click();
   await page.waitForFunction(
     () => (window as unknown as Game).__s.getState().room?.spec.id === 'r13',
@@ -527,7 +548,7 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
   );
 });
 
-test('the final fight won, the story ends: four panels, told once', async ({ page }) => {
+test('the last machine fixed, the story ends: four panels, told once', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
@@ -541,7 +562,13 @@ test('the final fight won, the story ends: four panels, told once', async ({ pag
         save: {
           ...s.save,
           character: { name: 'Ivo', look: 'look-1' },
-          progress: { ...s.save.progress, introSeen: true, onMap: true },
+          progress: {
+            ...s.save.progress,
+            introSeen: true,
+            onMap: true,
+            roomsDone: ['r13'],
+            told: ['r13'],
+          },
           economy: {
             ...s.save.economy,
             lairs: { 'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' } },
@@ -671,6 +698,10 @@ test('the district done: the foundry gate is marked, sealed, and to be continued
           told: done,
           tools: ['balance', 'workshop', 'chain', 'drum'],
           onMap: true,
+        },
+        economy: {
+          ...s.save.economy,
+          lairs: { 'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' } },
         },
       },
       room: null,

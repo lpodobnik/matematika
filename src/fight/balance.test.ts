@@ -44,7 +44,8 @@ interface Row {
 const GDD: Row[] = [
   { lair: 'lair-20', reasoning: { win: 99.7, parts: 13 }, random: { win: 98, parts: 7 } },
   { lair: 'lair-30', reasoning: { win: 97, parts: 12 }, random: { win: 83, parts: 5.5 } },
-  { lair: 'lair-45', reasoning: { win: 81, parts: 8.5 }, random: { win: 41, parts: 2.5 } },
+  // Lowered from armour 45 after the tablet playtest: the GDD's 81% and 41% were too hard.
+  { lair: 'lair-45', reasoning: { win: 88.7, parts: 10.3 }, random: { win: 55.2, parts: 3.7 } },
   {
     lair: 'lair-60',
     reasoning: { win: 39, parts: 3.5 },

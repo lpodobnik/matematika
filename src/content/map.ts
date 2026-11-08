@@ -57,11 +57,11 @@ export const districtMap: MapSpec = {
     ['r12', 'r13'],
     // Off the rooms: an automaton shows as its street opens, since it holds that street's
     // machine (the GDD had them after rooms 2, 5, 8 and 12), and the last, the final fight,
-    // once the last machine runs; the workshop and the foundry gate off room 6.
+    // holds the last machine; the workshop and the foundry gate off room 6.
     ['r02', 'lair-20'],
     ['r02', 'lair-30'],
     ['r07', 'lair-45'],
-    ['r13', 'lair-60'],
+    ['r12', 'lair-60'],
     ['r06', 'workshop'],
     ['r06', 'foundry'],
   ],

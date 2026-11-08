@@ -6,6 +6,7 @@ import { useGame } from '@/store/store';
 import type { SentRoom } from '@/store/types';
 import { ShareLink } from '@/ui/common/ShareLink';
 import { roomUrl } from '@/ui/workshop/links';
+import { roomTitleText } from '@/ui/workshop/room-title';
 import { equations } from '@/workshop/design';
 
 /**
@@ -38,10 +39,7 @@ export function WorkshopWall() {
       </div>
       {replied?.stamp && (
         <p ref={reply} className="wall__reply" role="status">
-          {hr.workshop.reply(
-            hr.workshop.titles[replied.title] ?? '',
-            hr.workshop.stamps[replied.stamp],
-          )}
+          {hr.workshop.reply(roomTitleText(replied.title), hr.workshop.stamps[replied.stamp])}
         </p>
       )}
       <h2 className="workshop__name">{hr.workshop.wall}</h2>
@@ -61,7 +59,7 @@ export function WorkshopWall() {
 function WallRoom({ room, fresh }: { room: SentRoom; fresh: boolean }) {
   const [open, setOpen] = useState(false);
   const payload = decodeRoom(room.payload);
-  const name = hr.workshop.titles[room.title] ?? '';
+  const name = roomTitleText(room.title);
   return (
     <li
       className="wall__room"

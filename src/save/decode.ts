@@ -215,9 +215,9 @@ function decodeSent(value: unknown): SentRoom | null {
   const { id, payload, title, stamp } = value;
   if (typeof id !== 'string' || !/^[0-9a-z]{1,12}$/.test(id)) return null;
   if (typeof payload !== 'string' || !/^[A-Za-z0-9_-]{1,2400}$/.test(payload)) return null;
-  if (typeof title !== 'number' || !Number.isInteger(title) || title < 0 || title > 255) {
-    return null;
-  }
+  const ownName = typeof title === 'string' && title.length > 0 && title.length <= 64;
+  const listed = typeof title === 'number' && Number.isInteger(title) && title >= 0 && title <= 255;
+  if (!ownName && !listed) return null;
   return { id, payload, title, stamp: stamp === 'cracked' || stamp === 'uncracked' ? stamp : null };
 }
 

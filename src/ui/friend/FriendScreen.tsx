@@ -7,6 +7,7 @@ import { useGame } from '@/store/store';
 import type { FriendFlow } from '@/store/types';
 import { ShareLink } from '@/ui/common/ShareLink';
 import { gameUrl, replyUrl } from '@/ui/workshop/links';
+import { roomTitleText } from '@/ui/workshop/room-title';
 import { equations, type RoomPayload } from '@/workshop/design';
 
 /**
@@ -23,7 +24,7 @@ export function FriendScreen() {
 
 /** The friend's cards from props only. */
 export function FriendCard({ friend, onNext }: { friend: FriendFlow; onNext(): void }) {
-  const name = friend.room ? (hr.workshop.titles[friend.room.title] ?? '') : '';
+  const name = friend.room ? roomTitleText(friend.room.title) : '';
   return (
     <main className="friend" data-step={friend.step}>
       <div className="friend__card">

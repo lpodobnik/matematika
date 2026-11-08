@@ -209,14 +209,13 @@ export const hr = {
       ],
       r12: [
         { who: 'faust', text: 'Ovo je Kristijanova zapisna ploča. Pamti svaki x koji isprobaš.' },
-        { who: 'nikola', text: 'Na njoj su brojevi. Kao da sama nešto zapisuje.' },
+        {
+          who: 'nikola',
+          text: 'Pod tornjem stoji čuvar Prvog Automata. Dok ga ne pobijediš, ne možeš do sata.',
+        },
       ],
       r13: [
         { who: 'nikola', text: 'Sve točkice leže na jednoj liniji. I svi strojevi opet rade!' },
-        {
-          who: 'faust',
-          text: 'Još nije gotovo. Pod tornjem stoji čuvar Prvog Automata i ne da nam dalje.',
-        },
       ],
       r09: [
         { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO UPUTAMA. OTVARANJE NIJE PREDVIĐENO.' },
@@ -379,7 +378,7 @@ export const hr = {
       // Each lair is named by its automaton's armour, so he can choose which to take on.
       'lair-20': 'Automat 20',
       'lair-30': 'Automat 30',
-      'lair-45': 'Automat 45',
+      'lair-45': 'Automat 40',
       'lair-60': 'Automat 60',
       workshop: 'Radionica',
       foundry: 'Ljevaonica',
@@ -612,7 +611,7 @@ export const hr = {
         ],
         after: [
           'Čuješ li? Svi strojevi u gradu opet rade!',
-          'Ostao je još samo čuvar Prvog Automata. Za njega ti treba Radionica.',
+          'Kristijan je u ljevaonici. A njezina vrata su zatvorena.',
         ],
       },
     },
@@ -875,6 +874,14 @@ export const hr = {
     /** For screen readers: the blows dial's notch. */
     blowsNotch: (x: number) => `${x} ${blowsWord(x)}`,
     strike: 'Udari',
+    /** Once he has beaten an automaton, a strike asks first how big it will be. */
+    guess: {
+      ask: 'Koliki će biti udarac?',
+      check: 'Provjeri',
+      change: 'Promijeni kockice',
+      wrong: 'Nije. Prvo pomnoži, pa dodaj.',
+      right: (damage: number, armour: number) => `Točno: udarac je ${damage}, a oklop ${armour}.`,
+    },
     /** Leaving: free before the first strike, a loss after it (story 3.2). */
     leave: 'Odlazak',
     leaveLoses: 'Ako sada odeš, automat pobjeđuje i dio tvojih dijelova ostaje ovdje.',
@@ -896,10 +903,9 @@ export const hr = {
     bossLost:
       'Čuvar je jak. Dijelove ti ne uzima: kupi nadogradnje u Radionici na Trgu i vrati se.',
     /** The district's last fight won. */
-    finale: 'Čuvar Prvog Automata je pao. Donji Kotač opet radi!',
+    finale: 'Čuvar Prvog Automata je pao. Put do sata je slobodan!',
     /** Prvi Automat's last notice: the district ends at the foundry door. */
-    finaleNote:
-      'ŠEGRT NIJE U UPUTAMA. MAJSTOR JE U LJEVAONICI. VRATA SU ZATVORENA. HVALA. PRVI AUTOMAT',
+    finaleNote: 'MAJSTOR JE U LJEVAONICI. ŠEGRTIMA ULAZ ZABRANJEN. HVALA. PRVI AUTOMAT',
     lost: 'Automat je ovaj put jači.',
     reasons: {
       hull: 'Trup ne može podnijeti još jedno udubljenje.',
@@ -1100,6 +1106,7 @@ export const hr = {
     plantReady: 'Krivi redak je spreman.',
     plantPick: 'Dodirni redak koji želiš pokvariti.',
     pickTitle: 'Ime stroja',
+    titleOwn: 'Upiši svoje ime ili odaberi jedno',
     /** The fixed list of titles (GDD): a link carries the index, so only add at the end. */
     titles: [
       'Tvrdi orah',

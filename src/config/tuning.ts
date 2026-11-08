@@ -101,8 +101,8 @@ export const tuning = {
   },
   /** GDD, Automaton fights: the three upgrades, their costs in parts and what they add. */
   upgrades: {
-    'fourth-die': { cost: 40, dice: 1, steam: 0, hull: 0 },
-    steam: { cost: 20, dice: 0, steam: 3, hull: 0 },
-    hull: { cost: 30, dice: 0, steam: 0, hull: 1 },
+    'fourth-die': { cost: 30, dice: 1, steam: 0, hull: 0 },
+    steam: { cost: 10, dice: 0, steam: 3, hull: 0 },
+    hull: { cost: 20, dice: 0, steam: 0, hull: 1 },
   },
 } as const;

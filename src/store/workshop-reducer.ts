@@ -24,9 +24,10 @@ import {
   type Planted,
   plantWorks,
   type RoomPayload,
+  type RoomTitle,
   roomSpecOf,
   type Solution,
-  titleCount,
+  titleOk,
   withFedNumbers,
 } from '@/workshop/design';
 
@@ -85,11 +86,11 @@ function solveStep(inner: Reduce, state: GameState, action: Action, ctx: Paramet
 }
 
 /** Sends the solved room: the payload, its id, the cost paid, and the room on the wall. */
-function sendStep(state: GameState, title: number, planted: Planted | null): Step {
+function sendStep(state: GameState, title: RoomTitle, planted: Planted | null): Step {
   const flow = state.ui.workshop;
   if (state.ui.screen !== 'workshop' || flow?.step !== 'finish') return unchanged(state);
   const { design, solution } = flow;
-  if (!Number.isInteger(title) || title < 0 || title >= titleCount) return unchanged(state);
+  if (!titleOk(title)) return unchanged(state);
   if (checkSolution(design, solution) !== null) return unchanged(state);
   if (design.plant !== (planted !== null)) return unchanged(state);
   if (planted && !plantWorks(design, solution, planted)) return unchanged(state);

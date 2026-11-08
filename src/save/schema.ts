@@ -20,8 +20,8 @@ export interface SentRoom {
   id: string;
   /** The link's data, `<data>` in `#s=<data>`, so the wall can show the link again. */
   payload: string;
-  /** Its title's index in `hr.workshop.titles`. */
-  title: number;
+  /** Its name: his own words, or (older rooms) an index in `hr.workshop.titles`. */
+  title: number | string;
   /** The last reply's stamp, or null before any reply. */
   stamp: Stamp | null;
 }

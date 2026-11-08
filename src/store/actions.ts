@@ -64,7 +64,7 @@ export type Action =
   /** Epic 5: back from the finished machine to setting it up again. */
   | { type: 'workshop/redesign' }
   /** Epic 5: sends the solved machine with its title and planted line; charges its cost. */
-  | { type: 'workshop/send'; title: number; planted: Planted | null }
+  | { type: 'workshop/send'; title: number | string; planted: Planted | null }
   /** Epic 5: a reply link opened at launch stamps a room he sent. */
   | { type: 'workshop/reply'; id: string; stamp: Stamp }
   /**

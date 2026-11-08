@@ -2,7 +2,8 @@
 // friend travels whole in the URL fragment, `#s=<data>`: no server, and nothing about the
 // sender (NFR5, NFR7). The data is bits, then base64url:
 //
-//   version u8 · title u8 · blinds (readouts, short dial) u1 u1 · planted u1 · machines u2
+//   version u8 · title · blinds (readouts, short dial) u1 u1 · planted u1 · machines u2
+//   title: version 1, u8, an index in the list; version 2, length u7 and his words in UTF-8
 //   each machine: form u4, then each number its form takes (a u7; b, c, d u14)
 //   planted line, if any: machine u2, line u4, the line
 //   each machine's solution: count u4, then the lines
@@ -25,9 +26,10 @@ import {
   type MachineDesign,
   plantWorks,
   type RoomPayload,
+  type RoomTitle,
   resolvedNumbers,
   type Solution,
-  titleCount,
+  titleOk,
 } from '@/workshop/design';
 import { type FormId, formIds, forms, type Slot } from '@/workshop/forms';
 import { fromBase64Url, toBase64Url } from './backup';
@@ -37,6 +39,8 @@ export const roomPrefix = '#s=';
 export const replyPrefix = '#r=';
 
 export const linkVersion = 1;
+/** The version of a link whose room has his own words for a name. */
+export const linkVersionOwnTitle = 2;
 
 /** The longest payload read at all: far past the largest legal room. */
 const maxPayload = 2400;
@@ -112,8 +116,15 @@ function readLine(input: BitReader): string {
 export function roomBytes(room: RoomPayload): Uint8Array {
   const out = new BitWriter();
   const { design, planted, solution } = room;
-  out.write(linkVersion, 8);
-  out.write(room.title, 8);
+  if (typeof room.title === 'number') {
+    out.write(linkVersion, 8);
+    out.write(room.title, 8);
+  } else {
+    const words = new TextEncoder().encode(room.title);
+    out.write(linkVersionOwnTitle, 8);
+    out.write(words.length, 7);
+    for (const byte of words) out.write(byte, 8);
+  }
   out.write(design.blinds.readouts ? 1 : 0, 1);
   out.write(design.blinds.shortDial ? 1 : 0, 1);
   out.write(planted ? 1 : 0, 1);
@@ -149,9 +160,16 @@ function readMachine(input: BitReader): MachineDesign {
   return { form, numbers };
 }
 
+function readTitle(input: BitReader): RoomTitle {
+  const version = input.read(8);
+  if (version === linkVersion) return input.read(8);
+  if (version !== linkVersionOwnTitle) throw new Error('version');
+  const words = Uint8Array.from({ length: input.read(7) }, () => input.read(8));
+  return new TextDecoder('utf-8', { fatal: true }).decode(words);
+}
+
 function readPayload(input: BitReader): RoomPayload {
-  if (input.read(8) !== linkVersion) throw new Error('version');
-  const title = input.read(8);
+  const title = readTitle(input);
   const readouts = input.read(1) === 1;
   const shortDial = input.read(1) === 1;
   const hasPlant = input.read(1) === 1;
@@ -173,14 +191,14 @@ function readPayload(input: BitReader): RoomPayload {
 }
 
 /**
- * Whether a room keeps the rules a link must: a title from the list, 1–3 machines of known
+ * Whether a room keeps the rules a link must: a name that can be shown, 1–3 machines of known
  * forms with numbers in their limits and whole answers, the fed numbers right, his solution
  * solving every machine, and a planted line that is wrong where it stands. The forms met
  * don't matter here: the friend didn't build it.
  */
 export function roomValid(room: RoomPayload): boolean {
   const { design } = room;
-  if (!Number.isInteger(room.title) || room.title < 0 || room.title >= titleCount) return false;
+  if (!titleOk(room.title)) return false;
   const count = design.machines.length;
   if (count < 1 || count > limits.machines) return false;
   if (!designValid(room)) return false;

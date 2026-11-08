@@ -48,9 +48,9 @@ const dispatch = (page: Page, action: unknown) =>
 const toSix = ['r01', 'r02', 'r03', 'r04', 'r05', 'r06'];
 
 /** A game with rooms 1–6 done and some parts, in the town, as a save would bring it. */
-async function startOnTheMap(page: Page, parts: number) {
+async function startOnTheMap(page: Page, parts: number, beatenOne = false) {
   await page.evaluate(
-    async ({ done, parts }) => {
+    async ({ done, parts, beatenOne }) => {
       const persist: string = '/src/store/persist.ts';
       const p = await import(/* @vite-ignore */ persist);
       const s = p.newSave('2026-11-07T08:00:00.000Z');
@@ -69,13 +69,17 @@ async function startOnTheMap(page: Page, parts: number) {
             // Past the guided first fight, which e2e/fight-guide.spec.ts walks through.
             firstUse: ['fight-guide'],
           },
-          economy: { ...s.economy, parts },
+          economy: {
+            ...s.economy,
+            parts,
+            lairs: beatenOne ? { 'lair-20': { rewindsAt: '2000-01-01T00:00:00.000Z' } } : {},
+          },
         },
         room: null,
         fight: null,
       });
     },
-    { done: toSix, parts },
+    { done: toSix, parts, beatenOne },
   );
   await expect(page.locator('.town__board')).toBeVisible();
 }
@@ -112,13 +116,79 @@ async function round(page: Page, hard: boolean) {
   // He sees a · x + b with his numbers, never the total, until the strike.
   await expect(page.locator('.fight__formula')).not.toContainText('=');
   await page.locator('.fight__strike').click();
+  await answerGuess(page);
   await expect(page.locator('.fight__banner')).toContainText('=');
+}
+
+/** Works out the strike if he is asked, once he has beaten an automaton, and lands it. */
+async function answerGuess(page: Page) {
+  const guess = page.locator('.fight__guess');
+  if ((await guess.count()) === 0) return;
+  const damage = await guessDamage(page);
+  await tapNumber(page, damage);
+  await guess.getByRole('button', { name: 'Provjeri' }).click();
+  await guess.getByRole('button', { name: 'Udari' }).click();
+}
+
+async function guessDamage(page: Page): Promise<number> {
+  const text = (await page.getByTestId('guess-formula').textContent()) ?? '';
+  const [a, x, b] = (text.match(/\d+/g) ?? []).map(Number);
+  return (a ?? 0) * (x ?? 0) + (b ?? 0);
+}
+
+async function tapNumber(page: Page, value: number) {
+  for (const digit of String(value)) {
+    await page.locator('.fight__guess-key', { hasText: digit }).click();
+  }
 }
 
 const over = async (page: Page) => {
   const phase = (await state(page)).fight?.phase;
   return phase === 'won' || phase === 'lost';
 };
+
+test('once he has beaten an automaton, a strike asks how big it will be', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await startOnTheMap(page, 0, true);
+  await dispatch(page, { type: 'map/travel', node: 'lair-30' });
+  await page.locator('.fight__roll').click();
+  for (const [die, slot] of ['blade', 'reach', 'charge'].entries()) {
+    await page.locator(`.fight__die[data-die="${die}"]`).click();
+    await page.locator(`.fight__slot[data-slot="${slot}"]`).click();
+  }
+  await page.locator('.fight__notch:not([disabled])').first().click();
+  const guess = page.locator('.fight__guess');
+
+  // Going back costs nothing: nothing has landed.
+  await page.locator('.fight__strike').click();
+  await expect(guess).toBeVisible();
+  await guess.getByRole('button', { name: 'Promijeni kockice' }).click();
+  await expect(guess).toHaveCount(0);
+  expect((await state(page)).fight?.strikes).toBe(0);
+
+  // A wrong answer doesn't strike.
+  await page.locator('.fight__strike').click();
+  const damage = await guessDamage(page);
+  await tapNumber(page, damage + 1);
+  await guess.getByRole('button', { name: 'Provjeri' }).click();
+  await expect(guess).toContainText('Nije');
+  expect((await state(page)).fight?.strikes).toBe(0);
+  await page.screenshot({ path: testInfo.outputPath('guess-wrong.png') });
+
+  // The right one sets it beside the armour, and he strikes.
+  await tapNumber(page, damage);
+  await guess.getByRole('button', { name: 'Provjeri' }).click();
+  await expect(guess).toContainText(`udarac je ${damage}`);
+  await page.screenshot({ path: testInfo.outputPath('guess-right.png') });
+  await guess.getByRole('button', { name: 'Udari' }).click();
+  await expect(page.locator('.fight__banner')).toContainText(String(damage));
+  expect((await state(page)).fight?.strikes).toBe(1);
+});
 
 test('fights from the map: lose, win the pile back with a page, and buy an upgrade', async ({
   page,

@@ -8,7 +8,7 @@ import type { LairId, LairSpec } from '@/fight/types';
 export const lairs: Readonly<Record<LairId, LairSpec>> = {
   'lair-20': { id: 'lair-20', armour: 20, baseParts: 3, page: null },
   'lair-30': { id: 'lair-30', armour: 30, baseParts: 4, page: 'page-1' },
-  'lair-45': { id: 'lair-45', armour: 45, baseParts: 5, page: 'page-2' },
+  'lair-45': { id: 'lair-45', armour: 40, baseParts: 5, page: 'page-2' },
   'lair-60': { id: 'lair-60', armour: 60, baseParts: 6, page: 'page-3' },
 };
 

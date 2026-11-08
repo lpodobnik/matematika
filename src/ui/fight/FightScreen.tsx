@@ -12,6 +12,7 @@ import { PartsCounterView, partsFlightMs } from '@/ui/common/PartsCounter';
 import { FightEndPanel, LeaveConfirm, StrikeBanner } from '@/ui/fight/FightEnd';
 import { FightGuide, guideMark } from '@/ui/fight/FightGuide';
 import { Automaton, DieFace, PunchedTape } from '@/ui/fight/fight-art';
+import { StrikeGuess } from '@/ui/fight/StrikeGuess';
 import { type Tap, tapDie, tapLeave, tapSlot } from '@/ui/fight/taps';
 
 /** As a · x + b reads, left to right: the blade, the reach that sets x, the charge. */
@@ -33,6 +34,7 @@ export function FightScreen() {
   const guide = useGame((s) => s.ui.fightGuide);
   const parts = useGame((s) => s.save.economy.parts);
   const piles = useGame((s) => s.save.economy.piles);
+  const beatenOne = useGame((s) => Object.keys(s.save.economy.lairs).length > 0);
   const dispatch = useGame((s) => s.dispatch);
   if (!fight) return null;
   return (
@@ -40,6 +42,7 @@ export function FightScreen() {
       fight={fight}
       end={end}
       guide={guide}
+      guess={beatenOne}
       pile={fight.strikes === 0 ? (piles[fight.lairId] ?? 0) : 0}
       onAction={dispatch}
     >
@@ -84,6 +87,8 @@ interface BoardProps {
   end?: FightEnd | null;
   /** The guided first fight's step, or null with no guide (fight/guide.ts). */
   guide?: GuideStep | null;
+  /** He must work out how big a strike will be before it lands (once he has beaten one). */
+  guess?: boolean;
   onAction(action: BoardAction): void;
 }
 
@@ -92,6 +97,7 @@ export function FightBoard({
   fight,
   end = null,
   guide = null,
+  guess = false,
   pile = 0,
   onAction,
   children,
@@ -99,6 +105,7 @@ export function FightBoard({
   const lair = lairs[fight.lairId];
   // Leaving after a strike loses the fight, so he is asked first (story 3.2).
   const [askLeave, setAskLeave] = useState(false);
+  const [guessing, setGuessing] = useState(false);
   // A torn page a win returned shows over the end until he closes it (story 3.4).
   const [pageRead, setPageRead] = useState<FightEnd | null>(null);
   // ...after the win's parts have landed on the counter, the only reward signal (NFR13).
@@ -111,7 +118,10 @@ export function FightBoard({
   // The question goes with the moment it was asked in: a new round or the end closes it.
   const moment = `${fight.round}:${fight.phase}`;
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new round or phase closes it
-  useEffect(() => setAskLeave(false), [moment]);
+  useEffect(() => {
+    setAskLeave(false);
+    setGuessing(false);
+  }, [moment]);
   // The die he has picked up, waiting for a slot. A new roll puts it down.
   const [heldDie, setHeld] = useState<number | null>(null);
   const rollKey = `${fight.round}:${fight.dice.join(',')}`;
@@ -190,6 +200,16 @@ export function FightBoard({
       {children}
       {over && end?.page && showsPage(end, pageDue, pageRead) && (
         <PageReturned page={end.page} onClose={() => setPageRead(end)} />
+      )}
+      {guessing && fight.phase === 'set' && (
+        <StrikeGuess
+          blade={placedValues(fight).blade ?? 0}
+          blows={fight.blows}
+          charge={placedValues(fight).charge ?? 0}
+          armour={fight.armour}
+          onBack={() => setGuessing(false)}
+          onStrike={() => onAction({ type: 'fight/strike' })}
+        />
       )}
       {askLeave && !over && (
         <LeaveConfirm
@@ -306,7 +326,8 @@ export function FightBoard({
               {...guideMark(guide, 'strike')}
               onClick={() => {
                 setHeld(null);
-                onAction({ type: 'fight/strike' });
+                if (guess) setGuessing(true);
+                else onAction({ type: 'fight/strike' });
               }}
             >
               {hr.fight.strike}

@@ -58,7 +58,7 @@ describe('the old mechanic’s counter (story 3.5)', () => {
   });
 
   it('buys an upgrade he can afford, once, saved, and the next fight has its limits', () => {
-    const g = game(toSix, 45);
+    const g = game(toSix, 35);
     const { dispatch } = g.store.getState();
     dispatch({ type: 'map/travel', node: 'workshop' });
     dispatch({ type: 'shop/buy', upgrade: 'fourth-die' });

@@ -7,6 +7,7 @@ import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { ShareLink } from '@/ui/common/ShareLink';
 import { roomUrl } from '@/ui/workshop/links';
 import { PlantEditor } from '@/ui/workshop/PlantEditor';
+import { roomTitleText } from '@/ui/workshop/room-title';
 import {
   checkDesign,
   checkSolution,
@@ -22,6 +23,8 @@ import {
   type Solution,
   startNumbers,
   titleCount,
+  titleMaxLength,
+  titleOk,
 } from '@/workshop/design';
 import { type FormId, fedSlot, formPattern, forms, formsMet, type Slot } from '@/workshop/forms';
 
@@ -70,7 +73,7 @@ interface StepProps {
   parts: number;
   rooms: readonly SentRoom[];
   onSolve(design: RoomDesign): void;
-  onSend(title: number, planted: Planted | null): void;
+  onSend(title: string, planted: Planted | null): void;
   onRedesign(): void;
   onBack(): void;
 }
@@ -339,15 +342,16 @@ function FinishStep({
   design: RoomDesign;
   solution: Solution;
   parts: number;
-  onSend(title: number, planted: Planted | null): void;
+  onSend(title: string, planted: Planted | null): void;
   onRedesign(): void;
 }) {
-  const [title, setTitle] = useState<number | null>(null);
+  const [typed, setTyped] = useState('');
+  const title = typed.trim();
   const [planted, setPlanted] = useState<{ value: Planted; works: boolean } | null>(null);
   const cost = costOf(design);
   const problem = checkSolution(design, solution);
   const plantReady = !design.plant || (planted?.works ?? false);
-  const ready = problem === null && title !== null && plantReady && parts >= cost;
+  const ready = problem === null && titleOk(title) && plantReady && parts >= cost;
   return (
     <div className="workshop__body">
       {problem === null ? (
@@ -363,14 +367,24 @@ function FinishStep({
       {problem === null && (
         <section className="workshop__titles-box">
           <h2 className="workshop__name">{hr.workshop.pickTitle}</h2>
+          <input
+            type="text"
+            className="workshop__title-input"
+            value={typed}
+            maxLength={titleMaxLength}
+            placeholder={hr.workshop.titleOwn}
+            aria-label={hr.workshop.pickTitle}
+            autoComplete="off"
+            onChange={(event) => setTyped(event.target.value)}
+          />
           <div className="workshop__titles">
-            {hr.workshop.titles.slice(0, titleCount).map((name, i) => (
+            {hr.workshop.titles.slice(0, titleCount).map((name) => (
               <button
                 key={name}
                 type="button"
-                aria-pressed={title === i}
+                aria-pressed={title === name}
                 className="workshop__title-pick"
-                onClick={() => setTitle(i)}
+                onClick={() => setTyped(name)}
               >
                 {name}
               </button>
@@ -387,9 +401,7 @@ function FinishStep({
             type="button"
             className="workshop__primary"
             disabled={!ready}
-            onClick={() =>
-              title !== null && onSend(title, design.plant ? (planted?.value ?? null) : null)
-            }
+            onClick={() => onSend(title, design.plant ? (planted?.value ?? null) : null)}
           >
             {hr.workshop.send}
           </button>
@@ -401,7 +413,7 @@ function FinishStep({
 
 /** Sent: the link to pass on. */
 function SentStep({ room, onBack }: { room: SentRoom; onBack(): void }) {
-  const name = hr.workshop.titles[room.title] ?? '';
+  const name = roomTitleText(room.title);
   return (
     <div className="workshop__body">
       <section className="workshop__sent">
