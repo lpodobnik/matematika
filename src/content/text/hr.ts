@@ -169,7 +169,10 @@ export const hr = {
       ],
       r05: [
         { who: 'automaton', text: 'OVAJ MOST NIJE U UPUTAMA. BIT ĆE ISPRAVLJEN. HVALA.' },
-        { who: 'nikola', text: 'Netko je pribio papir na most. Tko piše samo velikim slovima?' },
+        {
+          who: 'nikola',
+          text: 'To je Prvi Automat, Kristijanov najstariji stroj. Njega slušaju svi automati.',
+        },
       ],
       r06: [
         { who: 'faust', text: 'Ona radionica tamo bila je Kristijanova. Ključ je odsad tvoj.' },
@@ -212,7 +215,7 @@ export const hr = {
         { who: 'nikola', text: 'Sve točkice leže na jednoj liniji. I svi strojevi opet rade!' },
         {
           who: 'faust',
-          text: 'Još nije gotovo. Pod tornjem stoji najveći automat i ne da nam dalje.',
+          text: 'Još nije gotovo. Pod tornjem stoji čuvar Prvog Automata i ne da nam dalje.',
         },
       ],
       r09: [
@@ -405,7 +408,7 @@ export const hr = {
       'Satograd je grad zupčanika i pare. Sve strojeve složio je Majstor Kristijan.',
       'Upute za svaki stroj zapisao je u Knjigu. Ljudi ih slijede i ne pitaju zašto.',
       'Jednog jutra radionica je ostala prazna. Kristijana nema. Strojevi staju jedan po jedan.',
-      'Na podu radionice leži njegova bilježnica. U njoj nisu upute, nego pitanja.',
+      'Na podu leži njegova bilježnica, puna pitanja. Ako popraviš strojeve, možda nađeš i Kristijana.',
     ],
     next: 'Dalje',
     skip: 'Preskoči',
@@ -416,11 +419,12 @@ export const hr = {
     logbook: [
       'U Kristijanovu dnevniku jedan je redak pogrešan. A Kristijan ne griješi.',
       'Znao je da će ga odvesti. Ostavio je znak onome tko razumije.',
+      'Odveo ga je Prvi Automat. Zna sve upute napamet, ali ih ne razumije.',
     ],
     outro: [
       'Donji Kotač opet radi. Svjetiljke gore, tramvaj vozi, toranj zvoni.',
       'Ljudi više ne pitaju samo kako. Sad pitaju i zašto.',
-      'Na vratima ljevaonice visi traka: MAJSTOR JE OVDJE. VRATA SU ZATVORENA. HVALA.',
+      'Na vratima ljevaonice visi traka Prvog Automata: MAJSTOR JE OVDJE. VRATA SU ZATVORENA. HVALA.',
       'Iza vrata netko kuca: pet puta, pa osam. Bilježnica je još otvorena. Nastavak slijedi…',
     ],
   },
@@ -608,7 +612,7 @@ export const hr = {
         ],
         after: [
           'Čuješ li? Svi strojevi u gradu opet rade!',
-          'Ostao je još samo najveći automat. Za njega ti treba Radionica.',
+          'Ostao je još samo čuvar Prvog Automata. Za njega ti treba Radionica.',
         ],
       },
     },
@@ -890,11 +894,12 @@ export const hr = {
     spend: 'Dijelove troši u Radionici na Trgu.',
     /** Lost to the boss: what to do about it. */
     bossLost:
-      'Najveći automat je jak. Dijelove ti ne uzima: kupi nadogradnje u Radionici na Trgu i vrati se.',
+      'Čuvar je jak. Dijelove ti ne uzima: kupi nadogradnje u Radionici na Trgu i vrati se.',
     /** The district's last fight won. */
-    finale: 'To je bio zadnji automat u četvrti. Donji Kotač opet radi!',
+    finale: 'Čuvar Prvog Automata je pao. Donji Kotač opet radi!',
     /** Prvi Automat's last notice: the district ends at the foundry door. */
-    finaleNote: 'ŠEGRT NIJE U UPUTAMA. MAJSTOR JE U LJEVAONICI. VRATA SU ZATVORENA. HVALA.',
+    finaleNote:
+      'ŠEGRT NIJE U UPUTAMA. MAJSTOR JE U LJEVAONICI. VRATA SU ZATVORENA. HVALA. PRVI AUTOMAT',
     lost: 'Automat je ovaj put jači.',
     reasons: {
       hull: 'Trup ne može podnijeti još jedno udubljenje.',
@@ -1209,7 +1214,7 @@ export const hr = {
   now: {
     heading: 'Što sad?',
     /** In every street, from the last machine until the boss is beaten. */
-    boss: 'Zadnji automat čeka Pod tornjem. Pobijedi ga! Nadogradnje su u Radionici na Trgu.',
+    boss: 'Čuvar Prvog Automata čeka Pod tornjem. Pobijedi ga! Nadogradnje su u Radionici na Trgu.',
     /** Room 6, before the guess: compare what differs, don't add it all up. */
     compare:
       'Koliko je 58 veće od 56? Za toliko je x veći od 27. Stavi zastavicu pa dodirni Potvrdi.',

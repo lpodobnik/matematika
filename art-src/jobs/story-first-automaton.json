@@ -1,0 +1,16 @@
+{
+ "name": "story-first-automaton",
+ "seed": 7321,
+ "size": {
+  "width": 1920,
+  "height": 1080
+ },
+ "style": "v4",
+ "notes": "The reveal after room 7: Prvi Automat, ominous, for a ten-year-old.",
+ "slots": {
+  "subject": "The First Automaton: a very tall, thin, very old brass and black-iron machine man standing in the huge open doorway of a dark foundry, seen from below, fire glowing orange behind him so that he is mostly a looming silhouette. His head is a narrow riveted helmet with two small cold glowing round eyes and no mouth. A long strip of pale punched paper tape spills from a slot in his chest and curls down to the floor. In one long jointed hand he holds a thick old leather book, open, as if reading it. He is alone and very still. Unsettling and quiet, not gory, suitable for a children's storybook.",
+  "camera": "Low angle looking up at him from the ground.",
+  "composition": "The figure stands in the centre and fills most of the picture's height, the doorway framing him, deep shadows around.",
+  "state": "Completely still, sparks drifting faintly behind him."
+ }
+}

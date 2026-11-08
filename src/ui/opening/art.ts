@@ -1,6 +1,7 @@
 // The opening's pictures (story 5.0), one per panel (art-src/CREDITS.md, t35–t38): the city
 // running, the Book, the empty workshop (greyed: the machines have stopped), the notebook.
 
+import firstAutomaton from '@/ui/opening/art/first-automaton.webp';
 import logbook1 from '@/ui/opening/art/logbook-1.webp';
 import logbook2 from '@/ui/opening/art/logbook-2.webp';
 import outro1 from '@/ui/opening/art/outro-1.webp';
@@ -22,7 +23,11 @@ export interface PanelArt {
 const plain = (src: string): PanelArt => ({ src, focus: '50% 50%', grey: false });
 
 /** The panels after the logbook is put right, and at the end of the district. */
-export const logbookArt: readonly PanelArt[] = [plain(logbook1), plain(logbook2)];
+export const logbookArt: readonly PanelArt[] = [
+  plain(logbook1),
+  plain(logbook2),
+  plain(firstAutomaton),
+];
 export const outroArt: readonly PanelArt[] = [
   plain(outro1),
   plain(outro2),

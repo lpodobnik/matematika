@@ -358,11 +358,10 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   // is back in the town, never carried into it (story 5.0).
   await expect.poll(async () => (await state(page)).screen).toBe('map');
   expect((await state(page)).room).toBeNull();
-  // The logbook put right, the story moves on: two panels, as he comes out of the room.
+  // The logbook put right, the story moves on: three panels, as he comes out of the room.
   await expect(page.locator('.opening__text')).toContainText('Kristijanovu dnevniku');
   await shot('logbook-panel');
-  await page.locator('.opening__panel').click();
-  await page.locator('.opening__panel').click();
+  for (let i = 0; i < 3; i += 1) await page.locator('.opening__panel').click();
   await expect(page.locator('.opening__panel')).toHaveCount(0);
   await openMap(page);
   await expect(node('r07')).toHaveAttribute('data-state', 'restored');
