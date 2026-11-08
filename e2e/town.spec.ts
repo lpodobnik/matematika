@@ -548,6 +548,54 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
   );
 });
 
+test('the boss comes after room 12: until then he holds nothing', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    const done = ['r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07', 'r08', 'r09', 'r10', 'r11'];
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        character: { name: 'Ivo', look: 'look-1' },
+        progress: {
+          ...s.save.progress,
+          introSeen: true,
+          roomsDone: done,
+          told: done,
+          tools: ['balance', 'workshop', 'chain', 'drum'],
+          onMap: true,
+        },
+        economy: {
+          ...s.save.economy,
+          lairs: {
+            'lair-20': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+            'lair-30': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+            'lair-45': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+          },
+        },
+      },
+      room: null,
+    });
+  });
+  for (const to of ['canal', 'mill', 'yard', 'tram', 'market', 'wheel', 'hill']) {
+    await page.locator(`.town__sign[data-sign="${to}"]`).click();
+    await expect(page.locator(`.town__board[data-area="${to}"]`)).toBeVisible({ timeout: 12_000 });
+  }
+  await expect(page.locator('.town__figure--automaton')).toHaveCount(0);
+  await page.locator('.town__place[data-node="r12"]').click();
+  await page.waitForFunction(
+    () => (window as unknown as Game).__s.getState().room?.spec.id === 'r12',
+    null,
+    { timeout: 12_000 },
+  );
+});
+
 test('the last machine fixed, the story ends: four panels, told once', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());

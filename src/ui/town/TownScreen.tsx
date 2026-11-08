@@ -289,7 +289,9 @@ export function TownBoard({
         }
         // The street's automaton took this machine's parts: it comes first.
         const lairId = lairHere.current;
-        const holds = lairId && !beaten(lairId);
+        // Only one that is out: the boss comes after room 12, in the street of rooms 12 and 13.
+        const lairIsOut = lairId && nodes.get(lairId)?.state !== 'closed';
+        const holds = lairId && lairIsOut && !beaten(lairId);
         if (node?.kind === 'room' && node.state === 'open' && holds) {
           setBubble({ who: 'self', at: job.place.marker, lines: [hr.town.places.held], line: 0 });
           return;
