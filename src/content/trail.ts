@@ -13,7 +13,12 @@ export interface TrailPin {
 /** Where the red thread starts: the foundry, marked by Vučetić. */
 export const trailStart = { x: 12, y: 78 };
 
-export const trailPins: readonly TrailPin[] = [{ lead: 'l01', x: 34, y: 56 }];
+export const trailPins: readonly TrailPin[] = [
+  { lead: 'l01', x: 26, y: 58 },
+  { lead: 'l03', x: 44, y: 34 },
+  { lead: 'l04', x: 66, y: 46 },
+  { lead: 'l06', x: 84, y: 22 },
+];
 
 /** The leads open now: written, not done. */
 export function openLeads(done: readonly LeadId[]): LeadId[] {

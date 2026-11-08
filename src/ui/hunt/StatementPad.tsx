@@ -27,7 +27,7 @@ function kindOf(key: HuntKey | 'more'): KeyKind {
 
 const faceOf = (key: SToken) =>
   key === '^'
-    ? '10ⁿ'
+    ? 'ⁿ'
     : formatStatementLine([key])
         .map((segment) => segment.text)
         .join('');

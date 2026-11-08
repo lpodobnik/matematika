@@ -890,6 +890,29 @@ const u1: TownArea = {
       marker: { x: 700, y: 230 },
       bloom: { x: 700, y: 400, r: 460 },
     },
+    // Until their own streets are painted (epic 12), all of Act 1's leads and the first of Act 2
+    // start here, each at its own door.
+    {
+      lead: 'l03',
+      stand: { x: 1090, y: 360 },
+      area: { x: 1030, y: 110, w: 140, h: 190 },
+      marker: { x: 1080, y: 100 },
+      bloom: { x: 1100, y: 240, r: 340 },
+    },
+    {
+      lead: 'l04',
+      stand: { x: 1250, y: 460 },
+      area: { x: 1380, y: 100, w: 200, h: 640 },
+      marker: { x: 1440, y: 300 },
+      bloom: { x: 1450, y: 400, r: 360 },
+    },
+    {
+      lead: 'l06',
+      stand: { x: 420, y: 700 },
+      area: { x: 280, y: 410, w: 130, h: 200 },
+      marker: { x: 330, y: 400 },
+      bloom: { x: 340, y: 520, r: 320 },
+    },
   ],
   exits: [
     {

@@ -137,7 +137,14 @@ development_status:
   8-8-the-first-lead: done
   8-9-play-the-first-lead: done
 
-  epic-9: in-progress
-  epic-10: backlog
+  epic-9: done
+  9-1-sneak: done
+  9-2-the-tram-line-lead: done
+  9-3-unmask: done
+  9-4-the-newspaper-lead: done
+  9-5-little-one-alone: done
+  9-6-the-archive-lead: done
+  9-7-guides-and-help-for-each: done
+  epic-10: in-progress
   epic-11: backlog
   epic-12: backlog

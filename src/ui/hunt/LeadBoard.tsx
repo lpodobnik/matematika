@@ -2,6 +2,7 @@ import '@/ui/hunt/lead.css';
 import { useEffect, useRef, useState } from 'react';
 import { tuning } from '@/config/tuning';
 import { huntUiText, knockGuideText } from '@/content/text/hunt-leads';
+import type { AloneState } from '@/hunt/alone';
 import {
   cluesLeft,
   doorsOf,
@@ -11,13 +12,17 @@ import {
   lineStart,
   litDoors,
 } from '@/hunt/knock';
-import type { LeadAction, LeadPlay } from '@/hunt/lead';
+import { type LeadAction, type LeadPlay, playedScene } from '@/hunt/lead';
+import { sceneGuide } from '@/hunt/scene';
+import type { SneakState } from '@/hunt/sneak';
 import type { LeadSpec, LineTask } from '@/hunt/spec';
+import type { UnmaskState } from '@/hunt/unmask';
 import { formatNumber, formatStatementLine } from '@/math/format';
 import { readLine, type SLineToken, type SToken } from '@/math/statement-tokens';
 import { HintControl } from '@/ui/common/HintButton';
 import { LittleOneArt } from '@/ui/hunt/LittleOne';
 import { ObjectView } from '@/ui/hunt/objects/ObjectView';
+import { AloneBoardView, SneakBoardView, UnmaskBoardView } from '@/ui/hunt/SceneBoards';
 import { type HuntKey, StatementPad } from '@/ui/hunt/StatementPad';
 import { useHuntKeys } from '@/ui/hunt/use-hunt-keys';
 import { LineView } from '@/ui/notebook/LineView';
@@ -53,9 +58,44 @@ export function LeadBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay;
       return <FixBoard spec={spec} play={play} act={act} />;
     case 'play': {
       const scene = spec.scenes[play.at];
-      return scene && play.knock ? (
-        <KnockBoard key={play.at} spec={scene} state={play.knock} act={act} />
-      ) : null;
+      const state = playedScene(play);
+      if (!scene || !state) return null;
+      const guide = sceneGuide(scene, state);
+      switch (scene.kind) {
+        case 'knock':
+          return <KnockBoard key={play.at} spec={scene} state={state as KnockState} act={act} />;
+        case 'sneak':
+          return (
+            <SneakBoardView
+              key={play.at}
+              spec={scene}
+              state={state as SneakState}
+              guide={guide}
+              act={act}
+            />
+          );
+        case 'unmask':
+          return (
+            <UnmaskBoardView
+              key={play.at}
+              spec={scene}
+              state={state as UnmaskState}
+              guide={guide}
+              act={act}
+            />
+          );
+        case 'alone':
+          return (
+            <AloneBoardView
+              key={play.at}
+              spec={scene}
+              state={state as AloneState}
+              guide={guide}
+              act={act}
+            />
+          );
+      }
+      return null;
     }
     case 'write':
       return <WriteBoard spec={spec} play={play} act={act} />;
@@ -146,6 +186,8 @@ function TryBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: Ac
       <section className="hunt__scene hunt__scene--object">
         {task.kind === 'object' && play.object ? (
           <ObjectView object={play.object} onMove={(move) => act({ kind: 'move', move })} />
+        ) : task.kind === 'line' && task.object ? (
+          <ObjectView object={task.object} />
         ) : (
           <div className="hunt__little">
             <LittleOneArt />

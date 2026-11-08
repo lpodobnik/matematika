@@ -26,14 +26,15 @@ describe('every lead can be played', () => {
 
 describe('Two sides', () => {
   const street = l01.scenes[0];
-  if (!street) throw new Error('no street');
+  if (street?.kind !== 'knock') throw new Error('no street');
 
   it('has its doors from 1, as houses are', () => {
     expect(street.row.from).toBe(1);
   });
 
   it('has its lift from 0', () => {
-    expect(l01.scenes[1]?.row.from).toBe(0);
+    const lift = l01.scenes[1];
+    expect(lift?.kind === 'knock' && lift.row.from).toBe(0);
   });
 
   it('starts on the wrong side, so that he has to cross', () => {

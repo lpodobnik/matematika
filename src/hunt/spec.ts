@@ -2,9 +2,10 @@
 // code. A new scene type joins `SceneSpec` as a new kind.
 
 import type { LeadId } from '@/hunt/ids';
-import type { KnockSpec } from '@/hunt/knock';
 import type { ObjectGoal, ObjectState } from '@/hunt/objects';
+import type { SceneSpec } from '@/hunt/scene';
 import type { SToken } from '@/math/statement-tokens';
+import type { TruthContext } from '@/math/truth';
 
 /** One step of a showing: what the object looks like, and up to 2 short lines. */
 export interface LessonStep {
@@ -25,11 +26,13 @@ export interface LineTask {
   accepts: readonly string[];
   /** Keys beyond the digits: only what the line needs. */
   keys: readonly SToken[];
+  /** What the line leans on in the scene, such as what a point is worth. */
+  context?: TruthContext;
 }
 
 export type TryTask =
   | { kind: 'object'; say: string; object: ObjectState; goal: ObjectGoal }
-  | ({ kind: 'line' } & LineTask);
+  | ({ kind: 'line'; object?: ObjectState } & LineTask);
 
 /** The little one's wrong working, and how he shows it right. */
 export interface MistakeSpec {
@@ -39,6 +42,8 @@ export interface MistakeSpec {
   lines: readonly string[];
   /** Which of `lines` is the wrong one. */
   wrong: number;
+  /** What its lines lean on. */
+  context?: TruthContext;
   /** What a tap on a right line gets. */
   nudge: string;
   /** He shows it right with the object. */
@@ -48,8 +53,6 @@ export interface MistakeSpec {
   /** It nods. */
   thanks: string;
 }
-
-export type SceneSpec = KnockSpec;
 
 export interface LeadSpec {
   id: LeadId;

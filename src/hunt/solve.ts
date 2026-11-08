@@ -1,6 +1,7 @@
 // Proves a lead can be played (architecture, Pattern 6): content tests run this over every lead,
 // so that a clue set that leaves two doors never reaches him.
 
+import { proveAlone } from '@/hunt/alone';
 import {
   canonicalLine,
   cluesLeft,
@@ -9,7 +10,10 @@ import {
   type KnockSpec,
   litDoors,
 } from '@/hunt/knock';
+import type { SceneSpec } from '@/hunt/scene';
+import { proveSneak } from '@/hunt/sneak';
 import type { LeadSpec, LineTask } from '@/hunt/spec';
+import { proveUnmask } from '@/hunt/unmask';
 import { parseStatement } from '@/math/statement';
 import { readTokens, type SToken } from '@/math/statement-tokens';
 import { isTrue } from '@/math/truth';
@@ -71,24 +75,38 @@ export function proveLine(task: LineTask): string[] {
     const tokens = lineOf(line);
     const parsed = tokens && parseStatement(tokens);
     if (!parsed?.ok) problems.push(`"${line}" doesn't read`);
-    else if (!isTrue(parsed.statement)) problems.push(`"${line}" isn't true`);
+    else if (!isTrue(parsed.statement, task.context)) problems.push(`"${line}" isn't true`);
   }
   return problems;
+}
+
+/** A scene's own proof, whichever kind it is. */
+export function proveScene(scene: SceneSpec): string[] {
+  switch (scene.kind) {
+    case 'knock': {
+      const problems = proveKnock(scene).map(({ problem }) => problem);
+      for (const line of scene.example) {
+        const tokens = lineOf(line);
+        const parsed = tokens && parseStatement(tokens);
+        if (parsed?.ok && !isTrue(parsed.statement)) {
+          problems.push(`worked example "${line}" isn't true`);
+        }
+      }
+      return problems;
+    }
+    case 'sneak':
+      return proveSneak(scene);
+    case 'unmask':
+      return proveUnmask(scene);
+    case 'alone':
+      return proveAlone(scene);
+  }
 }
 
 /** Everything in a lead that can be checked without playing it. */
 export function proveLead(lead: LeadSpec): string[] {
   const problems: string[] = [];
-  for (const scene of lead.scenes) {
-    problems.push(...proveKnock(scene).map(({ problem }) => problem));
-    for (const line of scene.example) {
-      const tokens = lineOf(line);
-      const parsed = tokens && parseStatement(tokens);
-      if (parsed?.ok && !isTrue(parsed.statement)) {
-        problems.push(`worked example "${line}" isn't true`);
-      }
-    }
-  }
+  for (const scene of lead.scenes) problems.push(...proveScene(scene));
   for (const task of lead.tries) {
     if (task.kind === 'line') problems.push(...proveLine(task));
   }
@@ -96,13 +114,13 @@ export function proveLead(lead: LeadSpec): string[] {
   for (const task of lead.writeUp) problems.push(...proveLine(task));
   const wrong = lead.mistake.lines[lead.mistake.wrong];
   const wrongParsed = wrong !== undefined ? parseStatement(lineOf(wrong) ?? []) : null;
-  if (!wrongParsed?.ok || isTrue(wrongParsed.statement)) {
+  if (!wrongParsed?.ok || isTrue(wrongParsed.statement, lead.mistake.context)) {
     problems.push(`the little one's wrong line "${wrong}" isn't wrong`);
   }
   for (const [i, line] of lead.mistake.lines.entries()) {
     if (i === lead.mistake.wrong) continue;
     const parsed = parseStatement(lineOf(line) ?? []);
-    if (!parsed.ok || !isTrue(parsed.statement)) {
+    if (!parsed.ok || !isTrue(parsed.statement, lead.mistake.context)) {
       problems.push(`the little one's right line "${line}" isn't right`);
     }
   }

@@ -1,5 +1,12 @@
 import { huntUiText } from '@/content/text/hunt-leads';
-import { type LineState, type ObjectMove, type ObjectState, pairsOf } from '@/hunt/objects';
+import {
+  type LineState,
+  lineStops,
+  type ObjectMove,
+  type ObjectState,
+  type PlacesState,
+  pairsOf,
+} from '@/hunt/objects';
 import { formatNumber } from '@/math/format';
 
 /** The thing he moves: a showing draws it, and try and fix let him move it. */
@@ -11,6 +18,7 @@ export function ObjectView({
   onMove?(move: ObjectMove): void;
 }) {
   if (object.kind === 'pairs') return <Pairs count={object.count} onMove={onMove} />;
+  if (object.kind === 'places') return <Places places={object} onMove={onMove} />;
   return <NumberLine line={object} onMove={onMove} />;
 }
 
@@ -70,8 +78,43 @@ function Lamp() {
   );
 }
 
+/** Places: how many of each, from the biggest down. */
+function Places({ places, onMove }: { places: PlacesState; onMove?(move: ObjectMove): void }) {
+  return (
+    <ol className="places">
+      {places.names.map((name, place) => (
+        <li key={name} className="places__column" data-place={place}>
+          <span className="places__name">{name}</span>
+          <span className="places__count">{places.counts[place]}</span>
+          {onMove && (
+            <span className="places__controls">
+              <button
+                type="button"
+                className="object__button places__button"
+                aria-label={`${huntUiText.remove}: ${name}`}
+                onClick={() => onMove({ kind: 'places-remove', place })}
+              >
+                −
+              </button>
+              <button
+                type="button"
+                className="object__button places__button"
+                data-add="true"
+                aria-label={`${huntUiText.add}: ${name}`}
+                onClick={() => onMove({ kind: 'places-add', place })}
+              >
+                +
+              </button>
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function NumberLine({ line, onMove }: { line: LineState; onMove?(move: ObjectMove): void }) {
-  const numbers = Array.from({ length: line.to - line.from + 1 }, (_, i) => line.from + i);
+  const numbers = lineStops(line);
   return (
     <ol className="number-line">
       {numbers.map((n) => (
@@ -84,7 +127,11 @@ function NumberLine({ line, onMove }: { line: LineState; onMove?(move: ObjectMov
             data-marked={line.marked === n}
             onClick={() => onMove?.({ kind: 'line-mark', at: n })}
           >
-            {formatNumber(n)}
+            {line.point?.at === n
+              ? line.point.label
+              : !line.labelled || line.labelled.includes(n)
+                ? formatNumber(n)
+                : ''}
           </button>
         </li>
       ))}

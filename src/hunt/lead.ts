@@ -2,25 +2,24 @@
 // legal moves per step, everything else ignored, no timers. What it changes outside the lead comes
 // back as an `outcome`, which the store's layer applies.
 
-import {
-  type KnockState,
-  knockCross,
-  knockDelete,
-  knockDismiss,
-  knockDoor,
-  knockEarns,
-  knockEnter,
-  knockFrom,
-  knockGuide,
-  knockHint,
-  knockIdle,
-  knockPickClue,
-  knockStrike,
-  knockType,
-  newKnock,
-} from '@/hunt/knock';
+import type { AloneState } from '@/hunt/alone';
+import type { KnockState } from '@/hunt/knock';
 import { applyMove, goalMet, type ObjectMove, type ObjectState } from '@/hunt/objects';
-import type { LeadSpec, LineTask, SceneSpec } from '@/hunt/spec';
+import {
+  allGuidesTold,
+  freshScene,
+  guideTold,
+  type SceneAction,
+  type SceneSpec,
+  type SceneState,
+  sceneAct,
+  sceneEarns,
+  sceneFrom,
+  sceneGuide,
+} from '@/hunt/scene';
+import type { SneakState } from '@/hunt/sneak';
+import type { LeadSpec, LineTask } from '@/hunt/spec';
+import type { UnmaskState } from '@/hunt/unmask';
 import { formatStatementLine } from '@/math/format';
 import { parseStatement } from '@/math/statement';
 import { fillLine, isSToken, readLine, readTokens, type SToken } from '@/math/statement-tokens';
@@ -46,7 +45,11 @@ export interface LeadPlay {
   fix: FixPhase;
   /** A tap on a line of the little one's that was right. */
   nudged: boolean;
+  /** The scene in play: one of these, by the scene's kind. */
   knock: KnockState | null;
+  sneak: SneakState | null;
+  unmask: UnmaskState | null;
+  alone: AloneState | null;
   /** Whether every door so far went without a struck line or an exact move. */
   clean: boolean;
 }
@@ -69,17 +72,8 @@ export interface LeadOutcome {
 export type LeadAction =
   | { kind: 'next' }
   | { kind: 'move'; move: ObjectMove }
-  | { kind: 'type'; token: SToken }
-  | { kind: 'delete' }
-  | { kind: 'enter' }
   | { kind: 'fix-tap'; line: number }
-  | { kind: 'strike'; line: number }
-  | { kind: 'pick-clue'; clue: string }
-  | { kind: 'cross' }
-  | { kind: 'door'; door: number }
-  | { kind: 'dismiss' }
-  | { kind: 'idle' }
-  | { kind: 'hint' };
+  | SceneAction;
 
 export interface LeadResult {
   play: LeadPlay;
@@ -94,7 +88,7 @@ export interface LeadFacts {
 }
 
 export const firstDoorParts = 2;
-export const knockGuideTold = 'guide:knock';
+export const knockGuideTold = guideTold('knock');
 const maxTokens = 40;
 
 const blank = {
@@ -107,8 +101,21 @@ const blank = {
   fix: 'spot' as FixPhase,
   nudged: false,
   knock: null,
+  sneak: null,
+  unmask: null,
+  alone: null,
   clean: true,
 };
+
+/** The scene in play, whichever kind it is. */
+export function playedScene(play: LeadPlay): SceneState | null {
+  return play.knock ?? play.sneak ?? play.unmask ?? play.alone;
+}
+
+/** The play with this scene's state put back. */
+function withScene(play: LeadPlay, spec: SceneSpec, state: SceneState): LeadPlay {
+  return { ...play, [spec.kind]: state };
+}
 
 /** The lead from the start, or from past the fix when the little one has already learnt it. */
 export function newLeadPlay(): LeadPlay {
@@ -130,15 +137,12 @@ function startTry(spec: LeadSpec, at: number, base: LeadPlay): LeadPlay {
 
 function startPlay(spec: LeadSpec, at: number, base: LeadPlay, facts: LeadFacts): LeadPlay {
   const scene = spec.scenes[at] as SceneSpec;
-  const guided = at === 0 && !facts.told.includes(knockGuideTold);
-  return {
-    ...base,
-    ...blank,
-    clean: base.clean,
-    step: 'play',
-    at,
-    knock: newKnock(scene, guided),
-  };
+  const guided = !facts.told.includes(guideTold(scene.kind));
+  return withScene(
+    { ...base, ...blank, clean: base.clean, step: 'play', at },
+    scene,
+    freshScene(scene, guided),
+  );
 }
 
 function startFix(spec: LeadSpec, base: LeadPlay, facts: LeadFacts): LeadPlay {
@@ -187,32 +191,33 @@ function enterLine(task: LineTask, play: LeadPlay): { play: LeadPlay; line: stri
     };
   }
   const parsed = parseStatement(tokens);
-  const bounces = parsed.ok && !isTrue(parsed.statement);
+  const bounces = parsed.ok && !isTrue(parsed.statement, task.context);
   return { play: { ...play, bounced: bounces, refused: !bounces }, line: null };
 }
 
-function withKnock(
-  spec: LeadSpec,
-  play: LeadPlay,
-  change: (knock: KnockState, scene: SceneSpec) => KnockState,
-): LeadResult {
+/** A move in the scene, with what it changes outside the lead. */
+function inScene(spec: LeadSpec, play: LeadPlay, action: SceneAction): LeadResult {
   const scene = spec.scenes[play.at];
-  if (play.step !== 'play' || !play.knock || !scene) return { play, outcome: {} };
-  const knock = change(play.knock, scene);
-  if (knock === play.knock) return { play, outcome: {} };
+  const before = playedScene(play);
+  if (play.step !== 'play' || !before || !scene) return { play, outcome: {} };
+  const after = sceneAct(scene, before, action);
+  if (after === before) return { play, outcome: {} };
   const outcome: LeadOutcome = {};
-  if (knock.shown && !play.knock.shown) {
-    outcome.doorKnocked = { door: knock.shown.door, right: false };
-  }
-  if (knock.opened && !play.knock.opened) {
-    outcome.doorKnocked = { door: scene.door, right: true };
-    if (play.knock.guide !== null) outcome.told = knockGuideTold;
-    if (knockEarns(knock)) {
-      outcome.earned = { key: `${spec.id}:${play.at}`, parts: firstDoorParts };
+  if (scene.kind === 'knock') {
+    const shown = (after as KnockState).shown;
+    if (shown && !(before as KnockState).shown) {
+      outcome.doorKnocked = { door: shown.door, right: false };
     }
+    if (after.opened && !before.opened) outcome.doorKnocked = { door: scene.door, right: true };
   }
-  const clean = play.clean && !(knock.opened && !knockEarns(knock));
-  return { play: { ...play, knock, clean }, outcome };
+  // The guide is over, whenever that is: it isn't said twice.
+  if (before.guide !== null && after.guide === null) outcome.told = guideTold(scene.kind);
+  const earns = sceneEarns(scene, after);
+  if (after.opened && !before.opened) {
+    if (earns) outcome.earned = { key: `${spec.id}:${play.at}`, parts: firstDoorParts };
+  }
+  const clean = play.clean && !(after.opened && !earns);
+  return { play: { ...withScene(play, scene, after), clean }, outcome };
 }
 
 /** The "Dalje" of whatever step he's on. */
@@ -234,10 +239,13 @@ function next(spec: LeadSpec, play: LeadPlay, facts: LeadFacts): LeadResult {
       if (play.fix !== 'thanks') return { play, outcome: {} };
       return { play: startPlay(spec, 0, play, facts), outcome: {} };
     case 'play': {
-      if (play.knock?.guide === 'intro') {
-        return { play: { ...play, knock: { ...play.knock, guide: 'on' } }, outcome: {} };
+      const state = playedScene(play);
+      const scene = spec.scenes[play.at];
+      if (!state || !scene) return { play, outcome: {} };
+      if (state.guide === 'intro') {
+        return { play: withScene(play, scene, { ...state, guide: 'on' }), outcome: {} };
       }
-      if (!play.knock?.opened) return { play, outcome: {} };
+      if (!state.opened) return { play, outcome: {} };
       if (play.at + 1 < spec.scenes.length) {
         return { play: startPlay(spec, play.at + 1, play, facts), outcome: {} };
       }
@@ -286,24 +294,17 @@ function enter(spec: LeadSpec, play: LeadPlay): LeadResult {
       outcome: { lineWritten: result.line },
     };
   }
-  return withKnock(spec, play, (knock, scene) => knockEnter(scene, knock));
+  return inScene(spec, play, { kind: 'enter' });
 }
 
 /** While the guide asks for a move, only that move passes (GDD, Scene types). */
 function guideLets(spec: LeadSpec, play: LeadPlay, action: LeadAction): boolean {
   const scene = spec.scenes[play.at];
-  const guide = play.step === 'play' && play.knock && scene ? knockGuide(scene, play.knock) : null;
+  const state = playedScene(play);
+  const guide = play.step === 'play' && state && scene ? sceneGuide(scene, state) : null;
   if (!guide || action.kind === 'idle' || action.kind === 'hint') return true;
-  switch (guide.kind) {
-    case 'intro':
-      return action.kind === 'next';
-    case 'cross':
-      return action.kind === 'cross';
-    case 'line':
-      return action.kind === 'type' || action.kind === 'delete' || action.kind === 'enter';
-    case 'door':
-      return action.kind === 'door';
-  }
+  if (guide.allows === 'read') return action.kind === 'next';
+  return (guide.allows as readonly string[]).includes(action.kind);
 }
 
 /** One move in a lead. Whatever isn't legal in this step does nothing. */
@@ -335,9 +336,7 @@ export function leadStep(
       return same;
     }
     case 'type': {
-      if (play.step === 'play') {
-        return withKnock(spec, play, (knock) => knockType(knock, action.token, maxTokens));
-      }
+      if (play.step === 'play') return inScene(spec, play, action);
       const typing =
         (play.step === 'try' && spec.tries[play.at]?.kind === 'line' && !play.solved) ||
         (play.step === 'fix' && play.fix === 'write') ||
@@ -349,7 +348,7 @@ export function leadStep(
       };
     }
     case 'delete': {
-      if (play.step === 'play') return withKnock(spec, play, knockDelete);
+      if (play.step === 'play') return inScene(spec, play, action);
       if (play.draft.length === 0) return same;
       return {
         play: { ...play, draft: play.draft.slice(0, -1), bounced: false, refused: false },
@@ -367,20 +366,8 @@ export function leadStep(
         play: { ...play, fix: 'show', nudged: false, object: spec.mistake.show.object },
         outcome: {},
       };
-    case 'strike':
-      return withKnock(spec, play, (knock, scene) => knockStrike(scene, knock, action.line));
-    case 'pick-clue':
-      return withKnock(spec, play, (knock, scene) => knockPickClue(scene, knock, action.clue));
-    case 'cross':
-      return withKnock(spec, play, (knock, scene) => knockCross(scene, knock));
-    case 'door':
-      return withKnock(spec, play, (knock, scene) => knockDoor(scene, knock, action.door));
-    case 'dismiss':
-      return withKnock(spec, play, knockDismiss);
-    case 'idle':
-      return withKnock(spec, play, knockIdle);
-    case 'hint':
-      return withKnock(spec, play, knockHint);
+    default:
+      return inScene(spec, play, action);
   }
 }
 
@@ -407,10 +394,11 @@ export function leadPlayFrom(spec: LeadSpec, value: unknown): LeadPlay | null {
   if (saved.at >= counts[step]) return null;
   if (!Array.isArray(saved.draft) || !saved.draft.every(isSToken)) return null;
   const scene = step === 'play' ? spec.scenes[saved.at] : undefined;
-  const knock = scene ? knockFrom(scene, saved.knock) : null;
-  if (scene && !knock)
-    return startPlay(spec, saved.at, newLeadPlay(), { taught: [], told: [knockGuideTold] });
-  return {
+  const state = scene ? sceneFrom(scene, saved[scene.kind]) : null;
+  if (scene && !state) {
+    return startPlay(spec, saved.at, newLeadPlay(), { taught: [], told: allGuidesTold });
+  }
+  const base: LeadPlay = {
     step,
     at: saved.at,
     object: (saved.object as ObjectState | null | undefined) ?? null,
@@ -421,7 +409,11 @@ export function leadPlayFrom(spec: LeadSpec, value: unknown): LeadPlay | null {
     refused: false,
     fix: saved.fix && phases.includes(saved.fix) ? saved.fix : 'spot',
     nudged: false,
-    knock,
+    knock: null,
+    sneak: null,
+    unmask: null,
+    alone: null,
     clean: saved.clean !== false,
   };
+  return scene && state ? withScene(base, scene, state) : base;
 }
