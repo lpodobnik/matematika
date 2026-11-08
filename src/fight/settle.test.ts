@@ -31,12 +31,12 @@ function lost(lair: LairSpec, reason: 'hull' | 'steam' | 'left' = 'hull'): Fight
 }
 
 describe('winning', () => {
-  it('pays the reward and winds the automaton down for 15 minutes', () => {
+  it('pays the reward and winds the automaton down for 5 minutes', () => {
     const lair = lairs['lair-20'];
     const result = settleFight(ledger({ parts: 5 }), won(lair, 12), lair, now);
     expect(result.ledger.economy.parts).toBe(17);
     expect(result.ledger.economy.lairs['lair-20']).toEqual({
-      rewindsAt: '2026-11-05T20:15:00.000Z',
+      rewindsAt: '2026-11-05T20:05:00.000Z',
     });
     expect(result.reward).toBe(12);
     expect(result.events).toEqual([
@@ -157,20 +157,20 @@ describe('losing', () => {
 });
 
 describe('lairs rewinding (ADR-13)', () => {
-  it('a beaten automaton is asleep until 15 minutes after the win, then awake', () => {
+  it('a beaten automaton is asleep until 5 minutes after the win, then awake', () => {
     const lair = lairs['lair-20'];
     const { economy } = settleFight(ledger(), won(lair, 5), lair, now).ledger;
     expect(lairAwake(economy, 'lair-20', now)).toBe(false);
-    expect(lairAwake(economy, 'lair-20', now + 15 * minute - 1)).toBe(false);
-    expect(lairAwake(economy, 'lair-20', now + 15 * minute)).toBe(true);
+    expect(lairAwake(economy, 'lair-20', now + 5 * minute - 1)).toBe(false);
+    expect(lairAwake(economy, 'lair-20', now + 5 * minute)).toBe(true);
     expect(lairAwake(economy, 'lair-30', now)).toBe(true);
   });
 
   it('counts a rewind further off than a whole rewind as rewound (a clock set back)', () => {
-    const later = new Date(now + 15 * minute + 1).toISOString();
+    const later = new Date(now + 5 * minute + 1).toISOString();
     const economy = { ...createEconomy(), lairs: { 'lair-30': { rewindsAt: later } } };
     expect(lairAwake(economy, 'lair-30', now)).toBe(true);
-    const soon = new Date(now + 15 * minute).toISOString();
+    const soon = new Date(now + 5 * minute).toISOString();
     expect(
       lairAwake({ ...economy, lairs: { 'lair-30': { rewindsAt: soon } } }, 'lair-30', now),
     ).toBe(false);
@@ -182,7 +182,7 @@ describe('lairs rewinding (ADR-13)', () => {
   });
 
   it('writes the rewind time as ISO 8601', () => {
-    expect(rewindsAt(Date.parse('2026-11-05T23:50:00.000Z'))).toBe('2026-11-06T00:05:00.000Z');
+    expect(rewindsAt(Date.parse('2026-11-06T00:00:00.000Z'))).toBe('2026-11-06T00:05:00.000Z');
   });
 });
 

@@ -97,7 +97,7 @@ export const tuning = {
     /** Losing drops 1 / pileDivisor of his unspent parts, rounded down. */
     pileDivisor: 4,
     /** A beaten automaton rewinds this long after the win (ADR-13). */
-    lairRewindMinutes: 15,
+    lairRewindMinutes: 5,
   },
   /** GDD, Automaton fights: the three upgrades, their costs in parts and what they add. */
   upgrades: {

@@ -172,7 +172,7 @@ describe('entering a lair (story 3.1)', () => {
 
   it('ignores a lair whose automaton is still winding down', () => {
     const g = game();
-    const rewindsAt = new Date(start + 10 * minute).toISOString();
+    const rewindsAt = new Date(start + 3 * minute).toISOString();
     g.store.setState((s) => ({
       save: { ...s.save, economy: { ...s.save.economy, lairs: { 'lair-20': { rewindsAt } } } },
     }));
@@ -327,7 +327,7 @@ describe('a fight that ends (stories 3.2, 3.3)', () => {
     expect(g.state().save.economy.parts).toBe(reward);
     expect(g.state().ui.fightEnd).toMatchObject({ won: true, reward, recovered: 0, clean });
     expect(g.state().save.economy.lairs['lair-20']?.rewindsAt).toBe(
-      new Date(g.clock.now + 15 * minute).toISOString(),
+      new Date(g.clock.now + 5 * minute).toISOString(),
     );
     expect(types(g.seen)).toContain('FightEnded');
     expect(toSaveV1(g.state(), at).fight).toBeNull();
@@ -386,7 +386,7 @@ describe('a fight that ends (stories 3.2, 3.3)', () => {
     expect(g.state().ui.fightEnd?.page).toBe('page-1');
     expect(types(g.seen)).toContain('TornPageReturned');
     g.act({ type: 'fight/close' });
-    g.clock.now += 15 * minute;
+    g.clock.now += 5 * minute;
     g.act({ type: 'map/travel', node: 'lair-30' });
     // The dev seed still holds, so the same dice win again.
     playOut(g, true);
