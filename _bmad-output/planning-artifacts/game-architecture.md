@@ -3,7 +3,8 @@ title: 'Game Architecture'
 project: 'matematika (working title)'
 date: '2026-11-05'
 author: 'Luka'
-version: '1.0'
+version: '2.0'
+updated: '2026-11-08'
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 status: 'complete'
 mode: 'decide-and-flag: Claude made the technical calls; each is open to Luka''s veto (see ADRs)'
@@ -573,7 +574,7 @@ matematika/
 
 | Folder | May import | Must not import |
 |---|---|---|
-| `math`, `room`, `fight`, `city`, `economy`, `workshop`, `links`, `playlog` | Each other's types and functions, `config`, `lib`, `immer` | `react`, `zustand`, `motion`, `pixi.js`, `ui`, `store`, `save`, `audio`, any DOM or storage API |
+| `math`, `room`, `fight`, `city`, `economy`, `workshop`, `links`, `playlog`, `hunt` | Each other's types and functions, `config`, `lib`, `immer` | `react`, `zustand`, `motion`, `pixi.js`, `ui`, `store`, `save`, `audio`, any DOM or storage API |
 | `ui/scene` | Everything `ui` may, plus `pixi.js`, `@pixi/react`, `pixi-filters` | HTML elements |
 | Rest of `ui` | | `pixi.js` |
 | `content` | Types from the pure folders | Anything with behaviour |
@@ -851,6 +852,12 @@ Epic 1 ends with a profile on the tablet, with effects on.
 | 4. The whole district | `math/chain.ts`, `room/types/story.ts`, linked machines, drum, `ui/scene/chain/`, `ui/scene/drum/`, `r08`–`r13` | 1, 2 |
 | 5. Rooms for friends | `workshop/`, `links/` (room, reply), `ui/scene/workshop/`, friend mode in `app/` | 2, 3 |
 | 6. Ready for the surprise | `art/` and `art/shaders/`, `ui/scene/effects/`, final textures, `audio/`, `content/text/hr.ts`, PWA, deployment, e2e, fonts | All |
+| 7. The gate and the little one | Split of `ui/town/TownScreen.tsx`, `hunt/gate.ts`, `city/follow.ts`, the switch, save fields, `app/backup.ts` | 8 |
+| 8. Clues and doors | `math/statement*`, `math/truth.ts`, `hunt/knock.ts`, `hunt/lead.ts`, `ui/hunt/`, `ui/notebook/Pad.tsx`, trail map, `content/leads/` | 5, 6, 7 |
+| 9. Three more ways to play | `hunt/sneak.ts`, `hunt/unmask.ts`, `hunt/alone.ts`, their boards, guides and help | 6, 7 |
+| 10. The whole trail | All of `content/leads/`, `hunt/thread.ts`, `hunt/rule-guard.ts`, one-offs, objects, statement table | 5, 6, 7 |
+| 11. Growth and fights | `hunt/gear.ts`, secrets, new lairs in `content/lairs.ts`, brackets in `fight/`, `fight/balance.test.ts` | 7 |
+| 12. Ready for him | `art-src/`, `town/art.ts`, audio, `content/text/hunt.ts`, paper test | All |
 
 **Epic 1's first story is scaffolding:** the project, CI, boundaries test and an empty screen, before any game code.
 
@@ -867,6 +874,10 @@ Epic 1 ends with a profile on the tablet, with effects on.
 | Save and links | Vitest | Each migration from fixtures; every released link version decodes from fixtures; the largest room fits in 2,000 characters |
 | UI flows | Playwright | Room 1 with touch on the tablet profile; send and open a link; backup and restore |
 | On the device | By hand | Epic 1 profile on his tablet; epic 6 links through messaging apps on Android, iPad and iPhone |
+| Statement table (part 2) | Vitest | `math/statements.table.ts`: for each form, lines that must be true and false, and lines that must be refused. It does what the line-checker table does for equations |
+| Lead content (part 2) | Vitest | `hunt/solve.ts` proves every lead: clues leave one door, boards can be solved, one culprit, a tile that breaks each rule; see Pattern 6 |
+| Hunt playthrough (part 2) | Vitest | From the real path: a finished part 1 save through the gate, all 16 leads and 3 knots, with every wrong path tried. Saves are reloaded along the way |
+| Live save (part 2) | Vitest | Fixtures at each point of part 1 load with no hunt data; the gate is tested the moment before it opens as well as after; a backup carries neither name |
 
 ---
 
@@ -879,6 +890,7 @@ Epic 1 ends with a profile on the tablet, with effects on.
 | Pattern completeness | Pass | Entity creation, communication, state, errors, data access and events are defined, with examples |
 | Epic mapping | Pass | All six epics mapped |
 | Document completeness | Pass | No placeholders. The text-module strings are marked as placeholders on purpose |
+| Part 2 against the code | Pass on paper | Written against commit `0711d7c`. Seams were read from the code, and the three that matter most (`overKept`, the backup, `allDone`) were checked directly. Nothing has been built, so the estimates and the risks below are untested |
 
 **Deferred, with reasons:**
 - The final font, and which image generator or asset packs to use (epic 2 style guide, epic 6 final art). The pipeline takes PNGs from any source.
@@ -918,6 +930,210 @@ In `package.json`, set `"private": true` and `"type": "module"`. Scripts: `dev` 
 
 ---
 
+## Part 2 Architecture
+
+Added 2026-11-08 for the GDD's "Part 2: The Trail", in the same mode as the rest of this document: Claude's calls, open to Luka's veto. It is written against the code at commit `0711d7c`, and where the sections above describe a plan the code has moved on from, the code wins.
+
+**The principle: part 2 sits beside part 1. It adds, and doesn't widen what part 1 depends on.** His live save, the room links and about 3,000 tests all rest on part 1's types.
+
+### What stays untouched
+
+| Thing | Why it isn't extended |
+|---|---|
+| `roomIds`, `districtMap`, `NodeId` | Part 2 adds no rooms and no map nodes. `allDone` is "every authored room" (`city/reach.ts:169`), so appending a room makes it false on his live save and breaks the ending. Tests pin 13 rooms and 19 nodes, and `ambience.ts`, `audio/loops.ts` and the workshop all key on room ids |
+| `TOKENS`, `PAD_ROWS` | A token's index is the room links' wire format (`links/room-link.ts:100`). The pad test pins the keys exactly, and any new token would start typing into room notebooks (`keyboard.ts:30`) |
+| `Expr`, `Equation`, `Verdict`, `maxNumber` | At least a dozen functions walk `Expr`, `Equation` has no relation, and about 20 places use `maxNumber`. Rooms must also keep refusing these new forms |
+| `RoomSpec`, `StageState`, `check()` | They need a stage equation, a dial and pans. Leads have none, and machines aren't their shape |
+| `reach.ts` and `gate: { sealed: true }` | Tests pin it. The gate is decided in `hunt/gate.ts` instead |
+| `SaveV1.v` | Stays 1. New fields join it with defaults, as `CLAUDE.md` says |
+
+### Where things live
+
+| Concern | Location |
+|---|---|
+| Statement language | `math/statement-tokens.ts`, `math/statement.ts`, `math/truth.ts`; additions to `math/format.ts` and `math/rational.ts` |
+| Lead and scene rules | `hunt/` (new pure folder; `architecture.test.ts` must list it, or it gets no rules) |
+| Lead content | `content/leads/l01-two-sides.ts` and so on, `content/rule-guards.ts`, `content/trail.ts` |
+| Store wiring | A `withHunt` layer in `store/hunt-reducer.ts`, composed in `store/reducer.ts` like `withFights` |
+| Screens | `ui/hunt/` (a new `hunt` screen in `ScreenInPlay`), `ui/hunt/objects/`, `ui/hunt/boards/` |
+| Shared notebook pieces | `ui/notebook/Pad.tsx`, extracted from `NumberPad`, which stays as its wrapper |
+| Town | `content/town.ts`, the split `ui/town/`, `city/follow.ts` |
+| Text | `content/text/hunt.ts`, merged into `hr` as `hr.hunt`, because `hr.ts` is already about 1,260 lines |
+
+### Pattern 5: Statements
+
+The notebook's new forms are a separate small language, used only by part 2. It reuses the parser's approach, not its code paths: `parse.ts`'s `parseFactor` and token list are global, so anything added there would reach rooms.
+
+```ts
+// math/statement.ts
+export type SExpr =
+  | { k: 'num'; v: number }                              // to 999 999 999 999 999 (15 digits)
+  | { k: 'var'; name: 'x' | 'n' }
+  | { k: 'add' | 'sub' | 'mul' | 'div'; l: SExpr; r: SExpr }
+  | { k: 'pow'; base: number; exp: number }              // 10⁶
+  | { k: 'group'; kind: 'round' | 'square' | 'curly'; e: SExpr }; // keeps the bracket he wrote
+
+export type Statement =
+  | { k: 'sum'; left: SExpr | null; right: SExpr }       // left null is a continuation: "= 100 − 60 + 5"
+  | { k: 'range'; low?: Bound; name: 'x'; high?: Bound } // 230 < x < 240, x ≠ 5 uses 'not'
+  | { k: 'not'; name: 'x'; value: number }
+  | { k: 'member'; value: number; set: 'N' | 'N0'; negated: boolean }
+  | { k: 'list'; values: number[] }
+  | { k: 'approx'; left: number; right: number }
+  | { k: 'remainder'; dividend: number; divisor: number; quotient: number; rest: number }
+  | { k: 'point'; label: string; value: number }         // A = 25
+  | { k: 'mean'; value: SExpr };                         // x̄ = (6 + 14) : 2
+```
+
+- **Tokens** have names rather than being single characters, so `ost.`, `x̄` and `N₀` are one key each.
+- **Numbers:** `maxStatementNumber` is its own constant. 15 digits fit a safe integer, and evaluation uses `q` (`BigInt` rationals), with `q.pow` added. Numbers longer than 15 digits are only read, as formatted strings.
+- **Parsing** returns `{ ok: false, reason }` and never throws, as rule 1 of Pattern 1 does. Brackets must close with their own kind.
+- **Display:** `formatStatementLine` goes in `math/format.ts`, returning the same `LineSegment`s, so `LineView` shows both kinds of line and the notation rule holds.
+
+**Judging** (`math/truth.ts`) has two uses, and neither uses `check()`:
+
+| | His line before a door | A working line |
+|---|---|---|
+| Judged by | Nothing but shape; the door judges it | Truth |
+| Needs | The clue's sum already started, or a range or list using the clue's numbers | A sum must equal the line before; the last must reach the find |
+| False line | Allowed: it lights the door it claims | Bounces back to the draft, with a wobble |
+| Anything else | Refused with a shake | Refused with a wiggle |
+
+- **Truth by form:** `approx` is true only if the right side is the left rounded at some place, using the next digit alone. So 18 499 000 ≈ 19 000 000 is false. `remainder` needs `rest < divisor` and `divisor · quotient + rest = dividend`, so `55 : 9 = 5 ost. 10` is false and dividing by 0 is false. `point` and `mean` take their true value from the scene.
+- **Blanks:** at most one distinct blank per line, because `fillBlanks` puts the same value in every `☐`. A content test enforces this.
+- **Rule 3 still holds for rooms.** Rooms are judged by exact solution, leads by truth.
+
+### Pattern 6: Leads as data
+
+Rule 10 extends: leads are data, with content tests, and no per-lead code.
+
+```ts
+// hunt/types.ts
+export interface LeadSpec {
+  id: LeadId;                 // 'l01'…'l16'; stored in saves, so stable even if a label changes
+  act: 1 | 2 | 3 | 4 | 'last';
+  street: HuntStreetId;
+  idea: HuntIdeaId;           // its explanation card
+  lesson: LessonSpec;         // what the cylinder shows, then the try
+  mistake: MistakeSpec;       // the little one's wrong lines, the wrong one, and the object fix
+  scenes: SceneSpec[];        // discriminated on kind
+  writeUp: WriteUpSpec;       // the school form, with fading
+  find: FindId;               // what it yields for the knot
+  order?: 'first' | 'last';   // the locks and the coat
+}
+export type SceneSpec = KnockSpec | SneakSpec | UnmaskSpec | AloneSpec | CartsSpec | LevelSpec | LocksSpec;
+```
+
+Ids: leads `l01`–`l16`, knots `k1`–`k3`, rule guards `rule-1`–`rule-4`, new streets `u1`–`u6`, gear `hook`, `lamp`, `magnet`, `long-hook`. Each spec also holds its canonical answer and a worked example with other numbers.
+
+**`hunt/solve.ts` and content tests** check every lead:
+- Knock: each clue's canonical line, in any order, leaves exactly the door; a struck clue relights correctly.
+- Sneak: a search proves every board can be solved and the exit reached without being caught.
+- Unmask: exactly one culprit. The required cards separate it from anyone who slipped, so spotting the odd one out isn't enough.
+- Alone: the route exists, and every wrong pipe returns.
+- Rule guards: a tile breaks the rule, and the line it writes is true.
+- Worked examples are true and use different numbers from the scene.
+- No paper-test number appears, and no lead has more than one idea.
+- Each act holds at least one predicting moment, one story-to-maths moment, and one cross-clue.
+
+### Pattern 7: Scenes as pure reducers
+
+```
+lead:  show → try → fix → play → write → thread → done
+```
+
+Each scene is a state machine in `hunt/`, following the fight's precedent: legal actions per phase, everything else ignored, no timers, and time and randomness only through `ctx`. Actions are `hunt/*`. Events are past tense: `LeadPicked`, `LessonSeen`, `FixMade`, `LineWritten`, `DoorKnocked`, `SuspectAccused`, `BoardFinished`, `RuleJammed`, `LeadFinished`, `KnotTied`. The layer emits `SaveChanged` itself, as other outer layers do.
+
+| Module | Key rule |
+|---|---|
+| `hunt/knock.ts` | **The lit doors are derived, never stored:** `litDoors(row, side, activeLines)`. So striking a line is simply recomputing, and undo needs no history. It knocks only when one door is lit. After a wrong door the scene's `mode` becomes `working`, which is what stops him changing the answer until a door opens |
+| `hunt/sneak.ts` | Pure steps: his move, then each patrol's. Loop boards use `steps % lamps`. Waiting is off on bell boards. The next bell comes from the spec's list, not from randomness |
+| `hunt/unmask.ts` | Cards asked, accusations, and the corrected line. Accusing is legal only after 2 cards |
+| `hunt/alone.ts` | Junction, route so far, and last good junction |
+| `hunt/one-offs/` | Carts, levelling and bracket locks, each a small model |
+| `hunt/rule-guard.ts` | Tiles, the written line, and first-try payment |
+| `hunt/thread.ts` | Deterministic: the target list comes from `content/trail.ts`. Two seals at most, none after the coat |
+| `hunt/lead.ts` | The lead's steps, which leads are open, first and last in an act |
+| `hunt/help.ts`, `hunt/hint.ts`, `hunt/guide.ts` | Parallel to the room versions, which are bound to `RoomState`. `pressHint` and the `RoomGuideView` card are reused; targets use the fight's `data-focus` approach. New topics join `FirstUseId` |
+| `hunt/gear.ts` | Buying gear and looks through `economy`. Bought gear can open only secrets, and a content test fails if a lead needs it |
+
+**Objects** are data-driven: a lesson declares an object and a script of moves, and 8 renderers in `ui/hunt/objects/` play them. Models are pure, so try steps and the fix have goal predicates that can be tested.
+
+### Rendering
+
+- **Scenes are a screen,** like fights: the `hunt` screen in `ScreenInPlay`, with the town unmounted and restored through `readWhere`. It joins `withOnMap`'s list.
+- **DOM and SVG, not a new Pixi scene.** This matches the town and fights as built. Numbers stay crisp, hit areas are simple, and nothing here needs shaders. If a board misses 60 FPS when profiled, it moves to Pixi.
+- **Door rows are a native horizontal scroller:** `overflow-x: auto` with `touch-action: pan-x`, the facade as a repeating background, and plate text through `formatNumber`. Up to 70 buttons, each at least 48 CSS px wide at 640 × 360. Lit and dark change a class, never a filter per door, and scrolling to a door is `scrollIntoView`. Nothing else in the game scrolls sideways yet, so this gets profiled on the tablet first.
+- **The layout** keeps the room screen's: the scene beside the notebook on a tablet, and sliding over it on a phone.
+
+### Town, district and follower
+
+- **Split `TownScreen.tsx` first.** It is 994 lines. Extract the walking loop into a hook and the board parts into components, with no change in behaviour, before anything is added.
+- **Streets:** `AreaId` gains `u1`–`u6`, and `TownArea` gains `district` and `spots` (tap areas for leads and secrets). Boards stay 1600 × 1000. Streets with no room node already drop off the part 1 map (`ui/map/streets.ts:24`), so it needs no change.
+- **Conditions:** `opensWith`, `after` and `until` widen from `RoomId` to `RoomId | HuntMark`, read by one helper, `markDone(save, mark)`. Part 1's data stays as it is.
+- **The follower:** `city/follow.ts` holds a pure `followStep(trail, at, dt, tuning)`. It follows his recent spots, so it stays on the ground without its own pathfinding. The gap and speed are in `tuning.follow`. It runs in the walking loop through refs (rule 6), before the early return for streets with no patrol, and resets on arrival and on picking a street. Its position isn't saved.
+- **The trail map:** `MapOverlay` shows `TrailMap` in the new district. Threads are SVG, with positions in `content/trail.ts`, all derived from `save.hunt`.
+- **Vučetić:** the same `vucetic` person gets new scenes in the new district. Part 1's lines stay. After the coat, the real one appears, and his tool room is a spot on the old bridge.
+- **Boot:** art for the new district is decoded on entering it, not at launch, so launch time stays where it is. The budget of 30 MB has room (`dist` is 9.8 MB).
+
+### The gate and the switch
+
+```ts
+// hunt/gate.ts
+gateState(save, partTwoOn): 'sealed' | 'waiting' | 'ready' | 'opened'
+```
+
+- **`opened` is a ratchet.** `save.hunt.gateOpened` stays true once set. "Boss beaten" reads whether the `lair-60` entry exists, not whether it's awake. The dev panel's wake empties `economy.lairs`, so without the ratchet it would shut the gate.
+- **He solves it with part 1's own `check()`** on `5 · x = 40`, so epic 7 needs no new notebook forms. The foundry's tap (`TownScreen.tsx:304`) asks `gateState`, and otherwise behaves as today. `reach.ts` doesn't change.
+- **Wording that changes when part 2 is on:** `hr.ts:635` ("needs a tool") and the "Nastavak slijedi" at `MapScreen.tsx:126`.
+
+**The switch:** `partTwoOn = tuning.part2.live || state.ui.preview`.
+- `tuning.part2.live` is `false` until Luka opens part 2, pinned by a test, so opening is a deliberate change of two lines.
+- `ui.preview` comes from `wantsDev` in `App.tsx` through `boot/start`. It is never saved.
+- **Test on a second player.** `?dev` isn't a sandbox: the panel writes the active player's real save. On the tablet, use `#igraci` and leave his save alone.
+- The dev panel gets lead jumps that build state through the real path, not by seeding past it.
+
+### Save
+
+```ts
+// added to SaveV1, without changing v
+companion: { name: string | null; looks: LookPieceId[]; wearing: LookPieceId[];
+             gear: GearId[]; taught: TaughtEntry[] } | null;
+hunt: { gateOpened: boolean; leadsStarted: LeadId[]; leadsDone: LeadId[]; knotsDone: KnotId[];
+        sealed: LeadId[]; thread: ThreadState; corrected: HuntStreetId[]; secrets: SecretId[];
+        guards: RuleGuardId[]; paid: string[]; beats: BeatId[]; forged: 'open' | 'struck' | 'followed';
+        pages: Partial<Record<LeadId, PageLine[]>>; firstTries: Partial<Record<LeadId, boolean>>;
+        told: string[]; scene: SavedScene | null };
+// TaughtEntry: { lead: LeadId; mistake: MistakeId; line: string; at: string }
+```
+
+- **Adding them** touches `save/schema.ts`, `save/decode.ts`, `store/types.ts`, and `newSave`, `toSaveV1` and `fromSaveV1` in `store/persist.ts`. `save.test.ts` and `boot.test.ts` pin the shape and are updated once.
+- **Ids are filtered on load** like the rest, so a new id must join its known list, and ids are never renamed.
+- **The scene lives in `save.hunt.scene`,** not in a separate `GameState` slice. Resuming needs no replay, and the fight's six extra wiring points aren't needed. Help level and idle time aren't saved.
+- **A saved scene that no longer fits its spec** restarts that scene and keeps the lead, as a room that no longer replays does.
+- **`taught` is kept for the year,** so it lives in `companion`, which later chapters also use.
+- **The `overKept` trap:** `storage.ts:104` merges each top-level object one level deep over the save as first read, so a key removed from `hunt` comes back. `hunt` and `companion` have fixed keys only, set to `null` or empty, never deleted. Maps sit one level further down, where they're replaced whole.
+- **Privacy, a bug waiting to happen:** `encodeBackup` strips only `character`, so the little one's name would go into backup links, against rule 9. `backupOf`, `encodeBackup` and `restoredJson` must treat `companion.name` the way they treat his own name, with a test.
+
+### Other systems
+
+- **Play log:** `entryOf` drops unknown events, so new ones must be added, along with a table in Luka's view.
+- **Audio:** cases in `effects/audio.ts`, and one layer per act from `hunt` progress. `ambience.ts` needs no change, since no room ids are added.
+- **Story cards:** `owed` (`reducer.ts:507`) stays for rooms, and part 2's cards are owed from `hunt.told`.
+- **City log:** part 2 lines are a second list in the same view.
+- **Fights:** new lairs extend `LairId`, the `isLair` filter and `playlog/log.ts:44,192`. Brackets are an upgrade plus a per-strike choice in `fight/`. `fight/balance.test.ts` sets armour against the GDD's targets, for reasoning and random players.
+
+### Risks
+
+| Risk | Answer |
+|---|---|
+| Part 2 reaches his live save half-built | The switch, with a pinned test |
+| A change breaks part 1 | Part 1's types aren't touched, and the full test suite runs as before |
+| The town split breaks walking | The split comes first, with no behaviour change, checked by the existing browser specs and on screen |
+| Door rows scroll badly on his tablet | Profile the row early in epic 8 |
+| Statement judging accepts or refuses the wrong line | The table, plus property tests for `truth.ts` |
+| Content grows past what data can express | A scene type gets a new field, or a new kind, before any per-lead code |
+
 ## Architecture Decision Records
 
 Each is Claude's call, open to Luka's veto.
@@ -943,6 +1159,16 @@ Each is Claude's call, open to Luka's veto.
 | 17 | A quality setting from a frame-time test, with effects switching off in a fixed order | One fixed look | Rich effects without risking 60 FPS on his tablet |
 | 18 | Code draws everything that moves or shows a number; images carry backdrops, map, housings, automatons and looks | Images for everything | Pieces and gears must animate and show exact numbers; images give the rest the richness Luka wants |
 | 19 | The grey state is a shader over the colour image | Two drawings per image | Half the images, and grey and restored always match |
+| 20 | Part 2 adds no rooms or map nodes; leads are a separate `hunt/` system | Extending `RoomSpec` and `roomIds` | `allDone`, 13-room pins and his live save all break otherwise, and leads have no machine |
+| 21 | A separate statement language beside the equation path | Widening `Expr`, `TOKENS` and `Verdict` | Rooms must keep refusing these forms, tokens are the links' wire format, and a dozen functions walk `Expr` |
+| 22 | Clue lines are judged by the door, working lines by truth | Judging all lines in the notebook | A wrong idea should reach the wrong door, and after that he must work it line by line, which stops guessing |
+| 23 | Lit doors are derived from active lines | Storing the row's state | Undo is free and nothing can get out of step |
+| 24 | The scene in progress lives in `save.hunt.scene` | A new `GameState` slice with replay | Resuming is trivial, at less wiring than fights needed |
+| 25 | Scenes are DOM and SVG on their own screen | A new Pixi scene | Matches the town and fights as built; numbers stay crisp; move to Pixi only if a profile says so |
+| 26 | Part 2 stays off behind `tuning.part2.live`, and `?dev` previews it without saving the flag | A flag in the save, or a branch | `main` deploys to him. Opening is one deliberate change, and it can't happen by accident |
+| 27 | The gate's opening is a ratchet in the save | Reading boss and room state each time | The dev panel's wake empties the lairs, and a shut gate on progress would be a dead end |
+| 28 | `hunt` and `companion` have fixed keys, never deleted | Free-form top-level maps | `overKept` would bring deleted keys back from the save as first read |
+| 29 | The little one's name is stripped from backups like his own | Treating it as ordinary save data | Rule 9, and `encodeBackup` strips only `character` today |
 
 ---
 

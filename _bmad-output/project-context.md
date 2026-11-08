@@ -40,8 +40,18 @@ TypeScript 7.0.2, React 19.3.1, PixiJS 8.22.0 through `@pixi/react` 8.0.5 for th
 9. **No data leaves the device.** No analytics, no third-party requests, no character name in any link.
 10. **Rooms are data** (`RoomSpec`), with content tests. No per-room code.
 
+## Part 2 (planned, not built)
+
+Part 2's rules are in the architecture's "Part 2 Architecture". The ones most easily broken:
+
+- **Part 2 adds; it doesn't widen part 1.** No new room ids or map nodes. Don't touch `TOKENS`, `PAD_ROWS`, `Expr`, `Verdict` or `maxNumber`. Statements are a separate language in `math/statement*`, and rule 3 stays true for rooms.
+- **Rule 1's pure folders gain `hunt`,** and rule 10 extends to leads: data with content tests, no per-lead code.
+- **It stays off** behind `tuning.part2.live` until Luka opens it. `?dev` previews it but writes the active player's real save, so test on a second player.
+- **`save.hunt` and `save.companion` have fixed keys,** never deleted, and the little one's name stays out of backups and links.
+- **Lit doors are derived,** never stored.
+
 ## Testing
 
-- Every change to `math/` adds rows to `src/math/lines.table.ts`.
+- Every change to `math/` adds rows to `src/math/lines.table.ts`, or to `src/math/statements.table.ts` for statements.
 - Content tests run for every room.
 - Luka plays on the tablet; profile through `chrome://inspect` when a story asks for it.

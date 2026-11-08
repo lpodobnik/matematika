@@ -3,7 +3,8 @@ title: 'Narrative Design Document'
 project: 'matematika (working title)'
 date: '2026-11-05'
 author: 'Luka'
-version: '1.0'
+version: '2.0'
+updated: '2026-11-08'
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 status: 'complete'
 narrativeComplexity: 'light (quick narrative)'
@@ -16,7 +17,7 @@ gdd: '_bmad-output/planning-artifacts/gdds/gdd-matematika-2026-11-05/gdd.md'
 
 ### Document Status
 
-Complete. Created through the GDS Narrative Workflow.
+Complete for part 1, created through the GDS Narrative Workflow. Part 2, added on 2026-11-08, is at the end of this document and awaits Luka's review.
 
 **Narrative Complexity:** Light, quick narrative: premise, setting, key characters and clues, sized to the first district with hooks for later ones.
 **Steps Completed:** 11 of 11
@@ -694,3 +695,313 @@ Rooms 5–6 and 9–10 can come in either order, so beats in those pairs can't d
 | The Legend of Zelda | A silent hero, and tools that reopen the world |
 | Wildermyth | A story that feels like the player's own |
 | Christiaan Huygens, Nikola Tesla, Faust Vrančić, Slavoljub Penkala, Marin Getaldić | The real inventors and mathematicians behind the names |
+
+---
+
+# Part 2: The Trail
+
+Part 1 above is live and unchanged. The rules for this part are in the GDD, under "Part 2: The Trail": `C:\Users\lpodobnik\Claude\matematika\_bmad-output\planning-artifacts\gdds\gdd-matematika-2026-11-05\gdd.md`.
+
+Final text is Croatian, and Luka writes or approves every line. English lines here show intent only. New names and places are placeholders.
+
+## Part 2: Story Foundation
+
+### Premise
+
+He opens the foundry gate and Kristijan is gone, moved one step ahead of him. All that's left is a tiny automaton, knocking on the door, that follows him from then on. With Vučetić the guard keeping his map, he tracks Kristijan across a new district, reading clues only someone who understands can read. But the First Automaton always seems to know where he has been, because the friend writing everything down is one of its own.
+
+### Core Themes
+
+1. **You really know something when you can show it to someone else.** Part 1 was that knowing why beats knowing the steps. Now he passes it on, to a little machine that can't do it yet. The story never says this outright.
+2. **Writing it down isn't understanding it.** Vučetić records everything and understands nothing. His notebook does the opposite: Kristijan's held questions, not instructions.
+3. **He does for the little one what nobody did for the First Automaton.** It was given steps. This one gets shown why, by him.
+
+### Tone and Atmosphere
+
+**Tone:** the same wry adventure, cuter and funnier, with one real betrayal in the middle.
+
+**Atmosphere:** a shuttered upper district, grey again, whose people keep their doors shut until he gives them a reason to open them.
+
+**Emotional register:** he goes from being the one they ask to being the one who shows. Delight in the little one, the fun of a hunt, a real shock at the coat, and pride at being named at last.
+
+**What makes it funny:**
+- The little one gets things wrong with total confidence.
+- Neighbours are grumpy and unimpressed when he knocks on the wrong door.
+- A wrongly accused townsperson is deeply offended.
+- Rule guards thank him politely for confirming their rule.
+- The First Automaton files a kidnapping as a routine correction.
+
+## Part 2: Story Structure
+
+An episode with four acts, ending on a clue, not an ending. It is the second of six chapters of his 5th-grade book.
+
+| Act | Title | What happens |
+|---|---|---|
+| Opening | The gate | The foundry is empty. He meets the little one and Vučetić gives him a map |
+| 1 | Where they took him | He learns to read the district, and Kristijan's first gift says this was planned |
+| 2 | Which way they went | The little one goes missing and comes back. The search party keeps turning up where he's been. A forged note |
+| 3 | The convoy | Someone is reading his map. The coat |
+| 4 | The hiding place | The real Vučetić, a map that's now his own, and the search party lost |
+| Last | The lamp oil | A warm lamp, a note with his name, and the First Automaton's first question |
+
+## Part 2: Story Beats
+
+Within an act, leads come in any order, except that the coat is last in Act 3 and the locks first in Act 4. Lines in one lead can't refer to another in the same act.
+
+### Opening
+
+| Beat | What happens |
+|---|---|
+| The knock | After the ending, the knock is still going behind the gate: five, then eight. He solves `5 · x = 40`, and the door opens |
+| The foundry | Cold. A chair, a cup, tools put neatly away. A notice: "THE MASTER HAS BEEN MOVED. THIS HAS BEEN CORRECTED. THANK YOU." |
+| The little one | The knocker is a tiny automaton, still knocking, now on his boot. It looks up and follows him. He names it |
+| The map | Vučetić arrives, as thorough as ever, gives him a map, and marks the foundry on it. "Zapisano." The little one hides behind him. It looks like shyness |
+
+### Act 1: where they took him
+
+| Lead | Who | What he finds |
+|---|---|---|
+| Two sides | The first grumpy neighbours | Which side of the street the cart left from |
+| The neighbours | A witness who won't talk, and next door who will | Who saw it |
+| The archive | The archivist. The little one goes alone for the first time, and comes back proud | The foundry's transport slip |
+| The tram line | Belušić, a tram driver who measures everything and remembers only some stops | Where the cart joined the line |
+| **Knot 1** | Faust recognises the scrap the little one is made of | Kristijan's cache, with a grappling hook made for something very small. So this was planned |
+
+### Act 2: which way they went
+
+| Beat or lead | Who | What happens |
+|---|---|---|
+| It wanders off | Nikola | The little one follows Nikola's first attempt at an automaton, a wind-up toy that walks into a wall. The street is too quiet without its beeps. He finds it from neighbours' clues |
+| The witnesses | Townspeople who disagree | Which way the cart went, ranges and all |
+| The newspaper | Zagorka, whose headlines round everything | Her figures, and one that can't be true |
+| The ledgers | Kotruljević, who keeps every account twice | What's missing from the foundry's books |
+| The facade | Sleepy residents. The little one climbs alone | A window Kristijan chalked |
+| **Knot 2** | Vučetić brings a find: a note in Kristijan's hand | The note has a careless mistake, which Kristijan never makes. If he follows it, it's a trap, with a polite notice |
+
+Faust starts to say where the little one came from, and stops.
+
+### Act 3: the convoy
+
+| Beat or lead | Who | What happens |
+|---|---|---|
+| The warning | A cylinder from Kristijan | Someone close to him is reading his map |
+| The crate yard | Yard workers | Crates counted the clever way, and where they went |
+| The sixth cart | A witness who saw 5 carts | 120 crates, 20 per cart, is 6 carts. So where's the sixth? "S nulom se ne dijeli" is shown here, and a guard will regret it later |
+| **The coat** | Five people, gathered by Vučetić himself. Zagorka insists on asking him too, for the paper | See below |
+| **Knot 3** | The real Vučetić | What he wrote on the walls, turned into one expression |
+
+**The coat, the part's biggest moment.** He asks each of the five `2 + 2 : 2`, then another. Four answers are fine, or slip once. Vučetić's working goes left to right, every time. When he points, the hat pops off and there are gears. It winds down with its usual word: "Zapisano." The little one, who has hidden from it since the foundry, rolls up to it and prints the only word it knows: "Zašto?" There's no answer. On its tape is Kristijan's address, which it never could read: `100 − 20 · 3 + 10 : 2` is house 45. The automatons are all at 125.
+
+**The real Vučetić** is found locked in the tool room under his own bridge, in the old district, where he's been since before the first notice. Milka's kifle have been disappearing there for weeks. He has written everything on the walls, and is furious, in order, by date. He eats a kifla.
+
+### Act 4: the hiding place
+
+| Lead | Who | What happens |
+|---|---|---|
+| The locks | Penkala, who is stuck at one, reading the Book | Kristijan's doors only open for someone who knows what brackets do |
+| Two witnesses | The real Vučetić's first case back | Two say the same thing differently, and one is lying |
+| The loop | A patrol with a key | Where it stops when the bell rings |
+| The hoist | The first part's scale, returned as a bar | The way up to the street where the trail ends |
+
+The map is now his own, and the black thread wanders off to decoy doors.
+
+### Last: the lamp oil
+
+| Beat | What happens |
+|---|---|
+| The charts | Hanaman, who sells lamp oil, keeps careful charts. One street burns at night, though nobody lives there |
+| The zero guard | "ANYTHING CAN BE DIVIDED BY ANYTHING." He shows it `7 : 0`. It starts dividing, and it's still spinning there for the rest of the game |
+| The room | The lamp is still warm. He's only just missed him. No cart, no glimpse |
+| The note | Kristijan's note addresses him by name, the first time he speaks to him directly. There's a new cylinder for the little one |
+| The question | The First Automaton's last notice is the first it has ever put as a question: "HOW DID YOU READ THAT." |
+| The front page | Zagorka's paper has been saying "netko pametan". This time it prints his name |
+| The next trail | The last clue needs divisibility. One option: gear teeth that mesh only if one number divides the other |
+
+## Part 2: Pacing
+
+**Tempo:** lines between scenes, one or two at a time, as before. Scenes have their own short lines.
+
+**Tension curve:** it rises through the black thread in Acts 2 and 3, peaks at the coat, and then releases into a stronger Act 4, where he's ahead for the first time. It lifts again at the warm lamp.
+
+**Breathers:** the wandering-off beat ends in relief, and the real Vučetić is pure comedy after the coat.
+
+**Key moments:**
+- **Highest tension:** the coat.
+- **Most tender:** the little one printing "Zašto?" to the wound-down automaton.
+- **Funniest:** the zero guard, and the real Vučetić with his kifla.
+- **The ending:** his name, on the note and on the front page.
+
+## Part 2: Characters
+
+### The little one
+
+**Description:** a tiny automaton of scrap, with no legs, rolling on one wheel and hopping. He names it, and the name stays on the device.
+
+**Background:** Kristijan built it in secret in the foundry, under the First Automaton's eye. It was to knock until someone who understood opened the door.
+
+**Motivation:** to follow whoever opened the door, and to do what they do.
+
+**Strengths:** it fits anywhere, and it carries Kristijan's lessons.
+
+**Flaws:** it's wrong with total confidence, and it does exactly what it's told.
+
+**Voice:** beeps, gestures and maths in a wobbly hand. Its one printed word is "Zašto?".
+
+**Secret, revealed slowly:** it is Kristijan's second try. The first automaton got steps, and this one was to be taught why. It is built from the First Automaton's spare parts, so it is really its little brother. Faust only hints at this in part 2.
+
+### Vučetić in the coat
+
+**Description:** the bridge guard from part 1, on the outside. On the inside, gears.
+
+**Function:** his ally, and how the First Automaton keeps up. Every find he marks goes straight back.
+
+**Voice:** short reports, the same as in part 1. "Zapisano." "Sve sam zapisao." He never asks why, and that's the point.
+
+**Sympathetic side:** it does its job perfectly and understands none of it.
+
+### The real Vučetić
+
+**Function:** comedy, then a real ally for Act 4. His walls give him Knot 3.
+
+**Voice:** the same words, but warm, hungry, and furious in careful date order.
+
+### Clues planted fairly
+
+A sharp player can work it out. A 10-year-old should be surprised, then want to go back and check.
+
+| Where | The clue |
+|---|---|
+| Part 1, already live | The first notice appears on his bridge. All he talks about is writing things down |
+| Opening onward | The little one hides behind him when Vučetić is near |
+| Act 1 | Milka offers everyone a kifla. Vučetić says "Zapisano" and doesn't eat it |
+| Act 1 | Milka's kifle go missing by the bridge, and nobody knows why |
+| Act 1 or 2 | He reads a small sum aloud, left to right, and gets it wrong. Nothing depends on it |
+| Any | Nikola asks him how something works, and gets "Zapisano" |
+| Knot 2 | He's the one who brings the forged note |
+
+### Others
+
+| Character | In part 2 |
+|---|---|
+| Majstor Kristijan | Still absent. His cylinders, chalk marks and hook show he planned for someone to come. His first direct words are the final note |
+| The First Automaton | Only tapes and notices. Literal, polite, menacing. Its last notice is its first question |
+| Faust | Looks after the little one in the workshop, knows what it is, and doesn't say |
+| Nikola | Builds his own little automaton, badly. Still asks how |
+| Gospon Penkala | Reads left to right from the Book, gets `2 + 2 : 2` wrong, and gets stuck at a lock. Not a suspect |
+| Zagorka | Rounds everything for her headlines, reports him as "netko pametan", and prints his name at the end |
+| Milka | Keeps trying to feed kifle to the little one, which can't eat |
+| Belušić, new | A tram driver who measures everything. After Josip Belušić, inventor of an electric speedometer |
+| Kotruljević, new | Keeps every account twice. After Benedikt Kotruljević, whose 1458 manuscript describes double-entry bookkeeping |
+| Hanaman, new | Sells lamp oil and charts it. After Franjo Hanaman, co-inventor of the tungsten-filament bulb |
+| The archivist, new | Name open for Luka |
+
+Vučetić is already named after Ivan Vučetić, who pioneered fingerprint identification, and Zagorka after the journalist Marija Jurić Zagorka. As before, names go unexplained, for him to discover later.
+
+## Part 2: Character Arcs
+
+**The apprentice.** Starts as the one they ask. Transformation moments: naming the little one, fixing its first mistake, the coat. Ends as the one who shows, known by name to Kristijan and the whole city.
+
+**The little one.** Starts knowing one step. Each fix stays fixed, so he can see it learn. Ends knowing a chapter's worth of why, and still asking "Zašto?".
+
+**Nikola.** Starts copying him badly. Ends building something of his own, also badly, but his own.
+
+**Gospon Penkala.** Still holding the Book. Very little changes, which is the joke.
+
+**The First Automaton.** Starts by correcting. Ends by asking him a question for the first time.
+
+## Part 2: World
+
+**Setting:** Gornji Kotač (placeholder), the upper district of Satograd, reached through the foundry. Six streets, shuttered because the search party has been through.
+
+**World rule added:** Kristijan hid the whys around the city as cylinders, where the First Automaton wouldn't find them, because it only looks for steps.
+
+### History added
+
+1. Kristijan builds the First Automaton and gives it steps.
+2. The steps stop being enough. It takes him to the foundry to ask why.
+3. Before part 1's first notice, an automaton takes Vučetić's place at the bridge, and the real one is locked below it.
+4. Under its eye, Kristijan builds a tiny automaton from its spare parts and teaches it one step, knocking, and hides cylinders around the city.
+5. When the apprentice closes in, it moves him.
+
+### Key Locations
+
+| Place | What it is | Why it matters |
+|---|---|---|
+| The foundry | Cold and neat | Where it starts: the chair, the cup, the little one |
+| The archive | Halls, rows, shelves, boxes, folders | The little one's first solo trip |
+| The tram line | Stops with only some labelled | How the cart left |
+| Vučetić's tool room | Under the bridge, in the old district | Walls of writing, and the one return trip the story requires |
+| House 45 | A plain door | What the automatons missed by reading left to right |
+| The hiding place | A room above a street with no residents | The warm lamp |
+
+## Part 2: Dialogue Framework
+
+The voices from part 1 stay as they are, along with the rule that nobody addresses him with a gendered past tense.
+
+| Character | How they speak |
+|---|---|
+| The little one | Silent, except "Zašto?" |
+| Vučetić in the coat | Short reports, never a question |
+| The real Vučetić | The same words, warmer, plus complaints |
+| Neighbours | Grumpy and unimpressed, one line. A pool of 8 per act, none repeated in a scene |
+| Accused townspeople | Offended, one line, then their working |
+| Rule guards | Politely thankful |
+| Zagorka | Headlines, rounded |
+
+**Key conversations:** Vučetić and the map; Faust and the scrap; the coat; the real Vučetić on the walls; the final note.
+
+**Branching:** none. The name, the little one's name, the order of leads within an act, and whether he follows the forged note all vary, so lines can't assume them.
+
+## Part 2: Environmental Storytelling
+
+- **Kristijan's chalk marks** point to gaps, cylinders and secrets.
+- **Punched-tape notices** appear as the black thread arrives.
+- **Searched houses** stay marked, with doors turned out.
+- **Decoy doors,** after the coat, show the automatons busy in the wrong place.
+- **Zagorka's front page** changes after each knot, so he can see the city hearing about him.
+- **The real Vučetić's walls** can be read in full, in date order, by anyone who goes back.
+
+**Found documents:** 16 cylinders, 8 sketches or lore lines in secrets, the forged note, and the final note.
+
+## Part 2: Narrative and Gameplay
+
+| Story | Play |
+|---|---|
+| He shows the little one why | The Fix step |
+| The little one remembers | Fixes kept in the save for the finale |
+| Step-followers go wrong | Left-to-right sends the automatons to 125 |
+| Vučetić reports everything | The black thread keeps up, and stops after the coat |
+| Kristijan never makes a careless mistake | The forged note, the reverse of part 1's planted one |
+| Automatons know the steps, not why | Rule guards run wrong rules, and zero crashes one |
+| Being known | Red thread, front pages, his name at the end |
+
+**Story gating:** the coat ends Act 3, and otherwise story gates nothing.
+
+**Player agency:** he picks the order of leads within an act, which lead to save from the black thread, whether to trust the forged note, what to call the little one, and how it looks. The story itself doesn't branch.
+
+**Delivery:** no cutscenes and no voice acting, as in part 1. Required: leads, knots, rule guards, the coat, the ending. Optional: secrets, corrected streets, the real Vučetić's walls beyond what Knot 3 needs, fights, and the workshop. Croatian only.
+
+## Part 2: Production
+
+**Writing:** about 300 short lines by the GDD's count, drafted by Claude, with Luka's wording winning. Read every new line aloud for sense.
+
+**Lines to write first, because the twist depends on them:** the planted clues, the coat, and the real Vučetić.
+
+## Road to the Finale
+
+A sketch, not a plan. Each remaining chapter is its own episode, may play differently, and ends on a near miss with one reveal. Only the last has a true ending. [ASSUMPTION: the story finishes at the end of 5th grade.]
+
+| Part | Chapter | One reveal, for example | The First Automaton |
+|---|---|---|---|
+| 3 | Djeljivost | The little one is built from its spare parts | Asks why two gears won't mesh |
+| 4 | Oblik, prostor i mjerenje | He and Kristijan exchange knocks through a wall, for the first time | Measures him |
+| 5 | Razlomci | The little one holds a piece the First Automaton is missing | Wants its part back. Whether it takes the little one is Luka's call |
+| 6 | Decimalni brojevi | The finale | Asks why |
+
+**The finale.** He finds Kristijan. The First Automaton finally asks why the machines work. The little one answers by replaying what he showed it, a year of his own corrections, one by one. It prints its usual "HVALA", and this time it means it.
+
+## Appendix: Part 2 Open Items
+
+- The archivist's name, the district's name, and every Croatian line: Luka.
+- Whether the story finishes at the end of 5th grade: assumed, for Luka to veto.
+- Whether the little one is ever taken: for later chapters.

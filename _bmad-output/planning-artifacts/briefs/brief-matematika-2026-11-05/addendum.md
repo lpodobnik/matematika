@@ -78,7 +78,16 @@ This is the equations version. The four task types carry over to other topics:
 | Find the mistake | "Anything divisible by 4 and by 6 is divisible by 24." | "Same perimeter means same area." |
 | Go both ways | Use 36 = 2 · 2 · 3 · 3 to find how many ways 36 chairs can form equal rows. | Draw a shape with perimeter 2 · (3 + 5), then write the calculation for a drawn shape. |
 
-Limits: the task types do not cover memorised facts and notation, constructions with tools (C.5.2) or calculation speed. Examples exist for equations, divisibility, and area and perimeter, not yet for all 17 outcomes.
+Natural numbers, for part 2. Numbers here must not appear in a lead:
+
+| Task type | Natural numbers |
+|---|---|
+| Compare without calculating | Is 73 · 58 + 27 · 58 equal to 100 · 58? Which is larger, 6 · 10³ + 9 · 10² or 1 · 10⁴? |
+| Predict | One addend grows by 38 and the other by 15. What happens to the sum? What changes if 48 : 6 · 2 gets brackets around 6 · 2? |
+| Find the mistake | "6 + 4 · 2 = 20." "50 : 8 = 5, remainder 10." What went wrong, and why? |
+| Go both ways | Write a story for 4 · (6 + 3). Then write one expression for: 12 boys and 15 girls, with 5 notebooks each. |
+
+Limits: the task types do not cover memorised facts and notation, constructions with tools (C.5.2) or calculation speed. Examples exist for equations, natural numbers, divisibility, and area and perimeter, not yet for all 17 outcomes.
 
 Background: Skemp's [relational and instrumental understanding](https://lancashire.gov.uk/media/940445/relational-and-instrumental-understanding-richard-skemp.pdf); equal-sign understanding linked to equation solving, controlling for achievement, in 177 grade 6–8 students ([Knuth et al. 2006](https://www.nctm.org/Publications/journal-for-research-in-mathematics-education/2006/Vol37/Issue4/Does-Understanding-the-Equal-Sign-Matter_-Evidence-from-Solving-Equations/)); true/false sentences judged without calculating ([NRICH](https://nrich.maths.org/14797)).
 
@@ -116,21 +125,22 @@ Parts pay for upgrades and for pieces of the rooms he builds. Fights have no tim
 
 ## Candidate tools (proposed)
 
-Design ideas, untested. Findings about CARNET come from its lesson text; its videos and applets were not seen. Adjust the order to where his class is.
+Updated 2026-11-08: the order now follows his book, and the idea of "one tool per part" is relaxed, because a part may play differently. Part 2 is built and described in the GDD. Later rows are design ideas, untested. Findings about CARNET come from its lesson text; its videos and applets were not seen. Adjust the order to where his class is.
 
-| Order | Topic | Tool (placeholder, to fit the world) | What he works out | Why here |
+| Order | Topic | How it plays (placeholder, to fit the world) | What he works out | Why here |
 |---|---|---|---|---|
-| MVP | Equations (B.5.1) | Scale with draggable x | Both sides are equal at one point, and the change is steady | Luka's starting point. CARNET's text never connects the balance to the written rule |
-| 2 | Area and perimeter (D.5.4) | Drag a plate's edges on a grid | Area is a count of squares; doubling the sides quadruples the area but only doubles the perimeter | Reuses draggable x and tests the structure on geometry. CARNET states the area formula without a reason |
-| 3 | Divisibility and primes (A.5.2) | Mesh gears with different tooth counts | A small gear makes whole turns only if its teeth divide the big gear's; a prime gear has no smaller partner that fits evenly | CARNET's text gives the rules no reasons. Covered in his volume 1 |
-| 4 | Fractions and decimals (A.5.3 to A.5.5) | Set a dial to part of a turn and read it on a number line | The same amount can be written differently | 50 of 140 hours in the 2021./2022. Ministry-hosted plan |
-| 5 | Volume (D.5.5) | Fill a tank with unit cubes, layer by layer | Volume is a count of cubes, and the layers give the formula | Extends area. CARNET states the formula without a reason |
-| 6 | Angles and symmetry (C.5.1, C.5.3, D.5.1) | Turn crossing levers; stamp a part and its mirror image | Vertical angles stay equal; adjacent angles add up to a straight angle; a shape and its image move together | Visual, and CARNET has pupils find some of these rules from applets |
-| 7 | Sets (B.5.2) | Route parts through sorting gates into a Venn diagram | What intersection and union mean | Already taught visually with Venn diagrams, so the need is lowest |
+| Part 1 | Equations (B.5.1) | Scale with draggable x | Both sides are equal at one point, and the change is steady | Luka's starting point. CARNET's text never connects the balance to the written rule |
+| Part 2 | Natural numbers (A.5.1, A.5.6, E.5.1) | A clue hunt with a small automaton; see the GDD | Why the rules for big numbers, order of operations and division hold | The next chapter of his book |
+| 3 | Divisibility and primes (A.5.2) | Mesh gears with different tooth counts | A small gear makes whole turns only if its teeth divide the big gear's; a prime gear has no smaller partner that fits evenly | The last chapter of his volume 1. CARNET's text gives the rules no reasons |
+| 4 | Area and perimeter (D.5.4) | Drag a plate's edges on a grid | Area is a count of squares; doubling the sides quadruples the area but only doubles the perimeter | In volume 2's first chapter. CARNET states the area formula without a reason |
+| 5 | Angles and symmetry (C.5.1, C.5.3, D.5.1) | Turn crossing levers; stamp a part and its mirror image | Vertical angles stay equal; adjacent angles add up to a straight angle; a shape and its image move together | Same chapter. CARNET has pupils find some of these rules from applets |
+| 6 | Volume (D.5.5) | Fill a tank with unit cubes, layer by layer | Volume is a count of cubes, and the layers give the formula | Same chapter; extends area. CARNET states the formula without a reason |
+| 7 | Fractions and decimals (A.5.3 to A.5.5) | Set a dial to part of a turn and read it on a number line | The same amount can be written differently | The end of volume 2. 50 of 140 hours in the 2021./2022. Ministry-hosted plan |
+| When needed | Sets (B.5.2) | Route parts through sorting gates into a Venn diagram | What intersection and union mean | Taught visually at school, so the need is lowest; part 2 uses set notation |
 
-Not planned as tools: large-number arithmetic, rounding, units, money and data stay in fights and story. Compass constructions (C.5.2) and protractor work stay on paper.
+Not taught in the game: compass constructions (C.5.2) and protractor work stay on paper; units and money appear in clues and fights but aren't topics. Rounding, big numbers and data are no longer left to fights and story: part 2 teaches them.
 
-Example of the shared loop, for area and perimeter: drag the edges, predict what doubling the sides does, write the formula the way his class does, then send a friend a room to solve.
+Example of a machine loop, for area and perimeter: drag the edges, predict what doubling the sides does, write the formula the way his class does, then send a friend a room to solve.
 
 Tools can combine: B.5.1 asks pupils to use perimeter and area to find side lengths, so 5 · x = 40 is a plate 5 wide with area 40, and 2 · (x + 5) = 26 is a frame with perimeter 26.
 

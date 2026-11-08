@@ -108,3 +108,53 @@ Every decision, change and version transition for this GDD.
     - Room 8's slider runs 0–10, so the pin beyond the dial leaves the design. The code stays.
     - From room 9 the tray holds an x-gear, so Balance can finish `135 − 5x = 100`. This answers the overnight report's open question about rooms 9 and 11.
     - The rules from the playtests are written into the GDD as a list every room follows.
+
+## 2026-11-08
+
+Update for the next part: the Prirodni brojevi chapter. Inputs: `C:\Users\lpodobnik\Claude\matematika\_bmad-output\brainstorming-session-2026-11-08.md` and `C:\Users\lpodobnik\Claude\matematika\_bmad-output\planning-artifacts\content-prirodni-brojevi.md`.
+
+- **Decided by Luka, on Claude's recommendation:**
+  - The hunt happens in a new district reached through the foundry.
+  - The little automaton is silent: beeps, gestures, and maths it writes in the notebook. Its one printed word is "Zašto?", which replays a lesson.
+  - No spring and no abacus. He writes one line from the clue before it will knock, and a wrong line sends him to the wrong door. This replaces the spring from the brainstorm.
+  - Pillar 1 is rewritten for the whole game: a new idea is shown with objects before he must use it, and he still acts and can be wrong. Basis: Sinha & Kapur 2021 for 2nd to 5th graders, and his first playtest.
+- **Decided by Luka, from the brainstorm:**
+  - Same theme, not necessarily machines. Understanding over exercises. He tracks Kristijan by solving clues, with a small automaton following him.
+  - The story can't end in this part, the second of six chapters. It ends on a near miss.
+  - "If it's just scene, talk, solve puzzle, get color, next scene it will get boring fast." Agreed to all five changes: open leads, a rival on the trail, scenes that play differently, growth, and twists.
+  - No legs on the little automaton. A grappling hook to climb.
+- **Claude's calls, open to veto:**
+  - Same tap-to-walk and look, with door rows and a trail map. Luka was offered this over side-on streets and a case board, then answered with the five changes, so this is assumed.
+  - 16 leads, 3 knots, and one opening, in four acts. Two sides is split in two, and units 9, 10 and 11 get two leads each, as the content document asks.
+  - The coat and the locks come before distributivity and the mean, because those use brackets. This departs from the book's order; the book lists brackets as known from earlier grades.
+  - Four scene types: Knock, Sneak, Unmask, Little one alone, plus three one-offs: Load the carts, Level the load, Bracket locks.
+  - **Knock:** his lines light and darken doors, and the little one knocks only when one door is lit. A line must use the clue's numbers or signs. The notebook doesn't judge it; the door does.
+  - **Unmask:** people show their working, and two can be wrong in different ways, so spotting the odd one out isn't enough. A wrong accusation shows why that person was right. The scene ends only when he writes the false line corrected.
+  - **Sneak:** loop lamps are numbered from 0, and the pin is required on the long walk. The tram line uses line boards, so it needs no remainders.
+  - **Little one alone:** the route is given as powers of ten, so he supplies the missing 0.
+  - **Fix:** he shows the little one why with the objects, then writes the line, so it learns the reason and not only the step.
+  - **Rule guards:** four, one before each knot and one at the last door. Rule wording follows what has been taught. Rewards are first try only.
+  - Each scene type gets a first-time guided run and its own help levels.
+  - Bought gear opens only secrets, keeping "parts never open the way forward". So the hook is free from Knot 1, and the facade lead relies on it.
+  - The black thread starts in Act 2. After the second lead he finishes in an act, it reaches one lead he hasn't started, shown in advance, so he can choose which to save. A reached lead gains one plain Sneak board and is sealed only once.
+  - Corrected streets are optional to win back, and wandering off and the forged note are fixed beats, so none can block him.
+  - The foundry gate becomes available once room 13 is done and the boss is beaten, and he opens it by solving `5 · x = 40` the way rooms do. The "needs a tool" line is reworded.
+  - 3 new lairs and a brackets upgrade on sale after the coat, to be balanced by simulation for reasoning and random players.
+  - The story finishes at the end of 5th grade, and the little one remembers every fix until then.
+  - A clue trail for a friend is deferred, because the workshop's rooms already carry pillar 4. Raised in the brainstorm, so this is flagged rather than dropped.
+  - Written column arithmetic isn't taught; he meets it at school.
+  - The brief's tool order now follows his book, and "one tool per part" is relaxed. Rounding, big numbers and data are taught, reversing "never tools".
+  - Luka plays the first lead when epic 8 ends, and the design changes then if clues are muddier than rooms.
+  - Part 2 stays behind the dev switch, with the gate sealed on his live save, until Luka opens it, because `main` deploys to him.
+- **Scope change flagged:** part 2 is estimated at 84–126 hours, more than part 1, because each scene type is a new build. Its text is about 300 short lines, and all need Luka's eye.
+- **Checks run on the draft:** two independent reviews, one against the brainstorm and content document, one against the checklist as a 10-year-old would play it. They found the Knock's core rule undefined, most scenes solvable by tapping everything, no way to teach charts, and five leads with no written form. Part 2 was rewritten to answer them. A third review of the rewrite found doors could still be tried one by one, no undo in a Knock, a wrong pin that gave away the answer, and undefined question cards. Those are fixed too. That review's fixes have not themselves been re-reviewed.
+- **Left for stories:** the action for ordering suspects in the witnesses; how bracket locks avoid being solved by trying each place; each lead's exact objects and wrong attempts; which property names he has to use himself. The content document's terms that appear only on cards should be watched in play.
+- **From the narrative update, decided by Luka, on Claude's recommendation:**
+  - The automaton in the coat is Vučetić, the bridge guard from part 1. He is his ally until then, and his reports are how the black thread keeps up.
+  - This part ends on the warm lamp and the note. No cart, and no glimpse of Kristijan or the First Automaton. Chosen over Claude's recommendation.
+- **Claude's calls that follow, open to veto:**
+  - The coat is last in Act 3 as its climax, and the locks move to the start of Act 4, since they need the order of operations. Both exceptions to "any order within an act" are stated.
+  - The black thread seals twice at most and stops after the coat, then goes to decoy doors.
+- **Finalised 2026-11-08 for Luka's review.** Part 2's status stays "awaiting Luka's review" until he says otherwise. `gds-create-narrative` is the next step; the adventure guide recommends it, and the narrative document has nothing on part 2 yet.
+- **Open, for Luka's call later:** whether the First Automaton takes the little one near the finale. The idea that it is Kristijan's second try is kept as an open story beat.
+- **Pillar 1's name** changes from "The machine teaches" to "The world teaches", since part 2 isn't machines.
