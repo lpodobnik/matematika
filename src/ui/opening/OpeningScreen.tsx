@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { hr } from '@/content/text/hr';
 import { useGame } from '@/store/store';
 import { openingArt, type PanelArt } from '@/ui/opening/art';
+import { useTownSound } from '@/ui/town/use-town-sound';
 
 /**
  * The opening (story 5.0): four illustrated panels before anything else, a tap on each to
@@ -10,6 +11,8 @@ import { openingArt, type PanelArt } from '@/ui/opening/art';
  */
 export function OpeningScreen() {
   const dispatch = useGame((s) => s.dispatch);
+  // The square's sound under the story, from his first tap on.
+  useTownSound('square');
   return <OpeningPanels onDone={() => dispatch({ type: 'opening/done' })} />;
 }
 

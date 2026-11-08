@@ -149,11 +149,7 @@ async function type(page: Page, line: string) {
 
 /** He touches the machine: a tap on the canvas's empty top corner. */
 async function touch(page: Page) {
-  await expect.poll(async () => (await state(page)).phase).toBe('arrive');
-  await page
-    .locator('canvas')
-    .first()
-    .click({ position: { x: 8, y: 8 } });
+  // A machine starts by itself a moment after he arrives.
   await expect.poll(async () => (await state(page)).phase).not.toBe('arrive');
 }
 

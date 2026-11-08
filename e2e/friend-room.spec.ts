@@ -107,11 +107,7 @@ async function type(page: Page, line: string) {
 
 /** The first touch on the machine: a tap on the canvas's empty top corner. */
 async function touch(page: Page) {
-  await expect.poll(async () => (await state(page)).phase).toBe('arrive');
-  await page
-    .locator('canvas')
-    .first()
-    .click({ position: { x: 8, y: 8 } });
+  // A machine starts by itself a moment after he arrives.
   await expect.poll(async () => (await state(page)).phase).not.toBe('arrive');
 }
 
@@ -165,7 +161,6 @@ test('a room for a friend: built, solved, sent, cracked and stamped', async ({
   await expect(page.locator('.workshop__machine .workshop__status')).toHaveText(hr.workshop.levels);
   await page.locator('.workshop__toggle[data-option="readouts"]').click();
   // 4 for the pieces and 5 for the blind.
-  await expect(page.locator('.workshop__bill')).toContainText(hr.workshop.cost(9));
   await shot('2-design');
   await page.getByRole('button', { name: hr.workshop.solve }).click();
 
@@ -177,13 +172,13 @@ test('a room for a friend: built, solved, sent, cracked and stamped', async ({
   await type(page, '9');
   await expect.poll(async () => (await state(page)).workshop, { timeout: 20_000 }).toBe('finish');
 
-  // Solved: a title, then send; the parts are paid and the link appears.
+  // Solved: a title, then send, free of charge, and the link appears.
   await expect(page.locator('.workshop__speech')).toHaveText(hr.workshop.solved);
   await page.getByRole('button', { name: hr.workshop.titles[2] }).click();
   await shot('4-finish');
   await page.getByRole('button', { name: hr.workshop.send }).click();
   await expect(page.locator('.workshop__sent')).toBeVisible();
-  expect((await state(page)).parts).toBe(21);
+  expect((await state(page)).parts).toBe(30);
   const link = await page.locator('.share-link__url').inputValue();
   expect(link).toMatch(/#s=[A-Za-z0-9_-]+$/);
   expect(link.length).toBeLessThanOrEqual(2000);
@@ -329,7 +324,7 @@ test('he plants a wrong line in his solved machine before sending it', async ({
   await page.getByRole('button', { name: hr.workshop.send }).click();
   await expect(page.locator('.workshop__sent')).toBeVisible();
   // 4 for the pieces, 5 for the planted line.
-  expect((await state(page)).parts).toBe(21);
+  expect((await state(page)).parts).toBe(30);
   const link = await page.locator('.share-link__url').inputValue();
   const planted = await page.evaluate(async (data) => {
     const linkModule: string = '/src/links/room-link.ts';

@@ -114,22 +114,9 @@ describe('the builder’s rules', () => {
 });
 
 describe('what a room costs (FR46)', () => {
-  it('charges each piece, blind, planted line and extra machine', () => {
-    // 2x + 5 = 23: an x-gear (2) and two weights (1 + 1).
-    expect(costOf(design('ax+b', 2, 5, 23))).toBe(4);
-    // 135 − 5x = 100: a weight, a spring and a weight.
-    expect(costOf(design('b-ax', 5, 135, 100))).toBe(4);
-    // x − 6 = 8: an x-gear, a float, a weight.
-    expect(costOf(design('x-b', 1, 6, 8))).toBe(5);
-    const everything: RoomDesign = {
-      machines: [
-        { form: 'ax+b', numbers: { a: 2, b: 3, c: 11, d: 1 } },
-        { form: 'ax+b', numbers: { a: 3, b: 4, c: 19, d: 1 } },
-      ],
-      blinds: { readouts: true, shortDial: true },
-      plant: true,
-    };
-    expect(costOf(everything)).toBe(4 + 4 + 5 + 5 + 5 + 15);
+  it('charges nothing, whatever the room holds', () => {
+    expect(costOf(design('ax+b', 2, 5, 23))).toBe(0);
+    expect(costOf(design('b-ax', 5, 135, 100))).toBe(0);
   });
 });
 

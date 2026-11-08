@@ -13,7 +13,6 @@ import { fitScene, sceneSize } from '@/ui/scene/fit-scene';
 import type { Box } from '@/ui/scene/scale/dial-layout';
 import {
   controlBoxes,
-  goalBannerFits,
   goalCardBounds,
   goalCardLayout,
   goalCardObstacles,
@@ -135,10 +134,9 @@ describe('the goal card in the scene (story 1.16)', () => {
     },
   );
 
-  it('gives way to the goal banner on the tablet: no card in the scene there', () => {
+  it('stands in the scene on the tablet too, now the band holds the what-now line', () => {
     for (const { name, room } of situations(pinless)) {
-      expect(goalBannerFits(tabletFit.y), name).toBe(true);
-      expect(goalCardBounds(room, balance, tabletFit.scale, tabletFit), name).toBeNull();
+      expect(goalCardBounds(room, balance, tabletFit.scale, tabletFit), name).not.toBeNull();
     }
   });
 

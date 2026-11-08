@@ -45,15 +45,15 @@ export const limits = {
  */
 export const titleCount = 12;
 
-/** GDD, Room builder, Costs, in parts, charged when he sends the room. */
+/** Sending a room is free: making puzzles for friends should never be held back by parts. */
 export const costs: Readonly<Record<Piece | 'blind' | 'planted' | 'linked', number>> = {
-  weight: 1,
-  gear: 2,
-  spring: 2,
-  float: 2,
-  blind: 5,
-  planted: 5,
-  linked: 15,
+  weight: 0,
+  gear: 0,
+  spring: 0,
+  float: 0,
+  blind: 0,
+  planted: 0,
+  linked: 0,
 };
 
 export interface MachineDesign {

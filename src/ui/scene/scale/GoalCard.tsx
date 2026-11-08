@@ -11,11 +11,7 @@ import { goalView } from '@/room/goal';
 import { pinView } from '@/room/pin';
 import type { RoomState, ToolId } from '@/room/types';
 import { useGame } from '@/store/store';
-import {
-  type GoalCardLayout,
-  goalBannerFits,
-  goalCardLayout,
-} from '@/ui/scene/scale/goal-card-layout';
+import { type GoalCardLayout, goalCardLayout } from '@/ui/scene/scale/goal-card-layout';
 import type { Point } from '@/ui/scene/scale/layout';
 
 extend({ Container, Graphics, Text });
@@ -67,7 +63,7 @@ export function GoalCard({ sceneScale, origin }: Props) {
     return goalCardLayout(hr.goal.label, room, tools, sceneScale, origin);
   }, [key, ready, sceneScale, origin.x, origin.y]);
 
-  if (!layout || matched === null || goalBannerFits(origin.y)) return null;
+  if (!layout || matched === null) return null;
   return <Card layout={layout} matched={matched} />;
 }
 

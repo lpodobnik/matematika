@@ -357,6 +357,14 @@
   stroke: var(--ink);
 }
 
+button.town__sign {
+  border: 2px solid var(--ink);
+  color: inherit;
+  font-family: inherit;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 .town__sign[data-open="false"] {
   border-style: dashed;
   background: var(--paper);

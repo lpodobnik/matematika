@@ -13,6 +13,10 @@ import { FightEndPanel, LeaveConfirm, StrikeBanner } from '@/ui/fight/FightEnd';
 import { FightGuide, guideMark } from '@/ui/fight/FightGuide';
 import { Automaton, DieFace, PunchedTape } from '@/ui/fight/fight-art';
 import { type Tap, tapDie, tapLeave, tapSlot } from '@/ui/fight/taps';
+
+/** As a · x + b reads, left to right: the blade, the reach that sets x, the charge. */
+const SHOWN_SLOTS: readonly Slot[] = ['blade', 'reach', 'charge'];
+
 import { PageReturned } from '@/ui/pages/TornPages';
 
 /**
@@ -254,7 +258,7 @@ export function FightBoard({
           </p>
         )}
         <div className="fight__slots">
-          {SLOTS.map((slot) => {
+          {SHOWN_SLOTS.map((slot) => {
             const value = placedValues(fight)[slot];
             return (
               <button

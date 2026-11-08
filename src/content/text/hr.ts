@@ -160,8 +160,8 @@ export const hr = {
         { who: 'nikola', text: 'Sreća? Meni ne izgleda kao sreća.' },
       ],
       r03: [
-        { who: 'nikola', text: 'Gle, automat kod stupa! Skida dijelove sa svjetiljke.' },
-        { who: 'penkala', text: 'Prema Knjizi, smije. A voda teče, to je glavno.' },
+        { who: 'nikola', text: 'Gle, automat krade dijelove sa svjetiljke!' },
+        { who: 'penkala', text: 'U Knjizi ne piše da ne smije. Barem voda opet teče.' },
       ],
       r04: [
         { who: 'nikola', text: 'Cijela ulica je vani. Svi gledaju kolo.' },
@@ -649,16 +649,16 @@ export const hr = {
       /** Story 4.4: from room 8 on, once he knows the flag (room 9's pans leave less room). */
       'level-x-short': 'Gdje će vaga biti u ravnoteži?',
       /** Story 4.5: room 10's story pin, at the notebook: which story fits the pans. */
-      'story-choice': 'Koja priča odgovara vagi? Stavi zastavicu na nju.',
+      'story-choice': 'Koja priča odgovara vagi? Odaberi je.',
       /** Story 4.6: room 11's range pin, at the notebook: about how big x is. */
-      range: 'Koliki je x otprilike? Stavi zastavicu.',
+      range: 'Koliki je x otprilike? Odaberi.',
       /** Story 4.8: room 13's drum pin, at the notebook: where the next dot lands. */
-      'next-dot': 'Koliki je sljedeći broj? Stavi zastavicu.',
+      'next-dot': 'Koliki je sljedeći broj? Odaberi ga.',
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
       /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
       change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
       /** Story 2.10: room 7's mistake pin, at the notebook: which written line is wrong. */
-      'wrong-line': 'Koji je redak pogrešan? Stavi zastavicu na njega.',
+      'wrong-line': 'Koji je redak pogrešan? Odaberi ga.',
       /** Story 2.9: room 6, the readouts hidden: compare the pieces, don't add them up. */
       hidden: 'Vaga ne pokazuje zbrojeve. Usporedi utege: gdje će vaga biti u ravnoteži?',
     },
@@ -793,10 +793,10 @@ export const hr = {
     pinHow: {
       'level-x': 'Odvuci zastavicu po klizaču, pa dodirni Potvrdi.',
       effect: 'Odvuci zastavicu na lijevo ili desno, pa dodirni Potvrdi.',
-      'wrong-line': 'Dodirni zastavicu kod retka koji ne vrijedi, pa Potvrdi.',
-      'story-choice': 'Dodirni zastavicu kod priče koja odgovara, pa Potvrdi.',
-      range: 'Dodirni zastavicu kod jednog dijela, pa Potvrdi.',
-      'next-dot': 'Dodirni zastavicu kod jedne visine, pa Potvrdi.',
+      'wrong-line': 'Odaberi redak koji ne vrijedi, pa dodirni Potvrdi.',
+      'story-choice': 'Odaberi priču koja odgovara, pa dodirni Potvrdi.',
+      range: 'Odaberi jedan dio, pa dodirni Potvrdi.',
+      'next-dot': 'Odaberi jedan broj, pa dodirni Potvrdi.',
     },
     /** At the notebook: the answer line, `x = 9`. */
     answer: (line: string) => `Upiši ${line}.`,
@@ -857,7 +857,7 @@ export const hr = {
     slotHints: {
       blade: 'a, u svakom udarcu',
       charge: 'b, doda se jednom',
-      reach: 'najviše udaraca',
+      reach: 'x, najviše udaraca',
     },
     /** For screen readers: an empty slot. */
     emptySlot: 'prazno',
@@ -927,8 +927,8 @@ export const hr = {
       goal: ['Cilj: spusti oklop na 0. Tada automat staje i dobivaš dijelove.'],
       roll: ['Baci kocke! Svaki krug počinje bacanjem.'],
       blade: ['Odaberi kocku i stavi je na Oštricu. Oštrica se broji u svakom udarcu.'],
-      charge: ['Sad jednu kocku stavi na Naboj. Naboj se doda samo jednom.'],
-      reach: ['Zadnju kocku stavi na Doseg. Doseg je najviše udaraca u krugu.'],
+      reach: ['Sad jednu kocku stavi na Doseg. Doseg je najviše udaraca u krugu.'],
+      charge: ['Zadnju kocku stavi na Naboj. Naboj se doda samo jednom.'],
       blows: ['Koliko puta udaraš? Odaberi broj. To je x u računu iznad.'],
       strike: ['Sad udari! Zbroj vidiš tek nakon udarca.'],
       banner: ['Evo zbroja. Točno toliko pada s oklopa.'],
@@ -952,7 +952,7 @@ export const hr = {
     next: 'Dalje',
     last: 'U redu',
     /** Under a step that waits for a move, instead of a button. */
-    try: 'Probaj!',
+    try: 'Tvoj red: napravi to na ekranu.',
     steps: {
       // Room 1: the slider, the pans and what level means, the hint button.
       dial: 'Ovo je klizač. Pomiči ga i gledaj vagu.',
@@ -986,7 +986,7 @@ export const hr = {
       logbook: 'Ovo je stari dnevnik. Ovaj zadatak u njemu je već riješen.',
       'logbook-level': 'Prvo pomakni klizač dok vaga nije ravna.',
       'logbook-tap': 'Sad dodirni retke. Uz točan redak vaga ostaje ravna, uz krivi se nagne.',
-      'logbook-flag': 'Jedan redak ne vrijedi. Stavi zastavicu na njega, pa potvrdi.',
+      'logbook-flag': 'Jedan redak ne vrijedi. Odaberi ga, pa dodirni Potvrdi.',
       // Room 8: the gear chain.
       chain: 'Ovo je recept stroja: što se redom radi s x, dok ne nastane broj na kraju.',
       'chain-why': 'x ne znamo, pa idemo unatrag: zadnji korak poništava njegova suprotnost.',
@@ -1001,12 +1001,12 @@ export const hr = {
       'story-x': 'Ono što priča ne kaže je x. Ostale brojeve uzmi iz priče.',
       'story-write': 'Zapiši priču kao redak i dodirni ↵. To će napuniti vagu.',
       'story-choice': 'Tri priče, a vagi odgovara samo jedna. Usporedi ih s vagom.',
-      'story-flag': 'Stavi zastavicu na priču koja odgovara, pa dodirni Potvrdi.',
+      'story-flag': 'Odaberi priču koja odgovara, pa dodirni Potvrdi.',
       // Room 11: the coarse slider and its single steps, the range pin.
       coarse: 'Ovaj klizač skače po 10. Do velikog broja treba dugo.',
       fine: 'Gumbi − i + mijenjaju x za 1, kad si blizu.',
       range: 'Prvo samo procijeni koliki je x. Ne treba točan broj.',
-      'range-flag': 'Stavi zastavicu na jedan dio, pa dodirni Potvrdi.',
+      'range-flag': 'Odaberi jedan dio, pa dodirni Potvrdi.',
       // Room 12: the linked machines.
       linked: 'Ova dva stroja su povezana. Tvoj x odavde ide u sljedeći.',
       'linked-slot': 'Prazno mjesto u sljedećem stroju čeka baš taj broj.',
@@ -1015,7 +1015,7 @@ export const hr = {
       drum: 'Ovo je zapisna ploča. Za svaki x zapiše koliko teži koja strana.',
       'drum-dot': 'Gledaj red lijevo: za koliko se broj mijenja kad x poraste za 1?',
       'drum-try': 'Probaj klizač na prvim mjestima i gledaj brojeve.',
-      'drum-pin': 'Koliki je sljedeći broj? Stavi zastavicu, pa Potvrdi.',
+      'drum-pin': 'Koliki je sljedeći broj? Odaberi ga, pa dodirni Potvrdi.',
       'drum-cross': 'Gdje su lijevo i desno jednaki, vaga je ravna: tu je tvoj x.',
     },
   },
@@ -1203,7 +1203,13 @@ export const hr = {
    */
   now: {
     heading: 'Što sad?',
-    touch: 'Dodirni stroj da ga pokreneš.',
+    /** Room 6, before the guess: compare what differs, don't add it all up. */
+    compare:
+      'Koliko je 58 veće od 56? Za toliko je x veći od 27. Stavi zastavicu pa dodirni Potvrdi.',
+    /** A guess that missed: the scale shows it, and he finds the place himself. */
+    wrongPin: 'Nije pogođeno: vaga nije ravna. Pomiči klizač dok ne bude ravna.',
+    /** Room 6, a guess that missed. */
+    compareWrong: 'Nije pogođeno. 58 je za 2 veće od 56, pa je i x za 2 veći od 27.',
     confirm: 'Zatim dodirni Potvrdi.',
     slide: 'Pomiči klizač dok vaga ne bude ravna.',
     answer: 'Upiši koliko je x.',

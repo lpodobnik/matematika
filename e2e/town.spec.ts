@@ -133,14 +133,14 @@ test('a new game: the opening, the naming, the town, room 1 and back', async ({ 
 
   // The raised gate is now a way through: he walks to the canal, where room 3's sluice gate
   // waits and the first automaton strips a lamp; and back.
-  await page.locator('.town__place[data-exit="canal"]').click();
+  await page.locator('.town__sign[data-sign="canal"]').click();
   await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('.town__place[data-node="r03"]')).toBeVisible();
   // Its automaton isn't out yet: it shows once the street's machine can be reached.
   await expect(page.locator('.town__figure--automaton')).toHaveCount(0);
   await page.waitForTimeout(400);
   await shot(page, '6-canal');
-  await page.locator('.town__place[data-exit="square"]').click();
+  await page.locator('.town__sign[data-sign="square"]').click();
   await expect(page.locator('.town__board[data-area="square"]')).toBeVisible({ timeout: 8000 });
 
   // The district map is a tap away, and closes again.
@@ -274,14 +274,14 @@ test('fixed machines open the way on: square, canal, mill', async ({ page }) => 
     'data-open',
     'true',
   );
-  await page.locator('.town__place[data-exit="canal"]').click();
+  await page.locator('.town__sign[data-sign="canal"]').click();
   await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('.town__sign[data-sign="mill"]')).toHaveAttribute('data-open', 'true');
   await expect(page.locator('.town__sign[data-sign="lift"]')).toHaveAttribute('data-open', 'false');
   await expect(page.locator('.town__sign[data-sign="square"]')).toBeVisible();
   await page.waitForTimeout(400);
   await shot(page, '6-canal-signs');
-  await page.locator('.town__place[data-exit="mill"]').click();
+  await page.locator('.town__sign[data-sign="mill"]').click();
   await expect(page.locator('.town__board[data-area="mill"]')).toBeVisible({ timeout: 10_000 });
   await expect(page.locator('.town__place[data-node="r04"]')).toHaveAttribute('data-state', 'open');
   await expect(page.locator('.town__next')).toBeVisible();
@@ -325,7 +325,7 @@ test('people ask for help with their street machine: Milka at the canal, Vučeti
       room: null,
     });
   });
-  await page.locator('.town__place[data-exit="canal"]').click();
+  await page.locator('.town__sign[data-sign="canal"]').click();
   await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
   const milka = page.locator('[data-person="milka"]');
   await expect(milka).toHaveAttribute('data-asks', 'true');
@@ -336,9 +336,9 @@ test('people ask for help with their street machine: Milka at the canal, Vučeti
   await shot(page, '8-milka-asks');
   await page.locator('.town__bubble').click();
   await page.locator('.town__bubble').click();
-  await page.locator('.town__place[data-exit="square"]').click();
+  await page.locator('.town__sign[data-sign="square"]').click();
   await expect(page.locator('.town__board[data-area="square"]')).toBeVisible({ timeout: 8000 });
-  await page.locator('.town__place[data-exit="bridge"]').click();
+  await page.locator('.town__sign[data-sign="bridge"]').click();
   await expect(page.locator('.town__board[data-area="bridge"]')).toBeVisible({ timeout: 10_000 });
   // Not yet: the bridge needs Balance from the sluice gate first, so nobody asks for it.
   await expect(page.locator('[data-person="vucetic"]')).toHaveCount(0);
@@ -409,7 +409,7 @@ test('the town to the midpoint: bridge, yard, the logbook house and Faust', asyn
   // Faust stands at the workshop now.
   await expect(page.locator('[data-person="faust"]')).toBeVisible();
   // Down the lamp street to the bridge, with its automaton.
-  await page.locator('.town__place[data-exit="bridge"]').click();
+  await page.locator('.town__sign[data-sign="bridge"]').click();
   await expect(area('bridge')).toBeVisible({ timeout: 10_000 });
   await expect(page.locator('.town__place[data-node="r05"]')).toHaveAttribute(
     'data-state',
@@ -418,14 +418,14 @@ test('the town to the midpoint: bridge, yard, the logbook house and Faust', asyn
   await expect(page.locator('.town__figure--automaton')).toBeVisible();
   await page.waitForTimeout(400);
   await shot(page, '8-bridge');
-  await page.locator('.town__place[data-exit="square"]').click();
+  await page.locator('.town__sign[data-sign="square"]').click();
   await expect(area('square')).toBeVisible({ timeout: 10_000 });
   // Through the gate, along the canal and the mill, to the weighing yard.
-  await page.locator('.town__place[data-exit="canal"]').click();
+  await page.locator('.town__sign[data-sign="canal"]').click();
   await expect(area('canal')).toBeVisible({ timeout: 10_000 });
-  await page.locator('.town__place[data-exit="mill"]').click();
+  await page.locator('.town__sign[data-sign="mill"]').click();
   await expect(area('mill')).toBeVisible({ timeout: 10_000 });
-  await page.locator('.town__place[data-exit="yard"]').click();
+  await page.locator('.town__sign[data-sign="yard"]').click();
   await expect(area('yard')).toBeVisible({ timeout: 10_000 });
   await expect(page.locator('.town__place[data-node="r07"]')).toHaveAttribute('data-state', 'open');
   await expect(page.locator('.town__next')).toBeVisible();
@@ -490,7 +490,7 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
   });
   const area = (id: string) => page.locator(`.town__board[data-area="${id}"]`);
   const go = async (to: string) => {
-    await page.locator(`.town__place[data-exit="${to}"]`).click();
+    await page.locator(`.town__sign[data-sign="${to}"]`).click();
     await expect(area(to)).toBeVisible({ timeout: 12_000 });
     await page.waitForTimeout(300);
   };
@@ -678,7 +678,7 @@ test('the district done: the foundry gate is marked, sealed, and to be continued
   });
   const area = (id: string) => page.locator(`.town__board[data-area="${id}"]`);
   for (const to of ['canal', 'mill', 'yard']) {
-    await page.locator(`.town__place[data-exit="${to}"]`).click();
+    await page.locator(`.town__sign[data-sign="${to}"]`).click();
     await expect(area(to)).toBeVisible({ timeout: 12_000 });
   }
   await expect(page.locator('.town__next')).toBeVisible();

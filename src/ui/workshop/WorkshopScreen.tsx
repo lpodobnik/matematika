@@ -92,7 +92,7 @@ function Step({ flow, roomsDone, parts, rooms, ...on }: StepProps) {
     return room ? <SentStep room={room} onBack={on.onBack} /> : null;
   }
   const initial = flow?.step === 'design' ? flow.design : null;
-  return <DesignStep initial={initial} roomsDone={roomsDone} parts={parts} onSolve={on.onSolve} />;
+  return <DesignStep initial={initial} roomsDone={roomsDone} onSolve={on.onSolve} />;
 }
 
 /** One number of a machine: − and + either side of a box he can type in. */
@@ -155,12 +155,10 @@ function NumberField({
 function DesignStep({
   initial,
   roomsDone,
-  parts,
   onSolve,
 }: {
   initial: RoomDesign | null;
   roomsDone: readonly string[];
-  parts: number;
   onSolve(design: RoomDesign): void;
 }) {
   const met = formsMet(roomsDone);
@@ -169,7 +167,6 @@ function DesignStep({
   );
   const checked = checkDesign(design, roomsDone);
   const numbers = resolvedNumbers(design);
-  const cost = costOf(design);
   const setMachine = (i: number, change: Partial<RoomDesign['machines'][number]>) =>
     setDesign((d) => ({
       ...d,
@@ -253,7 +250,7 @@ function DesignStep({
             }))
           }
         >
-          {hr.workshop.addMachine} <span className="workshop__price">+{costs.linked}</span>
+          {hr.workshop.addMachine}
         </button>
       )}
       <Options design={design} roomsDone={roomsDone} onChange={setDesign} />
@@ -263,11 +260,6 @@ function DesignStep({
         </p>
       )}
       <footer className="workshop__foot">
-        <div className="workshop__bill">
-          <b>{hr.workshop.cost(cost)}</b>
-          <span>{hr.workshop.have(parts)}</span>
-          {parts < cost && <span>{hr.workshop.shortBy(cost - parts)}</span>}
-        </div>
         <div className="workshop__go">
           <span className="workshop__hint">{hr.workshop.solveWhat}</span>
           <button
@@ -328,7 +320,7 @@ function Options({
             aria-pressed={toggle.on}
             onClick={() => onChange(toggle.flip)}
           >
-            {hr.workshop[toggle.id]} <span className="workshop__price">+{toggle.price}</span>
+            {hr.workshop[toggle.id]}
           </button>
         ))}
       </div>
@@ -387,11 +379,6 @@ function FinishStep({
         </section>
       )}
       <footer className="workshop__foot">
-        <div className="workshop__bill">
-          <b>{hr.workshop.cost(cost)}</b>
-          <span>{hr.workshop.have(parts)}</span>
-          {parts < cost && <span>{hr.workshop.shortBy(cost - parts)}</span>}
-        </div>
         <div className="workshop__go">
           <button type="button" className="workshop__secondary" onClick={onRedesign}>
             {hr.workshop.redesign}

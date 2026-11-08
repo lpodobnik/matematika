@@ -598,7 +598,12 @@ export function TownBoard({
           ))}
           {area.exits.map((exit) => (
             // A signpost at every way out, open or not yet: where it leads, and which way.
-            <ExitSign key={`sign-${exit.to}`} exit={exit} open={done.includes(exit.opensWith)} />
+            <ExitSign
+              key={`sign-${exit.to}`}
+              exit={exit}
+              open={done.includes(exit.opensWith)}
+              onGo={() => walkTo(exit.stand, { kind: 'exit', exit })}
+            />
           ))}
           {nextMarker && (
             <span className="town__next" style={pct(nextMarker)} aria-hidden="true">
@@ -924,7 +929,7 @@ function rectStyle(rect: Rect) {
 
 /** A way's label, by where it leads from and to. */
 /** A way out, signposted: an arrow towards the street's edge, or a lock until its room. */
-function ExitSign({ exit, open }: { exit: TownExit; open: boolean }) {
+function ExitSign({ exit, open, onGo }: { exit: TownExit; open: boolean; onGo(): void }) {
   const angle =
     (Math.atan2(exit.marker.y - town.height / 2, exit.marker.x - town.width / 2) * 180) / Math.PI;
   // Near a side it hangs inwards from the marker, clear of the corner buttons, so it is
@@ -936,14 +941,18 @@ function ExitSign({ exit, open }: { exit: TownExit; open: boolean }) {
       : edge === 'end'
         ? Math.min(exit.marker.x + 60, town.width - 180)
         : exit.marker.x;
+  // An open way takes the tap too: children go for the arrow. A closed one lets it through,
+  // to the machine or the closed way under it.
+  const Tag = open ? 'button' : 'span';
   return (
-    <span
+    <Tag
       className="town__sign"
       data-sign={exit.to}
       data-open={open}
       data-edge={edge}
       style={pct({ x: left, y: exit.marker.y })}
-      aria-hidden="true"
+      aria-hidden={open ? undefined : 'true'}
+      {...(open ? { type: 'button' as const, onClick: onGo } : {})}
     >
       {open ? (
         <svg
@@ -966,7 +975,7 @@ function ExitSign({ exit, open }: { exit: TownExit; open: boolean }) {
         </svg>
       )}
       {hr.town.signs[exit.to]}
-    </span>
+    </Tag>
   );
 }
 

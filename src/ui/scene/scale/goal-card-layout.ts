@@ -426,6 +426,6 @@ export function goalCardBounds(
   sceneScale: number,
   origin: Point,
 ): Box | null {
-  if (!goalView(room, tools) || goalBannerFits(origin.y)) return null;
+  if (!goalView(room, tools)) return null;
   return goalCardLayout(hr.goal.label, room, tools, sceneScale, origin)?.bounds ?? null;
 }

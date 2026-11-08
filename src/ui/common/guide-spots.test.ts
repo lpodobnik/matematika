@@ -77,12 +77,12 @@ describe('where the room guide’s rings go (story 6.1)', () => {
     expect(sceneAvoidBoxes(at)).toEqual([]);
   });
 
-  it('rings the scene’s small goal card on a phone, and nothing on the tablet, where the banner shows', () => {
+  it('rings the scene’s small goal card on a phone and on the tabletows', () => {
     const room = touched(r04);
     expect(sceneTargetBoxes('goal', scene(room, phone, ['balance']))).toHaveLength(1);
-    expect(sceneTargetBoxes('goal', scene(room, { width: 868, height: 800 }, ['balance']))).toEqual(
-      [],
-    );
+    expect(
+      sceneTargetBoxes('goal', scene(room, { width: 868, height: 800 }, ['balance'])),
+    ).toHaveLength(1);
   });
 
   it('rings nothing in the scene for the notebook’s parts, and nothing before the scene is laid out', () => {

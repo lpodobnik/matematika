@@ -145,11 +145,7 @@ async function dialUpTo(page: Page, to: number) {
 
 /** He touches the machine: a tap on the scene's canvas, in its empty top corner. */
 async function touch(page: Page) {
-  expect((await state(page)).phase).toBe('arrive');
-  await page
-    .locator('canvas')
-    .first()
-    .click({ position: { x: 8, y: 8 } });
+  // A machine starts by itself a moment after he arrives.
   await expect.poll(async () => (await state(page)).phase).not.toBe('arrive');
   await guide(page);
 }

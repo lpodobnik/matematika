@@ -6,10 +6,10 @@ import { installSound } from '@/app/sound';
 import { audio } from '@/audio/index';
 import { useGame } from '@/store/store';
 import type { Screen } from '@/store/types';
-import { GoalBanner } from '@/ui/common/GoalBanner';
 import { HintButton } from '@/ui/common/HintButton';
 import { MapButton } from '@/ui/common/MapButton';
 import { MuteButton } from '@/ui/common/MuteButton';
+import { NowBanner } from '@/ui/common/NowLine';
 import { PartsCounter } from '@/ui/common/PartsCounter';
 import { PinConfirm } from '@/ui/common/PinConfirm';
 import { ResetButton } from '@/ui/common/ResetButton';
@@ -104,7 +104,7 @@ function RoomScreen() {
         {friend ? <GiveUpButton /> : <MapButton />}
         <PinConfirm area={sceneAreaRef} />
         {!friend && <PartsCounter area={sceneAreaRef} />}
-        <GoalBanner area={sceneAreaRef} />
+        <NowBanner />
       </main>
       <Notebook />
       {/* Story 6.1: Nikola's guide the first time the room needs a tool, over both. */}

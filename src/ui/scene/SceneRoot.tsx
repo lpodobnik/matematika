@@ -179,6 +179,14 @@ function SceneContent() {
     );
   }, [app, isInitialised, qualityPicked, dispatch]);
 
+  // A machine starts by itself a moment after he arrives: nobody knew to tap it.
+  const arriving = useGame((s) => s.ui.screen === 'room' && s.room?.stage.phase === 'arrive');
+  useEffect(() => {
+    if (!arriving) return;
+    const timer = setTimeout(() => dispatch({ type: 'machine/touch' }), 600);
+    return () => clearTimeout(timer);
+  }, [arriving, dispatch]);
+
   useEffect(() => {
     if (!isInitialised) return;
     const { stage } = app;

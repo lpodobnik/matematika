@@ -136,7 +136,7 @@ describe('building a room (epic 5)', () => {
     const rooms = g.state().save.workshop.rooms;
     expect(rooms).toHaveLength(1);
     expect(rooms[0]).toMatchObject({ title: 2, stamp: null });
-    expect(g.state().save.economy.parts).toBe(16);
+    expect(g.state().save.economy.parts).toBe(20);
     expect(g.state().ui.workshop).toEqual({ step: 'sent', id: rooms[0]?.id });
     expect(g.seen.map((e) => e.type)).toContain('SaveChanged');
     // The link holds the room and his lines, and its id is its hash.
@@ -145,14 +145,13 @@ describe('building a room (epic 5)', () => {
     expect(decodeRoom(data)).toMatchObject({ title: 2, solution: [['2x=18', 'x=9', '2·9+5=23']] });
   });
 
-  it('won’t send without the parts', () => {
-    const g = built(3);
+  it('sends with no parts at all: making puzzles for friends is free', () => {
+    const g = built(0);
     g.dispatch({ type: 'workshop/solve', design: machine });
     solve(g, ['x = 9', '2 · 9 + 5 = 23']);
     g.dispatch({ type: 'workshop/send', title: 0, planted: null });
-    expect(g.state().save.workshop.rooms).toEqual([]);
-    expect(g.state().save.economy.parts).toBe(3);
-    expect(g.state().ui.workshop?.step).toBe('finish');
+    expect(g.state().save.workshop.rooms).toHaveLength(1);
+    expect(g.state().save.economy.parts).toBe(0);
   });
 
   it('goes back to the design if he leaves the room before solving it', () => {
@@ -178,7 +177,7 @@ describe('building a room (epic 5)', () => {
     expect(g.state().save.workshop.rooms).toEqual([]);
     g.dispatch({ type: 'workshop/send', title: 0, planted: { stage: 0, line: 0, text: '2x=17' } });
     expect(g.state().save.workshop.rooms).toHaveLength(1);
-    expect(g.state().save.economy.parts).toBe(20 - 4 - 5);
+    expect(g.state().save.economy.parts).toBe(20);
   });
 
   it('keeps each linked machine’s lines as it locks', () => {
@@ -212,7 +211,7 @@ describe('building a room (epic 5)', () => {
     });
     // Sent, the link carries the fed number as the first machine's answer, and reads back.
     g.dispatch({ type: 'workshop/send', title: 0, planted: null });
-    expect(g.state().save.economy.parts).toBe(40 - 4 - 4 - 15);
+    expect(g.state().save.economy.parts).toBe(40);
     const data = g.state().save.workshop.rooms[0]?.payload ?? '';
     expect(decodeRoom(data)?.design.machines[1]?.numbers.b).toBe(4);
   });

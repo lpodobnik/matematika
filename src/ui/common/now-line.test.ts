@@ -36,9 +36,9 @@ describe('the "what now" line', () => {
     expect(nowText(null, [])).toBeNull();
   });
 
-  it('asks him to touch the machine as he arrives', () => {
-    expect(nowText(enterRoom(r01).room, [])).toBe(hr.now.touch);
-    expect(nowText(enterRoom(r08).room, earned)).toBe(hr.now.touch);
+  it('says nothing in the moment before the machine starts by itself', () => {
+    expect(nowText(enterRoom(r01).room, [])).toBeNull();
+    expect(nowText(enterRoom(r08).room, earned)).toBeNull();
   });
 
   it('sends him back along the steps while x isn’t alone in room 8', () => {
@@ -57,7 +57,7 @@ describe('the "what now" line', () => {
     const answered = write(level, answer);
     const locked = write(answered, answer);
     const says = [arriving, sliding, level, answered, locked].map((room) => nowText(room, []));
-    expect(says.slice(0, 4)).toEqual([hr.now.touch, hr.now.slide, hr.now.answer, hr.now.check]);
+    expect(says.slice(0, 4)).toEqual([null, hr.now.slide, hr.now.answer, hr.now.check]);
     expect(says[4]).toBeNull();
     for (const text of says) expect(text ?? '').not.toContain(answer);
   });

@@ -15,7 +15,58 @@
   font-weight: 800;
 }
 
+/* Over the scene on anything taller than a phone. */
+.now-banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  z-index: 20;
+  width: min(66%, 760px);
+  margin: 0;
+  padding: 10px 18px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--lamp-wash);
+  box-shadow: 0 4px 0 var(--ink);
+  color: var(--ink);
+  font-size: clamp(18px, 3dvh, 26px);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: now-bump 500ms ease-out;
+}
+
+@keyframes now-bump {
+  0% {
+    transform: translateX(-50%) scale(0.92);
+  }
+  60% {
+    transform: translateX(-50%) scale(1.04);
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .now-banner {
+    animation: none;
+  }
+}
+
+@media (min-height: 500px) {
+  .now-line {
+    display: none;
+  }
+}
+
 @media (max-height: 499.98px) {
+  .now-banner {
+    display: none;
+  }
+
   .now-line {
     padding: 3px 8px;
     font-size: 14px;
