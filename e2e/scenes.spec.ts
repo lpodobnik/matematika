@@ -233,10 +233,8 @@ test('Unmask: the newspaper, a wrong accusation included', async ({ page }) => {
   await next(page);
   // The moment before: the guide asks for cards, and pointing doesn't pass.
   await page.locator('.suspect[data-suspect="slagar"] .suspect__name').click();
-  expect(
-    ((await state(page)).save.hunt.scene?.state as unknown as { unmask: { phase: string } }).unmask
-      .phase,
-  ).toBe('ask');
+  const played = (await state(page)).save.hunt.scene?.state as { unmask?: { phase: string } };
+  expect(played.unmask?.phase).toBe('ask');
   await page.locator('.clue[data-card="a"]').click();
   await page.locator('.clue[data-card="b"]').click();
   await expect(page.locator('.suspect__working li')).toHaveCount(6);
