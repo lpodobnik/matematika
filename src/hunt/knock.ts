@@ -4,6 +4,7 @@
 // After a wrong door the scene's `mode` is `working`, and each line has to be true, which stops
 // him changing the answer until a door opens.
 
+import type { ObjectState } from '@/hunt/objects';
 import type { Rational } from '@/math/rational';
 import { parseStatement, resultOf, type Statement } from '@/math/statement';
 import {
@@ -63,6 +64,13 @@ export interface KnockSpec {
   /** The `?` hint: the first press, then the exact next move. */
   hint: { step: string; move: string };
   context?: TruthContext;
+  /** What stands above the doors, such as a chart to read. */
+  picture?: ObjectState;
+  /**
+   * A clue that's a trap (Knot 2): it isn't needed, its line can be struck like any other, and
+   * following it leads to the door that holds a polite notice.
+   */
+  forged?: string;
 }
 
 export interface KnockLine {
@@ -197,12 +205,12 @@ export function cluesLeft(
   spec: KnockSpec,
   state: Pick<KnockState, 'side' | 'lines'>,
 ): readonly KnockClue[] {
-  return spec.clues.filter((clue) => !clueUsed(clue, state));
+  return spec.clues.filter((clue) => clue.id !== spec.forged && !clueUsed(clue, state));
 }
 
 /** The first clue he can write a line for. */
 function firstClue(spec: KnockSpec, lines: readonly KnockLine[]): string | null {
-  const writable = spec.clues.filter((clue) => clue.kind !== 'side');
+  const writable = spec.clues.filter((clue) => clue.kind !== 'side' && clue.id !== spec.forged);
   const next = writable.find((clue) => !clueUsed(clue, { side: null, lines: [...lines] }));
   return next?.id ?? null;
 }

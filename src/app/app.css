@@ -18,6 +18,7 @@
   --iron: #59616b;
   --wood: #8a6a4a;
   --stone: #d8cfbf;
+  --water: #7fa7b5;
   --rule: color-mix(in srgb, var(--ink) 18%, transparent);
   color-scheme: light;
 }

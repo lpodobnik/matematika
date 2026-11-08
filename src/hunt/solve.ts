@@ -10,9 +10,11 @@ import {
   type KnockSpec,
   litDoors,
 } from '@/hunt/knock';
+import { proveCarts, proveLevel, proveLocks, proveLoop, proveWindows } from '@/hunt/one-offs';
+import { proveGuard } from '@/hunt/rule-guard';
 import type { SceneSpec } from '@/hunt/scene';
 import { proveSneak } from '@/hunt/sneak';
-import type { LeadSpec, LineTask } from '@/hunt/spec';
+import type { LeadSpec, LineTask, MistakeSpec } from '@/hunt/spec';
 import { proveUnmask } from '@/hunt/unmask';
 import { parseStatement } from '@/math/statement';
 import { readTokens, type SToken } from '@/math/statement-tokens';
@@ -37,7 +39,7 @@ export interface KnockProblem {
 export function proveKnock(spec: KnockSpec): KnockProblem[] {
   const problems: KnockProblem[] = [];
   const say = (problem: string) => problems.push({ problem });
-  const written = spec.clues.filter((clue) => clue.kind !== 'side');
+  const written = spec.clues.filter((clue) => clue.kind !== 'side' && clue.id !== spec.forged);
   const lines: KnockLine[] = written.flatMap((clue: KnockClue) => {
     const tokens = canonicalLine(clue);
     if (!tokens) say(`clue ${clue.id} has no line the notebook can write`);
@@ -61,6 +63,18 @@ export function proveKnock(spec: KnockSpec): KnockProblem[] {
   if (spec.door < spec.row.from || spec.door > spec.row.to) say('the door is not in the row');
   if (spec.row.to - spec.row.from + 1 > 70) say('more than 70 doors');
   if (spec.grumpy.length === 0) say('no grumpy neighbour for a wrong door');
+  if (spec.forged) {
+    const forged = spec.clues.find((clue) => clue.id === spec.forged);
+    const tokens = forged && canonicalLine(forged);
+    if (!tokens) say('the forged clue has no line');
+    else {
+      const left = litDoors(spec.row, side, [
+        ...lines,
+        { tokens, clue: spec.forged, struck: false },
+      ]);
+      if (left.length > 0) say('following the forged clue must leave no door with the true ones');
+    }
+  }
   return problems;
 }
 
@@ -100,7 +114,37 @@ export function proveScene(scene: SceneSpec): string[] {
       return proveUnmask(scene);
     case 'alone':
       return proveAlone(scene);
+    case 'guard':
+      return proveGuard(scene);
+    case 'carts':
+      return proveCarts(scene);
+    case 'level':
+      return proveLevel(scene);
+    case 'locks':
+      return proveLocks(scene);
+    case 'windows':
+      return proveWindows(scene);
+    case 'loop':
+      return proveLoop(scene);
   }
+}
+
+/** The little one's working: its right lines right, its wrong line wrong. */
+function proveMistake(mistake: MistakeSpec): string[] {
+  const problems = proveLine(mistake.write);
+  const wrong = mistake.lines[mistake.wrong];
+  const wrongParsed = wrong !== undefined ? parseStatement(lineOf(wrong) ?? []) : null;
+  if (!wrongParsed?.ok || isTrue(wrongParsed.statement, mistake.context)) {
+    problems.push(`the little one's wrong line "${wrong}" isn't wrong`);
+  }
+  for (const [i, line] of mistake.lines.entries()) {
+    if (i === mistake.wrong) continue;
+    const parsed = parseStatement(lineOf(line) ?? []);
+    if (!parsed.ok || !isTrue(parsed.statement, mistake.context)) {
+      problems.push(`the little one's right line "${line}" isn't right`);
+    }
+  }
+  return problems;
 }
 
 /** Everything in a lead that can be checked without playing it. */
@@ -110,21 +154,9 @@ export function proveLead(lead: LeadSpec): string[] {
   for (const task of lead.tries) {
     if (task.kind === 'line') problems.push(...proveLine(task));
   }
-  problems.push(...proveLine(lead.mistake.write));
   for (const task of lead.writeUp) problems.push(...proveLine(task));
-  const wrong = lead.mistake.lines[lead.mistake.wrong];
-  const wrongParsed = wrong !== undefined ? parseStatement(lineOf(wrong) ?? []) : null;
-  if (!wrongParsed?.ok || isTrue(wrongParsed.statement, lead.mistake.context)) {
-    problems.push(`the little one's wrong line "${wrong}" isn't wrong`);
-  }
-  for (const [i, line] of lead.mistake.lines.entries()) {
-    if (i === lead.mistake.wrong) continue;
-    const parsed = parseStatement(lineOf(line) ?? []);
-    if (!parsed.ok || !isTrue(parsed.statement, lead.mistake.context)) {
-      problems.push(`the little one's right line "${line}" isn't right`);
-    }
-  }
-  if (lead.lesson.steps.length === 0) problems.push('no showing');
+  if (lead.mistake) problems.push(...proveMistake(lead.mistake));
+  if (lead.mistake && lead.lesson.steps.length === 0) problems.push('no showing');
   for (const step of lead.lesson.steps) {
     if (step.say.length > 2) problems.push('a showing has more than 2 lines to a step');
   }

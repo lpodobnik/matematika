@@ -4,7 +4,7 @@
 import { castDraft, produce } from 'immer';
 import { cleanName } from '@/city/character';
 import { tuning } from '@/config/tuning';
-import { leadSpecs } from '@/content/leads';
+import { playedSpec } from '@/content/leads';
 import { earnParts } from '@/economy/parts';
 import {
   type GateScene,
@@ -15,10 +15,11 @@ import {
   gateType,
   newGateScene,
 } from '@/hunt/gate';
-import { inList, type LeadId, leadIds } from '@/hunt/ids';
+import { inList, knotIds, type LeadId, leadIds } from '@/hunt/ids';
 import { type LeadAction, type LeadPlay, leadPlayFrom, leadStep, newLeadPlay } from '@/hunt/lead';
 import type { LeadSpec } from '@/hunt/spec';
 import { partTwoOn } from '@/hunt/switch';
+import { openTrail, type TrailId, threadAfterLead, threadTarget } from '@/hunt/trail';
 import type { DomainEvent } from '@/store/events';
 import type { GameState, Reduce } from '@/store/types';
 
@@ -66,12 +67,15 @@ function changeGate(state: GameState, change: (scene: GateScene) => GateScene): 
 }
 
 const isLead = inList(leadIds);
+const isKnot = inList(knotIds);
+const isTrail = (id: string): id is TrailId => isLead(id) || isKnot(id);
 
 /** The lead in play, with its spec, or null. */
-function leadInPlay(state: GameState): { lead: LeadId; spec: LeadSpec; play: LeadPlay } | null {
-  const scene = state.save.hunt.scene;
-  if (!scene || scene.of === 'gate' || !isLead(scene.of)) return null;
-  const spec = leadSpecs[scene.of];
+function leadInPlay(state: GameState): { lead: TrailId; spec: LeadSpec; play: LeadPlay } | null {
+  const { hunt } = state.save;
+  const scene = hunt.scene;
+  if (!scene || scene.of === 'gate' || !isTrail(scene.of)) return null;
+  const spec = playedSpec(scene.of, hunt.sealed);
   return spec ? { lead: scene.of, spec, play: scene.state as LeadPlay } : null;
 }
 
@@ -87,8 +91,8 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
   });
   if (next === play && Object.keys(outcome).length === 0) return same(state);
   const events: DomainEvent[] = [];
-  if (outcome.lessonSeen) events.push({ type: 'LessonSeen', lead });
-  if (outcome.taught) events.push({ type: 'FixMade', lead });
+  if (outcome.lessonSeen && isLead(lead)) events.push({ type: 'LessonSeen', lead });
+  if (outcome.taught && isLead(lead)) events.push({ type: 'FixMade', lead });
   if (outcome.lineWritten) events.push({ type: 'LineWritten', lead, line: outcome.lineWritten });
   if (outcome.doorKnocked) events.push({ type: 'DoorKnocked', lead, ...outcome.doorKnocked });
   if (outcome.finished) {
@@ -103,7 +107,11 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
         saved.paid.push(outcome.earned.key);
         draft.save.economy = castDraft(earnParts(draft.save.economy, outcome.earned.parts));
       }
-      if (outcome.taught && draft.save.companion) {
+      if (outcome.forged && saved.forged === 'open') saved.forged = outcome.forged;
+      if (outcome.guardBeaten && !saved.guards.includes(outcome.guardBeaten)) {
+        saved.guards.push(outcome.guardBeaten);
+      }
+      if (outcome.taught && draft.save.companion && isLead(lead)) {
         draft.save.companion.taught.push({
           lead,
           ...outcome.taught,
@@ -121,7 +129,18 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
           struck: false,
         }));
         saved.firstTries[lead] = outcome.finished.firstTry;
-        if (!saved.leadsDone.includes(lead)) saved.leadsDone.push(lead);
+        if (isLead(lead) && !saved.leadsDone.includes(lead)) saved.leadsDone.push(lead);
+        if (isKnot(lead) && !saved.knotsDone.includes(lead)) saved.knotsDone.push(lead);
+        for (const beat of spec.beats ?? []) {
+          if (!saved.beats.includes(beat)) saved.beats.push(beat);
+        }
+        const companion = draft.save.companion;
+        if (spec.gives && companion && !companion.gear.includes(spec.gives)) {
+          companion.gear.push(spec.gives);
+        }
+        const moved = threadAfterLead(saved, lead);
+        saved.sealed = [...moved.sealed];
+        saved.thread = { ...moved.thread, target: threadTarget(saved) };
         saved.scene = null;
         draft.ui.screen = 'map';
       }
@@ -131,9 +150,12 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
 }
 
 /** A saved scene on launch: back as it was, or from its start if it no longer fits its spec. */
-function resumedScene(scene: NonNullable<GameState['save']['hunt']['scene']>): typeof scene {
-  if (scene.of === 'gate' || !isLead(scene.of)) return scene;
-  const spec = leadSpecs[scene.of];
+function resumedScene(
+  scene: NonNullable<GameState['save']['hunt']['scene']>,
+  sealed: readonly LeadId[],
+): typeof scene {
+  if (scene.of === 'gate' || !isTrail(scene.of)) return scene;
+  const spec = playedSpec(scene.of, sealed);
   if (!spec) return scene;
   return { ...scene, state: leadPlayFrom(spec, scene.state) ?? newLeadPlay() };
 }
@@ -167,28 +189,35 @@ export function withHunt(inner: Reduce): Reduce {
         );
       case 'hunt/lead-start': {
         const { hunt, companion } = state.save;
+        const spec = playedSpec(action.lead, hunt.sealed);
         const allowed =
           partTwoOn(state.ui.preview) &&
           companion !== null &&
-          hunt.beats.includes('map-given') &&
-          leadSpecs[action.lead] !== undefined &&
-          !hunt.leadsDone.includes(action.lead);
+          spec !== undefined &&
+          openTrail(hunt).includes(action.lead);
         if (!allowed) return same(state);
         const waiting = hunt.scene?.of === action.lead;
         return {
           state: produce(state, (draft) => {
             draft.ui.screen = 'hunt';
             if (waiting) return;
-            if (!draft.save.hunt.leadsStarted.includes(action.lead)) {
+            if (isLead(action.lead) && !draft.save.hunt.leadsStarted.includes(action.lead)) {
               draft.save.hunt.leadsStarted.push(action.lead);
             }
+            draft.save.hunt.thread.target = threadTarget(draft.save.hunt);
             draft.save.hunt.scene = castDraft({
               of: action.lead,
               index: 0,
-              state: newLeadPlay(),
+              state: newLeadPlay(spec, {
+                taught: companion.taught.map((entry) => entry.mistake),
+                told: hunt.told,
+              }),
             });
           }),
-          events: [{ type: 'LeadPicked', lead: action.lead }, { type: 'SaveChanged' }],
+          events: [
+            ...(isLead(action.lead) ? [{ type: 'LeadPicked' as const, lead: action.lead }] : []),
+            { type: 'SaveChanged' },
+          ],
         };
       }
       case 'hunt/lead':
@@ -232,7 +261,8 @@ export function withHunt(inner: Reduce): Reduce {
         state: produce(result.state, (draft) => {
           draft.ui.screen = 'hunt';
           const scene = result.state.save.hunt.scene;
-          if (scene) draft.save.hunt.scene = castDraft(resumedScene(scene));
+          const { sealed } = result.state.save.hunt;
+          if (scene) draft.save.hunt.scene = castDraft(resumedScene(scene, sealed));
         }),
         events: result.events,
       };

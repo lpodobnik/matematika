@@ -1,12 +1,12 @@
 import '@/ui/hunt/hunt.css';
 import { type FormEvent, useEffect, useState } from 'react';
 import { cleanName, maxNameLength } from '@/city/character';
-import { leadSpecs } from '@/content/leads';
+import { playedSpec } from '@/content/leads';
 import { hr } from '@/content/text/hr';
 import { town } from '@/content/town';
 import { type GateScene, gateEquation, gateScene } from '@/hunt/gate';
-import type { LeadId } from '@/hunt/ids';
 import type { LeadPlay } from '@/hunt/lead';
+import type { TrailId } from '@/hunt/trail';
 import { formatTokens } from '@/math/format';
 import { type Token, tokenFromChar } from '@/math/tokens';
 import { useGame } from '@/store/store';
@@ -24,6 +24,7 @@ const knocksThen = [0, 1, 2, 3, 4, 5, 6, 7];
 /** Part 2's screen: the scene in play. The gate is the first. */
 export function HuntScreen() {
   const scene = useGame((s) => s.save.hunt.scene);
+  const sealed = useGame((s) => s.save.hunt.sealed);
   const dispatch = useGame((s) => s.dispatch);
   if (scene?.of === 'gate') {
     const gate = gateScene(scene.state);
@@ -44,7 +45,7 @@ export function HuntScreen() {
       );
     }
   }
-  const spec = scene && scene.of !== 'gate' ? leadSpecs[scene.of as LeadId] : undefined;
+  const spec = scene && scene.of !== 'gate' ? playedSpec(scene.of as TrailId, sealed) : undefined;
   if (scene && spec) return <LeadScreen spec={spec} play={scene.state as LeadPlay} />;
   return null;
 }

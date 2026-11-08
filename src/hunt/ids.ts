@@ -21,7 +21,8 @@ export const leadIds = [
 ] as const;
 export type LeadId = (typeof leadIds)[number];
 
-export const knotIds = ['k1', 'k2', 'k3'] as const;
+/** The knots, and the wandering-off that opens Act 2, which is played the way a knot is. */
+export const knotIds = ['k1', 'k2', 'k3', 'w1'] as const;
 export type KnotId = (typeof knotIds)[number];
 
 export const ruleGuardIds = ['rule-1', 'rule-2', 'rule-3', 'rule-4'] as const;

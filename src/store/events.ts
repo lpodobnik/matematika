@@ -6,6 +6,7 @@ import type { AreaId } from '@/content/town';
 import type { UpgradeEvent } from '@/economy/upgrades';
 import type { FightEvent } from '@/fight/types';
 import type { LeadId } from '@/hunt/ids';
+import type { TrailId } from '@/hunt/trail';
 import type { RoomEvent } from '@/room/events';
 import type { RoomSpec } from '@/room/types';
 
@@ -24,9 +25,9 @@ export type StoreEvent =
   | { type: 'LeadPicked'; lead: LeadId }
   | { type: 'LessonSeen'; lead: LeadId }
   | { type: 'FixMade'; lead: LeadId }
-  | { type: 'LineWritten'; lead: LeadId; line: string }
-  | { type: 'DoorKnocked'; lead: LeadId; door: number; right: boolean }
-  | { type: 'LeadFinished'; lead: LeadId; firstTry: boolean };
+  | { type: 'LineWritten'; lead: TrailId; line: string }
+  | { type: 'DoorKnocked'; lead: TrailId; door: number; right: boolean }
+  | { type: 'LeadFinished'; lead: TrailId; firstTry: boolean };
 
 export type DomainEvent = RoomEvent | StoreEvent | FightEvent | UpgradeEvent;
 export type DomainEventType = DomainEvent['type'];

@@ -65,6 +65,8 @@ const toLift: LeadAction[] = [...toPlay, ...street, next];
 const lift: LeadAction[] = [...types('0'), { kind: 'door', door: 0 }];
 const toWrite: LeadAction[] = [...toLift, ...lift, next];
 
+const mistake = l01.mistake as NonNullable<typeof l01.mistake>;
+
 describe('the steps of a lead', () => {
   it('goes show, try, fix, play, write, thread, and ends', () => {
     const all = [...toWrite, ...types('0'), ...types('N₀'), ...types('7 · 2 + 1 = 15'), next, next];
@@ -131,19 +133,19 @@ describe('fixing the little one', () => {
   it('goes from spotting it, to showing it, to writing it, and it learns', () => {
     const spotted = play(newLeadPlay(), [...toFix, { kind: 'fix-tap', line: 1 }]).state;
     expect(spotted.fix).toBe('show');
-    expect(spotted.object).toEqual(l01.mistake.show.object);
+    expect(spotted.object).toEqual(mistake.show.object);
     const shown = play(spotted, [add]).state;
     expect(shown.fix).toBe('write');
     const { state, outcomes } = play(shown, types('4 · 2 + 1'));
     expect(state.fix).toBe('thanks');
     expect(outcomes[outcomes.length - 1]?.taught).toEqual({
-      mistake: l01.mistake.id,
+      mistake: mistake.id,
       line: '9 = 4 · 2 + 1',
     });
   });
 
   it('a mistake it has learnt never comes back', () => {
-    const { state } = play(newLeadPlay(), toFix, [l01.mistake.id]);
+    const { state } = play(newLeadPlay(), toFix, [mistake.id]);
     expect(state.step).toBe('play');
   });
 });

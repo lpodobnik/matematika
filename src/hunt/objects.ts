@@ -34,22 +34,109 @@ export interface PlacesState {
   counts: readonly number[];
 }
 
-export type ObjectState = PairsState | LineState | PlacesState;
+/** Rows and columns: counted either way, the same many. */
+export interface GridState {
+  kind: 'grid';
+  rows: number;
+  columns: number;
+}
+
+/** Things packed in groups: what doesn't make a group is the remainder. */
+export interface PackingState {
+  kind: 'packing';
+  items: number;
+  /** How many go in a group. */
+  per: number;
+}
+
+/** A sum as bundles: `2 + 3 · 4` is 2 and three bundles of 4. */
+export interface BundlesState {
+  kind: 'bundles';
+  loose: number;
+  bundles: number;
+  size: number;
+}
+
+/** Stacks to level: the total never changes. */
+export interface StacksState {
+  kind: 'stacks';
+  stacks: readonly number[];
+  /** The stack he has lifted a crate from. */
+  held: number | null;
+}
+
+/** A chart, built by counting. */
+export interface BarsState {
+  kind: 'bars';
+  bars: readonly { label: string; value: number }[];
+  /** What one mark on the axis is worth. */
+  step: number;
+}
+
+export type ObjectState =
+  | PairsState
+  | LineState
+  | PlacesState
+  | GridState
+  | PackingState
+  | BundlesState
+  | StacksState
+  | BarsState;
 
 export type ObjectMove =
   | { kind: 'pairs-add' }
   | { kind: 'pairs-remove' }
   | { kind: 'line-mark'; at: number }
   | { kind: 'places-add'; place: number }
-  | { kind: 'places-remove'; place: number };
+  | { kind: 'places-remove'; place: number }
+  | { kind: 'grid-rows'; by: -1 | 1 }
+  | { kind: 'grid-columns'; by: -1 | 1 }
+  | { kind: 'grid-turn' }
+  | { kind: 'packing-per'; by: -1 | 1 }
+  | { kind: 'stacks-tap'; stack: number };
 
 export type ObjectGoal =
   | { kind: 'pairs-count'; count: number }
   | { kind: 'line-mark'; at: number }
-  | { kind: 'places-counts'; counts: readonly number[] };
+  | { kind: 'places-counts'; counts: readonly number[] }
+  | { kind: 'grid-size'; rows: number; columns: number }
+  | { kind: 'packing-per'; per: number }
+  | { kind: 'stacks-level' };
 
 /** What the move does; a move that doesn't fit the object does nothing. */
 export function applyMove(state: ObjectState, move: ObjectMove): ObjectState {
+  if (state.kind === 'grid') {
+    if (move.kind === 'grid-turn') return { ...state, rows: state.columns, columns: state.rows };
+    if (move.kind === 'grid-rows') {
+      const rows = state.rows + move.by;
+      return rows < 0 || rows > 10 ? state : { ...state, rows };
+    }
+    if (move.kind === 'grid-columns') {
+      const columns = state.columns + move.by;
+      return columns < 0 || columns > 10 ? state : { ...state, columns };
+    }
+    return state;
+  }
+  if (state.kind === 'packing') {
+    if (move.kind !== 'packing-per') return state;
+    const per = state.per + move.by;
+    return per < 1 || per > 12 ? state : { ...state, per };
+  }
+  if (state.kind === 'stacks') {
+    if (move.kind !== 'stacks-tap') return state;
+    if (state.held === null) {
+      return (state.stacks[move.stack] ?? 0) > 0 ? { ...state, held: move.stack } : state;
+    }
+    if (state.held === move.stack) return { ...state, held: null };
+    return {
+      ...state,
+      held: null,
+      stacks: state.stacks.map((count, i) =>
+        i === state.held ? count - 1 : i === move.stack ? count + 1 : count,
+      ),
+    };
+  }
+  if (state.kind === 'bundles' || state.kind === 'bars') return state;
   if (state.kind === 'places') {
     if (move.kind !== 'places-add' && move.kind !== 'places-remove') return state;
     const count = state.counts[move.place];
@@ -87,6 +174,13 @@ export function goalMet(state: ObjectState, goal: ObjectGoal): boolean {
     return state.kind === 'places' && goal.counts.every((count, i) => state.counts[i] === count);
   }
   if (goal.kind === 'pairs-count') return state.kind === 'pairs' && state.count === goal.count;
+  if (goal.kind === 'grid-size') {
+    return state.kind === 'grid' && state.rows === goal.rows && state.columns === goal.columns;
+  }
+  if (goal.kind === 'packing-per') return state.kind === 'packing' && state.per === goal.per;
+  if (goal.kind === 'stacks-level') {
+    return state.kind === 'stacks' && new Set(state.stacks).size === 1;
+  }
   return state.kind === 'line' && state.marked === goal.at;
 }
 

@@ -76,6 +76,16 @@
   background: var(--brass);
 }
 
+.trail__pin[data-sealed="true"] .trail__needle {
+  background: var(--ink-deep);
+}
+
+/* The black thread is heading here. */
+.trail__pin[data-target="true"] .trail__needle {
+  outline: 4px solid var(--ink-deep);
+  outline-offset: 2px;
+}
+
 .trail__pin:disabled {
   opacity: 1;
 }

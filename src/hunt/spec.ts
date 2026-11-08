@@ -1,7 +1,7 @@
 // A lead as data (architecture, Pattern 6): rule 10 extends, with content tests and no per-lead
 // code. A new scene type joins `SceneSpec` as a new kind.
 
-import type { LeadId } from '@/hunt/ids';
+import type { BeatId, GearId, KnotId, LeadId } from '@/hunt/ids';
 import type { ObjectGoal, ObjectState } from '@/hunt/objects';
 import type { SceneSpec } from '@/hunt/scene';
 import type { SToken } from '@/math/statement-tokens';
@@ -55,16 +55,22 @@ export interface MistakeSpec {
 }
 
 export interface LeadSpec {
-  id: LeadId;
+  /** A lead, or a knot: a knot is a lead with no showing of its own. */
+  id: LeadId | KnotId;
   act: 1 | 2 | 3 | 4 | 'last';
   street: string;
   title: string;
   lesson: LessonSpec;
   tries: readonly TryTask[];
-  mistake: MistakeSpec;
+  /** Null for a knot: there's nothing new for the little one to get wrong. */
+  mistake: MistakeSpec | null;
   scenes: readonly SceneSpec[];
   /** The school form, with fading: blanks first, then whole lines. */
   writeUp: readonly LineTask[];
+  /** What it gives him for good, such as the hook from Knot 1. */
+  gives?: GearId;
+  /** The story's moment it marks, when done. */
+  beats?: readonly BeatId[];
   /** What it yields: a line, and the explanation card that answers "Kako to radi?". */
   find: { say: string; title: string; card: readonly string[] };
 }

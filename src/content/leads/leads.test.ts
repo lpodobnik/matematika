@@ -19,7 +19,7 @@ describe('every lead can be played', () => {
         if (task.kind === 'line') expect(readLine(task.start), task.start).not.toBeNull();
       }
       for (const task of lead.writeUp) expect(readLine(task.start), task.start).not.toBeNull();
-      expect(readLine(lead.mistake.write.start)).not.toBeNull();
+      if (lead.mistake) expect(readLine(lead.mistake.write.start)).not.toBeNull();
     },
   );
 });

@@ -344,6 +344,127 @@
   font-size: 24px;
 }
 
+.grid-object {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.grid-object__cells {
+  display: grid;
+  gap: 3px;
+}
+
+.grid-object__cell {
+  width: 22px;
+  height: 22px;
+  background: var(--water);
+  border: 2px solid var(--ink);
+}
+
+.packing__group {
+  min-width: 44px;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.stacks-object {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 180px;
+}
+
+.stacks-object__stack {
+  position: relative;
+  width: 64px;
+  height: 100%;
+  padding: 0;
+  font: inherit;
+  background: none;
+  border: none;
+  border-bottom: 3px solid var(--ink);
+}
+
+.stacks-object__stack[data-held="true"] {
+  outline: 3px solid var(--lamp);
+}
+
+.stacks-object__crates {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(0deg, var(--wood) 0 14px, var(--ink) 14px 16px);
+  border: 2px solid var(--ink);
+}
+
+.stacks-object__count {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  background: var(--sheet);
+  border-radius: 6px;
+}
+
+.bars-object {
+  display: flex;
+  gap: 6px;
+  height: 200px;
+  width: min(100%, 460px);
+}
+
+.bars-object__axis {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0 0 22px;
+  list-style: none;
+  font-size: 15px;
+  text-align: right;
+}
+
+.bars-object__bars {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  border-left: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink);
+}
+
+.bars-object__bar {
+  flex: 1 1 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 22px;
+  height: 100%;
+}
+
+.bars-object__fill {
+  display: block;
+  background: var(--brass);
+  border: 2px solid var(--ink);
+}
+
+.bars-object__label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 14px;
+  text-align: center;
+}
+
 /* The little one's working: its own wobbly hand, so that it never looks like help. */
 
 .hunt__wobbly-line {
@@ -417,6 +538,13 @@
   margin: 0;
   font-size: 17px;
   line-height: 1.25;
+}
+
+.knock__picture {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 0 8px;
 }
 
 .knock__side {
@@ -937,6 +1065,316 @@
   font-size: 34px;
   font-weight: 700;
   letter-spacing: 1px;
+}
+
+/* A rule guard: its tape, and the tiles. */
+
+.guard,
+.carts,
+.level,
+.locks,
+.windows,
+.loop {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--paper);
+}
+
+.guard .hint,
+.carts .hint,
+.level .hint,
+.locks .hint,
+.windows .hint,
+.loop .hint {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.guard__tape {
+  margin: 8px auto;
+  padding: 12px 20px;
+  font-size: clamp(16px, 3dvh, 22px);
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 1px;
+  color: var(--paper);
+  background: var(--iron);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+}
+
+.guard__tape[data-jammed="true"] {
+  background: var(--jam);
+  animation: little-shake 0.5s 3;
+}
+
+.guard__tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0 auto;
+  width: min(100%, 520px);
+}
+
+.guard__tile {
+  min-height: 72px;
+  font: inherit;
+  font-size: clamp(18px, 3.4dvh, 26px);
+  color: var(--ink-deep);
+  background: var(--brass-light);
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+}
+
+.guard__tile[data-picked="true"] {
+  background: var(--table);
+}
+
+/* Load the carts. */
+
+.carts__ground {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.carts__row {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.cart--none {
+  padding: 24px;
+  font-size: 20px;
+  color: var(--ink-soft);
+  border: 2px dashed var(--ink-soft);
+  border-radius: 10px;
+}
+
+.cart__load {
+  min-width: 92px;
+  min-height: 64px;
+  font: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink-deep);
+  background: var(--wood);
+  border: 3px solid var(--ink);
+  border-radius: 6px 6px 18px 18px;
+}
+
+.cart__off {
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 22px;
+}
+
+.carts__go {
+  margin-bottom: 56px;
+}
+
+/* Level the load. */
+
+.level__rig {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 60px;
+  transition: transform 0.3s;
+}
+
+.level__stacks {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.level__stack {
+  flex: 1 1 0;
+  position: relative;
+  height: 100%;
+  max-width: 96px;
+  padding: 0;
+  font: inherit;
+  background: none;
+  border: none;
+  border-bottom: 0;
+}
+
+.level__stack[data-held="true"] {
+  outline: 3px solid var(--lamp);
+}
+
+.level__crates {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(0deg, var(--wood) 0 14px, var(--ink) 14px 16px);
+  border: 2px solid var(--ink);
+}
+
+.level__count {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  background: var(--sheet);
+  border-radius: 6px;
+}
+
+.level__bar {
+  height: 12px;
+  background: var(--brass);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+}
+
+/* Bracket locks. */
+
+.locks__target {
+  margin: 0;
+  font-size: 20px;
+  text-align: center;
+}
+
+.locks__strip {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.locks__sign {
+  font-size: 30px;
+}
+
+.locks__number {
+  min-width: 64px;
+  min-height: 64px;
+  font: inherit;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--ink-deep);
+  background: var(--brass-light);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+}
+
+.locks__number[data-from="true"] {
+  background: var(--lamp);
+}
+
+.locks__tried {
+  margin: 0 0 56px;
+  font-size: 20px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* The facade. */
+
+.windows__turn {
+  align-self: flex-end;
+}
+
+.facade {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  padding: 8px;
+  margin-bottom: 56px;
+  background: var(--stone);
+  border: 3px solid var(--ink);
+}
+
+.facade__window {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-deep);
+  background: var(--water);
+  border: 2px solid var(--ink);
+}
+
+.facade__window[data-shown="true"] {
+  background: var(--lamp-wash);
+}
+
+/* The loop of lamps. */
+
+.loop__ring {
+  flex: 1 1 auto;
+  min-height: 220px;
+  position: relative;
+  margin: 0 0 56px;
+  padding: 0;
+  list-style: none;
+}
+
+.loop__lamp {
+  --turn: calc(1turn * var(--at) / var(--lamps));
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin: -24px;
+  font-size: 22px;
+  font-weight: 700;
+  background: var(--sheet);
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  transform: rotate(var(--turn)) translateY(-100px) rotate(calc(-1 * var(--turn)));
+}
+
+.loop__lamp[data-pinned="true"] {
+  background: var(--lamp-wash);
+}
+
+.loop__lamp[data-stopped="true"] {
+  background: var(--lamp);
+  outline: 3px solid var(--jam);
 }
 
 /* The thread, then the explanation card. */

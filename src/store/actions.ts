@@ -5,8 +5,8 @@ import type { NodeId } from '@/city/types';
 import type { AreaId } from '@/content/town';
 import type { UpgradeId } from '@/economy/types';
 import type { FightAction, FightState } from '@/fight/types';
-import type { LeadId } from '@/hunt/ids';
 import type { LeadAction } from '@/hunt/lead';
+import type { TrailId } from '@/hunt/trail';
 import type { LinkOp } from '@/math/chain';
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
@@ -163,7 +163,7 @@ export type Action =
   /** Vučetić hands over the map, the first time they talk. */
   | { type: 'hunt/map-given' }
   /** He walks up to a lead's place, or picks its pin. */
-  | { type: 'hunt/lead-start'; lead: LeadId }
+  | { type: 'hunt/lead-start'; lead: TrailId }
   /** A move in the lead in play (hunt/lead.ts). */
   | { type: 'hunt/lead'; action: LeadAction }
   /** He leaves the scene for the town; it waits for him. */

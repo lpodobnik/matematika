@@ -3,8 +3,11 @@
 // back as an `outcome`, which the store's layer applies.
 
 import type { AloneState } from '@/hunt/alone';
+import type { RuleGuardId } from '@/hunt/ids';
 import type { KnockState } from '@/hunt/knock';
 import { applyMove, goalMet, type ObjectMove, type ObjectState } from '@/hunt/objects';
+import type { CartsState, LevelState, LocksState, LoopState, WindowsState } from '@/hunt/one-offs';
+import type { GuardState } from '@/hunt/rule-guard';
 import {
   allGuidesTold,
   freshScene,
@@ -16,6 +19,7 @@ import {
   sceneEarns,
   sceneFrom,
   sceneGuide,
+  scenePartsFor,
 } from '@/hunt/scene';
 import type { SneakState } from '@/hunt/sneak';
 import type { LeadSpec, LineTask } from '@/hunt/spec';
@@ -50,6 +54,12 @@ export interface LeadPlay {
   sneak: SneakState | null;
   unmask: UnmaskState | null;
   alone: AloneState | null;
+  guard: GuardState | null;
+  carts: CartsState | null;
+  level: LevelState | null;
+  locks: LocksState | null;
+  windows: WindowsState | null;
+  loop: LoopState | null;
   /** Whether every door so far went without a struck line or an exact move. */
   clean: boolean;
 }
@@ -63,6 +73,10 @@ export interface LeadOutcome {
   lessonSeen?: boolean;
   doorKnocked?: { door: number; right: boolean };
   lineWritten?: string;
+  /** What he did with the forged clue. */
+  forged?: 'struck' | 'followed';
+  /** A rule guard has jammed. */
+  guardBeaten?: RuleGuardId;
   /** Something he has now been told, for good. */
   told?: string;
   /** The lead is done. His written lines go on its notebook page. */
@@ -87,7 +101,6 @@ export interface LeadFacts {
   told: readonly string[];
 }
 
-export const firstDoorParts = 2;
 export const knockGuideTold = guideTold('knock');
 const maxTokens = 40;
 
@@ -104,12 +117,29 @@ const blank = {
   sneak: null,
   unmask: null,
   alone: null,
+  guard: null,
+  carts: null,
+  level: null,
+  locks: null,
+  windows: null,
+  loop: null,
   clean: true,
 };
 
 /** The scene in play, whichever kind it is. */
 export function playedScene(play: LeadPlay): SceneState | null {
-  return play.knock ?? play.sneak ?? play.unmask ?? play.alone;
+  return (
+    play.knock ??
+    play.sneak ??
+    play.unmask ??
+    play.alone ??
+    play.guard ??
+    play.carts ??
+    play.level ??
+    play.locks ??
+    play.windows ??
+    play.loop
+  );
 }
 
 /** The play with this scene's state put back. */
@@ -117,9 +147,11 @@ function withScene(play: LeadPlay, spec: SceneSpec, state: SceneState): LeadPlay
   return { ...play, [spec.kind]: state };
 }
 
-/** The lead from the start, or from past the fix when the little one has already learnt it. */
-export function newLeadPlay(): LeadPlay {
-  return { ...blank, step: 'show', at: 0 };
+/** The lead from its first step: a knot has no showing, try or fix. */
+export function newLeadPlay(spec?: LeadSpec, facts?: LeadFacts): LeadPlay {
+  const fresh: LeadPlay = { ...blank, step: 'show', at: 0 };
+  if (!spec || !facts || spec.lesson.steps.length > 0) return fresh;
+  return spec.tries.length > 0 ? startTry(spec, 0, fresh) : startFix(spec, fresh, facts);
 }
 
 function startTry(spec: LeadSpec, at: number, base: LeadPlay): LeadPlay {
@@ -146,8 +178,16 @@ function startPlay(spec: LeadSpec, at: number, base: LeadPlay, facts: LeadFacts)
 }
 
 function startFix(spec: LeadSpec, base: LeadPlay, facts: LeadFacts): LeadPlay {
-  if (facts.taught.includes(spec.mistake.id)) return startPlay(spec, 0, base, facts);
+  if (!spec.mistake || facts.taught.includes(spec.mistake.id)) {
+    return spec.scenes.length > 0 ? startPlay(spec, 0, base, facts) : startWrite(spec, base);
+  }
   return { ...base, ...blank, clean: base.clean, step: 'fix', at: 0, fix: 'spot' };
+}
+
+/** The school form, if the lead has one; otherwise on to the thread. */
+function startWrite(spec: LeadSpec, base: LeadPlay): LeadPlay {
+  const step = spec.writeUp.length > 0 ? 'write' : 'thread';
+  return { ...base, ...blank, clean: base.clean, step, at: 0, written: [] };
 }
 
 /** The task's line as he has it so far. */
@@ -207,14 +247,20 @@ function inScene(spec: LeadSpec, play: LeadPlay, action: SceneAction): LeadResul
     const shown = (after as KnockState).shown;
     if (shown && !(before as KnockState).shown) {
       outcome.doorKnocked = { door: shown.door, right: false };
+      const named = (before as KnockState).lines.some(
+        (line) => !line.struck && line.clue === scene.forged,
+      );
+      if (scene.forged && named) outcome.forged = 'followed';
     }
+    if (after.opened && !before.opened && scene.forged) outcome.forged = 'struck';
     if (after.opened && !before.opened) outcome.doorKnocked = { door: scene.door, right: true };
   }
   // The guide is over, whenever that is: it isn't said twice.
   if (before.guide !== null && after.guide === null) outcome.told = guideTold(scene.kind);
   const earns = sceneEarns(scene, after);
   if (after.opened && !before.opened) {
-    if (earns) outcome.earned = { key: `${spec.id}:${play.at}`, parts: firstDoorParts };
+    if (earns) outcome.earned = { key: `${spec.id}:${play.at}`, parts: scenePartsFor(scene) };
+    if (scene.kind === 'guard') outcome.guardBeaten = scene.id;
   }
   const clean = play.clean && !(after.opened && !earns);
   return { play: { ...withScene(play, scene, after), clean }, outcome };
@@ -249,10 +295,7 @@ function next(spec: LeadSpec, play: LeadPlay, facts: LeadFacts): LeadResult {
       if (play.at + 1 < spec.scenes.length) {
         return { play: startPlay(spec, play.at + 1, play, facts), outcome: {} };
       }
-      return {
-        play: { ...play, ...blank, clean: play.clean, step: 'write', at: 0, written: [] },
-        outcome: {},
-      };
+      return { play: startWrite(spec, play), outcome: {} };
     }
     case 'write':
       return { play, outcome: {} };
@@ -275,7 +318,7 @@ function enter(spec: LeadSpec, play: LeadPlay): LeadResult {
       outcome: {},
     };
   }
-  if (play.step === 'fix' && play.fix === 'write') {
+  if (play.step === 'fix' && play.fix === 'write' && spec.mistake) {
     const result = enterLine(spec.mistake.write, play);
     if (!result.line) return { play: result.play, outcome: {} };
     return {
@@ -328,7 +371,7 @@ export function leadStep(
         const solved = task?.kind === 'object' && goalMet(object, task.goal);
         return { play: { ...play, object, solved }, outcome: {} };
       }
-      if (play.step === 'fix' && play.fix === 'show') {
+      if (play.step === 'fix' && play.fix === 'show' && spec.mistake) {
         return goalMet(object, spec.mistake.show.goal)
           ? { play: { ...play, object, fix: 'write' }, outcome: {} }
           : { play: { ...play, object }, outcome: {} };
@@ -358,7 +401,7 @@ export function leadStep(
     case 'enter':
       return enter(spec, play);
     case 'fix-tap':
-      if (play.step !== 'fix' || play.fix !== 'spot') return same;
+      if (play.step !== 'fix' || play.fix !== 'spot' || !spec.mistake) return same;
       if (action.line !== spec.mistake.wrong) {
         return { play: { ...play, nudged: true }, outcome: {} };
       }
@@ -413,6 +456,12 @@ export function leadPlayFrom(spec: LeadSpec, value: unknown): LeadPlay | null {
     sneak: null,
     unmask: null,
     alone: null,
+    guard: null,
+    carts: null,
+    level: null,
+    locks: null,
+    windows: null,
+    loop: null,
     clean: saved.clean !== false,
   };
   return scene && state ? withScene(base, scene, state) : base;

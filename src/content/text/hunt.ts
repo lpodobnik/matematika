@@ -9,6 +9,7 @@ import {
   l04Text,
   l06Text,
   sceneGuideText,
+  sealedText,
   trailText,
 } from '@/content/text/hunt-leads';
 
@@ -16,6 +17,7 @@ export const huntText = {
   leads: { l01: l01Text, l03: l03Text, l04: l04Text, l06: l06Text },
   knockGuide: knockGuideText,
   guide: sceneGuideText,
+  sealed: sealedText,
   ui: huntUiText,
   trail: trailText,
   gate: {

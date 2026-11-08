@@ -270,6 +270,18 @@ export const knockGuideText = {
   door: 'Sad svijetle samo jedna vrata. Dodirni ih i mali će automat pokucati.',
 } as const;
 
+/** The plain board a sealed lead gains. */
+export const sealedText = {
+  intro: 'Crna nit stigla je prije tebe. Automati čuvaju ulaz.',
+  caught: ['OPAŽENO. VRAĆENO NA POČETAK. HVALA.', 'OVO JE ZABILJEŽENO. POČNI ISPOČETKA. HVALA.'],
+  found: 'Prošao si.',
+  opened: 'Automati nisu ništa primijetili. Trag je još tu.',
+  hint: {
+    step: 'Čekaj da automat skrene iza ugla, pa kreni.',
+    move: 'Idi naprijed kad je mjesto ispred tebe prazno, a inače čekaj.',
+  },
+} as const;
+
 /** What each scene type's first-time guide says (story 9.7). */
 export const sceneGuideText = {
   knock: knockGuideText,
@@ -287,6 +299,33 @@ export const sceneGuideText = {
   alone: {
     intro: 'Ovuda može samo mali automat. Trag kaže kuda dalje.',
     pipe: 'Znak kaže što se ovdje bira. Izaberi broj iz traga.',
+  },
+  guard: {
+    intro: 'Automat izvršava pravilo s trake. Pravilo nije točno, a ti to možeš pokazati.',
+    pick: 'Izaberi pločicu za koju pravilo ne vrijedi.',
+    write: 'Sad napiši točan redak koji to pokazuje.',
+  },
+  carts: {
+    intro: 'Sanduci su na zemlji, a svaki se tovar slaže po deset.',
+    load: 'Dodirni kola da ih natovariš. Kad je sve na kolima, pritisni Kreni.',
+    write: 'Napiši što si upravo napravio.',
+  },
+  level: {
+    intro: 'Greda je nagnuta. Ravna je tek kad su svi stupci jednaki.',
+    move: 'Dodirni visoki stupac, pa niski: sanduk prelazi s jednog na drugi.',
+    write: 'Sad napiši račun.',
+  },
+  locks: {
+    intro: 'Brava se otvara samo ako zagrade stoje na pravom mjestu.',
+    tap: 'Dodirni broj gdje zagrada počinje, pa broj gdje završava.',
+  },
+  windows: {
+    intro: 'Prozori su numerirani redom, po katovima. Mali automat baca kuku.',
+    throw: 'Izračunaj koji je to prozor, pa ga dodirni.',
+  },
+  loop: {
+    intro: 'Automat s ključem hoda u krug. Kad zazvoni zvono, zaspi gdje se zatekne.',
+    write: 'Nakon cijelih krugova ostane još nekoliko koraka. Napiši dijeljenje s ostatkom.',
   },
 } as const;
 
@@ -315,6 +354,17 @@ export const huntUiText = {
   how: 'Kako to radi?',
   thread: 'Crvena nit stiže do mjesta.',
   wait: 'Čekaj',
+  moreRows: 'Još jedan red',
+  fewerRows: 'Jedan red manje',
+  moreColumns: 'Još jedan stupac',
+  fewerColumns: 'Jedan stupac manje',
+  rest: 'ost.',
+  ground: (crates: number) => `Na zemlji: ${crates}`,
+  noCarts: 'Nema kola',
+  go: 'Kreni',
+  lockTarget: 'Brava se otvara na:',
+  turn: 'Okreni se',
+  loopSay: 'Napiši dijeljenje. Ostatak kaže kod koje svjetiljke automat zaspi.',
   me: 'Ti',
   patrol: 'Automat',
   askMore: (n: number) => `Prvo postavi barem ${n} pitanja.`,

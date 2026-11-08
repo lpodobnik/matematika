@@ -58,42 +58,50 @@ const allRooms = [
   'r13',
 ];
 
-async function startLead(page: Page, lead: string) {
+async function startLead(page: Page, lead: string, hunt: Record<string, unknown> = {}) {
   await page.goto('/?dev');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await hook(page);
   await page.getByRole('button', { name: 'close', exact: true }).click();
-  await page.evaluate((rooms) => {
-    const g = window as unknown as Game;
-    const s = g.__s.getState();
-    sessionStorage.setItem(
-      'matematika:town:where',
-      JSON.stringify({ area: 'u1', at: { x: 200, y: 790 } }),
-    );
-    g.__d({
-      type: 'boot/start',
-      save: {
-        ...s.save,
-        character: { name: 'Ivo', look: 'look-1' },
-        progress: {
-          ...s.save.progress,
-          introSeen: true,
-          roomsDone: rooms,
-          told: rooms,
-          tools: ['balance', 'workshop', 'chain', 'drum'],
-          onMap: true,
+  await page.evaluate(
+    ({ rooms, hunt }) => {
+      const g = window as unknown as Game;
+      const s = g.__s.getState();
+      sessionStorage.setItem(
+        'matematika:town:where',
+        JSON.stringify({ area: 'u1', at: { x: 200, y: 790 } }),
+      );
+      g.__d({
+        type: 'boot/start',
+        save: {
+          ...s.save,
+          character: { name: 'Ivo', look: 'look-1' },
+          progress: {
+            ...s.save.progress,
+            introSeen: true,
+            roomsDone: rooms,
+            told: rooms,
+            tools: ['balance', 'workshop', 'chain', 'drum'],
+            onMap: true,
+          },
+          economy: {
+            ...s.save.economy,
+            lairs: { 'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' } },
+          },
+          hunt: {
+            ...s.save.hunt,
+            gateOpened: true,
+            beats: ['foundry', 'named', 'map-given'],
+            ...hunt,
+          },
+          companion: { name: 'Bip', looks: [], wearing: [], gear: [], taught: [] },
         },
-        economy: {
-          ...s.save.economy,
-          lairs: { 'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' } },
-        },
-        hunt: { ...s.save.hunt, gateOpened: true, beats: ['foundry', 'named', 'map-given'] },
-        companion: { name: 'Bip', looks: [], wearing: [], gear: [], taught: [] },
-      },
-      room: null,
-    });
-  }, allRooms);
+        room: null,
+      });
+    },
+    { rooms: allRooms, hunt },
+  );
   const panels = page.locator('.opening__panel');
   for (let i = 0; i < 4; i += 1) {
     if (await panels.count()) await panels.click();
@@ -218,7 +226,10 @@ test('Sneak: the tram line, being caught and a wrong stop included', async ({ pa
 
 test('Unmask: the newspaper, a wrong accusation included', async ({ page }) => {
   test.setTimeout(180_000);
-  await startLead(page, 'l06');
+  await startLead(page, 'l06', {
+    leadsDone: ['l01', 'l02', 'l03', 'l04'],
+    knotsDone: ['k1', 'w1'],
+  });
   await showing(page, 3);
   await page.locator('.number-line__stop').nth(1).click();
   await next(page);

@@ -13,6 +13,8 @@ import {
   litDoors,
 } from '@/hunt/knock';
 import { type LeadAction, type LeadPlay, playedScene } from '@/hunt/lead';
+import type { CartsState, LevelState, LocksState, LoopState, WindowsState } from '@/hunt/one-offs';
+import type { GuardState } from '@/hunt/rule-guard';
 import { sceneGuide } from '@/hunt/scene';
 import type { SneakState } from '@/hunt/sneak';
 import type { LeadSpec, LineTask } from '@/hunt/spec';
@@ -21,6 +23,14 @@ import { formatNumber, formatStatementLine } from '@/math/format';
 import { readLine, type SLineToken, type SToken } from '@/math/statement-tokens';
 import { HintControl } from '@/ui/common/HintButton';
 import { LittleOneArt } from '@/ui/hunt/LittleOne';
+import {
+  CartsBoardView,
+  GuardBoardView,
+  LevelBoardView,
+  LocksBoardView,
+  LoopBoardView,
+  WindowsBoardView,
+} from '@/ui/hunt/OneOffBoards';
 import { ObjectView } from '@/ui/hunt/objects/ObjectView';
 import { AloneBoardView, SneakBoardView, UnmaskBoardView } from '@/ui/hunt/SceneBoards';
 import { type HuntKey, StatementPad } from '@/ui/hunt/StatementPad';
@@ -90,6 +100,66 @@ export function LeadBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay;
               key={play.at}
               spec={scene}
               state={state as AloneState}
+              guide={guide}
+              act={act}
+            />
+          );
+        case 'guard':
+          return (
+            <GuardBoardView
+              key={play.at}
+              spec={scene}
+              state={state as GuardState}
+              guide={guide}
+              act={act}
+            />
+          );
+        case 'carts':
+          return (
+            <CartsBoardView
+              key={play.at}
+              spec={scene}
+              state={state as CartsState}
+              guide={guide}
+              act={act}
+            />
+          );
+        case 'level':
+          return (
+            <LevelBoardView
+              key={play.at}
+              spec={scene}
+              state={state as LevelState}
+              guide={guide}
+              act={act}
+            />
+          );
+        case 'locks':
+          return (
+            <LocksBoardView
+              key={play.at}
+              spec={scene}
+              state={state as LocksState}
+              guide={guide}
+              act={act}
+            />
+          );
+        case 'windows':
+          return (
+            <WindowsBoardView
+              key={play.at}
+              spec={scene}
+              state={state as WindowsState}
+              guide={guide}
+              act={act}
+            />
+          );
+        case 'loop':
+          return (
+            <LoopBoardView
+              key={play.at}
+              spec={scene}
+              state={state as LoopState}
               guide={guide}
               act={act}
             />
@@ -216,6 +286,7 @@ function TryBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: Ac
 /** The little one has written it wrong, in its own hand. */
 function FixBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: Act }) {
   const { mistake } = spec;
+  if (!mistake) return null;
   const say =
     play.fix === 'spot'
       ? play.nudged
@@ -405,6 +476,11 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
             </div>
           )}
         </header>
+        {spec.picture && (
+          <div className="knock__picture">
+            <ObjectView object={spec.picture} />
+          </div>
+        )}
         <div
           ref={row}
           className="doors"

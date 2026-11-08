@@ -26,6 +26,7 @@ import type { LairId } from '@/fight/types';
 import { type GateState, gateState } from '@/hunt/gate';
 import type { LeadId } from '@/hunt/ids';
 import { partTwoOn } from '@/hunt/switch';
+import { openTrail, type TrailId, threadTarget } from '@/hunt/trail';
 import { playersHash } from '@/lib/player';
 import { isRoomId } from '@/room/resume';
 import type { RoomId } from '@/room/types';
@@ -126,7 +127,10 @@ export function TownScreen() {
       onGate={() => dispatch({ type: 'hunt/gate-open' })}
       onMapGiven={() => dispatch({ type: 'hunt/map-given' })}
       onLead={(lead) => dispatch({ type: 'hunt/lead-start', lead })}
-      leadsDone={partTwo ? hunt.leadsDone : []}
+      leadsDone={partTwo ? [...hunt.leadsDone, ...hunt.knotsDone] : []}
+      open={partTwo ? openTrail(hunt) : []}
+      sealed={hunt.sealed}
+      threadHeading={partTwo ? threadTarget(hunt) : null}
     />
   );
 }
@@ -153,8 +157,12 @@ interface BoardProps {
   hasLittleOne?: boolean;
   onGate?(): void;
   onMapGiven?(): void;
-  onLead?(lead: LeadId): void;
-  leadsDone?: readonly LeadId[];
+  onLead?(lead: TrailId): void;
+  /** What's done in the hunt, and what's open. */
+  leadsDone?: readonly TrailId[];
+  open?: readonly TrailId[];
+  sealed?: readonly LeadId[];
+  threadHeading?: LeadId | null;
 }
 
 /** What happens when he reaches where he was walking to. */
@@ -205,6 +213,9 @@ export function TownBoard({
   onMapGiven,
   onLead,
   leadsDone = [],
+  open = [],
+  sealed = [],
+  threadHeading = null,
 }: BoardProps) {
   // Rooms done and the hunt's marks: what ways and people wait on.
   const reached = useMemo<readonly string[]>(() => [...done, ...marks], [done, marks]);
@@ -412,7 +423,7 @@ export function TownBoard({
   );
 
   // A pin on the trail map: to the lead's street, and he walks up to it.
-  const pickLead = (lead: LeadId) => {
+  const pickLead = (lead: TrailId) => {
     setShowMap(false);
     const to = Object.values(town.areas).find((candidate) =>
       candidate.spots?.some((spot) => spot.lead === lead),
@@ -467,7 +478,7 @@ export function TownBoard({
   // All its machines running, the whole street is in colour, as the room's backdrop shows it.
   const solvedSpots = (area.spots ?? []).filter((spot) => leadsDone.includes(spot.lead));
   const openSpots = (area.spots ?? []).filter(
-    (spot) => partTwo && reached.includes('map') && !leadsDone.includes(spot.lead),
+    (spot) => partTwo && reached.includes('map') && open.includes(spot.lead),
   );
   const colourMask = streetRestored(areaId, done)
     ? 'linear-gradient(#000, #000)'
@@ -858,7 +869,14 @@ export function TownBoard({
       </main>
       {showMap &&
         (area.spots && reached.includes('map') ? (
-          <TrailMap done={leadsDone} onPick={pickLead} onClose={() => setShowMap(false)} />
+          <TrailMap
+            done={leadsDone}
+            open={open}
+            sealed={sealed}
+            target={threadHeading}
+            onPick={pickLead}
+            onClose={() => setShowMap(false)}
+          />
         ) : (
           <MapOverlay onClose={() => setShowMap(false)} onPick={pick} />
         ))}

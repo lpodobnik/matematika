@@ -4,9 +4,10 @@ import { hr } from '@/content/text/hr';
 import { trailText } from '@/content/text/hunt-leads';
 import { trailPins, trailStart } from '@/content/trail';
 import type { LeadId } from '@/hunt/ids';
+import type { TrailId } from '@/hunt/trail';
 
 /** How far along the thread is: through the foundry, then what he has solved, in that order. */
-export function threadPoints(done: readonly LeadId[]): { x: number; y: number }[] {
+export function threadPoints(done: readonly TrailId[]): { x: number; y: number }[] {
   const pins = done.flatMap((lead) => {
     const pin = trailPins.find((candidate) => candidate.lead === lead);
     return pin ? [{ x: pin.x, y: pin.y }] : [];
@@ -20,11 +21,19 @@ export function threadPoints(done: readonly LeadId[]): { x: number; y: number }[
  */
 export function TrailMap({
   done,
+  open,
+  sealed = [],
+  target = null,
   onPick,
   onClose,
 }: {
-  done: readonly LeadId[];
-  onPick(lead: LeadId): void;
+  done: readonly TrailId[];
+  /** What he can go to now. Pins for what's still ahead don't show. */
+  open: readonly TrailId[];
+  sealed?: readonly LeadId[];
+  /** Where the black thread is heading. */
+  target?: LeadId | null;
+  onPick(lead: TrailId): void;
   onClose(): void;
 }) {
   useEffect(() => {
@@ -54,26 +63,30 @@ export function TrailMap({
           style={{ left: `${trailStart.x}%`, top: `${trailStart.y}%` }}
           aria-hidden="true"
         />
-        {trailPins.map((pin) => {
-          const solved = done.includes(pin.lead);
-          return (
-            <button
-              key={pin.lead}
-              type="button"
-              className="trail__pin"
-              data-lead={pin.lead}
-              data-done={solved}
-              disabled={solved}
-              style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-              onClick={() => onPick(pin.lead)}
-            >
-              <span className="trail__needle" aria-hidden="true" />
-              <span className="trail__name">
-                {trailText.leads[pin.lead as keyof typeof trailText.leads]}
-              </span>
-            </button>
-          );
-        })}
+        {trailPins
+          .filter((pin) => done.includes(pin.lead) || open.includes(pin.lead))
+          .map((pin) => {
+            const solved = done.includes(pin.lead);
+            return (
+              <button
+                key={pin.lead}
+                type="button"
+                className="trail__pin"
+                data-lead={pin.lead}
+                data-done={solved}
+                data-sealed={(sealed as readonly string[]).includes(pin.lead)}
+                data-target={target === pin.lead}
+                disabled={solved}
+                style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                onClick={() => onPick(pin.lead)}
+              >
+                <span className="trail__needle" aria-hidden="true" />
+                <span className="trail__name">
+                  {trailText.leads[pin.lead as keyof typeof trailText.leads]}
+                </span>
+              </button>
+            );
+          })}
       </div>
       <button type="button" className="town__close" onClick={onClose}>
         {hr.town.close}

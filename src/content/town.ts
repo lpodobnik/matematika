@@ -6,7 +6,7 @@
 import type { NodeId } from '@/city/types';
 import type { Ground, Point } from '@/city/walk';
 import type { LairId } from '@/fight/types';
-import type { HuntMark, LeadId } from '@/hunt/ids';
+import type { HuntMark, KnotId, LeadId } from '@/hunt/ids';
 import type { RoomId } from '@/room/types';
 
 export type PersonId = 'penkala' | 'nikola' | 'faust' | 'milka' | 'vucetic' | 'zagorka';
@@ -88,7 +88,7 @@ export type SceneId =
 
 /** Where a lead starts in a street (part 2): a tap area, and where he stands for it. */
 export interface TownSpot {
-  lead: LeadId;
+  lead: LeadId | KnotId;
   stand: Point;
   area: Rect;
   marker: Point;

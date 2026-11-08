@@ -31,6 +31,62 @@ import {
   newKnock,
 } from '@/hunt/knock';
 import {
+  type CartsSpec,
+  type CartsState,
+  cartsDismiss,
+  cartsEnter,
+  cartsFrom,
+  cartsGo,
+  cartsLoad,
+  cartsUnload,
+  type LevelSpec,
+  type LevelState,
+  type LocksSpec,
+  type LocksState,
+  type LoopSpec,
+  type LoopState,
+  levelDismiss,
+  levelEnter,
+  levelFrom,
+  levelTap,
+  locksDismiss,
+  locksFrom,
+  locksTap,
+  loopDismiss,
+  loopEnter,
+  loopFrom,
+  newCarts,
+  newLevel,
+  newLocks,
+  newLoop,
+  newWindows,
+  oneOffDelete,
+  oneOffEarns,
+  oneOffHint,
+  oneOffIdle,
+  oneOffType,
+  type WindowsSpec,
+  type WindowsState,
+  windowsDismiss,
+  windowsFrom,
+  windowsThrow,
+  windowsTurn,
+} from '@/hunt/one-offs';
+import {
+  type GuardSpec,
+  type GuardState,
+  guardDelete,
+  guardDismiss,
+  guardEarns,
+  guardEnter,
+  guardFrom,
+  guardHint,
+  guardIdle,
+  guardPick,
+  guardType,
+  newGuard,
+} from '@/hunt/rule-guard';
+import {
   lineStartOf,
   newSneak,
   type SneakSpec,
@@ -62,9 +118,29 @@ import {
 } from '@/hunt/unmask';
 import type { SToken } from '@/math/statement-tokens';
 
-export type SceneSpec = KnockSpec | SneakSpec | UnmaskSpec | AloneSpec;
+export type SceneSpec =
+  | KnockSpec
+  | SneakSpec
+  | UnmaskSpec
+  | AloneSpec
+  | GuardSpec
+  | CartsSpec
+  | LevelSpec
+  | LocksSpec
+  | WindowsSpec
+  | LoopSpec;
 export type SceneKind = SceneSpec['kind'];
-export type SceneState = KnockState | SneakState | UnmaskState | AloneState;
+export type SceneState =
+  | KnockState
+  | SneakState
+  | UnmaskState
+  | AloneState
+  | GuardState
+  | CartsState
+  | LevelState
+  | LocksState
+  | WindowsState
+  | LoopState;
 
 export type SceneAction =
   | { kind: 'type'; token: SToken }
@@ -78,6 +154,14 @@ export type SceneAction =
   | { kind: 'ask'; card: string }
   | { kind: 'accuse'; suspect: string }
   | { kind: 'pipe'; pipe: number }
+  | { kind: 'tile'; tile: string }
+  | { kind: 'cart'; cart: number }
+  | { kind: 'uncart'; cart: number }
+  | { kind: 'go' }
+  | { kind: 'stack'; stack: number }
+  | { kind: 'number'; number: number }
+  | { kind: 'turn' }
+  | { kind: 'window'; number: number }
   | { kind: 'dismiss' }
   | { kind: 'idle' }
   | { kind: 'hint' };
@@ -94,6 +178,18 @@ export function freshScene(spec: SceneSpec, guided: boolean): SceneState {
       return newUnmask(guided);
     case 'alone':
       return newAlone(guided);
+    case 'guard':
+      return newGuard(guided);
+    case 'carts':
+      return newCarts(spec, guided);
+    case 'level':
+      return newLevel(spec, guided);
+    case 'locks':
+      return newLocks(guided);
+    case 'windows':
+      return newWindows(guided);
+    case 'loop':
+      return newLoop(guided);
   }
 }
 
@@ -107,6 +203,18 @@ export function sceneFrom(spec: SceneSpec, value: unknown): SceneState | null {
       return unmaskFrom(spec, value);
     case 'alone':
       return aloneFrom(spec, value);
+    case 'guard':
+      return guardFrom(spec, value);
+    case 'carts':
+      return cartsFrom(spec, value);
+    case 'level':
+      return levelFrom(spec, value);
+    case 'locks':
+      return locksFrom(spec, value);
+    case 'windows':
+      return windowsFrom(spec, value);
+    case 'loop':
+      return loopFrom(spec, value);
   }
 }
 
@@ -196,6 +304,111 @@ function aloneAct(spec: AloneSpec, state: AloneState, action: SceneAction): Alon
   }
 }
 
+function guardAct(spec: GuardSpec, state: GuardState, action: SceneAction): GuardState {
+  switch (action.kind) {
+    case 'tile':
+      return guardPick(spec, state, action.tile);
+    case 'type':
+      return guardType(state, action.token);
+    case 'delete':
+      return guardDelete(state);
+    case 'enter':
+      return guardEnter(spec, state);
+    case 'dismiss':
+      return guardDismiss(state);
+    case 'idle':
+      return guardIdle(state);
+    case 'hint':
+      return guardHint(state);
+    default:
+      return state;
+  }
+}
+
+/** What every one-off shares: typing, help and the hint. */
+function oneOffCommon<T extends CartsState | LevelState | LocksState | WindowsState | LoopState>(
+  state: T,
+  action: SceneAction,
+): T {
+  switch (action.kind) {
+    case 'type':
+      return oneOffType(state, action.token);
+    case 'delete':
+      return oneOffDelete(state);
+    case 'idle':
+      return oneOffIdle(state);
+    case 'hint':
+      return oneOffHint(state);
+    default:
+      return state;
+  }
+}
+
+function cartsAct(spec: CartsSpec, state: CartsState, action: SceneAction): CartsState {
+  switch (action.kind) {
+    case 'cart':
+      return cartsLoad(spec, state, action.cart);
+    case 'uncart':
+      return cartsUnload(spec, state, action.cart);
+    case 'go':
+      return cartsGo(spec, state);
+    case 'enter':
+      return cartsEnter(spec, state);
+    case 'dismiss':
+      return cartsDismiss(spec, state);
+    default:
+      return oneOffCommon(state, action);
+  }
+}
+
+function levelAct(spec: LevelSpec, state: LevelState, action: SceneAction): LevelState {
+  switch (action.kind) {
+    case 'stack':
+      return levelTap(spec, state, action.stack);
+    case 'enter':
+      return levelEnter(spec, state);
+    case 'dismiss':
+      return levelDismiss(state);
+    default:
+      return oneOffCommon(state, action);
+  }
+}
+
+function locksAct(spec: LocksSpec, state: LocksState, action: SceneAction): LocksState {
+  switch (action.kind) {
+    case 'number':
+      return locksTap(spec, state, action.number);
+    case 'dismiss':
+      return locksDismiss(state);
+    default:
+      return oneOffCommon(state, action);
+  }
+}
+
+function windowsAct(spec: WindowsSpec, state: WindowsState, action: SceneAction): WindowsState {
+  switch (action.kind) {
+    case 'turn':
+      return windowsTurn(state);
+    case 'window':
+      return windowsThrow(spec, state, action.number);
+    case 'dismiss':
+      return windowsDismiss(spec, state);
+    default:
+      return oneOffCommon(state, action);
+  }
+}
+
+function loopAct(spec: LoopSpec, state: LoopState, action: SceneAction): LoopState {
+  switch (action.kind) {
+    case 'enter':
+      return loopEnter(spec, state);
+    case 'dismiss':
+      return loopDismiss(spec, state);
+    default:
+      return oneOffCommon(state, action);
+  }
+}
+
 /** One move in the scene. What isn't legal comes back as the same state. */
 export function sceneAct(spec: SceneSpec, state: SceneState, action: SceneAction): SceneState {
   switch (spec.kind) {
@@ -207,8 +420,23 @@ export function sceneAct(spec: SceneSpec, state: SceneState, action: SceneAction
       return unmaskAct(spec, state as UnmaskState, action);
     case 'alone':
       return aloneAct(spec, state as AloneState, action);
+    case 'guard':
+      return guardAct(spec, state as GuardState, action);
+    case 'carts':
+      return cartsAct(spec, state as CartsState, action);
+    case 'level':
+      return levelAct(spec, state as LevelState, action);
+    case 'locks':
+      return locksAct(spec, state as LocksState, action);
+    case 'windows':
+      return windowsAct(spec, state as WindowsState, action);
+    case 'loop':
+      return loopAct(spec, state as LoopState, action);
   }
 }
+
+/** What the first try is worth: a guard is a bigger thing than a door. */
+export const scenePartsFor = (spec: SceneSpec) => (spec.kind === 'guard' ? 5 : 2);
 
 /** Whether the door earns its first-try parts. */
 export function sceneEarns(spec: SceneSpec, state: SceneState): boolean {
@@ -221,12 +449,27 @@ export function sceneEarns(spec: SceneSpec, state: SceneState): boolean {
       return unmaskEarns(state as UnmaskState);
     case 'alone':
       return aloneEarns(state as AloneState);
+    case 'guard':
+      return guardEarns(state as GuardState);
+    default:
+      return oneOffEarns(state as CartsState);
   }
 }
 
 export const guideTold = (kind: SceneKind) => `guide:${kind}`;
 export const allGuidesTold: readonly string[] = (
-  ['knock', 'sneak', 'unmask', 'alone'] as const
+  [
+    'knock',
+    'sneak',
+    'unmask',
+    'alone',
+    'guard',
+    'carts',
+    'level',
+    'locks',
+    'windows',
+    'loop',
+  ] as const
 ).map(guideTold);
 
 /** What the first time's guide says now, and the one move it lets through. */
@@ -271,5 +514,31 @@ export function sceneGuide(spec: SceneSpec, state: SceneState): SceneGuide | nul
       if ((state as AloneState).plate) return null;
       return { say: 'pipe', allows: ['pipe'] };
     }
+    case 'guard': {
+      const guard = state as GuardState;
+      if (guard.said) return null;
+      return guard.phase === 'pick'
+        ? { say: 'pick', allows: ['tile'] }
+        : { say: 'write', allows: writing };
+    }
+    case 'carts':
+      if ((state as CartsState).notice) return null;
+      return (state as CartsState).phase === 'write'
+        ? { say: 'write', allows: writing }
+        : { say: 'load', allows: ['cart', 'uncart', 'go'] };
+    case 'level':
+      if ((state as LevelState).notice) return null;
+      return (state as LevelState).phase === 'write'
+        ? { say: 'write', allows: writing }
+        : { say: 'move', allows: ['stack'] };
+    case 'locks':
+      if ((state as LocksState).notice) return null;
+      return { say: 'tap', allows: ['number'] };
+    case 'windows':
+      if ((state as WindowsState).notice) return null;
+      return { say: 'throw', allows: ['window', 'turn'] };
+    case 'loop':
+      if ((state as LoopState).notice) return null;
+      return { say: 'write', allows: writing };
   }
 }
