@@ -1,6 +1,8 @@
 // Every Croatian string in the game. Placeholders until the final text in epic 6,
 // which also avoids gendered verb forms.
 
+import { huntText } from '@/content/text/hunt';
+
 /**
  * "s" before a number, or "sa" where its word starts with s or š, as Croatian says it: the
  * splitter's parts run 2–9, so only 6 (šest) and 7 (sedam) take "sa".
@@ -471,6 +473,7 @@ export const hr = {
       market: 'Tržnica',
       wheel: 'Kotač',
       hill: 'Pod tornjem',
+      u1: huntText.sign.u1,
     },
     close: 'Zatvori',
     /** For screen readers: the town as a whole, and a tap on the ground. */
@@ -559,6 +562,7 @@ export const hr = {
         ],
         after: ['Vozi! Ovo ide na prvu stranicu.', 'Kako to radi? Reci polako, da zapišem.'],
       },
+      u1Vucetic: huntText.vucetic,
       wheelZagorka: {
         before: [
           'Veliki kotač stoji. Ljudi kažu da je uklet.',
@@ -1257,4 +1261,5 @@ export const hr = {
     /** Story 4.5: while the story waits, a line that isn't the story as it is told. */
     story: 'Prvo zapiši priču onako kako je ispričana.',
   },
+  hunt: huntText,
 } as const;

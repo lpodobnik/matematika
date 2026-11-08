@@ -31,6 +31,7 @@ import square from '@/ui/town/art/square.webp';
 import squareGateOpen from '@/ui/town/art/square-gate-open.webp';
 import tram from '@/ui/town/art/tram.webp';
 import tramRunning from '@/ui/town/art/tram-running.webp';
+import u1 from '@/ui/town/art/u1.webp';
 import vucetic from '@/ui/town/art/vucetic.webp';
 import wheel from '@/ui/town/art/wheel.webp';
 import wheelTurning from '@/ui/town/art/wheel-turning.webp';
@@ -96,6 +97,7 @@ const pictures: Record<AreaId, { base: string; running?: { room: RoomId; src: st
   market: { base: market, running: { room: 'r10', src: marketLevel } },
   wheel: { base: wheel, running: { room: 'r11', src: wheelTurning } },
   hill: { base: hill, running: { room: 'r13', src: hillRunning } },
+  u1: { base: u1 },
 };
 
 /** An area's picture as it stands now. */
@@ -112,9 +114,10 @@ export function areaChange(area: AreaId): { room: RoomId; before: string } | nul
 
 /** Every town picture, for the loading screen to fetch before the game starts. */
 export const townImages: readonly string[] = [
-  ...Object.values(pictures).flatMap(({ base, running }) =>
-    running ? [base, running.src] : [base],
-  ),
+  // Part 2's streets load when he gets there, so launching takes no longer than it did.
+  ...Object.entries(pictures)
+    .filter(([area]) => !area.startsWith('u'))
+    .flatMap(([, { base, running }]) => (running ? [base, running.src] : [base])),
   automaton20,
   ...Object.values(looks),
   ...Object.values(personArt),

@@ -1,4 +1,4 @@
-images generated: 82/100
+images generated: 84/100
 
 # Art credits
 
@@ -1428,4 +1428,36 @@ nothing. Each names its source and the exact command.
 
   ```text
   Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. Remove every round ball and every chain hanging under the bridge deck, and the big round pulley and the chain beside the stone pier, with their shadows and reflections. Under the deck there is now only empty air and the river below. The bridge deck stays level and complete, resting on its piers, an ordinary finished bridge. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 83. `tests/town-u1.t83.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 8101
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 64, 277 KB
+- References: `town-square.t33.png`
+- Style block: v4
+- Date: 2026-11-08
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Part 2, the first street of the upper district (story 7.5), with the square as style reference.
+- Prompt:
+
+  ```text
+  Match the drawing style of image 1 exactly: the same ink linework, hatching, watercolour washes, palette and isometric camera. Do not copy its subject. A quiet shuttered residential street in the upper district of a gear-and-steam city, as an area of an adventure game. A long terrace of narrow plastered houses runs along the back of the picture, each with a closed front door, closed green shutters and terracotta roofs. A second, shorter row of houses stands on the right. Iron street lamps, a small stone fountain with no water, a tall iron lift tower at the far right. A wide cobbled street crosses the picture from the bottom-left corner to the upper right. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The scene fills the whole picture edge to edge. The cobbled ground is large open walkable space across the lower half. Everything is at one scale: a house is about a sixth of the picture's width. Everything is still: no people, no animals, no smoke, no steam, no flowing water; every door and shutter closed. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 84. `tests/panel-foundry.t84.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 8102
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 70, 288 KB
+- References: `town-square.t33.png`
+- Style block: v4
+- Date: 2026-11-08
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Part 2's opening panel (story 7.3): the empty foundry, with the square as style reference.
+- Prompt:
+
+  ```text
+  Match the drawing style of image 1 exactly: the same ink linework, hatching, watercolour washes and palette. Do not copy its subject or camera. The inside of a cold, empty foundry in a gear-and-steam city. Tall brick walls, a dead furnace, iron rails on the floor, great wooden doors standing open at the back with daylight coming through. In the foreground a small workbench with tools hung up neatly on the wall above it, a plain wooden chair pushed back, and a single cup on the bench. A wide view from about the height of a person, looking across the room. The scene fills the whole picture edge to edge. The bench, chair and cup are clear and easy to see in the lower middle of the picture. Everything is still and abandoned: no people, no animals, no smoke, no steam, no fire. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
   ```

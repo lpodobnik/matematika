@@ -6,6 +6,7 @@
 import type { NodeId } from '@/city/types';
 import type { Ground, Point } from '@/city/walk';
 import type { LairId } from '@/fight/types';
+import type { HuntMark } from '@/hunt/ids';
 import type { RoomId } from '@/room/types';
 
 export type PersonId = 'penkala' | 'nikola' | 'faust' | 'milka' | 'vucetic' | 'zagorka';
@@ -20,7 +21,8 @@ export type AreaId =
   | 'lift'
   | 'market'
   | 'wheel'
-  | 'hill';
+  | 'hill'
+  | 'u1';
 
 /** A tap area over an illustration, in town units. */
 export interface Rect {
@@ -45,8 +47,8 @@ export interface TownPlace {
 /** A way into another area, open once a room is done. */
 export interface TownExit {
   to: AreaId;
-  /** The room whose restart opens it. */
-  opensWith: RoomId;
+  /** The room whose restart opens it, or what in the hunt does. */
+  opensWith: RoomId | HuntMark;
   stand: Point;
   area: Rect;
   /** Where he comes out in the other area. */
@@ -59,12 +61,12 @@ export interface TownPerson {
   at: Point;
   /** He faces this way when standing: 1 right, -1 left. */
   facing: 1 | -1;
-  /** Shown once this room is done; always when null. */
-  after: RoomId | null;
-  /** The room whose restart changes what the person says. */
-  changesWith: RoomId;
+  /** Shown once this room is done, or this mark of the hunt reached; always when null. */
+  after: RoomId | HuntMark | null;
+  /** The room or mark that changes what the person says. */
+  changesWith: RoomId | HuntMark;
   /** Gone once this room is done (they have moved on to another street). */
-  until?: RoomId;
+  until?: RoomId | HuntMark;
   /** Lines of their own for this street (hr.town.scenes), in place of their usual ones. */
   scene?: SceneId;
 }
@@ -81,7 +83,8 @@ export type SceneId =
   | 'millMilka'
   | 'bridgeVucetic'
   | 'liftZagorka'
-  | 'wheelZagorka';
+  | 'wheelZagorka'
+  | 'u1Vucetic';
 
 export interface TownArea {
   id: AreaId;
@@ -413,6 +416,8 @@ const bridge: TownArea = {
       facing: 1,
       after: 'r03',
       changesWith: 'r05',
+      // Part 2: he has gone up to the foundry's door.
+      until: 'gate',
       scene: 'bridgeVucetic',
     },
   ],
@@ -478,6 +483,15 @@ const yard: TownArea = {
     },
   ],
   exits: [
+    {
+      // Through the foundry's great doors, once he has opened them (part 2).
+      to: 'u1',
+      opensWith: 'gate',
+      stand: { x: 700, y: 480 },
+      area: { x: 600, y: 0, w: 260, h: 250 },
+      arrive: { x: 200, y: 790 },
+      marker: { x: 730, y: 20 },
+    },
     {
       to: 'mill',
       opensWith: 'r04',
@@ -827,13 +841,69 @@ const hill: TownArea = {
   lamps: [],
 };
 
+// The first street of the upper district, behind the foundry (part 2, story 7.5). The cobbles
+// lie below the terrace that crosses the picture; the fountain, the lift tower, the lamps and
+// the stone post stand on them.
+const u1: TownArea = {
+  id: 'u1',
+  ground: ground(
+    [
+      { x: 0, y: 810 },
+      { x: 280, y: 665 },
+      { x: 430, y: 590 },
+      { x: 640, y: 490 },
+      { x: 860, y: 400 },
+      { x: 1040, y: 310 },
+      { x: 1180, y: 250 },
+      { x: 1400, y: 170 },
+      { x: 1600, y: 280 },
+      { x: 1600, y: 1000 },
+      { x: 0, y: 1000 },
+    ],
+    [
+      { x: 775, y: 690, rx: 150, ry: 90 },
+      { x: 1480, y: 680, rx: 110, ry: 60 },
+      { x: 1178, y: 400, rx: 40, ry: 24 },
+      { x: 1315, y: 330, rx: 40, ry: 24 },
+      { x: 250, y: 915, rx: 70, ry: 40 },
+    ],
+  ),
+  arrive: { x: 200, y: 790 },
+  places: [],
+  exits: [
+    {
+      // Back through the foundry, to the yard.
+      to: 'yard',
+      opensWith: 'gate',
+      stand: { x: 90, y: 860 },
+      area: { x: 0, y: 830, w: 170, h: 170 },
+      arrive: { x: 700, y: 480 },
+      marker: { x: 110, y: 830 },
+    },
+  ],
+  people: [
+    // He arrives at the foundry's door, as thorough as ever, and hands over the map.
+    {
+      id: 'vucetic',
+      at: { x: 480, y: 720 },
+      facing: -1,
+      after: 'gate',
+      changesWith: 'map',
+      scene: 'u1Vucetic',
+    },
+  ],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
 export const town = {
   width: 1600,
   height: 1000,
   /** His height, in town units; people and the automaton scale from it. */
   figure: 175,
   start: 'square' as AreaId,
-  areas: { square, canal, mill, bridge, yard, tram, lift, market, wheel, hill } as Record<
+  areas: { square, canal, mill, bridge, yard, tram, lift, market, wheel, hill, u1 } as Record<
     AreaId,
     TownArea
   >,

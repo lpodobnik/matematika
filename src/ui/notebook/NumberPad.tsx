@@ -1,6 +1,7 @@
 import { hr } from '@/content/text/hr';
 import { keyWorks, type NotebookKey } from '@/room/notebook';
-import { keyKind, PAD_ROWS, primaryPress, tokenLabel } from '@/ui/notebook/pad-keys';
+import { Pad } from '@/ui/notebook/Pad';
+import { keyKind, PAD_ROWS, tokenLabel } from '@/ui/notebook/pad-keys';
 
 interface Props {
   /** Whether the notebook takes keys now; otherwise the keys show as off. */
@@ -19,23 +20,17 @@ interface Props {
  */
 export function NumberPad({ writes, blank, pulse = null, onKey }: Props) {
   return (
-    <div className="pad">
-      {PAD_ROWS.flat().map((key) => (
-        <button
-          key={key}
-          type="button"
-          tabIndex={-1}
-          className={`pad__key pad__key--${keyKind(key)}`}
-          data-key={key}
-          disabled={!keyWorks(key, writes, blank)}
-          data-pulse={key === pulse || undefined}
-          aria-label={keyName(key)}
-          onPointerDown={(event) => primaryPress(event, () => onKey(key))}
-        >
-          <KeyFace pad={key} />
-        </button>
-      ))}
-    </div>
+    <Pad
+      keys={PAD_ROWS.flat().map((key) => ({
+        key,
+        kind: keyKind(key),
+        label: keyName(key),
+        face: <KeyFace pad={key} />,
+        disabled: !keyWorks(key, writes, blank),
+        pulse: key === pulse,
+      }))}
+      onKey={onKey}
+    />
   );
 }
 

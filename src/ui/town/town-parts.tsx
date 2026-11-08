@@ -8,7 +8,7 @@ import { MapScreen } from '@/ui/map/MapScreen';
 import { pct, rectStyle } from '@/ui/town/town-geometry';
 
 export type Bubble = {
-  who: PersonId | 'self';
+  who: PersonId | 'self' | 'little';
   at: Point;
   lines: readonly string[];
   line: number;

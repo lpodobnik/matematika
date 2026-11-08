@@ -17,6 +17,7 @@ import { RoomGuide } from '@/ui/common/RoomGuide';
 import { FightScreen } from '@/ui/fight/FightScreen';
 import { FriendScreen } from '@/ui/friend/FriendScreen';
 import { GiveUpButton } from '@/ui/friend/GiveUpButton';
+import { HuntScreen } from '@/ui/hunt/HuntScreen';
 import { NamingScreen } from '@/ui/naming/NamingScreen';
 import { Notebook } from '@/ui/notebook/Notebook';
 import { OpeningScreen } from '@/ui/opening/OpeningScreen';
@@ -68,6 +69,7 @@ function ScreenInPlay({ screen, loaded }: { screen: Screen; loaded: number }) {
   if (screen === 'shop') return <ShopScreen />;
   if (screen === 'workshop') return <WorkshopScreen />;
   if (screen === 'friend') return <FriendScreen />;
+  if (screen === 'hunt') return <HuntScreen />;
   return <RoomScreen />;
 }
 

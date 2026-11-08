@@ -29,7 +29,9 @@ describe('the map screen (story 2.2)', () => {
   it('draws one place per street, with only the streets he can reach enabled', () => {
     const html = board(['r01']);
     const all = buttons(html);
-    expect(all).toHaveLength(Object.keys(town.areas).length);
+    // Part 2's streets have no machine, so no place on this map.
+    const streets = Object.values(town.areas).filter((area) => area.places.length > 0);
+    expect(all).toHaveLength(streets.length);
     expect(all.filter((button) => !button.includes('disabled'))).toHaveLength(1);
     expect(html).toContain(hr.map.title);
   });

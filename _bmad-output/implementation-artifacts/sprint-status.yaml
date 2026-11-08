@@ -118,15 +118,15 @@ development_status:
   epic-6-retrospective: optional
 
   # Part 2: The Trail. Stays off behind tuning.part2.live until Luka opens it.
-  epic-7: in-progress
-  7-1-split-the-town-screen: ready-for-dev
-  7-2-the-switch-and-the-save: ready-for-dev
-  7-3-the-gate: ready-for-dev
-  7-4-the-little-one: ready-for-dev
-  7-5-the-first-new-street-and-vucetic: ready-for-dev
-  7-6-play-epic-7-on-screen: ready-for-dev
+  epic-7: done
+  7-1-split-the-town-screen: done
+  7-2-the-switch-and-the-save: done
+  7-3-the-gate: done
+  7-4-the-little-one: done
+  7-5-the-first-new-street-and-vucetic: done
+  7-6-play-epic-7-on-screen: done
 
-  epic-8: backlog
+  epic-8: in-progress
   8-1-the-statement-language: ready-for-dev
   8-2-leads-as-data-and-the-hunt-reducer: ready-for-dev
   8-3-the-trail-map: ready-for-dev

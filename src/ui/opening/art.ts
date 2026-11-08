@@ -2,6 +2,7 @@
 // running, the Book, the empty workshop (greyed: the machines have stopped), the notebook.
 
 import firstAutomaton from '@/ui/opening/art/first-automaton.webp';
+import foundry from '@/ui/opening/art/foundry.webp';
 import logbook1 from '@/ui/opening/art/logbook-1.webp';
 import logbook2 from '@/ui/opening/art/logbook-2.webp';
 import outro1 from '@/ui/opening/art/outro-1.webp';
@@ -33,6 +34,14 @@ export const outroArt: readonly PanelArt[] = [
   plain(outro2),
   plain(outro3),
   plain(outro4),
+];
+
+/** The empty foundry (story 7.3): the cold room, then the bench and cup up close. */
+export const foundryArt: readonly PanelArt[] = [
+  plain(foundry),
+  { src: foundry, focus: '60% 90%', grey: false },
+  { src: foundry, focus: '60% 90%', grey: false },
+  plain(foundry),
 ];
 
 export const openingArt: readonly PanelArt[] = [

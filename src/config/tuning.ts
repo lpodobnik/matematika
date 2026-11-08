@@ -8,6 +8,8 @@ export const tuning = {
    * deliberate change of two lines.
    */
   part2: { live: false },
+  /** The little one following him (city/follow.ts): its gap, top speed and trail spacing. */
+  follow: { gap: 96, speed: 400, spacing: 14, shyWithin: 240, beside: 72 },
   /** GDD, The scale: degrees of tilt per unit of difference between the sides. A stage
    * with big numbers overrides it with its own `tiltPerUnit`. */
   tiltPerUnit: 1,

@@ -4,6 +4,7 @@ import { findPath, onGround } from '@/city/walk';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { town } from '@/content/town';
+import { isRoomId } from '@/room/resume';
 
 const areas = Object.values(town.areas);
 
@@ -32,7 +33,7 @@ describe('the townspeople', () => {
   it.each(
     areas.flatMap((area) =>
       area.people
-        .filter((person) => person.after !== person.changesWith)
+        .filter((person) => person.after !== person.changesWith && isRoomId(person.changesWith))
         .map((person) => [person.id, area.id, person] as const),
     ),
   )('%s in the %s asks only for a machine he can already reach', (_id, _area, person) => {
@@ -43,10 +44,11 @@ describe('the townspeople', () => {
   });
 
   it('someone asks for help in most streets before its machine is fixed', () => {
-    const asking = areas.filter((area) =>
+    const streets = areas.filter((area) => area.places.length > 0);
+    const asking = streets.filter((area) =>
       area.places.some((place) => area.people.some((person) => person.changesWith === place.node)),
     );
-    expect(asking.length).toBeGreaterThanOrEqual(areas.length - 1);
+    expect(asking.length).toBeGreaterThanOrEqual(streets.length - 1);
   });
 
   it('nobody is in two streets at once: each stay ends with the room the next begins with', () => {

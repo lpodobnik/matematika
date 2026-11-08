@@ -1,3 +1,4 @@
+import { partTwoOn } from '@/hunt/switch';
 import '@/ui/map/map.css';
 import { useMemo, useState } from 'react';
 import { type MapView, mapView } from '@/city/reach';
@@ -37,6 +38,7 @@ export function MapScreen({ onTravel }: { onTravel?(node: NodeId): void } = {}) 
   const name = useGame((s) => s.save.character.name);
   const parts = useGame((s) => s.save.economy.parts);
   const bossBeaten = useGame((s) => s.save.economy.lairs['lair-60'] !== undefined);
+  const partTwo = useGame((s) => partTwoOn(s.ui.preview));
   const pages = useGame((s) => s.save.progress.tornPages);
   const dispatch = useGame((s) => s.dispatch);
   const view = useMemo(
@@ -62,6 +64,7 @@ export function MapScreen({ onTravel }: { onTravel?(node: NodeId): void } = {}) 
       pages={pages}
       parts={parts}
       bossBeaten={bossBeaten}
+      partTwo={partTwo}
       onTravel={onTravel ?? ((node) => dispatch({ type: 'map/travel', node }))}
     />
   );
@@ -80,6 +83,8 @@ interface BoardProps {
   parts?: number;
   /** The final fight is won: only then does the story go on elsewhere. */
   bossBeaten?: boolean;
+  /** Part 2 is on, so the story goes on and no note says it will. */
+  partTwo?: boolean;
   onTravel(node: NodeId): void;
   /** For tests: the log starts open. */
   logOpen?: boolean;
@@ -98,6 +103,7 @@ export function MapBoard({
   pages = [],
   parts = 0,
   bossBeaten = true,
+  partTwo = false,
   onTravel,
   logOpen = false,
 }: BoardProps) {
@@ -123,7 +129,9 @@ export function MapBoard({
         {nodes.map((node) => (
           <MapNode key={node.area} node={node} onTravel={onTravel} />
         ))}
-        {view.allDone && bossBeaten && <p className="map__note">{hr.app.toBeContinued}</p>}
+        {view.allDone && bossBeaten && !partTwo && (
+          <p className="map__note">{hr.app.toBeContinued}</p>
+        )}
         <PartsCounterView shown={parts} visible={parts > 0} flight={null} />
         {pages.length > 0 && (
           <button

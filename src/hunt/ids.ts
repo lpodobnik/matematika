@@ -70,6 +70,9 @@ export const beatIds = [
 ] as const;
 export type BeatId = (typeof beatIds)[number];
 
+/** What in the hunt can open a way or change what someone says: a lead, a knot, or a moment. */
+export type HuntMark = 'gate' | 'map' | LeadId | KnotId;
+
 /** Whether a string is one of `list`, as a type guard, for filtering what a save holds. */
 export function inList<T extends string>(list: readonly T[]): (item: string) => item is T {
   const set: ReadonlySet<string> = new Set(list);

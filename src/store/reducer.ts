@@ -560,6 +560,7 @@ function withOnMap(save: SaveState, screen: GameState['ui']['screen']): SaveStat
     screen === 'opening' ||
     screen === 'story' ||
     screen === 'naming' ||
+    screen === 'hunt' ||
     screen === 'fight' ||
     screen === 'shop' ||
     screen === 'workshop' ||

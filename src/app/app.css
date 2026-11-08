@@ -10,6 +10,13 @@
   --lamp-wash: #f3dfb4;
   /* A sheet laid on the page: speech, cards, an input. palette.ts `sheet`. */
   --sheet: #ffffff;
+  --ink-soft: #6b7a8c;
+  --ink-deep: #26303b;
+  --brass: #b8893a;
+  --brass-light: #e2c07a;
+  --copper: #b5603a;
+  --iron: #59616b;
+  --wood: #8a6a4a;
   --rule: color-mix(in srgb, var(--ink) 18%, transparent);
   color-scheme: light;
 }

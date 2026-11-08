@@ -17,7 +17,9 @@ import type { RoomSpec } from '@/room/types';
 export type StoreEvent =
   | { type: 'SaveChanged' }
   | { type: 'RoomLeft'; roomId: RoomSpec['id'] }
-  | { type: 'TownAreaShown'; area: AreaId | null };
+  | { type: 'TownAreaShown'; area: AreaId | null }
+  | { type: 'GateOpened' }
+  | { type: 'LittleOneNamed' };
 
 export type DomainEvent = RoomEvent | StoreEvent | FightEvent | UpgradeEvent;
 export type DomainEventType = DomainEvent['type'];
@@ -27,6 +29,8 @@ const notRoom: ReadonlySet<DomainEventType> = new Set<DomainEventType>([
   'SaveChanged',
   'RoomLeft',
   'TownAreaShown',
+  'GateOpened',
+  'LittleOneNamed',
   'FightStarted',
   'FightLeft',
   'DiceRolled',

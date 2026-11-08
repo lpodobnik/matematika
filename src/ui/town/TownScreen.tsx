@@ -1,6 +1,7 @@
 import '@/ui/town/town.css';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { LookId } from '@/city/character';
+import { type FollowState, followStep, startFollow } from '@/city/follow';
 import { type MapView, mapView } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { findPath, type Point } from '@/city/walk';
@@ -21,11 +22,15 @@ import {
 } from '@/content/town';
 import { asleepLairs } from '@/fight/settle';
 import type { LairId } from '@/fight/types';
+import { type GateState, gateState } from '@/hunt/gate';
+import { partTwoOn } from '@/hunt/switch';
 import { playersHash } from '@/lib/player';
+import { isRoomId } from '@/room/resume';
 import type { RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { Automaton } from '@/ui/fight/fight-art';
+import { LittleOneArt } from '@/ui/hunt/LittleOne';
 import { logbookArt, outroArt } from '@/ui/opening/art';
 import { OpeningPanels, StoryPanels } from '@/ui/opening/OpeningScreen';
 import { areaArt, areaChange, lookFacing, looks, personArt, personFacing } from '@/ui/town/art';
@@ -57,6 +62,9 @@ export function TownScreen() {
   const economy = useGame((s) => s.save.economy);
   const look = useGame((s) => s.save.character.look);
   const dispatch = useGame((s) => s.dispatch);
+  const hunt = useGame((s) => s.save.hunt);
+  const companion = useGame((s) => s.save.companion);
+  const partTwo = useGame((s) => partTwoOn(s.ui.preview));
   const asleep = useMemo(() => asleepLairs(economy, Date.now()), [economy]);
   const view = useMemo(
     () =>
@@ -92,6 +100,28 @@ export function TownScreen() {
           !(economy.upgrades as readonly string[]).includes(id) && economy.parts >= upgrade.cost,
       )}
       onTravel={(node) => dispatch({ type: 'map/travel', node })}
+      partTwo={partTwo}
+      gate={gateState(
+        {
+          roomsDone,
+          bossBeaten: economy.lairs['lair-60'] !== undefined,
+          hunt,
+        },
+        partTwo,
+      )}
+      marks={
+        partTwo
+          ? [
+              ...hunt.leadsDone,
+              ...hunt.knotsDone,
+              ...(hunt.gateOpened ? ['gate'] : []),
+              ...(hunt.beats.includes('map-given') ? ['map'] : []),
+            ]
+          : []
+      }
+      hasLittleOne={partTwo && companion !== null}
+      onGate={() => dispatch({ type: 'hunt/gate-open' })}
+      onMapGiven={() => dispatch({ type: 'hunt/map-given' })}
     />
   );
 }
@@ -110,6 +140,14 @@ interface BoardProps {
   /** He has the parts for something the workshop still sells. */
   canBuy: boolean;
   onTravel(node: NodeId): void;
+  /** Part 2 is on (hunt/switch.ts). Off, nothing in the town changes. */
+  partTwo?: boolean;
+  gate?: GateState;
+  /** What he has reached in the hunt, for ways and people that wait on it. */
+  marks?: readonly string[];
+  hasLittleOne?: boolean;
+  onGate?(): void;
+  onMapGiven?(): void;
 }
 
 /** What happens when he reaches where he was walking to. */
@@ -151,7 +189,15 @@ export function TownBoard({
   beaten,
   canBuy,
   onTravel,
+  partTwo = false,
+  gate = 'sealed',
+  marks = [],
+  hasLittleOne = false,
+  onGate,
+  onMapGiven,
 }: BoardProps) {
+  // Rooms done and the hunt's marks: what ways and people wait on.
+  const reached = useMemo<readonly string[]>(() => [...done, ...marks], [done, marks]);
   const nodes = useMemo(() => new Map(view.nodes.map((node) => [node.id, node])), [view]);
   // He comes out where he went in: the area holding the room just restarted, or else the
   // street and spot he left from (a fight, a room left halfway), or else the square.
@@ -181,6 +227,13 @@ export function TownBoard({
   const lairHere = useRef(area.lair);
   lairHere.current = area.lair;
   const arrivedRef = useRef<(job: Errand | null) => void>(() => {});
+  // The little one: it moves every frame, through its element (rule 6).
+  const follow = useRef<FollowState>(startFollow(start, tuning.follow.beside));
+  const littleEl = useRef<HTMLButtonElement>(null);
+  const shyFrom = useRef<Point | null>(null);
+  shyFrom.current = area.people.find((person) => person.id === 'vucetic')?.at ?? null;
+  const hasLittleOneRef = useRef(hasLittleOne);
+  hasLittleOneRef.current = hasLittleOne;
   // His figure and the automaton move every frame, so they move through their elements,
   // not through React state: the board renders only when something else changes.
   const { meRef, meFacing, meEl, path, errand, botRef, botEl } = useTownLoop<Errand>({
@@ -190,6 +243,20 @@ export function TownBoard({
     paused: showMap || showIntro || slides !== null,
     onStopped: () => setWalking(false),
     onArrive: (job) => arrivedRef.current(job),
+    onFrame: (dt, me) => {
+      if (!hasLittleOneRef.current) return;
+      const next = followStep(follow.current, me, dt, tuning.follow);
+      follow.current = next;
+      const el = littleEl.current;
+      if (!el) return;
+      place(el, next.at, next.facing, 1);
+      el.dataset.moving = String(next.moving);
+      // It hides behind him near the man in the coat. It looks like shyness (narrative, Part 2).
+      const him = shyFrom.current;
+      el.dataset.shy = String(
+        him !== null && Math.hypot(him.x - next.at.x, him.y - next.at.y) < tuning.follow.shyWithin,
+      );
+    },
   });
 
   const arrived = useCallback(
@@ -200,6 +267,7 @@ export function TownBoard({
         const { to, arrive } = job.exit;
         setAreaId(to);
         meRef.current = arrive;
+        follow.current = startFollow(arrive, tuning.follow.beside);
         setStart(arrive);
         botRef.current = botAt(town.areas[to].patrol);
         setBubble(null);
@@ -228,7 +296,13 @@ export function TownBoard({
           return;
         }
         if (job.place.node === 'foundry') {
-          setBubble({ who: 'self', at: job.place.marker, lines: hr.town.places.foundry, line: 0 });
+          if (gate === 'ready') {
+            writeWhere(areaRef.current, meRef.current);
+            onGate?.();
+            return;
+          }
+          const lines = partTwo ? hr.hunt.gate.waiting : hr.town.places.foundry;
+          setBubble({ who: 'self', at: job.place.marker, lines, line: 0 });
           return;
         }
         const missing = waitsFor(job.place.node, done);
@@ -257,7 +331,8 @@ export function TownBoard({
         return;
       }
       const { person } = job;
-      const lines = personLines(person, done);
+      const lines = personLines(person, reached);
+      if (person.scene === 'u1Vucetic') onMapGiven?.();
       const first = !met.includes(person.id);
       if (first) {
         const next = [...met, person.id];
@@ -276,7 +351,23 @@ export function TownBoard({
           : undefined,
       });
     },
-    [nodes, onTravel, wakesIn, beaten, done, met, meFacing, meEl, meRef, botRef],
+    [
+      nodes,
+      onTravel,
+      wakesIn,
+      beaten,
+      done,
+      met,
+      meFacing,
+      meEl,
+      meRef,
+      botRef,
+      gate,
+      partTwo,
+      onGate,
+      reached,
+      onMapGiven,
+    ],
   );
   arrivedRef.current = arrived;
 
@@ -296,6 +387,7 @@ export function TownBoard({
       setShowMap(false);
       setAreaId(to);
       meRef.current = stand;
+      follow.current = startFollow(stand, tuning.follow.beside);
       setStart(stand);
       botRef.current = botAt(there.patrol);
       setBubble(null);
@@ -341,8 +433,8 @@ export function TownBoard({
   const change = areaChange(areaId);
   const people = area.people.filter(
     (person) =>
-      (person.after === null || done.includes(person.after)) &&
-      !(person.until && done.includes(person.until)),
+      (person.after === null || reached.includes(person.after)) &&
+      !(person.until && reached.includes(person.until)),
   );
   const pile = (area.lair && nodes.get(area.lair)?.pile) || 0;
   const lairOut = area.lair !== null && nodes.get(area.lair)?.state !== 'closed';
@@ -350,7 +442,11 @@ export function TownBoard({
   const finalWaits = area.lair === 'lair-60' && lairOut && !beaten('lair-60');
   // Until he is beaten the game isn't over, in whichever street he is.
   const bossWaits = nodes.get('lair-60')?.state === 'open' && !beaten('lair-60');
-  const exits = area.exits.filter((exit) => done.includes(exit.opensWith));
+  const exits = area.exits.filter((exit) => reached.includes(exit.opensWith));
+  // Part 2's ways stay out of sight until they open, so that part 1 doesn't change.
+  const shownExits = area.exits.filter(
+    (exit) => isRoomId(exit.opensWith) || reached.includes(exit.opensWith),
+  );
   // An open way on takes the tap over its area (the raised gate is now a way through).
   const places = area.places.filter(
     (place) => !exits.some((exit) => sameRect(exit.area, place.area)),
@@ -360,7 +456,7 @@ export function TownBoard({
   // With the whole district running, the way on is the sealed foundry gate.
   const nextNode =
     view.nodes.find((node) => node.next)?.id ??
-    (done.length === 0 ? 'r01' : view.allDone ? 'foundry' : null);
+    (done.length === 0 ? 'r01' : view.allDone && gate !== 'opened' ? 'foundry' : null);
   // While the boss waits he is the next thing, not the machine he holds.
   const nextPlace = bossWaits ? undefined : places.find((place) => place.node === nextNode);
   const nextExit = nextPlace ? undefined : exits.find((exit) => exit.to === areaOf(nextNode));
@@ -411,8 +507,8 @@ export function TownBoard({
                 aria-hidden="true"
               />
             ))}
-          {area.exits
-            .filter((exit) => !done.includes(exit.opensWith))
+          {shownExits
+            .filter((exit) => !reached.includes(exit.opensWith))
             .map((exit) => (
               // A way not open yet sits under the machines and says which machine opens it.
               <button
@@ -427,7 +523,10 @@ export function TownBoard({
                     who: 'self',
                     at: exit.marker,
                     lines: [
-                      hr.town.places.wayWaits(hr.town.signs[exit.to], hr.map.nodes[exit.opensWith]),
+                      hr.town.places.wayWaits(
+                        hr.town.signs[exit.to],
+                        isRoomId(exit.opensWith) ? hr.map.nodes[exit.opensWith] : '',
+                      ),
                     ],
                     line: 0,
                   })
@@ -437,6 +536,8 @@ export function TownBoard({
           {area.places
             .filter((place) => place.node === 'workshop' || place.node === 'foundry')
             .filter((place) => nodes.get(place.node)?.state !== 'closed')
+            // Once it's open, the sign says where the way goes, not what's shut.
+            .filter((place) => place.node !== 'foundry' || gate !== 'opened')
             .map((place) => (
               <span
                 key={`sign-${place.node}`}
@@ -470,12 +571,12 @@ export function TownBoard({
               onClick={() => walkTo(exit.stand, { kind: 'exit', exit })}
             />
           ))}
-          {area.exits.map((exit) => (
+          {shownExits.map((exit) => (
             // A signpost at every way out, open or not yet: where it leads, and which way.
             <ExitSign
               key={`sign-${exit.to}`}
               exit={exit}
-              open={done.includes(exit.opensWith)}
+              open={reached.includes(exit.opensWith)}
               onGo={() => walkTo(exit.stand, { kind: 'exit', exit })}
             />
           ))}
@@ -492,7 +593,7 @@ export function TownBoard({
               type="button"
               className="town__figure town__figure--person"
               data-person={person.id}
-              data-asks={!done.includes(person.changesWith)}
+              data-asks={!reached.includes(person.changesWith)}
               style={{
                 ...pct(person.at),
                 zIndex: Math.round(person.at.y),
@@ -515,7 +616,7 @@ export function TownBoard({
                 draggable={false}
                 style={{ transform: `scaleX(${person.facing * personFacing[person.id]})` }}
               />
-              {!done.includes(person.changesWith) && (
+              {!reached.includes(person.changesWith) && (
                 // Still waiting on their machine: a "!" over the head, like a raised hand.
                 <span className="town__ask" aria-hidden="true">
                   !
@@ -523,6 +624,30 @@ export function TownBoard({
               )}
             </button>
           ))}
+          {hasLittleOne && (
+            <button
+              type="button"
+              ref={littleEl}
+              className="town__figure town__figure--little"
+              data-moving="false"
+              style={{
+                ...pct(follow.current.at),
+                zIndex: Math.round(follow.current.at.y),
+                height: `${((town.figure * 0.42) / town.height) * 100}%`,
+              }}
+              aria-label={hr.hunt.littleOne.label}
+              onClick={() =>
+                setBubble({
+                  who: 'little',
+                  at: follow.current.at,
+                  lines: [hr.hunt.littleOne.why],
+                  line: 0,
+                })
+              }
+            >
+              <LittleOneArt />
+            </button>
+          )}
           {lairOut && area.lair && area.lairSpot && (
             // The automaton the picture shows, standing still: a tap on it.
             <button
@@ -673,7 +798,12 @@ export function TownBoard({
       {slides && (
         <div className="town__overlay">
           <StoryPanels
-            panels={hr.slides[slides]}
+            panels={
+              // With part 2 on, the story goes on, so the last panel doesn't promise it.
+              slides === 'outro' && partTwo
+                ? [...hr.slides.outro.slice(0, -1), hr.hunt.gate.outroLast]
+                : hr.slides[slides]
+            }
             art={slides === 'outro' ? outroArt : logbookArt}
             onDone={() => {
               if (slides === 'outro') writeOutroSeen();
@@ -692,9 +822,9 @@ export function TownBoard({
 }
 
 /** A person's lines: before the room that changes them, or after. */
-function personLines(person: TownPerson, done: readonly RoomId[]): readonly string[] {
+function personLines(person: TownPerson, reached: readonly string[]): readonly string[] {
   const text = person.scene ? hr.town.scenes[person.scene] : hr.town.people[person.id];
-  return done.includes(person.changesWith) ? text.after : text.before;
+  return reached.includes(person.changesWith) ? text.after : text.before;
 }
 
 function exitLabel(from: AreaId, to: AreaId): string {

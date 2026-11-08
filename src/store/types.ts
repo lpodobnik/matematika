@@ -52,7 +52,8 @@ export type Screen =
   | 'fight'
   | 'shop'
   | 'workshop'
-  | 'friend';
+  | 'friend'
+  | 'hunt';
 
 /**
  * Epic 5: where building a room for a friend stands (store/workshop-reducer.ts), in memory

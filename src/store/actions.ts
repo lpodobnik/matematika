@@ -150,6 +150,18 @@ export type Action =
   | { type: 'town/area'; area: AreaId | null }
   /** Story 6.1: a room guide's "Dalje": the next step, or the topic is over (room/guide.ts). */
   | { type: 'room/guide-next' }
+  /** Part 2: he goes up to the foundry gate, once it's ready (hunt/gate.ts). */
+  | { type: 'hunt/gate-open' }
+  /** Part 2's notebook: a key, delete, enter. */
+  | { type: 'hunt/type'; token: Token }
+  | { type: 'hunt/delete' }
+  | { type: 'hunt/enter' }
+  /** The empty foundry's panels are over. */
+  | { type: 'hunt/foundry-done' }
+  /** Vučetić hands over the map, the first time they talk. */
+  | { type: 'hunt/map-given' }
+  /** He names the little one. */
+  | { type: 'hunt/name'; name: string }
   /** This page load has `?dev`: part 2 is previewed (hunt/switch.ts). */
   | { type: 'dev/preview' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */

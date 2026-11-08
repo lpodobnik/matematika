@@ -48,7 +48,7 @@ export function streetsOf(view: MapView): { nodes: StreetView[]; roads: RoadView
       const [from, to] = [at.get(area.id), at.get(exit.to)];
       if (seen.has(key) || !from || !to) return [];
       seen.add(key);
-      const travelled = byId.get(exit.opensWith)?.state === 'restored';
+      const travelled = view.nodes.find((node) => node.id === exit.opensWith)?.state === 'restored';
       return [{ from: { x: from.x, y: from.y }, to: { x: to.x, y: to.y }, travelled }];
     }),
   );
