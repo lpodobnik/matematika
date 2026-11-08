@@ -191,9 +191,7 @@ test('a room for a friend: built, solved, sent, cracked and stamped', async ({
   const fshot = shooter(fp, (n) => testInfo.outputPath(n), 'friend');
   await fp.goto(link);
   await hook(fp);
-  await expect(fp.locator('.friend__card')).toContainText(
-    hr.friend.welcome('Ivin čvor'),
-  );
+  await expect(fp.locator('.friend__card')).toContainText(hr.friend.welcome('Ivin čvor'));
   await expect(fp.locator('.friend__card')).toContainText(hr.friend.newHere);
   await fshot('1-welcome');
   await fp.getByRole('button', { name: hr.friend.go }).click();
