@@ -28,7 +28,8 @@ import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { Automaton } from '@/ui/fight/fight-art';
 import { MapScreen } from '@/ui/map/MapScreen';
-import { OpeningPanels } from '@/ui/opening/OpeningScreen';
+import { logbookArt, outroArt } from '@/ui/opening/art';
+import { OpeningPanels, StoryPanels } from '@/ui/opening/OpeningScreen';
 import { areaArt, areaChange, lookFacing, looks, personArt, personFacing } from '@/ui/town/art';
 import { useTownSound } from '@/ui/town/use-town-sound';
 
@@ -166,6 +167,23 @@ function waitsFor(node: NodeId, done: readonly RoomId[]): string[] {
     .map((room) => hr.map.nodes[room]);
 }
 
+/** The district's end is told once. */
+function readOutroSeen(): boolean {
+  try {
+    return localStorage.getItem(`${playerKeys(activePlayer()).met}:outro`) !== null;
+  } catch {
+    return false;
+  }
+}
+
+function writeOutroSeen() {
+  try {
+    localStorage.setItem(`${playerKeys(activePlayer()).met}:outro`, '1');
+  } catch {
+    // A private window: it is told again next time.
+  }
+}
+
 /** Where he left the town from: the street and the spot, for when he comes back. */
 function readWhere(): { area: AreaId; at: Point } | null {
   try {
@@ -226,6 +244,10 @@ export function TownBoard({
   const [bubble, setBubble] = useState<Bubble | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
+  const [slides, setSlides] = useState<'logbook' | 'outro' | null>(() => {
+    if (fresh === 'r07') return 'logbook';
+    return beaten('lair-60') && !readOutroSeen() ? 'outro' : null;
+  });
   const [met, setMet] = useState<PersonId[]>(readMet);
   const path = useRef<Point[]>([]);
   const errand = useRef<Errand | null>(null);
@@ -356,7 +378,7 @@ export function TownBoard({
   // One loop moves him along his path and the automaton along its round. It pauses while
   // the district map is open.
   useEffect(() => {
-    if (showMap || showIntro) return;
+    if (showMap || showIntro || slides) return;
     let frame = 0;
     let last = performance.now();
     const tick = (now: number) => {
@@ -408,7 +430,7 @@ export function TownBoard({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [arrived, showMap, showIntro]);
+  }, [arrived, showMap, showIntro, slides]);
 
   const walkTo = (target: Point, job: Errand | null) => {
     setBubble(null);
@@ -764,6 +786,18 @@ export function TownBoard({
         </button>
       </main>
       {showMap && <MapOverlay onClose={() => setShowMap(false)} onPick={pick} />}
+      {slides && (
+        <div className="town__overlay">
+          <StoryPanels
+            panels={hr.slides[slides]}
+            art={slides === 'outro' ? outroArt : logbookArt}
+            onDone={() => {
+              if (slides === 'outro') writeOutroSeen();
+              setSlides(null);
+            }}
+          />
+        </div>
+      )}
       {showIntro && (
         <div className="town__overlay">
           <OpeningPanels onDone={() => setShowIntro(false)} />

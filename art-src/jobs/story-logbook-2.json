@@ -1,0 +1,16 @@
+{
+ "name": "story-logbook-2",
+ "seed": 7302,
+ "size": {
+  "width": 1920,
+  "height": 1080
+ },
+ "style": "v4",
+ "notes": "Story panels between and after the rooms.",
+ "slots": {
+  "subject": "An empty clockmaker's workshop at dusk: a stool knocked over, a half-finished gear on the bench, a door left ajar, and on the dusty floor a trail of many small metal footprints leading out through the door. Nobody in the picture.",
+  "camera": "Wide view from a little above.",
+  "composition": "The open door and the trail of footprints in the centre.",
+  "state": "Still and quiet."
+ }
+}

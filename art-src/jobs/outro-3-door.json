@@ -1,0 +1,16 @@
+{
+ "name": "outro-3-door",
+ "seed": 7313,
+ "size": {
+  "width": 1920,
+  "height": 1080
+ },
+ "style": "v4",
+ "notes": "Story panels between and after the rooms.",
+ "slots": {
+  "subject": "A huge shut iron foundry door in a soot-stained brick wall, with a small brass plate on it and one long strip of pale punched paper tape nailed across it, hanging down. Faint orange glow in the crack under the door. Nobody in the picture.",
+  "camera": "Straight-on view from slightly below, looking up at the door.",
+  "composition": "The door fills most of the picture, with the paper tape in the centre.",
+  "state": "Still and quiet."
+ }
+}

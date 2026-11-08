@@ -1,0 +1,16 @@
+{
+ "name": "story-logbook-1",
+ "seed": 7301,
+ "size": {
+  "width": 1920,
+  "height": 1080
+ },
+ "style": "v4",
+ "notes": "Story panels between and after the rooms.",
+ "slots": {
+  "subject": "An old open logbook on a wooden workbench, handwritten neat lines of sums on the page; one line is written slightly differently and a pencil has been set down right beside it. A small brass lamp lights the page. Nobody in the picture, no hands.",
+  "camera": "Close view from above at a slight angle.",
+  "composition": "The open logbook in the centre, large.",
+  "state": "Still and quiet."
+ }
+}

@@ -2,7 +2,7 @@ import '@/ui/opening/opening.css';
 import { useState } from 'react';
 import { hr } from '@/content/text/hr';
 import { useGame } from '@/store/store';
-import { openingArt } from '@/ui/opening/art';
+import { openingArt, type PanelArt } from '@/ui/opening/art';
 
 /**
  * The opening (story 5.0): four illustrated panels before anything else, a tap on each to
@@ -13,12 +13,24 @@ export function OpeningScreen() {
   return <OpeningPanels onDone={() => dispatch({ type: 'opening/done' })} />;
 }
 
-/** The panels from props only. */
+/** The opening's panels. */
 export function OpeningPanels({ onDone }: { onDone(): void }) {
+  return <StoryPanels panels={hr.opening.panels} art={openingArt} onDone={onDone} />;
+}
+
+/** Any of the story's panels, a tap on each to go on, and a skip: from props only. */
+export function StoryPanels({
+  panels,
+  art: pictures,
+  onDone,
+}: {
+  panels: readonly string[];
+  art: readonly PanelArt[];
+  onDone(): void;
+}) {
   const [index, setIndex] = useState(0);
-  const panels = hr.opening.panels;
   const last = index === panels.length - 1;
-  const art = openingArt[index] ?? openingArt[0];
+  const art = pictures[index] ?? pictures[0];
   return (
     <main className="opening">
       <button

@@ -174,7 +174,7 @@ test('a room for a friend: built, solved, sent, cracked and stamped', async ({
   await touch(page);
   await type(page, 'x=9');
   await shot('3-solving');
-  await type(page, '3·9+4=31');
+  await type(page, '9');
   await expect.poll(async () => (await state(page)).workshop, { timeout: 20_000 }).toBe('finish');
 
   // Solved: a title, then send; the parts are paid and the link appears.
@@ -220,7 +220,7 @@ test('a room for a friend: built, solved, sent, cracked and stamped', async ({
   await expect(fp.getByRole('button', { name: hr.ui.map })).toHaveCount(0);
   await fshot('4-room');
   await type(fp, 'x=9');
-  await type(fp, '3·9+4=31');
+  await type(fp, '9');
   await expect.poll(async () => (await state(fp)).friend, { timeout: 20_000 }).toBe('cracked');
   await expect(fp.locator('.friend__card')).toContainText(hr.friend.crackedTitle);
   await expect(fp.getByRole('button', { name: hr.friend.play })).toBeVisible();
@@ -313,7 +313,7 @@ test('he plants a wrong line in his solved machine before sending it', async ({
   await touch(page);
   await type(page, '2x=18');
   await type(page, 'x=9');
-  await type(page, '2·9+5=23');
+  await type(page, '9');
   await expect.poll(async () => (await state(page)).workshop, { timeout: 20_000 }).toBe('finish');
   // He picks his line 2x = 18 and makes it 2x = 19, which is wrong where it stands.
   await page.locator('.workshop__line', { hasText: '2x = 18' }).click();

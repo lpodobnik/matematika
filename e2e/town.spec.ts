@@ -359,7 +359,6 @@ test('people ask for help with their street machine: Milka at the canal, Vučeti
             'lair-20': { rewindsAt: '2000-01-01T00:00:00.000Z' },
             'lair-30': { rewindsAt: '2000-01-01T00:00:00.000Z' },
             'lair-45': { rewindsAt: '2000-01-01T00:00:00.000Z' },
-            'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' },
           },
         },
       },
@@ -483,7 +482,6 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
             'lair-20': { rewindsAt: '2000-01-01T00:00:00.000Z' },
             'lair-30': { rewindsAt: '2000-01-01T00:00:00.000Z' },
             'lair-45': { rewindsAt: '2000-01-01T00:00:00.000Z' },
-            'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' },
           },
         },
       },
@@ -527,6 +525,40 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
     null,
     { timeout: 12_000 },
   );
+});
+
+test('the final fight won, the story ends: four panels, told once', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  const boot = () =>
+    page.evaluate(() => {
+      const g = window as unknown as Game;
+      const s = g.__s.getState();
+      g.__d({
+        type: 'boot/start',
+        save: {
+          ...s.save,
+          character: { name: 'Ivo', look: 'look-1' },
+          progress: { ...s.save.progress, introSeen: true, onMap: true },
+          economy: {
+            ...s.save.economy,
+            lairs: { 'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' } },
+          },
+        },
+        room: null,
+      });
+    });
+  await boot();
+  await expect(page.locator('.opening__text')).toContainText('Donji Kotač');
+  for (let i = 0; i < 4; i += 1) await page.locator('.opening__panel').click();
+  await expect(page.locator('.opening__panel')).toHaveCount(0);
+  await page.reload();
+  await hook(page);
+  await boot();
+  await expect(page.locator('.town__board')).toBeVisible();
+  await expect(page.locator('.opening__panel')).toHaveCount(0);
 });
 
 for (const look of ['look-1', 'look-2', 'look-3', 'look-4', 'look-5', 'look-6']) {

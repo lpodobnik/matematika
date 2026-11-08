@@ -1,0 +1,16 @@
+{
+ "name": "outro-1-city",
+ "seed": 7311,
+ "size": {
+  "width": 1920,
+  "height": 1080
+ },
+ "style": "v4",
+ "notes": "Story panels between and after the rooms.",
+ "slots": {
+  "subject": "A city of gears and steam in warm evening light, everything running: street lamps lit, a tram crossing a stone bridge, a big wheel turning, a water wheel in a canal, a clock tower on a terrace with thin steam plumes. Small distant crowds on the squares.",
+  "camera": "High isometric bird's-eye view, parallel projection.",
+  "composition": "The city fills the picture edge to edge.",
+  "state": "Still and quiet."
+ }
+}

@@ -148,7 +148,7 @@ export const hr = {
       r01: [
         {
           who: 'penkala',
-          text: 'Kaj? Ja sam Penkala, kondukter. Po Knjizi, vrata se dižu kurblom.',
+          text: 'Dobar dan. Ja sam Penkala, kondukter. Po Kristijanovoj Knjizi, vrata se dižu kurblom.',
         },
         { who: 'penkala', text: 'A ova su se digla bez kurble. Toga nema u Knjizi.' },
       ],
@@ -404,12 +404,25 @@ export const hr = {
     panels: [
       'Satograd je grad zupčanika i pare. Sve strojeve složio je Majstor Kristijan.',
       'Upute za svaki stroj zapisao je u Knjigu. Ljudi ih slijede i ne pitaju zašto.',
-      'Jednog jutra radionica je prazna. Kristijana nema. Strojevi staju jedan po jedan.',
+      'Jednog jutra radionica je ostala prazna. Kristijana nema. Strojevi staju jedan po jedan.',
       'Na podu radionice leži njegova bilježnica. U njoj nisu upute, nego pitanja.',
     ],
     next: 'Dalje',
     skip: 'Preskoči',
     begin: 'Kreni',
+  },
+  /** The story's panels after the opening, as it shows them: after the logbook, and the end. */
+  slides: {
+    logbook: [
+      'U Kristijanovu dnevniku jedan je redak pogrešan. A Kristijan ne griješi.',
+      'Znao je da će ga odvesti. Ostavio je znak onome tko razumije.',
+    ],
+    outro: [
+      'Donji Kotač opet radi. Svjetiljke gore, tramvaj vozi, toranj zvoni.',
+      'Ljudi više ne pitaju samo kako. Sad pitaju i zašto.',
+      'Na vratima ljevaonice visi traka: MAJSTOR JE OVDJE. VRATA SU ZATVORENA. HVALA.',
+      'Iza vrata netko kuca: pet puta, pa osam. Bilježnica je još otvorena. Nastavak slijedi…',
+    ],
   },
   /**
    * The town (story 5.0): the square he walks through, its people and its machines. A

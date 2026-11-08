@@ -1,0 +1,16 @@
+{
+ "name": "outro-4-notebook",
+ "seed": 7314,
+ "size": {
+  "width": 1920,
+  "height": 1080
+ },
+ "style": "v4",
+ "notes": "Story panels between and after the rooms.",
+ "slots": {
+  "subject": "A small worn leather notebook with a brass clasp lying open on a stone doorstep at the foot of a huge iron door, a stub of pencil on its blank page, orange light from under the door falling across it. Nobody in the picture, no hands.",
+  "camera": "Close view from low at a slight angle.",
+  "composition": "The open notebook in the foreground, the bottom of the door behind it.",
+  "state": "Still and quiet."
+ }
+}

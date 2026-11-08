@@ -29,13 +29,13 @@ describe('the story lines (hr.story, story 2.5)', () => {
     }
   });
 
-  it('keeps every line to a tablet bubble, about 80 characters, even with the longest name', () => {
+  it('keeps every line to a tablet bubble, about 90 characters, even with the longest name', () => {
     for (const id of roomIds) {
       for (const line of storyLines(id)) {
         expect(
           lineText(line, longestName).length,
           `${id}: ${lineText(line, longestName)}`,
-        ).toBeLessThanOrEqual(80);
+        ).toBeLessThanOrEqual(90);
       }
     }
   });

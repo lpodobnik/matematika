@@ -1,0 +1,16 @@
+{
+ "name": "outro-2-square",
+ "seed": 7312,
+ "size": {
+  "width": 1920,
+  "height": 1080
+ },
+ "style": "v4",
+ "notes": "Story panels between and after the rooms.",
+ "slots": {
+  "subject": "A town square with a stone fountain running with clear water, a tall lit lamp beside it, and a small group of children and grown-ups in old-fashioned clothes gathered around a scale on a table, pointing at it and talking. Warm late afternoon light.",
+  "camera": "High isometric view from above, parallel projection.",
+  "composition": "The fountain and the group around the scale in the centre.",
+  "state": "Still and quiet."
+ }
+}

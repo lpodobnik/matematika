@@ -430,7 +430,19 @@ function saveBefore(save: SaveState, action: Action, now: number): SaveState {
       const withThem = withTools(save, action.tools);
       if (!action.firstUse) return withThem;
       const firstUse = [...new Set([...withThem.progress.firstUse, ...action.firstUse])];
-      return { ...withThem, progress: { ...withThem.progress, firstUse } };
+      // A jump is past the opening and the naming too, so neither waits at the room's end.
+      const character = named(withThem)
+        ? withThem.character
+        : {
+            ...withThem.character,
+            name: 'Ivo',
+            look: withThem.character.look ?? ('look-1' as const),
+          };
+      return {
+        ...withThem,
+        character,
+        progress: { ...withThem.progress, firstUse, introSeen: true },
+      };
     }
     default:
       return save;
