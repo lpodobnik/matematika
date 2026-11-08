@@ -7,6 +7,7 @@
 import type { LookId } from '@/city/character';
 import type { Economy } from '@/economy/types';
 import type { FightState, PageId } from '@/fight/types';
+import type { CompanionSave, HuntSave } from '@/hunt/types';
 import { firstPlayer, playerKeys } from '@/lib/player';
 import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, IdeaId, RoomId, ToolId } from '@/room/types';
@@ -104,4 +105,8 @@ export interface SaveV1 {
   settings: Settings;
   /** Epic 5: the rooms he sent, with their stamps. A save from before has none. */
   workshop: WorkshopSave;
+  /** Part 2: the hunt for Kristijan. A save from before starts with none of it. */
+  hunt: HuntSave;
+  /** Part 2: the little one, or null before he has met it. */
+  companion: CompanionSave | null;
 }

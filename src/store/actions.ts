@@ -150,6 +150,8 @@ export type Action =
   | { type: 'town/area'; area: AreaId | null }
   /** Story 6.1: a room guide's "Dalje": the next step, or the topic is over (room/guide.ts). */
   | { type: 'room/guide-next' }
+  /** This page load has `?dev`: part 2 is previewed (hunt/switch.ts). */
+  | { type: 'dev/preview' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */
   | { type: 'dev/set-parts'; parts: number }
   /** The dev panel only: every winding-down automaton rewinds now. */

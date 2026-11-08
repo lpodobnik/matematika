@@ -5,6 +5,7 @@
 import { createEconomy } from '@/economy/parts';
 import { fightInProgress } from '@/fight/fight';
 import type { FightState } from '@/fight/types';
+import { newHunt } from '@/hunt/types';
 import { type SavedRoom, savedRoomOf } from '@/room/resume';
 import { currentVersion, type SaveV1 } from '@/save/schema';
 import type { GameState, SaveState } from '@/store/types';
@@ -28,6 +29,8 @@ export function newSave(createdAt: string | null = null): SaveState {
     economy: createEconomy(),
     settings: { muted: false, quality: null },
     workshop: { rooms: [] },
+    hunt: newHunt(),
+    companion: null,
   };
 }
 
@@ -44,6 +47,8 @@ export function toSaveV1(state: GameState, now: string): SaveV1 {
     fight: fightInProgress(state.fight) ? state.fight : null,
     settings: save.settings,
     workshop: save.workshop,
+    hunt: save.hunt,
+    companion: save.companion,
   };
 }
 
@@ -62,6 +67,8 @@ export function fromSaveV1(save: SaveV1): {
       economy: save.economy,
       settings: save.settings,
       workshop: save.workshop,
+      hunt: save.hunt,
+      companion: save.companion,
     },
     room,
     fight: save.fight,

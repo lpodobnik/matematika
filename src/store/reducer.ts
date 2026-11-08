@@ -37,6 +37,7 @@ import type { RoomSpec, RoomState, ToolId } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
 import { withFights } from '@/store/fight-reducer';
+import { withHunt } from '@/store/hunt-reducer';
 import { newSave } from '@/store/persist';
 import { initialQuality, type QualityState, reduceQuality } from '@/store/quality';
 import { withRoomGuide } from '@/store/room-guide';
@@ -53,6 +54,7 @@ export function initialGameState(): GameState {
     fight: null,
     ui: {
       screen: 'loading',
+      preview: false,
       loaded: 0,
       fresh: null,
       notebookAside: false,
@@ -289,6 +291,7 @@ const notHis: ReadonlySet<Action['type']> = new Set<Action['type']>([
   'boot/progress',
   'boot/start',
   'dev/new-game',
+  'dev/preview',
   'map/open',
   'map/travel',
   'room/enter',
@@ -608,8 +611,10 @@ function leavingRoom(state: GameState, action: Action): RoomState | null {
  */
 export function createReducer(roomList: readonly RoomSpec[] = rooms): Reduce {
   return withSettings(
-    withWorkshop(
-      withShop(withFights(withRoomGuide(createRoomReducer(roomList)), roomList), roomList),
+    withHunt(
+      withWorkshop(
+        withShop(withFights(withRoomGuide(createRoomReducer(roomList)), roomList), roomList),
+      ),
     ),
   );
 }

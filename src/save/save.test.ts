@@ -4,6 +4,7 @@
 // storage fails.
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { newHunt } from '@/hunt/types';
 import { errorLogKey } from '@/lib/error-log';
 import { decodeSave } from '@/save/decode';
 import { migrate } from '@/save/migrate';
@@ -49,6 +50,8 @@ const sample: SaveV1 = {
   fight: null,
   settings: { muted: false, quality: 'medium' },
   workshop: { rooms: [] },
+  hunt: newHunt(),
+  companion: null,
 };
 
 afterEach(() => {
@@ -81,6 +84,8 @@ describe('decodeSave', () => {
       fight: null,
       settings: { muted: false, quality: null },
       workshop: { rooms: [] },
+      hunt: newHunt(),
+      companion: null,
     });
   });
 

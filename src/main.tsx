@@ -88,6 +88,7 @@ function play(id: string, hash: string): void {
   rememberPlayer(id);
   mountGame();
   const { dispatch } = gameStore.getState();
+  if (new URLSearchParams(location.search).has('dev')) dispatch({ type: 'dev/preview' });
   void boot(saveStorage, dispatch).then(() => {
     if (replyOf(hash)) handleReply(hash, dispatch);
   });

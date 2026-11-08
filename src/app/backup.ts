@@ -9,7 +9,16 @@ import { currentVersion, type SaveV1 } from '@/save/schema';
 
 /** What a backup carries: the whole save but his apprentice's name and look (GDD privacy). */
 export function backupOf(save: SaveV1): SaveV1 {
-  return { ...save, character: { name: null, look: null } };
+  return {
+    ...save,
+    character: { name: null, look: null },
+    companion: save.companion && { ...save.companion, name: null },
+  };
+}
+
+/** The stored JSON's little one without its name: it stays on the device, like his own. */
+function nameless(companion: unknown, name: string | null = null): unknown {
+  return typeof companion === 'object' && companion !== null ? { ...companion, name } : companion;
 }
 
 async function through(
@@ -29,7 +38,7 @@ type Json = Record<string, unknown>;
  */
 export async function encodeBackup(save: SaveV1, stored: Json | null = null): Promise<string> {
   const whole: Json = stored
-    ? { ...stored, character: { name: null, look: null } }
+    ? { ...stored, character: { name: null, look: null }, companion: nameless(stored.companion) }
     : { ...backupOf(save) };
   const json = new TextEncoder().encode(JSON.stringify(whole));
   return toBase64Url(await through(json, new CompressionStream('deflate-raw')));
@@ -64,5 +73,9 @@ export async function decodeBackup(payload: string, now: string): Promise<Backup
 
 /** The JSON a restore writes: the backup's, with the device's own name and look kept. */
 export function restoredJson(backup: Backup, current: SaveV1 | null): Json {
-  return { ...backup.json, character: current?.character ?? { name: null, look: null } };
+  return {
+    ...backup.json,
+    character: current?.character ?? { name: null, look: null },
+    companion: nameless(backup.json.companion, current?.companion?.name ?? null),
+  };
 }

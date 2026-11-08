@@ -2,6 +2,12 @@
 // until playtesting, so they live in this one object (architecture, Configuration).
 
 export const tuning = {
+  /**
+   * Part 2 (GDD, Part 2: The Trail) stays off until Luka opens it, because `main` deploys to his
+   * son's live save. `?dev` previews it. `hunt/switch.test.ts` pins this, so opening it is a
+   * deliberate change of two lines.
+   */
+  part2: { live: false },
   /** GDD, The scale: degrees of tilt per unit of difference between the sides. A stage
    * with big numbers overrides it with its own `tiltPerUnit`. */
   tiltPerUnit: 1,

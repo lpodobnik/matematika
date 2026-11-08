@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 // Type-only imports count too: a pure folder must not even name a forbidden module.
 
 const pureFolders = [
+  'hunt',
   'math',
   'room',
   'fight',

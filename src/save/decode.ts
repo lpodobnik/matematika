@@ -26,6 +26,7 @@ import {
   wayIds,
 } from '@/room/types';
 import { decodeFight } from '@/save/decode-fight';
+import { decodeCompanion, decodeHunt } from '@/save/decode-hunt';
 import {
   type Character,
   currentVersion,
@@ -260,5 +261,7 @@ export function decodeSave(value: unknown, now: string): SaveV1 | null {
     fight: decodeFight(value.fight),
     settings: decodeSettings(value.settings),
     workshop: decodeWorkshop(value.workshop),
+    hunt: decodeHunt(value.hunt),
+    companion: decodeCompanion(value.companion),
   };
 }

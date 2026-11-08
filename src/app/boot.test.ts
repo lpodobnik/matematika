@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { boot } from '@/app/boot';
+import { newHunt } from '@/hunt/types';
 import { errorLogKey } from '@/lib/error-log';
 import type { SaveV1 } from '@/save/schema';
 import type { Action } from '@/store/actions';
@@ -24,6 +25,8 @@ const save: SaveV1 = {
   fight: null,
   settings: { muted: false, quality: null },
   workshop: { rooms: [] },
+  hunt: newHunt(),
+  companion: null,
 };
 
 afterEach(() => {

@@ -28,6 +28,7 @@ describe('the store', () => {
     expect(store.getState().room).toBeNull();
     expect(store.getState().ui).toEqual({
       screen: 'loading',
+      preview: false,
       loaded: 0,
       fresh: null,
       notebookAside: false,

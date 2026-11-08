@@ -4,6 +4,7 @@
 import type { Economy } from '@/economy/types';
 import type { GuideStep } from '@/fight/guide';
 import type { FightState, PageId } from '@/fight/types';
+import type { CompanionSave, HuntSave } from '@/hunt/types';
 import type { RoomGuideState } from '@/room/guide';
 import type { HintState } from '@/room/hint';
 import type { SavedRoom } from '@/room/resume';
@@ -90,6 +91,8 @@ export type SceneCopies = 1 | 3;
 
 export interface UiState {
   screen: Screen;
+  /** This page load has `?dev`, so part 2 is previewed (hunt/switch.ts). Never saved. */
+  preview: boolean;
   /** While loading: how much of the assets has loaded, 0–1 (story 2.1). */
   loaded: number;
   /**
@@ -175,6 +178,10 @@ export interface SaveState {
   settings: Settings;
   /** Epic 5: the rooms he sent, with their stamps (`SaveV1.workshop`). */
   workshop: WorkshopSave;
+  /** Part 2: the hunt for Kristijan (`SaveV1.hunt`). */
+  hunt: HuntSave;
+  /** Part 2: the little one, or null before he has met it (`SaveV1.companion`). */
+  companion: CompanionSave | null;
 }
 
 /** The game's state: the architecture's four slices, `save`, `room`, `fight` and `ui`. */
