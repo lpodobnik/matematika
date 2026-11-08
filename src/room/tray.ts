@@ -90,8 +90,12 @@ export function trayWorks(room: RoomState, tools: readonly ToolId[]): boolean {
  */
 export function rememberTray(room: RoomState, met: readonly FirstUseId[]): RoomState {
   const { stage } = room;
-  if (stage.balance.trayMet || !met.includes('tray')) return room;
-  return withStage(room, { ...stage, balance: { ...stage.balance, trayMet: true } });
+  // The splitter too: once he knows it, it is there from the start of every stage, and an
+  // uneven split shows him why not yet.
+  const trayMet = stage.balance.trayMet || met.includes('tray');
+  const splitterSeen = stage.balance.splitterSeen || met.includes('splitter');
+  if (trayMet === stage.balance.trayMet && splitterSeen === stage.balance.splitterSeen) return room;
+  return withStage(room, { ...stage, balance: { ...stage.balance, trayMet, splitterSeen } });
 }
 
 /** The stage's Balance line mode; a stage that lists none writes nothing for Balance. */

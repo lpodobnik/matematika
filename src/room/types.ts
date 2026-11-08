@@ -195,6 +195,7 @@ export const handoverIds = [
   'balance-goal',
   'splitter',
   'chain',
+  'drag-off',
 ] as const;
 
 export type HandoverId = (typeof handoverIds)[number];

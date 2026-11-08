@@ -235,6 +235,7 @@ describe('which handover applies (story 1.15)', () => {
       'tray',
       'balance-goal',
       'splitter',
+      'drag-off',
     ]);
   });
 

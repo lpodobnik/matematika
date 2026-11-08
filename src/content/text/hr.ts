@@ -642,6 +642,8 @@ export const hr = {
     tray: 'Stavi broj s police na vagu – ide na obje strane.',
     /** Above the scale, after his first Balance move. */
     'balance-goal': 'Ostavi x samog na jednoj strani, kao na kartici Cilj.',
+    /** At the tray, whenever a number is too big for it: nobody should click 300 times. */
+    'drag-off': 'Uteg veći od 99 odvuci s vage: skine se s obje strane.',
     /** At the splitter, when it is first offered. */
     splitter: 'Razdjelnik dijeli obje strane na jednake dijelove.',
     /** Story 4.1: at the gear chain, when it first works: undo its last link. */

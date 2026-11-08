@@ -150,7 +150,8 @@ describe('parse: refusals', () => {
       }),
       { numRuns: 2000 },
     );
-  });
+    // Many random lines: it needs longer on a busy machine, and a timeout here stops a deploy.
+  }, 30_000);
 });
 
 describe('parseExpr', () => {

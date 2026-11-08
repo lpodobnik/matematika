@@ -890,7 +890,7 @@ describe('rooms', () => {
               }
             }
             // Story 4.6: on a coarse dial (room 11) the numbers are too big for the tools; a
-            // split by more parts than the splitter has is written by hand.
+            // split by more parts than the splitter has (over 30) is written by hand.
             const byHand = stage.dial !== 'locked' && stage.dial.coarse !== undefined;
             if (move.kind === 'split-both' && !(byHand && move.parts > tuning.splitterMaxParts)) {
               expect(move.parts).toBeGreaterThanOrEqual(tuning.splitterMinParts);

@@ -273,7 +273,8 @@ export function handoverAnchor(
     }
     // The shelf's and the holder's inner bottom corners, toward the middle of the scene,
     // where there is room for the tag.
-    case 'tray': {
+    case 'tray':
+    case 'drag-off': {
       const box = stageTrayLayout(room, sceneScale, labelSize).box;
       return { point: { x: box.x, y: box.y + box.height }, nail: false };
     }

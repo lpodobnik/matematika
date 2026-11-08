@@ -36,7 +36,7 @@ import { currentStageSpec } from '@/room/room';
 import { scaleView, stageX } from '@/room/scale';
 import { splitterOffered } from '@/room/splitter';
 import { storyWaits } from '@/room/story';
-import { readyToSplit, trayOffered } from '@/room/tray';
+import { hasXBalloons, overTheTray, readyToSplit, trayOffered } from '@/room/tray';
 import type { FirstUseId, HandoverId, Phase, RoomState, ToolId } from '@/room/types';
 
 /** The handover steps in the order he meets them; the earliest that applies comes first. */
@@ -51,6 +51,7 @@ export const handoverOrder: readonly HandoverId[] = [
   'tray',
   'balance-goal',
   'splitter',
+  'drag-off',
 ];
 
 /** The id that marks a handover step met, in `save.progress.firstUse`. */
@@ -145,6 +146,8 @@ interface Situation {
   chain: boolean;
   /** Story 4.5: the stage's story waits to be written (room/story.ts). */
   story: boolean;
+  /** The number beside x is more than the tray reaches, with no balloons left to cancel. */
+  overTray: boolean;
 }
 
 function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
@@ -168,6 +171,7 @@ function situationOf(room: RoomState, tools: readonly ToolId[]): Situation {
     rewrites: stage.planted?.found === true,
     chain: chainWorks(room, tools),
     story: storyWaits(room),
+    overTray: overTheTray(stage.pans) && !hasXBalloons(stage.pans),
   };
 }
 
@@ -202,6 +206,8 @@ function applies(id: HandoverId, s: Situation): boolean {
       return s.chain && !s.answered;
     case 'story':
       return s.open && s.story;
+    case 'drag-off':
+      return s.tray && !s.answered && s.overTray;
   }
 }
 
@@ -230,7 +236,7 @@ export function handoverView(
   const fresh = applying.find((id) => !met.includes(handoverMet(id)));
   if (fresh) return fresh;
   // Past these the game waits for a line he must know to write: it always says so.
-  const waiting = applying.find((id) => id === 'answer' || id === 'check');
+  const waiting = applying.find((id) => id === 'answer' || id === 'check' || id === 'drag-off');
   if (waiting) return waiting;
   return room.stage.idle ? (applying[0] ?? null) : null;
 }

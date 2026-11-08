@@ -68,7 +68,7 @@ export const tuning = {
    * stage arrives with it)… */
   splitterMinParts: 2,
   /** …and this many at the most. */
-  splitterMaxParts: 9,
+  splitterMaxParts: 30,
   /** Architecture, Performance (Quality): the frame-time test starts timing this long after
    * the scene's first frame, so mount and texture-upload spikes don't count… */
   qualitySettleMs: 1000,

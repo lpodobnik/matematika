@@ -235,25 +235,25 @@ describe('when the splitter is offered (story 1.15: one tool at a time)', () => 
 });
 
 describe('setting the parts', () => {
-  it('sets 2–9 parts, one step at a time, and stops at either end', () => {
+  it('sets 2–30 parts, one step at a time, and stops at either end', () => {
     expect(tuning.splitterMinParts).toBe(2);
-    expect(tuning.splitterMaxParts).toBe(9);
+    expect(tuning.splitterMaxParts).toBe(30);
     let room = atTwoXEighteen();
     expect(stepSplitter(room, balance, -1)).toBeNull();
     const seen: number[] = [room.stage.splitter];
-    for (let i = 0; i < 7; i += 1) {
+    for (let i = 0; i < 28; i += 1) {
       const next = step(stepSplitter(room, balance, 1));
       expect(next.events).toEqual([]);
       room = next.room;
       seen.push(room.stage.splitter);
     }
-    expect(seen).toEqual([2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(seen).toEqual(Array.from({ length: 29 }, (_, i) => i + 2));
     expect(stepSplitter(room, balance, 1)).toBeNull();
-    expect(step(stepSplitter(room, balance, -1)).room.stage.splitter).toBe(8);
+    expect(step(stepSplitter(room, balance, -1)).room.stage.splitter).toBe(29);
     expect(canStepParts(2, -1)).toBe(false);
     expect(canStepParts(2, 1)).toBe(true);
-    expect(canStepParts(9, 1)).toBe(false);
-    expect(canStepParts(9, -1)).toBe(true);
+    expect(canStepParts(30, 1)).toBe(false);
+    expect(canStepParts(30, -1)).toBe(true);
   });
 
   it("doesn't touch the pans, and is ignored without Balance", () => {

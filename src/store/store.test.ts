@@ -1084,12 +1084,12 @@ describe('split both pans (story 1.11; refused when uneven, story 1.15)', () => 
     expect(offered()).toBe(true);
   });
 
-  it('sets 2–9 parts with its stepper', () => {
+  it('sets 2–30 parts with its stepper', () => {
     const game = inRoomFour();
     toTwoXEighteen(game);
-    for (let i = 0; i < 10; i += 1) game.act({ type: 'splitter/step', by: 1 });
-    expect(game.stage()?.splitter).toBe(9);
-    for (let i = 0; i < 10; i += 1) game.act({ type: 'splitter/step', by: -1 });
+    for (let i = 0; i < 40; i += 1) game.act({ type: 'splitter/step', by: 1 });
+    expect(game.stage()?.splitter).toBe(30);
+    for (let i = 0; i < 40; i += 1) game.act({ type: 'splitter/step', by: -1 });
     expect(game.stage()?.splitter).toBe(2);
   });
 

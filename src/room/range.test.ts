@@ -84,14 +84,14 @@ describe('the range pin (story 4.6)', () => {
 describe('help in room 11 (story 4.6 review)', () => {
   const tools = ['balance', 'workshop', 'chain'] as const;
 
-  it('names the chain where Balance can’t split by 27', () => {
+  it('splits by 27, now the splitter goes that far', () => {
     let room = step(setPin(wheel(), { kind: 'bucket', index: 1 })).room;
     room = step(confirmPin(room)).room;
     room = { ...room, stage: { ...room.stage, balance: { ...room.stage.balance, moves: 2 } } };
     const pans = parse('5589 = 27x');
     if (!pans.ok) throw new Error('no parse');
     room = { ...room, stage: { ...room.stage, pans: pans.equation } };
-    expect(nextMove(room, [...tools])).toEqual({ kind: 'chain', op: 'div', n: 27 });
+    expect(nextMove(room, [...tools])).toEqual({ kind: 'split', parts: 27 });
   });
 
   it('works an example of the same shape with small numbers', () => {
