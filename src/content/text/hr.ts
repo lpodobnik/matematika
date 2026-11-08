@@ -160,7 +160,7 @@ export const hr = {
         { who: 'nikola', text: 'Sreća? Meni ne izgleda kao sreća.' },
       ],
       r03: [
-        { who: 'nikola', text: 'Gle, automat krade dijelove sa svjetiljke!' },
+        { who: 'nikola', text: 'Gle, automat krade dijelove strojeva!' },
         { who: 'penkala', text: 'U Knjizi ne piše da ne smije. Barem voda opet teče.' },
       ],
       r04: [

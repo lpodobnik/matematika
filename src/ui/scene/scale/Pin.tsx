@@ -12,6 +12,7 @@ import { currentStageSpec } from '@/room/room';
 import type { EffectOption } from '@/room/types';
 import { useGame } from '@/store/store';
 import { hintPlace, pinHowText } from '@/ui/common/hint-text';
+import { nowBannerShows } from '@/ui/common/now-line';
 import { dialPointerHandlers, watchDragCancel } from '@/ui/scene/scale/dial-drag';
 import { dialLayout } from '@/ui/scene/scale/dial-layout';
 import { labelFontSize } from '@/ui/scene/scale/layout';
@@ -206,7 +207,8 @@ function PinOnScale({ sceneScale, question }: Props) {
     return box ? new Rectangle(box.x, box.y, box.width, box.height) : null;
   }, [layout]);
 
-  const asks = (view?.asks ?? false) && question !== null;
+  // Where the now banner stands over the scene the tag would only repeat it, beside the flag.
+  const asks = (view?.asks ?? false) && question !== null && (hinted > 0 || !nowBannerShows());
   const questionKey = view?.question ?? null;
   const originX = question?.x ?? 0;
   const originY = question?.y ?? 0;

@@ -80,67 +80,25 @@ describe("the pin's head in the scene area", () => {
   });
 });
 
-describe('confirmSpot (story 1.14)', () => {
-  it.each(areas)('stays fully on screen beside the head, never on it, on %s', (_, area) => {
+describe('confirmSpot', () => {
+  it.each(areas)('stays on screen and clear of the flag at every place, on %s', (_, area) => {
     for (const { name, notches, pin } of everyPin()) {
       const head = pinHeadSpot(area, 1, notches, pin);
       if (!head) throw new Error(name);
-      const spot = confirmSpot(head, pin.kind, area);
-      expect(spot.left, name).toBeGreaterThanOrEqual(0);
-      expect(spot.top, name).toBeGreaterThanOrEqual(0);
+      const spot = confirmSpot(area, head);
+      expect(spot.left, name).toBeGreaterThanOrEqual(confirmGapPx);
+      expect(spot.top, name).toBeGreaterThanOrEqual(confirmGapPx);
       expect(spot.left + confirmSize.width, name).toBeLessThanOrEqual(area.width);
       expect(spot.top + confirmSize.height, name).toBeLessThanOrEqual(area.height);
       expect(overlaps(spot, confirmSize, head), name).toBe(false);
-      // Right next to the head: its near edge within a gap of the head's edge.
-      const near = Math.min(
-        Math.abs(spot.left - (head.x + head.radius)),
-        Math.abs(spot.left + confirmSize.width - (head.x - head.radius)),
-      );
-      expect(near, name).toBeLessThanOrEqual(confirmGapPx + 1e-9);
-      // Its bottom is level with the head's, clear of the knob below.
-      expect(spot.top + confirmSize.height).toBeCloseTo(head.y + head.radius);
     }
   });
 
-  // Story 1.15 rewrites 1.14's "away from the dial's centre": the option's word now takes the
-  // outer side, and the places are far enough apart that the control still misses the other.
-  it.each(areas)(
-    "goes toward the dial's centre for a direction pin, clear of the other option and the words, on %s",
-    (_, area) => {
-      const stage = rooms[2]?.stages[1];
-      if (!stage || stage.dial === 'locked') throw new Error('room 3, stage 2');
-      const notches = notchCount(stage.dial);
-      const left = pinHeadSpot(area, 1, notches, { kind: 'choice', slots: 2, slot: 0 });
-      const right = pinHeadSpot(area, 1, notches, { kind: 'choice', slots: 2, slot: 1 });
-      if (!left || !right) throw new Error('no heads');
-      const onLeft = confirmSpot(left, 'choice', area);
-      const onRight = confirmSpot(right, 'choice', area);
-      expect(onLeft.left).toBeGreaterThan(left.x);
-      expect(onLeft.left + confirmSize.width).toBeLessThan(right.x - right.radius);
-      expect(onRight.left + confirmSize.width).toBeLessThan(right.x);
-      expect(onRight.left).toBeGreaterThan(left.x + left.radius);
-    },
-  );
-
-  it("goes toward the dial's centre for an x pin, clear of the pans' readouts", () => {
-    const area = { width: 640, height: 360 };
-    const stage = rooms[3]?.stages[0];
-    if (!stage || stage.dial === 'locked') throw new Error('room 4');
-    const notches = notchCount(stage.dial);
-    const low = pinHeadSpot(area, 1, notches, { kind: 'x', slots: 13, slot: 0 });
-    const high = pinHeadSpot(area, 1, notches, { kind: 'x', slots: 13, slot: 9 });
-    if (!low || !high) throw new Error('no heads');
-    expect(confirmSpot(low, 'x', area).left).toBeGreaterThan(low.x);
-    expect(confirmSpot(high, 'x', area).left + confirmSize.width).toBeLessThan(high.x);
-  });
-
-  it('flips to the other side when there is no room, and keeps inside the area', () => {
-    const area = { width: 400, height: 300 };
-    const atRight: HeadSpot = { x: 380, y: 150, radius: 20, centreX: 200 };
-    expect(confirmSpot(atRight, 'choice', area).left + confirmSize.width).toBeLessThanOrEqual(360);
-    const atLeft: HeadSpot = { x: 30, y: 150, radius: 20, centreX: 200 };
-    expect(confirmSpot(atLeft, 'choice', area).left).toBeGreaterThanOrEqual(50);
-    const low: HeadSpot = { x: 200, y: 380, radius: 20, centreX: 200 };
-    expect(confirmSpot(low, 'x', area).top + confirmSize.height).toBeLessThanOrEqual(area.height);
+  it('is the bottom-right corner whenever the flag is not under it', () => {
+    const area = { width: 868, height: 800 };
+    const head: HeadSpot = { x: 400, y: 600, radius: 20, centreX: 430 };
+    const corner = { left: 868 - confirmGapPx - 132, top: 800 - confirmGapPx - 56 };
+    expect(confirmSpot(area, head)).toEqual(corner);
+    expect(confirmSpot(area, null)).toEqual(corner);
   });
 });

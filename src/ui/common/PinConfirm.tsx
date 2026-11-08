@@ -15,10 +15,10 @@ interface Props {
 }
 
 /**
- * The pin's confirm control (Pattern 2, Pin: "confirming locks it"), right beside the
- * pin's head (story 1.14). It shows only while the pin is placed and not yet locked, and
- * moves with the pin from place to place. Confirming opens the dial and the notebook, and
- * the machine tests the pin. What confirming does is decided in `room/pin.ts`.
+ * The pin's confirm control (Pattern 2, Pin: "confirming locks it"), in the scene's corner,
+ * away from the flag and the dial. It shows only while the pin is placed and not yet locked.
+ * Confirming opens the dial and the notebook, and the machine tests the pin. What confirming
+ * does is decided in `room/pin.ts`.
  */
 export function PinConfirm({ area }: Props) {
   const pin = useGame(
@@ -44,11 +44,10 @@ export function PinConfirm({ area }: Props) {
   const size = useAreaSize(area);
   if (!pin || notches === null) return null;
   const head = size ? pinHeadSpot(size, copies, notches, pin) : null;
-  const spot = head && size ? confirmSpot(head, pin.kind, size) : null;
   return (
     <PinConfirmControl
       option={pin.option}
-      spot={spot}
+      spot={size ? confirmSpot(size, head) : null}
       onConfirm={() => dispatch({ type: 'pin/confirm' })}
     />
   );

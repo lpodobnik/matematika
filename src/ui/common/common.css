@@ -64,9 +64,6 @@
   font: inherit;
   font-size: 20px;
   touch-action: manipulation;
-  transition:
-    left 120ms ease-out,
-    top 120ms ease-out;
   animation: pin-confirm-rise 240ms ease-out;
 }
 
@@ -190,7 +187,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pin-confirm {
-    transition: none;
     animation: none;
   }
 

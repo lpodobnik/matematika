@@ -51,3 +51,10 @@ export function nowText(room: RoomState | null, tools: readonly ToolId[]): strin
       return hr.now.blank;
   }
 }
+
+/** Whether the big now banner fits over the scene (now-line.css: the same height). */
+export function nowBannerShows(): boolean {
+  return (
+    typeof window !== 'undefined' && (window.matchMedia?.('(min-height: 500px)').matches ?? false)
+  );
+}

@@ -1,5 +1,5 @@
 // Where the pin's head is in the scene area, in CSS px, for the HTML laid over the scene:
-// the confirm control beside it, and the `+2` that rises from it (story 1.14). The canvas
+// the `+2` that rises from it (story 1.14), and the confirm control, in the corner. The canvas
 // fills the scene area and the 1600 × 1000 scene is fitted and centred in it (fitScene);
 // with the dev panel's three copies, the first copy's pin counts. Presentation only, with
 // no React, Pixi or DOM, so the layout tests can check it at 640 × 360 and on the tablet.
@@ -53,37 +53,20 @@ export function pinHeadSpot(
 
 /** The confirm control's size (common.css: `.pin-confirm`), in CSS px. */
 export const confirmSize: Size = { width: 132, height: 56 };
-/** Kept between the control and the head, and between it and the area's edges. */
+/** Kept between the control and the area's edges. */
 export const confirmGapPx = 8;
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
 /**
- * Where the confirm control goes, beside the pin's head (its top-left corner in the area),
- * with its bottom level with the head's, so it stays clear of the knob below. It goes on the
- * side toward the dial's centre, over the stand's foot: an x pin's stays clear of the pans'
- * readouts under their outer halves, and (story 1.15) a direction pin's of its option's word,
- * on the outer side; its two places are far enough apart that the other stays clear. It takes
- * the other side when there is no room, and always stays inside the area. Both kinds go the
- * same way since story 1.15; `_kind` stays so the callers keep their shape.
+ * Where the confirm control goes (its top-left corner in the area): the scene's bottom-right
+ * corner, always the same place, away from the flag and the dial. Only on a small screen, with
+ * the flag at the far end of its track and so under that corner, it stands just above the flag.
  */
-export function confirmSpot(
-  head: HeadSpot,
-  _kind: PinView['kind'],
-  area: Size,
-  size: Size = confirmSize,
-) {
-  const gap = confirmGapPx;
-  const right = head.x + head.radius + gap;
-  const left = head.x - head.radius - gap - size.width;
-  const roomRight = right + size.width <= area.width - gap;
-  const roomLeft = left >= gap;
-  const preferRight = head.x < head.centreX;
-  const goRight = preferRight ? roomRight || !roomLeft : !roomLeft && roomRight;
+export function confirmSpot(area: Size, head: HeadSpot | null, size: Size = confirmSize) {
+  const left = area.width - confirmGapPx - size.width;
+  const top = area.height - confirmGapPx - size.height;
+  const underIt = head && head.x + head.radius >= left && head.y + head.radius >= top;
   return {
-    left: clamp(goRight ? right : left, gap, area.width - gap - size.width),
-    top: clamp(head.y + head.radius - size.height, gap, area.height - gap - size.height),
+    left,
+    top: underIt ? Math.max(confirmGapPx, head.y - head.radius - confirmGapPx - size.height) : top,
   };
 }
