@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { roomOpen } from '@/city/reach';
 import { findPath, onGround } from '@/city/walk';
+import { districtMap } from '@/content/map';
+import { rooms } from '@/content/rooms';
 import { town } from '@/content/town';
 
 const areas = Object.values(town.areas);
@@ -15,6 +18,29 @@ describe('the townspeople', () => {
       expect(sides.some((side) => findPath(area.ground, area.arrive, side) !== null)).toBe(true);
     },
   );
+
+  // The tools rooms give (content/map.ts): Balance from room 3, the workshop from 6, the gear
+  // chain from 7, the drum from 12.
+  const gives: Record<string, string> = {
+    r03: 'balance',
+    r06: 'workshop',
+    r07: 'chain',
+    r12: 'drum',
+  };
+  const authored: string[] = rooms.map((room) => room.id);
+
+  it.each(
+    areas.flatMap((area) =>
+      area.people
+        .filter((person) => person.after !== person.changesWith)
+        .map((person) => [person.id, area.id, person] as const),
+    ),
+  )('%s in the %s asks only for a machine he can already reach', (_id, _area, person) => {
+    // Played in order up to the room they come with.
+    const done = authored.slice(0, authored.indexOf(person.after as string) + 1);
+    const tools = done.flatMap((room) => (gives[room] ? [gives[room]] : []));
+    expect(roomOpen(districtMap, person.changesWith, { done, tools, authored })).toBe(true);
+  });
 
   it('someone asks for help in most streets before its machine is fixed', () => {
     const asking = areas.filter((area) =>

@@ -109,14 +109,15 @@ export const hr = {
       kristijan: 'Majstor Kristijan',
       automaton: 'Prvi Automat',
     },
-    /** Under each name, every time: who they are, so nobody speaks without an introduction. */
+    /**
+     * After each townsperson's name, every time: `Name (role)`, so nobody speaks without an
+     * introduction. Kristijan's note and the Automaton's notice speak for themselves.
+     */
     roles: {
-      penkala: 'kondukter, sve radi po Knjizi',
-      nikola: 'sin palitelja svjetiljki',
-      faust: 'stari mehaničar',
-      kristijan: 'nestali majstor, njegova bilješka',
-      automaton: 'obavijest na bušenoj traci',
-    },
+      penkala: 'kondukter',
+      nikola: 'sin palitelja',
+      faust: 'mehaničar',
+    } as Partial<Record<'penkala' | 'nikola' | 'faust' | 'kristijan' | 'automaton', string>>,
     /** In a line that takes his name, before he has one (a dev jump). */
     noName: 'šegrte',
     next: 'Dalje',
@@ -156,7 +157,7 @@ export const hr = {
       ],
       r07: [
         { who: 'kristijan', text: 'Pišem kako mi kažu. Tko razumije, vidjet će grešku.' },
-        { who: 'faust', text: 'Kristijan ne griješi. Ova je greška namjerna. Netko ga je odveo.' },
+        { who: 'faust', text: 'Kristijan ne griješi. Ova je greška namjerna. Netko ga je oteo.' },
       ],
       r08: [
         {
@@ -326,7 +327,7 @@ export const hr = {
   /** Story 2.10: room 7, the old logbook's lines. */
   logbook: {
     /** The tag before he has tapped a line: tapping puts it on the scale. */
-    tap: 'Dodirni redak – vaga će ga pokazati.',
+    tap: 'Dodirni redak i vaga će ga složiti.',
     /** For screen readers: the flag beside a line, "this line is wrong". */
     flag: 'Pogrešan redak',
   },
@@ -437,7 +438,7 @@ export const hr = {
     people: {
       penkala: {
         name: 'Gospon Penkala',
-        who: 'kondukter, uvijek s Knjigom',
+        who: 'kondukter',
         before: [
           'Prema Knjizi: tri okreta kurble, svako jutro. Okrećem. Vrata stoje.',
           'Ne diraj stroj, molim. Toga nema u Knjizi.',
@@ -446,7 +447,7 @@ export const hr = {
       },
       nikola: {
         name: 'Nikola',
-        who: 'sin palitelja svjetiljki',
+        who: 'sin palitelja',
         before: [
           'Tata pali svjetiljke svaku večer. Sad ne gori nijedna.',
           'Kristijan bi znao. Ali Kristijana nema.',
@@ -455,7 +456,7 @@ export const hr = {
       },
       faust: {
         name: 'Faust',
-        who: 'stari mehaničar',
+        who: 'mehaničar',
         before: [
           'Radionica je sad tvoja. Kristijan bi to htio.',
           'Za dijelove ti napravim nešto korisno. Svrati unutra.',
@@ -472,14 +473,14 @@ export const hr = {
         after: ['Melje!', 'Hvala ti.'],
       },
       vucetic: {
-        name: 'Stražar Vučetić',
-        who: 'stražar na mostu, sve zapisuje',
-        before: ['Most je gore i neće dolje.', 'Pomogneš li?'],
-        after: ['Most je dolje. Zapisano.', 'Hvala ti.'],
+        name: 'Vučetić',
+        who: 'stražar',
+        before: ['Utezi na mostu su se zapleli.', 'Pomogneš li?'],
+        after: ['Utezi vise ravno. Zapisano.', 'Hvala ti.'],
       },
       zagorka: {
         name: 'Zagorka',
-        who: 'novinarka, traži priču',
+        who: 'novinarka',
         before: ['Pišem o strojevima koji stoje.', 'Pomogneš li?'],
         after: ['Ovo ide na prvu stranicu!', 'Hvala ti.'],
       },
@@ -502,11 +503,11 @@ export const hr = {
       },
       bridgeVucetic: {
         before: [
-          'Most je gore i neće dolje. Sve sam zapisao.',
-          'Pomozi, molim te. Bez mosta nitko ne prelazi.',
+          'Utezi na mostu su se zapleli. Most se klima. Sve sam zapisao.',
+          'Pomozi, molim te. Ovako ga nitko ne smije prijeći.',
         ],
         after: [
-          'Most je dolje. Zapisano: radi.',
+          'Utezi vise ravno, most stoji čvrsto. Zapisano: radi.',
           'Na poluzi su otisci prstiju. Tvoji, pretpostavljam.',
         ],
       },
@@ -540,11 +541,11 @@ export const hr = {
       },
       yardFaust: {
         before: [
-          'Vagaonica je bila Kristijanova najdraža.',
+          'Vagaonica je Kristijanu bila najdraže mjesto.',
           'Pazi na utege. Svaki ima svoju priču.',
         ],
         after: [
-          'Vagaonica je bila Kristijanova najdraža.',
+          'Vagaonica je Kristijanu bila najdraže mjesto.',
           'Pazi na utege. Svaki ima svoju priču.',
         ],
       },
@@ -573,6 +574,12 @@ export const hr = {
     places: {
       /** A machine he can play: its name is enough; this is what a locked one says. */
       locked: 'Ovaj stroj čeka. Prvo neki drugi.',
+      /** A locked machine, naming the machines it waits for (from the map's gates). */
+      waits: (machines: readonly string[]) =>
+        `Ovaj stroj čeka. Prvo popravi: ${machines.join(' i ')}.`,
+      /** A way out not open yet, naming the machine that opens it. */
+      wayWaits: (sign: string, machine: string) =>
+        `Put „${sign}” je zatvoren. Otvorit će se kad popraviš: ${machine}.`,
       /** A machine he has fixed: it runs, and there is nothing left to do here. */
       running: (name: string) => `${name}: radi. Ovdje je sve gotovo.`,
       workshop: 'Kristijanova radionica. Zaključana, a ključ je kod nekog drugog.',
@@ -932,7 +939,7 @@ export const hr = {
       split: 'Tipkama − i + biraš broj dijelova. Onda ga odvuci na vagu.',
       // Room 7: the old logbook and its wrong line.
       logbook: 'Ovo je stari dnevnik. Ovaj zadatak u njemu je već riješen.',
-      'logbook-tap': 'Dodirni redak i vaga ga pokaže uz isti x.',
+      'logbook-tap': 'Dodirni redak i vaga će ga složiti. Gledaj je li ravna.',
       'logbook-flag': 'Jedan redak ne vrijedi. Stavi zastavicu na njega, pa potvrdi.',
       // Room 8: the gear chain.
       chain: 'Ovo je lanac. Karike redom pokazuju što se radi s x.',

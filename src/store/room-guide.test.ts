@@ -243,6 +243,24 @@ describe('Balance’s guide (room 4)', () => {
     g.act({ type: 'splitter/split' });
     expect(g.met()).toContain('guide-splitter');
   });
+
+  it('a split made early, before the step that asks for it, never leaves him waiting', () => {
+    const g = playing({ tools: ['balance'], firstUse: allMetBut('tray', 'splitter') });
+    g.act({ type: 'room/enter', roomId: 'r04' });
+    g.act({ type: 'machine/touch' });
+    for (let i = 0; i < 3; i += 1) g.next();
+    for (let i = 0; i < 4; i += 1) g.act({ type: 'tray/step', kind: 'float', by: 1 });
+    g.act({ type: 'tray/drop', kind: 'float' });
+    g.next();
+    g.next();
+    expect(g.shows()).toBe('splitter:splitter');
+    // He drags the splitter on while Nikola is still saying what it is.
+    g.act({ type: 'splitter/split' });
+    expect(g.shows()).not.toBe('splitter:split');
+    if (g.shows() === 'splitter:splitter') g.next();
+    expect(g.shows()).toBeNull();
+    expect(g.met()).toContain('guide-splitter');
+  });
 });
 
 describe('each room’s own guide comes first in its room', () => {

@@ -114,7 +114,7 @@ test('a new game: the opening, the naming, the town, room 1 and back', async ({ 
   );
   // Nobody speaks without an introduction: Penkala says who he is, and his role is under his name.
   await expect(page.locator('.story__item[data-who="penkala"] .story__role').first()).toHaveText(
-    'kondukter, sve radi po Knjizi',
+    '(kondukter)',
   );
   await expect(page.locator('.story__text').first()).toContainText('Ja sam Penkala');
   await shot(page, '4b-penkala-introduces-himself');
@@ -318,9 +318,31 @@ test('people ask for help with their street machine: Milka at the canal, Vučeti
   await expect(page.locator('.town__board[data-area="square"]')).toBeVisible({ timeout: 8000 });
   await page.locator('.town__place[data-exit="bridge"]').click();
   await expect(page.locator('.town__board[data-area="bridge"]')).toBeVisible({ timeout: 10_000 });
+  // Not yet: the bridge needs Balance from the sluice gate first, so nobody asks for it.
+  await expect(page.locator('[data-person="vucetic"]')).toHaveCount(0);
+
+  // With the sluice gate fixed, Vučetić asks, and his bridge is open to go in.
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    const done = ['r01', 'r02', 'r03'];
+    g.__d({
+      type: 'boot/start',
+      save: { ...s.save, progress: { ...s.save.progress, roomsDone: done, told: done } },
+      room: null,
+    });
+  });
+  // He is still in the bridge street; now Vučetić is there.
+  await expect(page.locator('.town__board[data-area="bridge"]')).toBeVisible({ timeout: 10_000 });
   await expect(page.locator('[data-person="vucetic"]')).toHaveAttribute('data-asks', 'true');
+  await page.locator('[data-person="vucetic"]').click();
+  await expect(page.locator('.town__bubble')).toContainText('Utezi', { timeout: 8000 });
   await page.waitForTimeout(300);
   await shot(page, '9-vucetic');
+  await page.locator('.town__bubble').click();
+  await page.locator('.town__bubble').click();
+  await page.locator('.town__place[data-node="r05"]').click();
+  await expect.poll(async () => (await state(page)).ui.screen, { timeout: 8000 }).toBe('room');
 });
 
 test('the town to the midpoint: bridge, yard, the logbook house and Faust', async ({ page }) => {

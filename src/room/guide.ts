@@ -30,7 +30,7 @@ import { rangeView } from '@/room/range';
 import { currentStageSpec, pokeNotches } from '@/room/room';
 import { splitterOffered } from '@/room/splitter';
 import { storyView, storyWaits } from '@/room/story';
-import { balanceFading, trayHasGear, trayOffered } from '@/room/tray';
+import { balanceFading, readyToSplit, trayHasGear, trayOffered } from '@/room/tray';
 import type { FirstUseId, GuideTopic, Phase, RoomId, RoomState, ToolId } from '@/room/types';
 
 /**
@@ -248,7 +248,14 @@ const topics: Readonly<Record<GuideTopic, TopicSpec>> = {
       open(room) && splitterOffered(room, tools) && !answered(room) && room.stage.jam === null,
     steps: [
       { id: 'splitter', targets: ['splitter'] },
-      { id: 'split', targets: ['splitter', 'scale'], waits: 'split' },
+      // Only while a split can still be made: dragged early, the scale is already split, and
+      // a step waiting for it would wait for good.
+      {
+        id: 'split',
+        targets: ['splitter', 'scale'],
+        waits: 'split',
+        skip: (room) => !readyToSplit(room.stage.pans),
+      },
     ],
   },
   logbook: {

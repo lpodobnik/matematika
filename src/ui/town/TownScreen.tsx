@@ -133,6 +133,49 @@ function readMet(): PersonId[] {
   }
 }
 
+/** The rooms that give the tools gates ask for (content/map.ts). */
+const toolRooms: Record<string, RoomId> = {
+  balance: 'r03',
+  workshop: 'r06',
+  chain: 'r07',
+  drum: 'r12',
+};
+
+/** The machines a locked place waits for, by name: its gate's rooms and tool rooms not done. */
+function waitsFor(node: NodeId, done: readonly RoomId[]): string[] {
+  const gate = districtMap.nodes.find((n) => n.id === node)?.gate;
+  if (!gate || gate.sealed) return [];
+  const rooms = [
+    ...(gate.rooms ?? []),
+    ...(gate.tools ?? []).flatMap((tool) => (toolRooms[tool] ? [toolRooms[tool]] : [])),
+  ] as RoomId[];
+  return [...new Set(rooms)]
+    .filter((room) => !done.includes(room))
+    .map((room) => hr.map.nodes[room]);
+}
+
+/** Where he left the town from: the street and the spot, for when he comes back. */
+function readWhere(): { area: AreaId; at: Point } | null {
+  try {
+    const raw = sessionStorage.getItem('matematika:town:where');
+    const where = raw ? (JSON.parse(raw) as { area?: unknown; at?: Point }) : null;
+    if (!where || typeof where.area !== 'string' || !(where.area in town.areas) || !where.at) {
+      return null;
+    }
+    return { area: where.area as AreaId, at: where.at };
+  } catch {
+    return null;
+  }
+}
+
+function writeWhere(area: AreaId, at: Point) {
+  try {
+    sessionStorage.setItem('matematika:town:where', JSON.stringify({ area, at }));
+  } catch {
+    // A private window: he comes back to the square.
+  }
+}
+
 function writeMet(met: PersonId[]) {
   try {
     localStorage.setItem('matematika:town:met', JSON.stringify(met));
@@ -144,13 +187,19 @@ function writeMet(met: PersonId[]) {
 /** The town from props: the square, its machines, people and automaton, and his figure. */
 export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }: BoardProps) {
   const nodes = useMemo(() => new Map(view.nodes.map((node) => [node.id, node])), [view]);
-  // He comes out where he went in: the area holding the room just restarted.
-  const [areaId, setAreaId] = useState<AreaId>(() => areaOf(fresh) ?? town.start);
+  // He comes out where he went in: the area holding the room just restarted, or else the
+  // street and spot he left from (a fight, a room left halfway), or else the square.
+  const [where] = useState(() => (fresh ? null : readWhere()));
+  const [areaId, setAreaId] = useState<AreaId>(() => areaOf(fresh) ?? where?.area ?? town.start);
   const area = town.areas[areaId];
   useTownSound(areaId);
   const [start, setStart] = useState<Point>(
-    () => area.places.find((place) => place.node === fresh)?.stand ?? area.arrive,
+    () =>
+      area.places.find((place) => place.node === fresh)?.stand ??
+      (where?.area === areaId ? where.at : area.arrive),
   );
+  const areaRef = useRef(areaId);
+  areaRef.current = areaId;
   const [walking, setWalking] = useState(false);
   const [bubble, setBubble] = useState<Bubble | null>(null);
   const [showMap, setShowMap] = useState(false);
@@ -195,6 +244,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
           return;
         }
         if (node && (node.state === 'open' || node.state === 'restored')) {
+          writeWhere(areaRef.current, meRef.current);
           onTravel(job.place.node);
           return;
         }
@@ -202,8 +252,13 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
           setBubble({ who: 'self', at: job.place.marker, lines: hr.town.places.foundry, line: 0 });
           return;
         }
+        const missing = waitsFor(job.place.node, done);
         const text =
-          job.place.node === 'workshop' ? hr.town.places.workshop : hr.town.places.locked;
+          job.place.node === 'workshop'
+            ? hr.town.places.workshop
+            : missing.length > 0
+              ? hr.town.places.waits(missing)
+              : hr.town.places.locked;
         setBubble({ who: 'self', at: job.place.marker, lines: [text], line: 0 });
         return;
       }
@@ -214,6 +269,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
         const seen = lair?.state === 'open' || lair?.state === 'winding';
         const wait = wakesIn(id);
         if (seen && wait === null) {
+          writeWhere(areaRef.current, meRef.current);
           onTravel(id);
           return;
         }
@@ -237,7 +293,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
         lines,
         line: 0,
         intro: first
-          ? `${hr.town.people[person.id].name}, ${hr.town.people[person.id].who}`
+          ? `${hr.town.people[person.id].name} (${hr.town.people[person.id].who})`
           : undefined,
       });
     },
@@ -419,6 +475,29 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 className="town__glow"
                 style={pct(lamp)}
                 aria-hidden="true"
+              />
+            ))}
+          {area.exits
+            .filter((exit) => !done.includes(exit.opensWith))
+            .map((exit) => (
+              // A way not open yet sits under the machines and says which machine opens it.
+              <button
+                key={`closed-${exit.to}`}
+                type="button"
+                className="town__place"
+                data-closed-exit={exit.to}
+                style={rectStyle(exit.area)}
+                aria-label={hr.town.signs[exit.to]}
+                onClick={() =>
+                  setBubble({
+                    who: 'self',
+                    at: exit.marker,
+                    lines: [
+                      hr.town.places.wayWaits(hr.town.signs[exit.to], hr.map.nodes[exit.opensWith]),
+                    ],
+                    line: 0,
+                  })
+                }
               />
             ))}
           {places.map((place) => (

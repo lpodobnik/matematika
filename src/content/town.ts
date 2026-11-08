@@ -270,7 +270,7 @@ const canal: TownArea = {
       id: 'milka',
       at: { x: 650, y: 770 },
       facing: -1,
-      after: 'r01',
+      after: 'r02',
       changesWith: 'r03',
       until: 'r03',
       scene: 'canalMilka',
@@ -360,7 +360,7 @@ const mill: TownArea = {
       facing: -1,
       after: 'r04',
       changesWith: 'r04',
-      until: 'r11',
+      until: 'r12',
       scene: 'millNikola',
     },
   ],
@@ -405,12 +405,13 @@ const bridge: TownArea = {
     },
   ],
   people: [
-    // The bridge guard asks for the drawbridge, and notes everything down.
+    // The bridge guard asks for the tangled counterweights once Balance (room 3) opens the
+    // bridge, and notes everything down.
     {
       id: 'vucetic',
       at: { x: 450, y: 720 },
       facing: 1,
-      after: 'r02',
+      after: 'r03',
       changesWith: 'r05',
       scene: 'bridgeVucetic',
     },
@@ -811,7 +812,7 @@ const hill: TownArea = {
       id: 'nikola',
       at: { x: 900, y: 720 },
       facing: -1,
-      after: 'r11',
+      after: 'r12',
       changesWith: 'r13',
       scene: 'hillNikola',
     },
