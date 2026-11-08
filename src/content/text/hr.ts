@@ -369,8 +369,6 @@ export const hr = {
     started: 'započeto',
     /** Story 3.3: on a lair, the parts he left there by losing, to win back. */
     pile: (n: number) => `ostavljeno ${n}`,
-    /** Story 3.3: on a winding-down lair, when its automaton rewinds. */
-    wakes: (minutes: number) => `budi se za ${minutes} min`,
   },
   /**
    * The opening (story 5.0; narrative design, Story Beats, "Opening | Start"): four panels

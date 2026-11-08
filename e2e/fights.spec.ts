@@ -149,7 +149,14 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
 
   // Armour 30, beside the bridge: one soft strike, then leave, which asks and loses.
   await dispatch(page, { type: 'dev/fight-seed', seed: 21 });
-  await page.locator('.map__node[data-node="lair-30"]').click();
+  // He set off from the bridge street, as a tap on its automaton records.
+  await page.evaluate(() =>
+    sessionStorage.setItem(
+      'matematika:town:where',
+      JSON.stringify({ area: 'bridge', at: { x: 450, y: 800 } }),
+    ),
+  );
+  await dispatch(page, { type: 'map/travel', node: 'lair-30' });
   await expect(page.locator('.fight')).toBeVisible();
   await shot('02-fight-start');
   await round(page, false);
@@ -173,16 +180,15 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   await expect(page.locator('.fight__end')).toContainText(`${dropped} dijela ostaju`);
   await shot('05-lost');
   await page.locator('.fight__close').click();
-  await openMap(page);
-  await expect(page.locator('.map__node[data-node="lair-30"] .map__pile')).toHaveText(
-    String(dropped),
-  );
-  await shot('06-map-pile');
+  // Back in the street he left, not the square; what he left is on the automaton.
+  await expect(page.locator('.town__board[data-area="bridge"]')).toBeVisible();
+  await expect(page.locator('.town__figure--automaton .town__pile')).toHaveText(String(dropped));
+  await shot('06-after-loss');
 
   // Back in, played hard: seed 22's dice win with a clean cut, the pile comes back, and the
   // first win returns page 1. (With other dice this test fails here, on purpose.)
   await dispatch(page, { type: 'dev/fight-seed', seed: 22 });
-  await page.locator('.map__node[data-node="lair-30"]').click();
+  await dispatch(page, { type: 'map/travel', node: 'lair-30' });
   await expect(page.locator('.fight__pile')).toContainText(String(dropped));
   while (!(await over(page))) await round(page, true);
   expect((await state(page)).fight?.phase).toBe('won');
@@ -199,12 +205,6 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   await page.locator('.pages__close').click();
   await page.locator('.fight__close').click();
   await openMap(page);
-  await expect(page.locator('.map__node[data-node="lair-30"]')).toHaveAttribute(
-    'data-state',
-    'winding',
-  );
-  // The pile is gone from the map.
-  await expect(page.locator('.map__node[data-node="lair-30"] .map__pile')).toHaveCount(0);
   await page.locator('.map__pages-button').click();
   await expect(page.locator('.torn-page')).toHaveCount(1);
   await shot('09-pages');
@@ -221,8 +221,10 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   expect((await state(page)).save.economy.parts).toBe(beforePanel + 10);
   await page.locator('.dev-panel button', { hasText: 'close' }).click();
   await openMap(page);
+  // The map takes him to the street; he walks to the workshop door.
   await page.locator('.map__node[data-node="workshop"]').click();
-  await expect(page.locator('.shop')).toBeVisible();
+  await page.locator('.town__place[data-node="workshop"]').click();
+  await expect(page.locator('.shop')).toBeVisible({ timeout: 10_000 });
   const parts = (await state(page)).save.economy.parts;
   const steamCost = tuning.upgrades.steam.cost;
   expect(parts).toBeGreaterThanOrEqual(steamCost);
@@ -244,7 +246,7 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   expect((await state(page)).save.economy.upgrades).toEqual(['steam']);
   expect((await state(page)).save.progress.tornPages).toEqual(['page-1']);
   await openMap(page);
-  await page.locator('.map__node[data-node="lair-20"]').click();
+  await dispatch(page, { type: 'map/travel', node: 'lair-20' });
   await expect(page.locator('.fight__pip')).toHaveCount(
     tuning.fight.steam + tuning.upgrades.steam.steam,
   );

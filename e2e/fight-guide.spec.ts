@@ -133,7 +133,7 @@ test('the first fight is guided step by step, once', async ({ page }, testInfo) 
   await expect(page.locator('.town__overlay .map__board')).toBeVisible();
   // Seed 21's first roll is 3, 3, 2: one strike leaves armour, so the dent is explained too.
   await dispatch(page, { type: 'dev/fight-seed', seed: 21 });
-  await page.locator('.map__node[data-node="lair-20"]').click();
+  await dispatch(page, { type: 'map/travel', node: 'lair-20' });
   await expect(card).toBeVisible();
   await expect(card).toContainText('Nikola');
 
@@ -191,7 +191,7 @@ test('the first fight is guided step by step, once', async ({ page }, testInfo) 
   await hook(page);
   expect((await state(page)).save.progress.firstUse).toContain('fight-guide');
   await page.getByRole('button', { name: 'Karta četvrti' }).click();
-  await page.locator('.map__node[data-node="lair-20"]').click();
+  await dispatch(page, { type: 'map/travel', node: 'lair-20' });
   await expect(page.locator('.fight')).toBeVisible();
   await expect(card).toHaveCount(0);
   await shot('next-fight');
@@ -216,7 +216,7 @@ test('a first fight won in one strike: the guide finishes over the end', async (
   await page.getByRole('button', { name: 'Karta četvrti' }).click();
   // Seed 11's first roll is 4, 4, 4: four blows of 4 plus 4 cut armour 20 clean.
   await dispatch(page, { type: 'dev/fight-seed', seed: 11 });
-  await page.locator('.map__node[data-node="lair-20"]').click();
+  await dispatch(page, { type: 'map/travel', node: 'lair-20' });
   await page.locator('.fight__guide-next').click();
   await page.locator('.fight__guide-next').click();
   await page.locator('.fight__roll').click();

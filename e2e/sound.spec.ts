@@ -130,7 +130,7 @@ test('the mute control toggles, is kept across a reload, and is on every screen'
   await dispatch(page, { type: 'map/open' });
   await expect(page.locator('.town__board')).toBeVisible();
   await page.getByRole('button', { name: 'Karta četvrti' }).click();
-  await page.locator('.map__node[data-node="lair-20"]').click();
+  await dispatch(page, { type: 'map/travel', node: 'lair-20' });
   await expect(page.locator('.fight')).toBeVisible();
   await expect(mute(page)).toBeVisible();
   await page.waitForTimeout(400);

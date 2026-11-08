@@ -269,6 +269,22 @@
 }
 
 /* A signpost at each way out of a street: below its marker, so the bobbing arrow sits on top. */
+.town__pile {
+  position: absolute;
+  top: -0.4em;
+  right: -0.2em;
+  min-width: 1.6em;
+  padding: 0 0.3em;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: max(13px, 1.4cqw);
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
 .town__ask {
   position: absolute;
   top: -0.2em;

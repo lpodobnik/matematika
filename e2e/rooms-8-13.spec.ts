@@ -222,8 +222,10 @@ async function arrive(page: Page, room: string) {
   await expect.poll(async () => (await state(page)).screen).toBe('map');
   expect((await state(page)).room).toBeNull();
   await openMap(page);
+  // The map takes him to the street; he walks to the machine.
   await page.locator(`button.map__node[data-node="${room}"]`).click();
-  await expect.poll(async () => (await state(page)).room).toBe(room);
+  await page.locator(`.town__place[data-node="${room}"]`).click();
+  await expect.poll(async () => (await state(page)).room, { timeout: 10_000 }).toBe(room);
   await touch(page);
 }
 
@@ -369,10 +371,7 @@ test('rooms 8–13 back to back, through the line reveal', async ({ page }, test
   await expect(page.locator('.town__board')).toBeVisible();
   expect((await state(page)).done).toHaveLength(13);
   await openMap(page);
-  await expect(page.locator('.map__node[data-node="lair-60"]')).toHaveAttribute(
-    'data-state',
-    'open',
-  );
+  await expect(page.locator('.map__node[data-kind="lair"]')).toHaveCount(0);
   await shot('map-whole');
   expect(errors).toEqual([]);
 });

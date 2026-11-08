@@ -133,21 +133,6 @@
 }
 
 /* The parts he left at a lair by losing: a small heap of cogs, with the number. */
-.map__pile {
-  position: absolute;
-  top: -4px;
-  right: -10px;
-  min-width: 1.6em;
-  padding: 0 0.3em;
-  border: 1.5px solid var(--ink);
-  border-radius: 999px;
-  background: var(--sheet);
-  font-size: clamp(11px, 1.3cqw, 18px);
-  font-weight: 700;
-  line-height: 1.5;
-  text-align: center;
-}
-
 .map__node[data-state="open"] .map__glyph {
   box-shadow: 0 0 0 3px var(--ink);
 }

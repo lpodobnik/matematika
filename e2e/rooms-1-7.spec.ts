@@ -189,7 +189,9 @@ async function arrive(page: Page, room: string, via: 'town' | 'map') {
     await page.locator(`.town__place[data-node="${room}"]`).click();
   } else {
     if ((await page.locator('.town__overlay').count()) === 0) await openMap(page);
+    // The map takes him to the street; he walks to the machine.
     await page.locator(`button.map__node[data-node="${room}"]`).click();
+    await page.locator(`.town__place[data-node="${room}"]`).click();
   }
   await expect.poll(async () => (await state(page)).room, { timeout: 10_000 }).toBe(room);
   await expect.poll(async () => (await state(page)).screen).toBe('room');

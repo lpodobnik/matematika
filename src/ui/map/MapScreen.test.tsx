@@ -28,7 +28,8 @@ describe('the map screen (story 2.2)', () => {
   it('draws every node as a button, with only the rooms he can reach enabled', () => {
     const html = board(['r01']);
     const all = buttons(html);
-    expect(all).toHaveLength(19);
+    // The 19 nodes, less the four automatons, who stand in their streets.
+    expect(all).toHaveLength(15);
     expect(all.filter((button) => !button.includes('disabled'))).toHaveLength(2);
     expect(html).toContain(hr.map.title);
   });
@@ -59,8 +60,9 @@ describe('the map screen (story 2.2)', () => {
     expect(bridge).toContain('data-state="locked"');
     expect(html).toContain(`>${hr.map.nodes.r05}<`);
     expect(html).toContain('map__lock');
-    // The lair beside room 2 shows, named, and opens into a fight (story 3.1).
-    expect(html).toContain(`aria-label="${hr.map.nodes['lair-20']}, ${hr.map.states.open}"`);
+    // The automatons stand in their streets, not on the map.
+    expect(html).not.toContain(hr.map.nodes['lair-20']);
+    expect(html).not.toContain('data-kind="lair"');
   });
 
   it('pulses the next room and blooms the one just restored', () => {
@@ -115,34 +117,6 @@ describe('room 6 on the map (story 2.9)', () => {
     expect(html).toContain(`aria-label="${hr.map.nodes.workshop}, ${hr.map.states.open}"`);
     expect(html).toContain(`aria-label="${hr.map.nodes.foundry}, ${hr.map.states.locked}"`);
     expect(html).toContain('5 · x = 40');
-  });
-});
-
-describe('lairs on the map screen (story 3.3)', () => {
-  it('shows a winding-down lair off, with when it wakes, and the pile left at a lair', () => {
-    const view = mapView(
-      districtMap,
-      {
-        roomsDone: ['r01', 'r02'],
-        tools: [],
-        started: [],
-        fresh: null,
-        asleep: ['lair-20'],
-        piles: { 'lair-20': 3 },
-      },
-      authored,
-    );
-    const html = renderToString(
-      <MapBoard view={view} wakes={{ 'lair-20': 12 }} onTravel={() => undefined} />,
-    );
-    const lair = buttons(html).find((b) => b.includes('data-node="lair-20"')) ?? '';
-    expect(lair).toContain('disabled');
-    expect(lair).toContain('data-state="winding"');
-    expect(lair).toContain(
-      `aria-label="${hr.map.nodes['lair-20']}, ${hr.map.states.winding}, ${hr.map.wakes(12)}, ${hr.map.pile(3)}"`,
-    );
-    expect(html).toContain(`>${hr.map.wakes(12)}<`);
-    expect(html).toContain('class="map__pile"');
   });
 });
 

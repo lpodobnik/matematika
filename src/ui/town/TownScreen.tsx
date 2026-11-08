@@ -303,7 +303,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   // A tap on the district map: to the street that holds the place, standing beside it.
   const pick = useCallback(
     (node: NodeId) => {
-      const to = streetOf(node);
+      const to = areaOf(node);
       if (!to) {
         onTravel(node);
         return;
@@ -417,6 +417,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
       (person.after === null || done.includes(person.after)) &&
       !(person.until && done.includes(person.until)),
   );
+  const pile = (area.lair && nodes.get(area.lair)?.pile) || 0;
   const exits = area.exits.filter((exit) => done.includes(exit.opensWith));
   // An open way on takes the tap over its area (the raised gate is now a way through).
   const places = area.places.filter(
@@ -574,7 +575,11 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               className="town__place"
               data-lair={area.lair}
               style={rectStyle(area.lairSpot.area)}
-              aria-label={hr.map.nodes[area.lair]}
+              aria-label={
+                pile > 0
+                  ? `${hr.map.nodes[area.lair]}, ${hr.map.pile(pile)}`
+                  : hr.map.nodes[area.lair]
+              }
               onClick={() => {
                 const spot = area.lairSpot;
                 if (spot) {
@@ -595,7 +600,11 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
                 ...pct(area.patrol[0] as Point),
                 height: `${((town.figure * 0.62) / town.height) * 100}%`,
               }}
-              aria-label={hr.map.nodes[area.lair]}
+              aria-label={
+                pile > 0
+                  ? `${hr.map.nodes[area.lair]}, ${hr.map.pile(pile)}`
+                  : hr.map.nodes[area.lair]
+              }
               onClick={() =>
                 walkTo(
                   { x: botRef.current.at.x - 90, y: botRef.current.at.y + 10 },
@@ -604,6 +613,12 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               }
             >
               <Automaton armour={lairs[area.lair].armour} />
+              {/* The parts he left here by losing, to win back. */}
+              {pile > 0 && (
+                <span className="town__pile" aria-hidden="true">
+                  {pile}
+                </span>
+              )}
             </button>
           )}
           <div
@@ -720,12 +735,6 @@ function place(el: HTMLElement | null, at: Point, facing: 1 | -1, picture: 1 | -
   el.style.zIndex = String(Math.round(at.y));
   const img = el.firstElementChild as HTMLElement | null;
   if (img) img.style.transform = `scaleX(${facing * picture})`;
-}
-
-/** The street a map place stands in: a machine, or the automaton on patrol there. */
-function streetOf(node: NodeId): AreaId | null {
-  const area = Object.values(town.areas).find((a) => a.lair === node);
-  return areaOf(node) ?? area?.id ?? null;
 }
 
 /** A person's lines: before the room that changes them, or after. */
