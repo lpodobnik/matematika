@@ -63,6 +63,14 @@ export function FightEndPanel({
           {end.recovered > 0 && (
             <p className="fight__pay-line">{hr.fight.recovered(end.recovered)}</p>
           )}
+          {fight.lairId === 'lair-60' ? (
+            <>
+              <p className="fight__pay-line">{hr.fight.finale}</p>
+              <p className="fight__notice">{hr.fight.finaleNote}</p>
+            </>
+          ) : (
+            <p className="fight__pay-line">{hr.fight.spend}</p>
+          )}
         </div>
       )}
       {end && !won && (

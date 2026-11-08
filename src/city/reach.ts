@@ -65,19 +65,6 @@ export function nextRoomOnMap(map: MapSpec, reach: Reach): string | null {
 }
 
 /**
- * The map as he sees it: the automatons stand in their streets (the town), so neither they
- * nor the roads to them are drawn; what is open or asleep is still worked out for the town.
- */
-export function withoutLairs(view: MapView): Pick<MapView, 'nodes' | 'roads'> {
-  const lairs = view.nodes.filter((node) => node.kind === 'lair');
-  const atLair = (p: { x: number; y: number }) => lairs.some((l) => l.x === p.x && l.y === p.y);
-  return {
-    nodes: view.nodes.filter((node) => node.kind !== 'lair'),
-    roads: view.roads.filter((road) => !atLair(road.from) && !atLair(road.to)),
-  };
-}
-
-/**
  * How a node shows:
  * - `restored`, a room he has finished, its change in colour;
  * - `open`, a room he can travel to;

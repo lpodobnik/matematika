@@ -315,9 +315,7 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   const node = (id: string) => page.locator(`button.map__node[data-node="${id}"]`);
   await expect(node('r04')).toHaveAttribute('data-state', 'restored');
   await expect(node('r05')).toHaveAttribute('data-state', 'open');
-  await expect(node('r07')).not.toHaveAttribute('data-state', /^(open|restored)$/);
   await expect(node('r08')).not.toHaveAttribute('data-state', /^(open|restored)$/);
-  await expect(node('r07')).toBeDisabled();
   await expect(node('r08')).toBeDisabled();
   await shot('map-mid');
 

@@ -136,7 +136,8 @@ test('a new game: the opening, the naming, the town, room 1 and back', async ({ 
   await page.locator('.town__place[data-exit="canal"]').click();
   await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('.town__place[data-node="r03"]')).toBeVisible();
-  await expect(page.locator('.town__figure--automaton')).toBeVisible();
+  // Its automaton isn't out yet: it shows once the street's machine can be reached.
+  await expect(page.locator('.town__figure--automaton')).toHaveCount(0);
   await page.waitForTimeout(400);
   await shot(page, '6-canal');
   await page.locator('.town__place[data-exit="square"]').click();
@@ -516,7 +517,8 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
   await shot(page, '13-wheel');
   await go('hill');
   await expect(page.locator('.town__place[data-node="r13"]')).toHaveAttribute('data-state', 'open');
-  await expect(page.locator('.town__figure--automaton')).toBeVisible();
+  // The final fight waits for the last machine.
+  await expect(page.locator('.town__figure--automaton')).toHaveCount(0);
   await shot(page, '14-hill');
   // The clock tower opens room 13.
   await page.locator('.town__place[data-node="r13"]').click();

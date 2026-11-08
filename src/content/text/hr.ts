@@ -346,7 +346,7 @@ export const hr = {
       r09: 'Parno dizalo',
       r10: 'Tržnica',
       r11: 'Veliki kotač',
-      r12: 'Raskrižje',
+      r12: 'Kotlovnica',
       r13: 'Toranj sa satom',
       // Each lair is named by its automaton's armour, so he can choose which to take on.
       'lair-20': 'Automat 20',
@@ -413,7 +413,7 @@ export const hr = {
       'market-tram': 'Natrag do tramvaja',
       'market-wheel': 'Do velikog kotača',
       'wheel-market': 'Natrag na tržnicu',
-      'wheel-hill': 'Uz stube, na brijeg',
+      'wheel-hill': 'Uz stube, pod toranj',
       'hill-wheel': 'Natrag do kotača',
     },
     /** The signpost at each way out of a street: where it leads (locked until its room). */
@@ -427,7 +427,7 @@ export const hr = {
       lift: 'Dizalo',
       market: 'Tržnica',
       wheel: 'Kotač',
-      hill: 'Brijeg',
+      hill: 'Pod tornjem',
     },
     close: 'Zatvori',
     /** For screen readers: the town as a whole, and a tap on the ground. */
@@ -540,7 +540,7 @@ export const hr = {
       yardFaust: {
         before: [
           'Vagaonica je Kristijanu bila najdraže mjesto.',
-          'Pazi na utege. Svaki ima svoju priču.',
+          'Prvi Automat vodi sve automate. Kristijan ga je složio da čuva upute.',
         ],
         after: [
           'Vagaonica je Kristijanu bila najdraže mjesto.',
@@ -568,7 +568,7 @@ export const hr = {
         ],
         after: [
           'Čuješ li? Svi strojevi u gradu opet rade!',
-          'Crta s ploče vodi do ljevaonice. Što je tamo?',
+          'Ostao je još samo najveći automat. Za njega ti treba Radionica.',
         ],
       },
     },
@@ -844,6 +844,12 @@ export const hr = {
     dented: 'Automat uzvraća: udubljenje u trupu.',
     /** How the fight ended. */
     won: 'Automat staje. Pobijeđen je.',
+    /** On the end screen, while there is anything left to buy. */
+    spend: 'Dijelove troši u Radionici na Trgu.',
+    /** The district's last fight won. */
+    finale: 'To je bio zadnji automat u četvrti. Donji Kotač opet radi!',
+    /** Prvi Automat's last notice: the district ends at the foundry door. */
+    finaleNote: 'ŠEGRT NIJE U UPUTAMA. MAJSTOR JE U LJEVAONICI. VRATA SU ZATVORENA. HVALA.',
     lost: 'Automat je ovaj put jači.',
     reasons: {
       hull: 'Trup ne može podnijeti još jedno udubljenje.',
@@ -1121,7 +1127,7 @@ export const hr = {
         title: 'Iz dnevnika, list prvi',
         lines: [
           'Prvi Automat me je danas pitao zašto treća uputa dolazi prije četvrte.',
-          'Odgovorio sam: tako piše u Knjizi. Nije mu bilo dosta.',
+          'Odgovorio sam: tako piše u Knjizi. To mu nije bilo dovoljno.',
         ],
       },
       'page-2': {

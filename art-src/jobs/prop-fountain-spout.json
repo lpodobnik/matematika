@@ -1,0 +1,17 @@
+{
+ "name": "prop-fountain-spout",
+ "seed": 6100,
+ "size": {
+  "width": 1024,
+  "height": 1536
+ },
+ "style": "v4",
+ "slots": {
+  "subject": "The dry centrepiece of an old town fountain, on its own: a short carved stone column on a round stone foot, with a small round stone bowl near the top and a tarnished brass spout with a little gear-shaped finial above it. Stained and weathered. No water at all, completely dry.",
+  "camera": "Seen from above at the same steep angle as an isometric town map.",
+  "composition": "The column is centred and fills about nine tenths of the picture's height, with a clear margin on every side.",
+  "state": "Dry and still.",
+  "background": "Isolated on plain flat cream paper with no ground, no scenery and no shadow."
+ },
+ "notes": "Added to the square's empty basin, which did not read as a fountain without it."
+}

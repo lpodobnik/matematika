@@ -222,7 +222,7 @@ test('fights from the map: lose, win the pile back with a page, and buy an upgra
   await page.locator('.dev-panel button', { hasText: 'close' }).click();
   await openMap(page);
   // The map takes him to the street; he walks to the workshop door.
-  await page.locator('.map__node[data-node="workshop"]').click();
+  await page.locator('.map__node[data-node="r02"]').click();
   await page.locator('.town__place[data-node="workshop"]').click();
   await expect(page.locator('.shop')).toBeVisible({ timeout: 10_000 });
   const parts = (await state(page)).save.economy.parts;

@@ -284,6 +284,20 @@
   text-align: center;
 }
 
+/* On the workshop's sign: he can buy something. */
+.town__sign-ask {
+  display: inline-grid;
+  place-items: center;
+  width: 1.3em;
+  height: 1.3em;
+  margin-left: 0.3em;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--lamp);
+  font-weight: 800;
+  line-height: 1;
+}
+
 .town__ask {
   position: absolute;
   top: -0.2em;

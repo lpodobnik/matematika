@@ -1,6 +1,6 @@
 import '@/ui/map/map.css';
 import { useMemo, useState } from 'react';
-import { type MapView, mapView, type NodeView, withoutLairs } from '@/city/reach';
+import { type MapView, mapView } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
@@ -9,6 +9,7 @@ import { ideasByRoom } from '@/room/ideas';
 import type { IdeaId, RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { LockBadge, NodeGlyph } from '@/ui/map/glyphs';
+import { type StreetView, streetsOf } from '@/ui/map/streets';
 import '@/ui/story/story.css';
 import type { PageId } from '@/fight/types';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
@@ -23,7 +24,8 @@ const authored = rooms.map((room) => room.id);
  * change in colour, and by shape (ui/map/glyphs.tsx); the room to play next pulses; a room
  * he left halfway carries a page. A tap on a room he can reach takes him there at once.
  * A place he can see but not open yet shows its name, and its lock shows what opens it
- * (story 2.3). The automatons are not on it: they stand in their streets.
+ * (story 2.3). It shows streets, one place each however many machines stand there; the
+ * automatons, the workshop and the foundry gate are found in their streets.
  */
 export function MapScreen({ onTravel }: { onTravel?(node: NodeId): void } = {}) {
   const roomsDone = useGame((s) => s.save.progress.roomsDone);
@@ -96,7 +98,7 @@ export function MapBoard({
 }: BoardProps) {
   const [log, setLog] = useState(logOpen);
   const [reading, setReading] = useState(false);
-  const { nodes, roads } = useMemo(() => withoutLairs(view), [view]);
+  const { nodes, roads } = useMemo(() => streetsOf(view), [view]);
   return (
     <main className="map">
       <div className="map__board">
@@ -114,7 +116,7 @@ export function MapBoard({
         </svg>
         <h1 className="map__title">{hr.map.title}</h1>
         {nodes.map((node) => (
-          <MapNode key={node.id} node={node} onTravel={onTravel} />
+          <MapNode key={node.area} node={node} onTravel={onTravel} />
         ))}
         {view.allDone && <p className="map__note">{hr.app.toBeContinued}</p>}
         <PartsCounterView shown={parts} visible={parts > 0} flight={null} />
@@ -151,8 +153,8 @@ export function MapBoard({
   );
 }
 
-function MapNode({ node, onTravel }: { node: NodeView; onTravel(node: NodeId): void }) {
-  const name = hr.map.nodes[node.id];
+function MapNode({ node, onTravel }: { node: StreetView; onTravel(node: NodeId): void }) {
+  const name = hr.town.signs[node.area];
   // Seen, he knows its name; only a room he can travel to takes a tap (story 2.3).
   const named = node.state !== 'closed';
   const reachable = node.state === 'open' || node.state === 'restored';

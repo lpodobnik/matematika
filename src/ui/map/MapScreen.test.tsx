@@ -5,6 +5,7 @@ import { mapView } from '@/city/reach';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { hr } from '@/content/text/hr';
+import { town } from '@/content/town';
 import { MapBoard } from '@/ui/map/MapScreen';
 
 const authored = rooms.map((room) => room.id);
@@ -25,19 +26,17 @@ const buttons = (html: string) =>
   [...html.matchAll(/<button[^>]*class="map__node"[^>]*>/g)].map((match) => match[0]);
 
 describe('the map screen (story 2.2)', () => {
-  it('draws every node as a button, with only the rooms he can reach enabled', () => {
+  it('draws one place per street, with only the streets he can reach enabled', () => {
     const html = board(['r01']);
     const all = buttons(html);
-    // The 19 nodes, less the four automatons, who stand in their streets.
-    expect(all).toHaveLength(15);
-    expect(all.filter((button) => !button.includes('disabled'))).toHaveLength(2);
+    expect(all).toHaveLength(Object.keys(town.areas).length);
+    expect(all.filter((button) => !button.includes('disabled'))).toHaveLength(1);
     expect(html).toContain(hr.map.title);
   });
 
-  it('names the rooms he can reach, and leaves the closed ones unnamed', () => {
+  it('names the streets he can reach, and leaves the closed ones unnamed', () => {
     const html = board(['r01']);
-    expect(html).toContain(`>${hr.map.nodes.r01}<`);
-    expect(html).toContain(`>${hr.map.nodes.r02}<`);
+    expect(html).toContain(`>${hr.town.signs.square}<`);
     expect(html).not.toContain(`>${hr.map.nodes.r05}<`);
     // Not to a screen reader either.
     expect(html).not.toContain(hr.map.nodes.r05);
@@ -46,9 +45,12 @@ describe('the map screen (story 2.2)', () => {
 
   it('says a node’s state to a screen reader, and when a room was left halfway', () => {
     const html = board(['r01'], ['r02']);
-    expect(html).toContain(`aria-label="${hr.map.nodes.r01}, ${hr.map.states.restored}"`);
+    // The square has two machines: open until both run.
     expect(html).toContain(
-      `aria-label="${hr.map.nodes.r02}, ${hr.map.states.open}, ${hr.map.started}"`,
+      `aria-label="${hr.town.signs.square}, ${hr.map.states.open}, ${hr.map.started}"`,
+    );
+    expect(board(['r01', 'r02'])).toContain(
+      `aria-label="${hr.town.signs.square}, ${hr.map.states.restored}"`,
     );
   });
 
@@ -68,7 +70,7 @@ describe('the map screen (story 2.2)', () => {
   it('pulses the next room and blooms the one just restored', () => {
     const html = board(['r01'], [], 'r01');
     expect(html).toContain('map__pulse');
-    expect(html).toMatch(/data-state="restored" data-next="false" data-fresh="true"/);
+    expect(html).toContain('data-fresh="true"');
   });
 
   it('shows the "to be continued" note once every room so far is restored', () => {
@@ -100,7 +102,7 @@ describe('room 5 on the map (story 2.8)', () => {
 });
 
 describe('room 6 on the map (story 2.9)', () => {
-  it('opens the workshop’s gate and shows the foundry’s plate once the weighing yard is restored', () => {
+  it('leaves the yard open for its second machine, and finds the workshop in its street', () => {
     const view = mapView(
       districtMap,
       {
@@ -112,11 +114,9 @@ describe('room 6 on the map (story 2.9)', () => {
       authored,
     );
     const html = renderToString(<MapBoard view={view} onTravel={() => undefined} />);
-    expect(html).toContain(`aria-label="${hr.map.nodes.r06}, ${hr.map.states.restored}"`);
-    // The workshop opens into the old mechanic’s counter (story 3.5).
-    expect(html).toContain(`aria-label="${hr.map.nodes.workshop}, ${hr.map.states.open}"`);
-    expect(html).toContain(`aria-label="${hr.map.nodes.foundry}, ${hr.map.states.locked}"`);
-    expect(html).toContain('5 · x = 40');
+    expect(html).toContain(`aria-label="${hr.town.signs.yard}, ${hr.map.states.open}"`);
+    expect(html).not.toContain(hr.map.nodes.workshop);
+    expect(html).not.toContain(hr.map.nodes.foundry);
   });
 });
 

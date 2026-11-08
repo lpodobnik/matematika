@@ -4,6 +4,7 @@ import type { LookId } from '@/city/character';
 import { type MapView, mapView, type NodeView } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { findPath, type Point } from '@/city/walk';
+import { tuning } from '@/config/tuning';
 import { lairs } from '@/content/lairs';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
@@ -80,6 +81,10 @@ export function TownScreen() {
         return Math.max(1, Math.ceil((Date.parse(at) - Date.now()) / 60_000));
       }}
       beaten={(lair) => economy.lairs[lair] !== undefined}
+      canBuy={Object.entries(tuning.upgrades).some(
+        ([id, upgrade]) =>
+          !(economy.upgrades as readonly string[]).includes(id) && economy.parts >= upgrade.cost,
+      )}
       onTravel={(node) => dispatch({ type: 'map/travel', node })}
     />
   );
@@ -96,6 +101,8 @@ interface BoardProps {
   wakesIn(lair: LairId): number | null;
   /** Whether he has ever beaten a lair's automaton. */
   beaten(lair: LairId): boolean;
+  /** He has the parts for something the workshop still sells. */
+  canBuy: boolean;
   onTravel(node: NodeId): void;
 }
 
@@ -197,6 +204,7 @@ export function TownBoard({
   parts,
   wakesIn,
   beaten,
+  canBuy,
   onTravel,
 }: BoardProps) {
   const nodes = useMemo(() => new Map(view.nodes.map((node) => [node.id, node])), [view]);
@@ -443,6 +451,9 @@ export function TownBoard({
       !(person.until && done.includes(person.until)),
   );
   const pile = (area.lair && nodes.get(area.lair)?.pile) || 0;
+  const lairOut = area.lair !== null && nodes.get(area.lair)?.state !== 'closed';
+  // The final fight, waiting: the one thing left to do.
+  const finalWaits = area.lair === 'lair-60' && lairOut && !beaten('lair-60');
   const exits = area.exits.filter((exit) => done.includes(exit.opensWith));
   // An open way on takes the tap over its area (the raised gate is now a way through).
   const places = area.places.filter(
@@ -526,6 +537,23 @@ export function TownBoard({
                 }
               />
             ))}
+          {area.places
+            .filter((place) => place.node === 'workshop' || place.node === 'foundry')
+            .filter((place) => nodes.get(place.node)?.state !== 'closed')
+            .map((place) => (
+              <span
+                key={`sign-${place.node}`}
+                className="town__sign"
+                data-sign={place.node}
+                data-open={nodes.get(place.node)?.state === 'open'}
+                data-edge="mid"
+                style={pct(place.marker)}
+                aria-hidden="true"
+              >
+                {hr.map.nodes[place.node]}
+                {place.node === 'workshop' && canBuy && <span className="town__sign-ask">!</span>}
+              </span>
+            ))}
           {places.map((place) => (
             <PlaceButton
               key={place.node}
@@ -593,7 +621,7 @@ export function TownBoard({
               )}
             </button>
           ))}
-          {area.lair && area.lairSpot && (
+          {lairOut && area.lair && area.lairSpot && (
             // The automaton the picture shows, standing still: a tap on it.
             <button
               type="button"
@@ -616,14 +644,14 @@ export function TownBoard({
               }}
             />
           )}
-          {area.lair && area.patrol.length > 0 && (
+          {lairOut && area.lair && area.patrol.length > 0 && (
             <button
               type="button"
               ref={botEl}
               className="town__figure town__figure--automaton"
               style={{
                 ...pct(area.patrol[0] as Point),
-                height: `${((town.figure * 0.62) / town.height) * 100}%`,
+                height: `${((town.figure * (area.lair === 'lair-60' ? 1.15 : 0.62)) / town.height) * 100}%`,
               }}
               aria-label={
                 pile > 0
@@ -638,6 +666,11 @@ export function TownBoard({
               }
             >
               <Automaton armour={lairs[area.lair].armour} />
+              {finalWaits && (
+                <span className="town__ask" aria-hidden="true">
+                  !
+                </span>
+              )}
               {/* The parts he left here by losing, to win back. */}
               {pile > 0 && (
                 <span className="town__pile" aria-hidden="true">

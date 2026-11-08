@@ -1,4 +1,4 @@
-images generated: 71/100
+images generated: 72/100
 
 # Art credits
 
@@ -1249,3 +1249,20 @@ nothing. Each names its source and the exact command.
   A small worn leather notebook with a brass clasp lies alone on old wooden floorboards, next to a stub of pencil, among scattered loose pages. No people, no hands, nobody in the picture. Close view from above at a slight angle. The notebook in the centre, large. Still and quiet. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
   ```
 - opening-4-notebook.t71 (2026-11-08): regenerated with no hand; the first showed a four-fingered hand (seen in playtest). Replaces src/ui/opening/art/panel-4.webp.
+
+### 72. `tests/prop-fountain-spout.t72.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 6100
+- Generated at 1024 × 1536 PNG; saved as WebP 1024 × 1536, quality 82, 162 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-08
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Added to the square's empty basin, which did not read as a fountain without it.
+- Prompt:
+
+  ```text
+  The dry centrepiece of an old town fountain, on its own: a short carved stone column on a round stone foot, with a small round stone bowl near the top and a tarnished brass spout with a little gear-shaped finial above it. Stained and weathered. No water at all, completely dry. Seen from above at the same steep angle as an isometric town map. The column is centred and fills about nine tenths of the picture's height, with a clear margin on every side. Dry and still. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+- prop-fountain-spout.t72 (2026-11-08): cut out at 170 px and composited onto square.webp and square-gate-open.webp at the basin, since the empty basin did not read as a fountain.
