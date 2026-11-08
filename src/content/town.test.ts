@@ -1,12 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import { roomOpen } from '@/city/reach';
 import { findPath, onGround } from '@/city/walk';
+import { allLeadSpecs } from '@/content/leads';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { town } from '@/content/town';
 import { isRoomId } from '@/room/resume';
 
 const areas = Object.values(town.areas);
+
+describe('where leads start', () => {
+  const spots = Object.values(town.areas).flatMap((area) =>
+    (area.spots ?? []).map((spot) => [spot.lead, area, spot] as const),
+  );
+
+  it.each(spots)('%s stands on the ground, and he can walk up to it', (_lead, area, spot) => {
+    expect(onGround(area.ground, spot.stand)).toBe(true);
+    expect(findPath(area.ground, area.arrive, spot.stand)).not.toBeNull();
+  });
+
+  it('every lead has one place', () => {
+    const leads = spots.map(([lead]) => lead);
+    expect(new Set(leads).size).toBe(leads.length);
+    expect(leads).toEqual(allLeadSpecs.map((lead) => lead.id));
+  });
+});
 
 describe('the townspeople', () => {
   it.each(areas.flatMap((area) => area.people.map((person) => [area.id, person] as const)))(

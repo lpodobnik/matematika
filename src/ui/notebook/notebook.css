@@ -126,6 +126,11 @@
   gap: 6px;
 }
 
+.pad__gap {
+  min-width: 48px;
+  min-height: 48px;
+}
+
 .pad__key {
   display: flex;
   align-items: center;

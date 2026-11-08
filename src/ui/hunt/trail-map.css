@@ -1,0 +1,100 @@
+/* The trail map (story 8.3): paper, pins, and a red thread through what he has solved. */
+
+.trail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--table);
+}
+
+.trail__title {
+  margin: 0;
+  font-size: 24px;
+  color: var(--ink-deep);
+}
+
+.trail__map {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: min(100%, 980px);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+}
+
+.trail__thread {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--jam);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.trail__thread polyline {
+  vector-effect: non-scaling-stroke;
+}
+
+.trail__start {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: var(--ink);
+  border-radius: 3px;
+  transform: translate(-50%, -50%);
+}
+
+.trail__pin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  font: inherit;
+  color: var(--ink-deep);
+  background: none;
+  border: none;
+  transform: translate(-50%, -24px);
+}
+
+.trail__needle {
+  width: 24px;
+  height: 24px;
+  background: var(--jam);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+
+.trail__pin[data-done="true"] .trail__needle {
+  background: var(--brass);
+}
+
+.trail__pin:disabled {
+  opacity: 1;
+}
+
+.trail__name {
+  padding: 2px 8px;
+  font-size: 18px;
+  white-space: nowrap;
+  background: var(--sheet);
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+}
+
+@media (max-height: 460px) {
+  .trail__title {
+    font-size: 16px;
+  }
+
+  .trail__name {
+    font-size: 14px;
+  }
+}

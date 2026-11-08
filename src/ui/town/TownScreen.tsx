@@ -1,5 +1,5 @@
 import '@/ui/town/town.css';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useMemo, useRef, useState } from 'react';
 import type { LookId } from '@/city/character';
 import { type FollowState, followStep, startFollow } from '@/city/follow';
 import { type MapView, mapView } from '@/city/reach';
@@ -18,11 +18,13 @@ import {
   type TownExit,
   type TownPerson,
   type TownPlace,
+  type TownSpot,
   town,
 } from '@/content/town';
 import { asleepLairs } from '@/fight/settle';
 import type { LairId } from '@/fight/types';
 import { type GateState, gateState } from '@/hunt/gate';
+import type { LeadId } from '@/hunt/ids';
 import { partTwoOn } from '@/hunt/switch';
 import { playersHash } from '@/lib/player';
 import { isRoomId } from '@/room/resume';
@@ -31,6 +33,7 @@ import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { Automaton } from '@/ui/fight/fight-art';
 import { LittleOneArt } from '@/ui/hunt/LittleOne';
+import { TrailMap } from '@/ui/hunt/TrailMap';
 import { logbookArt, outroArt } from '@/ui/opening/art';
 import { OpeningPanels, StoryPanels } from '@/ui/opening/OpeningScreen';
 import { areaArt, areaChange, lookFacing, looks, personArt, personFacing } from '@/ui/town/art';
@@ -122,6 +125,8 @@ export function TownScreen() {
       hasLittleOne={partTwo && companion !== null}
       onGate={() => dispatch({ type: 'hunt/gate-open' })}
       onMapGiven={() => dispatch({ type: 'hunt/map-given' })}
+      onLead={(lead) => dispatch({ type: 'hunt/lead-start', lead })}
+      leadsDone={partTwo ? hunt.leadsDone : []}
     />
   );
 }
@@ -148,6 +153,8 @@ interface BoardProps {
   hasLittleOne?: boolean;
   onGate?(): void;
   onMapGiven?(): void;
+  onLead?(lead: LeadId): void;
+  leadsDone?: readonly LeadId[];
 }
 
 /** What happens when he reaches where he was walking to. */
@@ -155,7 +162,8 @@ type Errand =
   | { kind: 'place'; place: TownPlace }
   | { kind: 'person'; person: TownPerson }
   | { kind: 'automaton'; at: Point }
-  | { kind: 'exit'; exit: TownExit };
+  | { kind: 'exit'; exit: TownExit }
+  | { kind: 'spot'; spot: TownSpot };
 
 /** The rooms that give the tools gates ask for (content/map.ts). */
 const toolRooms: Record<string, RoomId> = {
@@ -195,6 +203,8 @@ export function TownBoard({
   hasLittleOne = false,
   onGate,
   onMapGiven,
+  onLead,
+  leadsDone = [],
 }: BoardProps) {
   // Rooms done and the hunt's marks: what ways and people wait on.
   const reached = useMemo<readonly string[]>(() => [...done, ...marks], [done, marks]);
@@ -271,6 +281,11 @@ export function TownBoard({
         setStart(arrive);
         botRef.current = botAt(town.areas[to].patrol);
         setBubble(null);
+        return;
+      }
+      if (job.kind === 'spot') {
+        writeWhere(areaRef.current, meRef.current);
+        onLead?.(job.spot.lead);
         return;
       }
       if (job.kind === 'place') {
@@ -367,6 +382,7 @@ export function TownBoard({
       onGate,
       reached,
       onMapGiven,
+      onLead,
     ],
   );
   arrivedRef.current = arrived;
@@ -394,6 +410,30 @@ export function TownBoard({
     },
     [onTravel, path, meRef, errand, botRef],
   );
+
+  // A pin on the trail map: to the lead's street, and he walks up to it.
+  const pickLead = (lead: LeadId) => {
+    setShowMap(false);
+    const to = Object.values(town.areas).find((candidate) =>
+      candidate.spots?.some((spot) => spot.lead === lead),
+    );
+    const spot = to?.spots?.find((candidate) => candidate.lead === lead);
+    if (!to || !spot) return;
+    if (to.id !== areaId) {
+      path.current = [];
+      errand.current = null;
+      setWalking(false);
+      setAreaId(to.id);
+      meRef.current = spot.stand;
+      follow.current = startFollow(spot.stand, tuning.follow.beside);
+      setStart(spot.stand);
+      botRef.current = botAt(to.patrol);
+      setBubble(null);
+      arrived({ kind: 'spot', spot });
+      return;
+    }
+    walkTo(spot.stand, { kind: 'spot', spot });
+  };
 
   const walkTo = (target: Point, job: Errand | null) => {
     setBubble(null);
@@ -425,9 +465,13 @@ export function TownBoard({
 
   const restored = area.places.filter((place) => nodes.get(place.node)?.state === 'restored');
   // All its machines running, the whole street is in colour, as the room's backdrop shows it.
+  const solvedSpots = (area.spots ?? []).filter((spot) => leadsDone.includes(spot.lead));
+  const openSpots = (area.spots ?? []).filter(
+    (spot) => partTwo && reached.includes('map') && !leadsDone.includes(spot.lead),
+  );
   const colourMask = streetRestored(areaId, done)
     ? 'linear-gradient(#000, #000)'
-    : bloomMask(restored, fresh);
+    : bloomMask([...restored, ...solvedSpots], fresh);
   const lampsLit = done.includes('r02');
   const art = areaArt(areaId, done);
   const change = areaChange(areaId);
@@ -552,6 +596,29 @@ export function TownBoard({
                 {place.node === 'workshop' && canBuy && <span className="town__sign-ask">!</span>}
               </span>
             ))}
+          {openSpots.map((spot) => (
+            <Fragment key={spot.lead}>
+              <button
+                type="button"
+                className="town__place"
+                data-spot={spot.lead}
+                style={rectStyle(spot.area)}
+                aria-label={hr.hunt.trail.leads[spot.lead as keyof typeof hr.hunt.trail.leads]}
+                onClick={() => walkTo(spot.stand, { kind: 'spot', spot })}
+              />
+              <button
+                type="button"
+                className="town__sign"
+                data-sign={spot.lead}
+                data-open="true"
+                data-edge="mid"
+                style={pct(spot.marker)}
+                onClick={() => walkTo(spot.stand, { kind: 'spot', spot })}
+              >
+                {hr.hunt.trail.leads[spot.lead as keyof typeof hr.hunt.trail.leads]}
+              </button>
+            </Fragment>
+          ))}
           {places.map((place) => (
             <PlaceButton
               key={place.node}
@@ -789,7 +856,12 @@ export function TownBoard({
           </svg>
         </button>
       </main>
-      {showMap && <MapOverlay onClose={() => setShowMap(false)} onPick={pick} />}
+      {showMap &&
+        (area.spots && reached.includes('map') ? (
+          <TrailMap done={leadsDone} onPick={pickLead} onClose={() => setShowMap(false)} />
+        ) : (
+          <MapOverlay onClose={() => setShowMap(false)} onPick={pick} />
+        ))}
       {bossWaits && !slides && !showMap && !showIntro && (
         <p className="town__goal" role="status">
           {hr.now.boss}

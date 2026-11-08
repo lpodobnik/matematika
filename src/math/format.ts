@@ -5,6 +5,7 @@
 
 import { assert } from '@/lib/assert';
 import type { Equation, Expr } from '@/math/expr';
+import { isSDigit, type SLineToken, type SToken } from '@/math/statement-tokens';
 import { BLANK, isDigit, type LineToken, type Token } from '@/math/tokens';
 
 export const thousandsSeparator = '\u202f';
@@ -129,4 +130,76 @@ export function formatTokens(tokens: readonly Token[]): string {
   return formatLine(tokens)
     .map((segment) => segment.text)
     .join('');
+}
+
+const spacedStatementTokens: ReadonlySet<string> = new Set([
+  '+',
+  '−',
+  '·',
+  ':',
+  '=',
+  '<',
+  '>',
+  '≤',
+  '≥',
+  '≠',
+  '≈',
+  '∈',
+  '∉',
+  'ost.',
+]);
+const smallDigits = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+
+/**
+ * A line of part 2 in school notation (architecture, Pattern 5), as `formatLine` is for rooms, so
+ * that `LineView` shows both. Digits after the power sign are written small; a space either side
+ * of a sign, none inside brackets; a blank holds `fill`.
+ */
+export function formatStatementLine(
+  tokens: readonly SLineToken[],
+  fill: readonly SToken[] = [],
+): LineSegment[] {
+  const segments: LineSegment[] = [];
+  let text = '';
+  let digits = '';
+  let inPower = false;
+  const endNumber = () => {
+    text += groupDigits(digits);
+    digits = '';
+  };
+  for (const token of tokens) {
+    if (inPower && isSDigit(token)) {
+      text += smallDigits[Number(token)];
+      continue;
+    }
+    inPower = false;
+    if (isSDigit(token)) {
+      digits += token;
+      continue;
+    }
+    endNumber();
+    if (token === BLANK) {
+      if (text !== '') segments.push({ kind: 'text', text });
+      text = '';
+      const inside = formatStatementLine(fill)
+        .map((segment) => segment.text)
+        .join('');
+      segments.push({ kind: 'blank', text: inside });
+    } else if (token === '^') {
+      inPower = true;
+    } else if (spacedStatementTokens.has(token)) {
+      const first = text === '' && segments.length === 0;
+      text = first ? `${token} ` : `${text.trimEnd()} ${token} `;
+    } else if (token === ',') {
+      text = `${text.trimEnd()}, `;
+    } else if (token === ')' || token === ']' || token === '}') {
+      text = `${text.trimEnd()}${token}`;
+    } else {
+      text += token;
+    }
+  }
+  endNumber();
+  text = text.trimEnd();
+  if (text !== '') segments.push({ kind: 'text', text });
+  return segments;
 }

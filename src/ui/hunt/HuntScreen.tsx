@@ -1,12 +1,16 @@
 import '@/ui/hunt/hunt.css';
 import { type FormEvent, useEffect, useState } from 'react';
 import { cleanName, maxNameLength } from '@/city/character';
+import { leadSpecs } from '@/content/leads';
 import { hr } from '@/content/text/hr';
 import { town } from '@/content/town';
 import { type GateScene, gateEquation, gateScene } from '@/hunt/gate';
+import type { LeadId } from '@/hunt/ids';
+import type { LeadPlay } from '@/hunt/lead';
 import { formatTokens } from '@/math/format';
 import { type Token, tokenFromChar } from '@/math/tokens';
 import { useGame } from '@/store/store';
+import { LeadScreen } from '@/ui/hunt/LeadScreen';
 import { LittleOneArt } from '@/ui/hunt/LittleOne';
 import { NumberPad } from '@/ui/notebook/NumberPad';
 import { foundryArt } from '@/ui/opening/art';
@@ -40,6 +44,8 @@ export function HuntScreen() {
       );
     }
   }
+  const spec = scene && scene.of !== 'gate' ? leadSpecs[scene.of as LeadId] : undefined;
+  if (scene && spec) return <LeadScreen spec={spec} play={scene.state as LeadPlay} />;
   return null;
 }
 

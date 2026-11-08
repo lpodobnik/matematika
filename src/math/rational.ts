@@ -55,6 +55,12 @@ export function div(a: Rational, b: Rational): Rational {
   return rational(a.n * b.d, a.d * b.n);
 }
 
+/** a to a whole power, 0 or more. */
+export function pow(a: Rational, exp: number): Rational {
+  assert(Number.isInteger(exp) && exp >= 0, `not a whole power: ${exp}`);
+  return rational(a.n ** BigInt(exp), a.d ** BigInt(exp));
+}
+
 export function neg(a: Rational): Rational {
   return { n: -a.n, d: a.d };
 }

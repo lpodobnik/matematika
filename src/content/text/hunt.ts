@@ -1,7 +1,13 @@
 // Part 2's Croatian (GDD, Part 2: The Trail), reached through `hr.hunt`. All of it is a draft
 // for Luka: his wording wins, and every line waits for his review.
 
+import { huntUiText, knockGuideText, l01Text, trailText } from '@/content/text/hunt-leads';
+
 export const huntText = {
+  leads: { l01: l01Text },
+  knockGuide: knockGuideText,
+  ui: huntUiText,
+  trail: trailText,
   gate: {
     knock: 'Iza vrata netko kuca: pet puta, pa osam.',
     task: 'Riješi jednadžbu s pločice, pa je provjeri.',

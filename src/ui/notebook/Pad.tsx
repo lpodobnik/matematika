@@ -9,6 +9,8 @@ export interface PadKey<K extends string> {
   face: ReactNode;
   disabled?: boolean;
   pulse?: boolean;
+  /** A place with no key, so that the digits stay where they are. */
+  empty?: boolean;
 }
 
 /**
@@ -25,21 +27,25 @@ export function Pad<K extends string>({
 }) {
   return (
     <div className="pad">
-      {keys.map(({ key, kind, label, face, disabled, pulse }) => (
-        <button
-          key={key}
-          type="button"
-          tabIndex={-1}
-          className={`pad__key pad__key--${kind}`}
-          data-key={key}
-          disabled={disabled}
-          data-pulse={pulse || undefined}
-          aria-label={label}
-          onPointerDown={(event) => primaryPress(event, () => onKey(key))}
-        >
-          {face}
-        </button>
-      ))}
+      {keys.map(({ key, kind, label, face, disabled, pulse, empty }) =>
+        empty ? (
+          <span key={key} className="pad__gap" />
+        ) : (
+          <button
+            key={key}
+            type="button"
+            tabIndex={-1}
+            className={`pad__key pad__key--${kind}`}
+            data-key={key}
+            disabled={disabled}
+            data-pulse={pulse || undefined}
+            aria-label={label}
+            onPointerDown={(event) => primaryPress(event, () => onKey(key))}
+          >
+            {face}
+          </button>
+        ),
+      )}
     </div>
   );
 }

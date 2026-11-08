@@ -24,12 +24,16 @@ export function place(el: HTMLElement | null, at: Point, facing: 1 | -1, picture
  * The colour layer's mask: a soft circle of colour over each restored place. The room just
  * restored blooms open (town.css, `town-bloom`).
  */
-export function bloomMask(restored: readonly TownPlace[], fresh: RoomId | null): string {
+export function bloomMask(
+  restored: readonly Pick<TownPlace, 'bloom'>[],
+  fresh: RoomId | null,
+): string {
   if (restored.length === 0) return 'linear-gradient(transparent, transparent)';
   return restored
     .map((place) => {
       const { x, y, r } = place.bloom;
-      const radius = place.node === fresh ? 'var(--bloom)' : `${(r / town.width) * 100}cqw`;
+      const radius =
+        'node' in place && place.node === fresh ? 'var(--bloom)' : `${(r / town.width) * 100}cqw`;
       return `radial-gradient(circle ${radius} at ${(x / town.width) * 100}% ${(y / town.height) * 100}%, #000 62%, transparent 100%)`;
     })
     .join(', ');

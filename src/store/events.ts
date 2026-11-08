@@ -5,6 +5,7 @@
 import type { AreaId } from '@/content/town';
 import type { UpgradeEvent } from '@/economy/upgrades';
 import type { FightEvent } from '@/fight/types';
+import type { LeadId } from '@/hunt/ids';
 import type { RoomEvent } from '@/room/events';
 import type { RoomSpec } from '@/room/types';
 
@@ -19,7 +20,13 @@ export type StoreEvent =
   | { type: 'RoomLeft'; roomId: RoomSpec['id'] }
   | { type: 'TownAreaShown'; area: AreaId | null }
   | { type: 'GateOpened' }
-  | { type: 'LittleOneNamed' };
+  | { type: 'LittleOneNamed' }
+  | { type: 'LeadPicked'; lead: LeadId }
+  | { type: 'LessonSeen'; lead: LeadId }
+  | { type: 'FixMade'; lead: LeadId }
+  | { type: 'LineWritten'; lead: LeadId; line: string }
+  | { type: 'DoorKnocked'; lead: LeadId; door: number; right: boolean }
+  | { type: 'LeadFinished'; lead: LeadId; firstTry: boolean };
 
 export type DomainEvent = RoomEvent | StoreEvent | FightEvent | UpgradeEvent;
 export type DomainEventType = DomainEvent['type'];
@@ -31,6 +38,12 @@ const notRoom: ReadonlySet<DomainEventType> = new Set<DomainEventType>([
   'TownAreaShown',
   'GateOpened',
   'LittleOneNamed',
+  'LeadPicked',
+  'LessonSeen',
+  'FixMade',
+  'LineWritten',
+  'DoorKnocked',
+  'LeadFinished',
   'FightStarted',
   'FightLeft',
   'DiceRolled',

@@ -6,7 +6,7 @@
 import type { NodeId } from '@/city/types';
 import type { Ground, Point } from '@/city/walk';
 import type { LairId } from '@/fight/types';
-import type { HuntMark } from '@/hunt/ids';
+import type { HuntMark, LeadId } from '@/hunt/ids';
 import type { RoomId } from '@/room/types';
 
 export type PersonId = 'penkala' | 'nikola' | 'faust' | 'milka' | 'vucetic' | 'zagorka';
@@ -86,12 +86,24 @@ export type SceneId =
   | 'wheelZagorka'
   | 'u1Vucetic';
 
+/** Where a lead starts in a street (part 2): a tap area, and where he stands for it. */
+export interface TownSpot {
+  lead: LeadId;
+  stand: Point;
+  area: Rect;
+  marker: Point;
+  /** The colour that comes back to the place once it's solved. */
+  bloom: { x: number; y: number; r: number };
+}
+
 export interface TownArea {
   id: AreaId;
   ground: Ground;
   /** Where he stands when the game puts him here without a way in (after the naming). */
   arrive: Point;
   places: readonly TownPlace[];
+  /** Part 2: where leads start in this street. */
+  spots?: readonly TownSpot[];
   /** Ways on, listed before places: an open exit takes the tap over a place's area. */
   exits: readonly TownExit[];
   people: readonly TownPerson[];
@@ -870,6 +882,15 @@ const u1: TownArea = {
   ),
   arrive: { x: 200, y: 790 },
   places: [],
+  spots: [
+    {
+      lead: 'l01',
+      stand: { x: 770, y: 505 },
+      area: { x: 620, y: 240, w: 180, h: 240 },
+      marker: { x: 700, y: 230 },
+      bloom: { x: 700, y: 400, r: 460 },
+    },
+  ],
   exits: [
     {
       // Back through the foundry, to the yard.
