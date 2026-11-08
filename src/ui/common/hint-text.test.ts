@@ -65,7 +65,7 @@ describe('where the hint’s tag hangs and what it says (story 1.16)', () => {
   });
 
   it('writes the answer and the check line at the notebook, in school notation', () => {
-    expect(hintSpot(view({ move: { kind: 'answer', x: 9 } }))).toEqual({
+    expect(hintSpot(view({ move: { kind: 'answer', x: 9, template: false } }))).toEqual({
       place: 'notebook',
       text: hr.hint.answer('x = 9'),
     });

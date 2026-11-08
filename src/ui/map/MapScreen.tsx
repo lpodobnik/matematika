@@ -36,6 +36,7 @@ export function MapScreen({ onTravel }: { onTravel?(node: NodeId): void } = {}) 
   const seen = useGame((s) => s.save.progress.ideasSeen);
   const name = useGame((s) => s.save.character.name);
   const parts = useGame((s) => s.save.economy.parts);
+  const bossBeaten = useGame((s) => s.save.economy.lairs['lair-60'] !== undefined);
   const pages = useGame((s) => s.save.progress.tornPages);
   const dispatch = useGame((s) => s.dispatch);
   const view = useMemo(
@@ -60,6 +61,7 @@ export function MapScreen({ onTravel }: { onTravel?(node: NodeId): void } = {}) 
       name={name}
       pages={pages}
       parts={parts}
+      bossBeaten={bossBeaten}
       onTravel={onTravel ?? ((node) => dispatch({ type: 'map/travel', node }))}
     />
   );
@@ -76,6 +78,8 @@ interface BoardProps {
   pages?: readonly PageId[];
   /** His parts, on the counter in the board's corner once he has any (story 3.6). */
   parts?: number;
+  /** The final fight is won: only then does the story go on elsewhere. */
+  bossBeaten?: boolean;
   onTravel(node: NodeId): void;
   /** For tests: the log starts open. */
   logOpen?: boolean;
@@ -93,6 +97,7 @@ export function MapBoard({
   name = null,
   pages = [],
   parts = 0,
+  bossBeaten = true,
   onTravel,
   logOpen = false,
 }: BoardProps) {
@@ -118,7 +123,7 @@ export function MapBoard({
         {nodes.map((node) => (
           <MapNode key={node.area} node={node} onTravel={onTravel} />
         ))}
-        {view.allDone && <p className="map__note">{hr.app.toBeContinued}</p>}
+        {view.allDone && bossBeaten && <p className="map__note">{hr.app.toBeContinued}</p>}
         <PartsCounterView shown={parts} visible={parts > 0} flight={null} />
         {pages.length > 0 && (
           <button

@@ -101,7 +101,7 @@ describe('the next move (story 1.16)', () => {
     expect(nextMove(room, [])).toEqual({ kind: 'slide', direction: 1 });
     expect(nextMove(dialTo(room, 9), [])).toEqual({ kind: 'slide', direction: -1 });
     const level = dialTo(room, 5);
-    expect(nextMove(level, [])).toEqual({ kind: 'answer', x: 5 });
+    expect(nextMove(level, [])).toEqual({ kind: 'answer', x: 5, template: true });
     const answered = write(level, '5');
     // Room 1's check line is a template, `☐ + 4 = 9` (story 1.16 review: `template`).
     expect(nextMove(answered, [])).toEqual({ kind: 'check', x: 5, template: true });
@@ -115,7 +115,7 @@ describe('the next move (story 1.16)', () => {
     const twoX = dropFloat(room, 5);
     expect(nextMove(twoX, balance)).toEqual({ kind: 'split', parts: 2 });
     const alone = step(splitBothPans(twoX, balance)).room;
-    expect(nextMove(alone, balance)).toEqual({ kind: 'answer', x: 9 });
+    expect(nextMove(alone, balance)).toEqual({ kind: 'answer', x: 9, template: true });
   });
 
   it('adds a weight where x has a number taken away', () => {
@@ -157,7 +157,7 @@ describe('the next move (story 1.16)', () => {
   });
 
   it('puts the answer and the check line in the notebook, the rest in the scene', () => {
-    expect(inNotebook({ kind: 'answer', x: 9 })).toBe(true);
+    expect(inNotebook({ kind: 'answer', x: 9, template: true })).toBe(true);
     expect(inNotebook({ kind: 'check', x: 9, template: true })).toBe(true);
     expect(inNotebook({ kind: 'jam' })).toBe(true);
     expect(inNotebook({ kind: 'split', parts: 2 })).toBe(false);
@@ -261,7 +261,7 @@ describe('the hint after the review of story 1.16', () => {
     const deleted = step(deleteToken(jammed)).room;
     expect(deleted.stage.jam).toBeNull();
     expect(formatEquation(deleted.stage.pans)).toBe('x = 9');
-    expect(nextMove(deleted, balance)).toEqual({ kind: 'answer', x: 9 });
+    expect(nextMove(deleted, balance)).toEqual({ kind: 'answer', x: 9, template: true });
     expect(hintStep(deleted, balance)).toBe('answer');
   });
 
@@ -308,7 +308,7 @@ describe('the hint after the review of story 1.16', () => {
     expect(nextMove(plus, balance)).toEqual({ kind: 'tray', piece: 'float', amount: 14 });
     const alone = dropFloat(plus, 14);
     expect(alone.stage.templates).toHaveLength(2);
-    expect(nextMove(alone, balance)).toEqual({ kind: 'answer', x: 9 });
+    expect(nextMove(alone, balance)).toEqual({ kind: 'answer', x: 9, template: true });
     // Weights only: the smallest comes off as a balloon.
     const weights = write(wheel(), 'x = 4 + 5');
     expect(nextMove(weights, balance)).toEqual({ kind: 'tray', piece: 'float', amount: 4 });

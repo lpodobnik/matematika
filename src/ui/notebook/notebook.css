@@ -265,6 +265,7 @@
    under them; the pad stays at the bottom, and a long page still scrolls. */
 .notebook[data-handover="true"] .notebook__lines {
   flex: 0 1 auto;
+  min-height: 64px;
 }
 
 .notebook[data-handover="true"] .pad {
@@ -949,6 +950,11 @@
   text-decoration: underline;
 }
 
+/* Once the pin is tested, its heights make room for the line to write. */
+.drum__pin:not([data-asks]) {
+  display: none;
+}
+
 .drum__options {
   flex-direction: row;
   margin-top: 6px;
@@ -992,11 +998,6 @@
 
   .notebook:has(.drum) .drum__plot {
     max-height: 52px;
-  }
-
-  /* Once the pin is tested, its heights make room for the pad. */
-  .drum__pin:not([data-asks]) {
-    display: none;
   }
 
   .notebook[data-choosing="true"] .chain {

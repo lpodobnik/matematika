@@ -65,7 +65,7 @@ export type HintMove =
   /** The dial: its knob's ghost goes two notches this way and back. */
   | { kind: 'slide'; direction: 1 | -1 }
   /** The answer line, `x = n`. */
-  | { kind: 'answer'; x: number }
+  | { kind: 'answer'; x: number; template: boolean }
   /**
    * The check line, with n for x; `template` where it is a line with x blanked to fill
    * (rooms 1–4), so the hint says only what goes in the blank.
@@ -197,7 +197,8 @@ function balanceMove(room: RoomState, tools: readonly ToolId[], n: number): Hint
   const { stage } = room;
   const spec = currentStageSpec(room);
   const pans = stage.pans;
-  if (answerOnPans(room)) return { kind: 'answer', x: n };
+  if (answerOnPans(room))
+    return { kind: 'answer', x: n, template: room.stage.templates.length > 0 };
   const gear = trayHasGear(spec);
   const next = nextStep(machineEquation(spec, stage.machine), pans, 'balance', { trayGear: gear });
   if (next === null) return null;
@@ -239,7 +240,8 @@ function resultBlankWaits(room: RoomState): boolean {
  * the notebook's own tag and blank pulse cover).
  */
 function chainMove(room: RoomState, tools: readonly ToolId[], n: number): HintMove | null {
-  if (answerOnPans(room)) return { kind: 'answer', x: n };
+  if (answerOnPans(room))
+    return { kind: 'answer', x: n, template: room.stage.templates.length > 0 };
   const chain = pansChain(room);
   if (chain && resultBlankWaits(room)) return { kind: 'blank', value: chain.output };
   const link = chain ? lastLink(chain) : null;
@@ -262,7 +264,9 @@ export function nextMove(room: RoomState, tools: readonly ToolId[]): HintMove | 
   }
   const way = wayOf(room, tools, n);
   if (way === 'try') {
-    return room.stage.dialX === n ? { kind: 'answer', x: n } : slideToward(n, room.stage.dialX);
+    return room.stage.dialX === n
+      ? { kind: 'answer', x: n, template: room.stage.templates.length > 0 }
+      : slideToward(n, room.stage.dialX);
   }
   if (way === 'undo') return chainMove(room, tools, n);
   if (way !== 'balance') return null;

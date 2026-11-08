@@ -298,6 +298,28 @@
   line-height: 1;
 }
 
+/* The one thing left to do, over every street. */
+.town__goal {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  z-index: 3100;
+  width: min(62%, 720px);
+  margin: 0;
+  padding: 8px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--lamp-wash);
+  box-shadow: 0 4px 0 var(--ink);
+  color: var(--ink);
+  font-size: clamp(15px, 2.6dvh, 22px);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
 .town__ask {
   position: absolute;
   top: -0.2em;

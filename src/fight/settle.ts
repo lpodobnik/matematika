@@ -95,7 +95,8 @@ export function settleFight(
     };
   }
 
-  const dropped = droppedParts(economy.parts);
+  // The boss takes nothing: he has to be beaten to finish, so trying again must never cost.
+  const dropped = lair.id === 'lair-60' ? 0 : droppedParts(economy.parts);
   const next: Economy =
     dropped === 0
       ? economy

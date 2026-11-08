@@ -1,0 +1,20 @@
+{
+ "name": "town-yard-broken",
+ "seed": 9011,
+ "size": {
+  "width": 1920,
+  "height": 1200
+ },
+ "style": "v4",
+ "references": [
+  "C:/Users/lpodobnik/AppData/Local/Temp/matematika-art-originals/town-yard-level.t63.png"
+ ],
+ "notes": "The yard before room 6: one scale, broken, so it never reads as two.",
+ "slots": {
+  "reference": "Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows.",
+  "subject": "The long brass balance beam is broken and has fallen: one end has dropped so it hangs steeply tilted, one of its chains snapped and lying on the ground. The platform is empty: no crate on it. The pan in the middle is empty and hangs crooked, with no weights in it.",
+  "camera": "",
+  "composition": "",
+  "state": "No people, no animals."
+ }
+}

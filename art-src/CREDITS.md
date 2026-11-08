@@ -1,4 +1,4 @@
-images generated: 78/100
+images generated: 80/100
 
 # Art credits
 
@@ -1362,3 +1362,37 @@ nothing. Each names its source and the exact command.
   ```text
   A small worn leather notebook with a brass clasp lying open on a stone doorstep at the foot of a huge iron door, a stub of pencil on its blank page, orange light from under the door falling across it. Nobody in the picture, no hands. Close view from low at a slight angle. The open notebook in the foreground, the bottom of the door behind it. Still and quiet. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
   ```
+
+### 79. `tests/town-yard-broken.t79.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 9011
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 46, 287 KB
+- References: `town-yard-level.t63.png`
+- Style block: v4
+- Date: 2026-11-08
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: The yard before room 6: one scale, broken, so it never reads as two.
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. The long brass balance beam is broken and has fallen: one end has dropped so it hangs steeply tilted, one of its chains snapped and lying on the ground. The platform is empty: no crate on it. The pan in the middle is empty and hangs crooked, with no weights in it. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+- town-yard-broken.t79 (2026-11-08): replaces yard.webp; the hanging scale over the floor platform read as two scales.
+
+### 80. `tests/town-market-broken.t80.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 9012
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 58, 300 KB
+- References: `town-market-level.t62.png`
+- Style block: v4
+- Date: 2026-11-08
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: The market before room 10: one scale, tipped and empty; the first picture had two stacked.
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, stalls, ground, scale and drawing style. Change only what follows. There is one single market scale on the stone base, with one beam and two pans. Its beam is tipped steeply to one side, one pan low and one pan high, and both pans are empty: no sacks in them. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+- town-market-broken.t80 (2026-11-08): replaces market.webp; the first had two scales stacked.

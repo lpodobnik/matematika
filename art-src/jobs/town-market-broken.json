@@ -1,0 +1,20 @@
+{
+ "name": "town-market-broken",
+ "seed": 9012,
+ "size": {
+  "width": 1920,
+  "height": 1200
+ },
+ "style": "v4",
+ "references": [
+  "C:/Users/lpodobnik/AppData/Local/Temp/matematika-art-originals/town-market-level.t62.png"
+ ],
+ "notes": "The market before room 10: one scale, tipped and empty; the first picture had two stacked.",
+ "slots": {
+  "reference": "Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, stalls, ground, scale and drawing style. Change only what follows.",
+  "subject": "There is one single market scale on the stone base, with one beam and two pans. Its beam is tipped steeply to one side, one pan low and one pan high, and both pans are empty: no sacks in them.",
+  "camera": "",
+  "composition": "",
+  "state": "No people, no animals."
+ }
+}

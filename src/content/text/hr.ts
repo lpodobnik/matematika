@@ -209,10 +209,10 @@ export const hr = {
         { who: 'nikola', text: 'Na njoj su brojevi. Kao da sama nešto zapisuje.' },
       ],
       r13: [
-        { who: 'nikola', text: 'Sve točkice leže na jednoj liniji. I cijela četvrt opet radi!' },
+        { who: 'nikola', text: 'Sve točkice leže na jednoj liniji. I svi strojevi opet rade!' },
         {
           who: 'faust',
-          text: 'Zadnji trag na ploči vodi ravno do ljevaonice. A ona je zatvorena.',
+          text: 'Još nije gotovo. Pod tornjem stoji najveći automat i ne da nam dalje.',
         },
       ],
       r09: [
@@ -800,6 +800,8 @@ export const hr = {
     },
     /** At the notebook: the answer line, `x = 9`. */
     answer: (line: string) => `Upiši ${line}.`,
+    /** The same, where the line is already there with a box in it: only the number is his. */
+    answerBox: (n: string) => `Upiši ${n} u kućicu.`,
     /** At the notebook: the check line, on a blank page. */
     check: (n: string) => `Prepiši prvu jednadžbu, a umjesto x upiši ${n}.`,
     /** At the notebook: the check line as a template with x blanked (rooms 1–4). */
@@ -886,6 +888,9 @@ export const hr = {
     won: 'Automat staje. Pobijeđen je.',
     /** On the end screen, while there is anything left to buy. */
     spend: 'Dijelove troši u Radionici na Trgu.',
+    /** Lost to the boss: what to do about it. */
+    bossLost:
+      'Najveći automat je jak. Dijelove ti ne uzima: kupi nadogradnje u Radionici na Trgu i vrati se.',
     /** The district's last fight won. */
     finale: 'To je bio zadnji automat u četvrti. Donji Kotač opet radi!',
     /** Prvi Automat's last notice: the district ends at the foundry door. */
@@ -1203,6 +1208,8 @@ export const hr = {
    */
   now: {
     heading: 'Što sad?',
+    /** In every street, from the last machine until the boss is beaten. */
+    boss: 'Zadnji automat čeka Pod tornjem. Pobijedi ga! Nadogradnje su u Radionici na Trgu.',
     /** Room 6, before the guess: compare what differs, don't add it all up. */
     compare:
       'Koliko je 58 veće od 56? Za toliko je x veći od 27. Stavi zastavicu pa dodirni Potvrdi.',
@@ -1212,8 +1219,8 @@ export const hr = {
     compareWrong: 'Nije pogođeno. 58 je za 2 veće od 56, pa je i x za 2 veći od 27.',
     confirm: 'Zatim dodirni Potvrdi.',
     slide: 'Pomiči klizač dok vaga ne bude ravna.',
-    answer: 'Upiši koliko je x.',
-    check: 'Provjeri: upiši svoj broj umjesto x.',
+    answer: 'U kućicu upiši koliko je x.',
+    check: 'Provjeri: u kućicu upiši svoj broj.',
     weight: 'Stavi uteg na vagu: tako poništiš minus na obje strane.',
     float: 'Stavi balon na vagu: tako makneš broj s obje strane.',
     gear: 'Baloni s x smetaju: stavi zupčanik na vagu, koliko ih je.',

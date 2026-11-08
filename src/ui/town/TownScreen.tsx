@@ -477,6 +477,8 @@ export function TownBoard({
   const lairOut = area.lair !== null && nodes.get(area.lair)?.state !== 'closed';
   // The final fight, waiting: the one thing left to do.
   const finalWaits = area.lair === 'lair-60' && lairOut && !beaten('lair-60');
+  // Until he is beaten the game isn't over, in whichever street he is.
+  const bossWaits = nodes.get('lair-60')?.state === 'open' && !beaten('lair-60');
   const exits = area.exits.filter((exit) => done.includes(exit.opensWith));
   // An open way on takes the tap over its area (the raised gate is now a way through).
   const places = area.places.filter(
@@ -791,6 +793,11 @@ export function TownBoard({
         </button>
       </main>
       {showMap && <MapOverlay onClose={() => setShowMap(false)} onPick={pick} />}
+      {bossWaits && !slides && !showMap && !showIntro && (
+        <p className="town__goal" role="status">
+          {hr.now.boss}
+        </p>
+      )}
       {slides && (
         <div className="town__overlay">
           <StoryPanels

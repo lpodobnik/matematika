@@ -73,6 +73,7 @@ export function FightEndPanel({
           )}
         </div>
       )}
+      {!won && fight.lairId === 'lair-60' && <p className="fight__pay-line">{hr.fight.bossLost}</p>}
       {end && !won && (
         <p className="fight__pay-line">
           {end.dropped > 0 ? hr.fight.dropped(end.dropped) : hr.fight.droppedNone}

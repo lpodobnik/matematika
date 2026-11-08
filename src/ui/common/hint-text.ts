@@ -53,7 +53,9 @@ function moveSpot(move: HintMove): HintSpot {
     case 'answer':
       return {
         place: 'notebook',
-        text: hr.hint.answer(formatEquation({ left: xVar(), right: num(move.x) })),
+        text: move.template
+          ? hr.hint.answerBox(formatNumber(move.x))
+          : hr.hint.answer(formatEquation({ left: xVar(), right: num(move.x) })),
       };
     case 'check': {
       const n = formatNumber(move.x);
