@@ -24,7 +24,7 @@ import { formatEquation, formatExpr } from '@/math/format';
 import { solve } from '@/math/linear';
 import { BLANK, type LineToken, tokenize } from '@/math/tokens';
 import type { RoomEvent } from '@/room/events';
-import { answerTemplate, checkTemplate, withLastLines } from '@/room/fading';
+import { answerTemplate, checkTemplate, offeredByLevel, withLastLines } from '@/room/fading';
 import { writeWayLine } from '@/room/notebook';
 import { currentStageSpec, machineEquation, type RoomStep } from '@/room/room';
 import { storyWaits } from '@/room/story';
@@ -58,7 +58,8 @@ export function pansChain(room: RoomState): Chain | null {
 export function chainWorks(room: RoomState, tools: readonly ToolId[]): boolean {
   if (!chainOffered(room, tools)) return false;
   const { stage } = room;
-  if (stage.jam !== null || stage.draft.length > 0 || stage.templates.length > 0) return false;
+  if (stage.jam !== null || stage.draft.length > 0) return false;
+  if (stage.templates.length > 0 && !offeredByLevel(stage)) return false;
   if (stage.shownLine !== null) return false;
   if (stage.lines.some((line) => line.verdict.kind === 'check')) return false;
   const chain = pansChain(room);
@@ -120,7 +121,7 @@ function ranRight(
       : [resultTemplate(result, xOnLeft)];
     return { ...next, pans: result, templates, draft: [] };
   }
-  return { ...next, pans: result, shownLine: null };
+  return withLastLines(spec, { ...next, pans: result, shownLine: null });
 }
 
 /**
@@ -192,6 +193,19 @@ export function chainBlankWaits(room: RoomState): boolean {
   if (stage.templates.length === 0) return false;
   if (undoFading(currentStageSpec(room)) !== 'blanks') return false;
   return stage.lines[stage.lines.length - 1]?.source === 'undo';
+}
+
+/**
+ * The room with its last lines' blanks up to date after any step, so a slider that levels
+ * the pans offers `x = ☐` at once, and takes it back when it moves on. Not over what he is
+ * typing, a jam, the logbook's own lines or a blank a chain run left.
+ */
+export function withBlanksUpToDate(room: RoomState): RoomState {
+  const { stage } = room;
+  if (stage.jam !== null || stage.draft.length > 0 || stage.planted !== null) return room;
+  if (chainBlankWaits(room) || storyWaits(room)) return room;
+  const next = withLastLines(currentStageSpec(room), stage);
+  return next === stage ? room : { ...room, stage: next };
 }
 
 /** One link as the strip draws it. */

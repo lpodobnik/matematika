@@ -323,8 +323,9 @@ describe('the hint after the review of story 1.16', () => {
     expect(nextMove(balanced, balance)).toEqual({ kind: 'check', x: 9, template: true });
     const first = r01.stages[0] as StageSpec;
     const blankPage: RoomSpec = { ...r01, stages: [{ ...first, fading: { try: 'blank' } }] };
+    // On a blank page too: he never copies the whole equation out again.
     const free = write(dialTo(opened(enterRoom(blankPage).room), 5), 'x = 5');
-    expect(nextMove(free, [])).toEqual({ kind: 'check', x: 5, template: false });
+    expect(nextMove(free, [])).toEqual({ kind: 'check', x: 5, template: true });
   });
 });
 

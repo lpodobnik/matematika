@@ -10,7 +10,7 @@ import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { payPrediction, predictionKey } from '@/economy/predictions';
 import { assert } from '@/lib/assert';
-import { runLink } from '@/room/chain';
+import { runLink, withBlanksUpToDate } from '@/room/chain';
 import { nudgeDial, setDial } from '@/room/dial';
 import { recordDial } from '@/room/drum';
 import { meetControls } from '@/room/first-use';
@@ -239,7 +239,9 @@ function unshown(room: RoomState): RoomState {
 function withToolMemory(step: RoomStep | null, save: SaveState): RoomStep | null {
   if (!step) return step;
   const { firstUse, tools } = save.progress;
-  const room = recordDial(rememberSplitter(rememberTray(step.room, firstUse), tools));
+  const room = withBlanksUpToDate(
+    recordDial(rememberSplitter(rememberTray(step.room, firstUse), tools)),
+  );
   return room === step.room ? step : { ...step, room };
 }
 

@@ -8,6 +8,8 @@
 // join with their ways.
 
 import { assert } from '@/lib/assert';
+import { toLinear, valueAt } from '@/math/linear';
+import * as q from '@/math/rational';
 import { BLANK, blankOutX, fillBlanks, type LineToken, type Token, tokenize } from '@/math/tokens';
 import { xAlone } from '@/room/pieces';
 import type { StageSpec, StageState } from '@/room/types';
@@ -34,31 +36,48 @@ export function openingTemplates(stage: StageSpec, machine: number): LineToken[]
 }
 
 /**
- * Whether a stage gives him the last two lines as blanks once x is alone (story 1.16):
- * Balance `auto` (room 4) or Undo `auto` (room 8, story 4.1), where Try values doesn't
- * already open with them.
+ * Whether a stage gives him the last two lines as blanks once x is alone (story 1.16): every
+ * stage where Try values doesn't already open with them. Copying the whole equation out
+ * again at the end teaches nothing, so no room asks for it.
  */
 export function blanksOnceAlone(stage: StageSpec): boolean {
-  const auto = stage.fading.balance === 'auto' || stage.fading.undo === 'auto';
-  return auto && stage.fading.try !== 'blanks';
+  return stage.fading.try !== 'blanks';
+}
+
+type LinesState = Pick<StageState, 'machine' | 'pans' | 'lines' | 'dialX' | 'phase' | 'jam'>;
+
+/**
+ * Whether his slider levels the pans, in a stage where that can finish it: the scale has
+ * already told him the answer, so the notebook offers the line to write it in.
+ */
+function levelAtDial(stage: StageSpec, state: LinesState): boolean {
+  if (!stage.ways.includes('try') || state.phase !== 'open' || state.jam !== null) return false;
+  if (state.lines.length === 0) return false;
+  const [left, right] = [toLinear(state.pans.left), toLinear(state.pans.right)];
+  if (left.kind !== 'linear' || right.kind !== 'linear') return false;
+  const x = q.rational(state.dialX);
+  return q.equals(valueAt(left, x), valueAt(right, x));
 }
 
 /**
- * The lines with blanks left for him in a stage that gives them once x is alone
- * (`blanksOnceAlone`): none while x isn't alone on the pans; then `x = ☐` and the check
- * line with x blanked (`2 · ☐ + 5 = 23`); after his answer line, the check line alone; none
- * once it is written. Null for any other stage, whose blanks are set as it opens.
+ * The lines with blanks left for him in a stage that gives them (`blanksOnceAlone`): none
+ * until x is alone on the pans or his slider levels them; then `x = ☐` and the check line
+ * with x blanked (`2 · ☐ + 5 = 23`); after his answer line, the check line alone; none once
+ * it is written. Null for any other stage, whose blanks are set as it opens.
  */
-export function lastLines(
-  stage: StageSpec,
-  state: Pick<StageState, 'machine' | 'pans' | 'lines'>,
-): LineToken[][] | null {
+export function lastLines(stage: StageSpec, state: LinesState): LineToken[][] | null {
   if (!blanksOnceAlone(stage)) return null;
   const has = (kind: 'answer' | 'check') => state.lines.some((line) => line.verdict.kind === kind);
   if (has('check')) return [];
   if (has('answer')) return [checkTemplate(stage, state.machine)];
-  if (!xAlone(state.pans)) return [];
+  if (!xAlone(state.pans) && !levelAtDial(stage, state)) return [];
   return [[...answerTemplate], checkTemplate(stage, state.machine)];
+}
+
+/** Whether the blanks up are only `x = ☐`'s offer from a level scale: the tools still work. */
+export function offeredByLevel(stage: Pick<StageState, 'pans' | 'templates'>): boolean {
+  const [first] = stage.templates;
+  return !xAlone(stage.pans) && first?.join(' ') === answerTemplate.join(' ');
 }
 
 function sameLines(

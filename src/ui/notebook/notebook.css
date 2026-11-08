@@ -934,6 +934,44 @@
   border-bottom: 2px solid var(--ink);
 }
 
+.drum__table {
+  width: 100%;
+  border: 2px solid var(--ink);
+  border-collapse: collapse;
+  background: var(--sheet);
+  font-size: clamp(14px, 2.6dvh, 20px);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.drum__table th {
+  padding: 2px 6px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.drum__table td {
+  padding: 2px 4px;
+  border-left: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+.drum__x {
+  font-weight: 700;
+}
+
+/* Where the sides are equal: the scale is level (bold, not by colour alone). */
+.drum__table td[data-level="true"] {
+  background: var(--lamp-wash);
+  font-weight: 700;
+}
+
+.drum__guess-cell {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline dotted;
+}
+
 .drum__plot {
   display: block;
   width: 100%;
@@ -963,18 +1001,6 @@
 
 .drum__dot {
   fill: var(--ink);
-}
-
-.drum__guess {
-  fill: none;
-  stroke: var(--lamp);
-  stroke-width: 3;
-}
-
-/* Once the machine has tested it, a wrong guess stays as a dashed ring beside the real dot. */
-.drum__guess[data-wrong="true"] {
-  stroke: var(--jam);
-  stroke-dasharray: 3 3;
 }
 
 /* The height that was right, marked once the pin is tested (not by colour alone). */

@@ -185,7 +185,10 @@ async function openMap(page: Page) {
 async function arrive(page: Page, room: string, via: 'town' | 'map') {
   await expect.poll(async () => (await state(page)).screen).toBe('map');
   await expect(page.locator('.town__board')).toBeVisible();
-  if (via === 'town') {
+  // A machine an automaton holds isn't what this walks through: e2e/town.spec.ts is.
+  if (['r03', 'r05'].includes(room)) {
+    await dispatch(page, { type: 'map/travel', node: room });
+  } else if (via === 'town') {
     await page.locator(`.town__place[data-node="${room}"]`).click();
   } else {
     if ((await page.locator('.town__overlay').count()) === 0) await openMap(page);
@@ -291,7 +294,7 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   // Room 4, the water wheel: x = 9 refused until simplified, then Balance.
   await arrive(page, 'r04', 'map');
   await dialUpTo(page, 9);
-  await write(page, 'x=9');
+  await write(page, '9');
   expect((await state(page)).refused).toBe(1);
   expect((await state(page)).phase).not.toBe('locked');
   await deleteKeys(page, 3);
@@ -322,12 +325,12 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   await arrive(page, 'r05', 'map');
   await dial(page, [1, 2, 3]);
   await pin(page, { kind: 'x', x: 6 });
-  await write(page, 'x=6');
+  await write(page, '6');
   await write(page, '6');
   await presented(page);
   await touch(page);
   await pin(page, { kind: 'x', x: 7 });
-  await write(page, 'x=7');
+  await write(page, '7');
   await write(page, '7');
   await presented(page);
   await finish(page, 'r05', shot);
@@ -335,7 +338,7 @@ test('rooms 1–7 back to back from a fresh start', async ({ page }, testInfo) =
   // Room 6, the weighing yard: the readouts hidden, the pin at 29.
   await arrive(page, 'r06', 'map');
   await pin(page, { kind: 'x', x: 29 });
-  await write(page, 'x=29');
+  await write(page, '29');
   await write(page, '29');
   await presented(page);
   await finish(page, 'r06', shot);

@@ -26,9 +26,10 @@ import { StoryScreen } from '@/ui/story/StoryScreen';
 import { TownScreen } from '@/ui/town/TownScreen';
 import { WorkshopScreen } from '@/ui/workshop/WorkshopScreen';
 
-// Development builds only, loaded on demand (architecture, Debug Tools): production builds
-// drop this branch, and the panel's code with it.
-const DevPanel = import.meta.env.DEV ? lazy(() => import('@/dev/DevPanel')) : null;
+// Loaded on demand (architecture, Debug Tools): always in development; online only with ?dev
+// in the address, so the puzzles can be tested on a stable build. Players never load it.
+const wantsDev = import.meta.env.DEV || new URLSearchParams(window.location.search).has('dev');
+const DevPanel = wantsDev ? lazy(() => import('@/dev/DevPanel')) : null;
 
 // Landscape layout: the scene on the left and the notebook beside it on the tablet; on a
 // phone the notebook slides over the scene (ui/notebook/notebook.css). The canvas fills

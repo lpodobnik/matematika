@@ -187,6 +187,16 @@ function edited(stage: StageState, draft: Token[]): StageState {
  */
 export function typeToken(room: RoomState, token: Token): NotebookStep | null {
   const { stage } = room;
+  // A computer keyboard can still write the whole line on a page that has faded to blank:
+  // a key the blank can't take turns it back into a free line. The pad only offers digits.
+  if (fillsBlank(stage) && !isDigit(token) && notebookWrites(stage)) {
+    const { fading } = currentStageSpec(room);
+    const free = fading.try === 'blank' && fading.balance !== 'auto' && fading.undo !== 'auto';
+    if (free && stage.draft.length < tuning.draftMaxTokens) {
+      const typed = edited({ ...stage, templates: [] }, [...stage.draft, token]);
+      return { room: withStage(room, typed), events: [] };
+    }
+  }
   const blank = fillsBlank(stage);
   if (!keyWorks(token, notebookWrites(stage), blank)) return null;
   const limit = blank ? blankMaxDigits : tuning.draftMaxTokens;

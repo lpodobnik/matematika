@@ -161,7 +161,7 @@ describe('entering a lair (story 3.1)', () => {
 
   it('ignores a lair he has not seen, and any lair off the map', () => {
     const g = game();
-    g.act({ type: 'map/travel', node: 'lair-30' });
+    g.act({ type: 'map/travel', node: 'lair-45' });
     expect(g.state().ui.screen).toBe('map');
     expect(g.state().fight).toBeNull();
     g.act({ type: 'map/travel', node: 'r03' });

@@ -37,9 +37,9 @@ describe('the district map (content/map.ts; GDD, Level Structure)', () => {
       'r11–r12',
       'r12–r13',
       'r02–lair-20',
-      'r05–lair-30',
-      'r08–lair-45',
-      'r12–lair-60',
+      'r02–lair-30',
+      'r07–lair-45',
+      'r11–lair-60',
       'r06–workshop',
       'r06–foundry',
     ]);
@@ -212,7 +212,8 @@ describe('what the map shows (mapView)', () => {
     expect(node(v, 'r03')?.state).toBe('open');
     expect(node(v, 'r05')).toMatchObject({ state: 'locked', lock: 'weights' });
     expect(node(v, 'lair-20')).toMatchObject({ state: 'open', lock: null });
-    expect(node(v, 'lair-30')?.state).toBe('closed');
+    expect(node(v, 'lair-30')?.state).toBe('open');
+    expect(node(v, 'lair-45')?.state).toBe('closed');
   });
 
   it('after room 3: the steam lift shows locked with the gear chain, and the bridge opens', () => {
@@ -256,8 +257,8 @@ describe('what the map shows (mapView)', () => {
   it('draws a road in full only between places he can travel to', () => {
     const v = view(['r01', 'r02']);
     const travelled = v.roads.filter((road) => road.travelled);
-    // Rooms 1–2, rooms 2–3 and the road to the lair beside room 2 (story 3.1).
-    expect(travelled).toHaveLength(3);
+    // Rooms 1–2, rooms 2–3 and the roads to the two lairs that room 2 opens.
+    expect(travelled).toHaveLength(4);
     expect(travelled[0]?.from).toEqual({ x: 150, y: 830 });
   });
 
@@ -314,11 +315,11 @@ describe('lairs on the map (story 3.3)', () => {
   });
 
   it('shows the pile he left at a lair, once the lair is seen', () => {
-    const piles = { 'lair-20': 4, 'lair-30': 2 };
+    const piles = { 'lair-20': 4, 'lair-45': 2 };
     const v = mapView(districtMap, { ...progress, piles }, authored);
     expect(lair(v)?.pile).toBe(4);
     // Not seen yet: no pile shows.
-    expect(v.nodes.find((n) => n.id === 'lair-30')?.pile).toBe(0);
+    expect(v.nodes.find((n) => n.id === 'lair-45')?.pile).toBe(0);
     expect(v.nodes.find((n) => n.id === 'r02')?.pile).toBe(0);
   });
 });

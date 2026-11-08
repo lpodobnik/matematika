@@ -215,7 +215,28 @@ test('a tap on the district map takes him to the street, beside the machine', as
   expect((await state(page)).room).toBeNull();
   await page.waitForTimeout(400);
   await shot(page, '10-map-to-canal');
-  // He walks the last step himself.
+  // The canal's automaton took this machine's parts: it says so, and he stays out here.
+  await page.locator('.town__place[data-node="r03"]').click();
+  await expect(page.locator('.town__bubble')).toContainText('Automat', { timeout: 8000 });
+  expect((await state(page)).room).toBeNull();
+  await shot(page, '11-held-by-the-automaton');
+  // Once it is beaten, he goes in.
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        economy: {
+          ...s.save.economy,
+          lairs: { 'lair-20': { rewindsAt: '2000-01-01T00:00:00.000Z' } },
+        },
+      },
+      room: null,
+    });
+  });
+  await page.locator('.town__bubble').click();
   await page.locator('.town__place[data-node="r03"]').click();
   await expect.poll(async () => (await state(page)).ui.screen, { timeout: 8000 }).toBe('room');
 });
@@ -328,7 +349,19 @@ test('people ask for help with their street machine: Milka at the canal, Vučeti
     const done = ['r01', 'r02', 'r03'];
     g.__d({
       type: 'boot/start',
-      save: { ...s.save, progress: { ...s.save.progress, roomsDone: done, told: done } },
+      save: {
+        ...s.save,
+        progress: { ...s.save.progress, roomsDone: done, told: done },
+        economy: {
+          ...s.save.economy,
+          lairs: {
+            'lair-20': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+            'lair-30': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+            'lair-45': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+            'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+          },
+        },
+      },
       room: null,
     });
   });
@@ -443,6 +476,15 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
           tools: ['balance', 'workshop', 'chain', 'drum'],
           onMap: true,
         },
+        economy: {
+          ...s.save.economy,
+          lairs: {
+            'lair-20': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+            'lair-30': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+            'lair-45': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+            'lair-60': { rewindsAt: '2000-01-01T00:00:00.000Z' },
+          },
+        },
       },
       room: null,
     });
@@ -484,6 +526,42 @@ test('the whole district: tram, market, wheel, the hill, and the lift', async ({
     { timeout: 12_000 },
   );
 });
+
+for (const look of ['look-1', 'look-2', 'look-3', 'look-4', 'look-5', 'look-6']) {
+  test(`his legs line up with his body, standing still (${look})`, async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await hook(page);
+    await page.evaluate((l) => {
+      const g = window as unknown as Game;
+      const s = g.__s.getState();
+      g.__d({
+        type: 'boot/start',
+        save: {
+          ...s.save,
+          character: { name: 'Ivo', look: l },
+          progress: { ...s.save.progress, introSeen: true, onMap: true },
+        },
+        room: null,
+      });
+    }, look);
+    await expect(page.locator('.town__part--leg-l')).toBeVisible();
+    // The three pieces are one picture: at rest they must lie exactly on top of each other,
+    // and on the figure's centre, over its shadow.
+    const centre = (selector: string) =>
+      page.locator(selector).evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        return box.left + box.width / 2;
+      });
+    const body = await centre('.town__part--body');
+    expect(Math.abs((await centre('.town__part--leg-l')) - body)).toBeLessThan(1);
+    expect(Math.abs((await centre('.town__part--leg-r')) - body)).toBeLessThan(1);
+    expect(Math.abs((await centre('.town__figure--me')) - body)).toBeLessThan(1);
+    await page.waitForTimeout(200);
+    await page.locator('.town__figure--me').screenshot({ path: `test-results/stand-${look}.png` });
+  });
+}
 
 for (const [look, mirrored] of [
   ['look-1', true],

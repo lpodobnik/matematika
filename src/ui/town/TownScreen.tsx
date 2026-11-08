@@ -13,6 +13,7 @@ import {
   areaOf,
   type PersonId,
   type Rect,
+  streetRestored,
   type TownExit,
   type TownPerson,
   type TownPlace,
@@ -78,6 +79,7 @@ export function TownScreen() {
         if (!at || !asleepLairs(economy, Date.now()).includes(lair)) return null;
         return Math.max(1, Math.ceil((Date.parse(at) - Date.now()) / 60_000));
       }}
+      beaten={(lair) => economy.lairs[lair] !== undefined}
       onTravel={(node) => dispatch({ type: 'map/travel', node })}
     />
   );
@@ -92,6 +94,8 @@ interface BoardProps {
   parts: number;
   /** Minutes until a beaten lair's automaton is back (ADR-13); null when it is there. */
   wakesIn(lair: LairId): number | null;
+  /** Whether he has ever beaten a lair's automaton. */
+  beaten(lair: LairId): boolean;
   onTravel(node: NodeId): void;
 }
 
@@ -185,7 +189,16 @@ function writeMet(met: PersonId[]) {
 }
 
 /** The town from props: the square, its machines, people and automaton, and his figure. */
-export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }: BoardProps) {
+export function TownBoard({
+  view,
+  done,
+  fresh,
+  look,
+  parts,
+  wakesIn,
+  beaten,
+  onTravel,
+}: BoardProps) {
   const nodes = useMemo(() => new Map(view.nodes.map((node) => [node.id, node])), [view]);
   // He comes out where he went in: the area holding the room just restarted, or else the
   // street and spot he left from (a fight, a room left halfway), or else the square.
@@ -243,6 +256,12 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
           setBubble({ who: 'self', at: job.place.marker, lines: [text], line: 0 });
           return;
         }
+        // The street's automaton took this machine's parts: it comes first.
+        const lairId = lairHere.current;
+        if (node?.kind === 'room' && node.state === 'open' && lairId && !beaten(lairId)) {
+          setBubble({ who: 'self', at: job.place.marker, lines: [hr.town.places.held], line: 0 });
+          return;
+        }
         if (node && (node.state === 'open' || node.state === 'restored')) {
           writeWhere(areaRef.current, meRef.current);
           onTravel(job.place.node);
@@ -297,7 +316,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
           : undefined,
       });
     },
-    [nodes, onTravel, wakesIn, done, met],
+    [nodes, onTravel, wakesIn, beaten, done, met],
   );
 
   // A tap on the district map: to the street that holds the place, standing beside it.
@@ -409,6 +428,10 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   };
 
   const restored = area.places.filter((place) => nodes.get(place.node)?.state === 'restored');
+  // All its machines running, the whole street is in colour, as the room's backdrop shows it.
+  const colourMask = streetRestored(areaId, done)
+    ? 'linear-gradient(#000, #000)'
+    : bloomMask(restored, fresh);
   const lampsLit = done.includes('r02');
   const art = areaArt(areaId, done);
   const change = areaChange(areaId);
@@ -455,8 +478,8 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
               alt=""
               draggable={false}
               style={{
-                maskImage: bloomMask(restored, fresh),
-                WebkitMaskImage: bloomMask(restored, fresh),
+                maskImage: colourMask,
+                WebkitMaskImage: colourMask,
               }}
             />
             {change && fresh === change.room && (

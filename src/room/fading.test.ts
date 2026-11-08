@@ -92,13 +92,31 @@ describe('the last two lines as blanks once x is alone (story 1.16)', () => {
     expect(blanksOnceAlone(wheel)).toBe(true);
     expect(blanksOnceAlone(roomOne)).toBe(false);
     expect(blanksOnceAlone({ ...wheel, fading: { try: 'blanks', balance: 'auto' } })).toBe(false);
-    expect(blanksOnceAlone({ ...wheel, fading: { try: 'blank', balance: 'blank' } })).toBe(false);
-    expect(lastLines(roomOne, { machine: 0, pans: equation('x = 5'), lines: [] })).toBeNull();
+    expect(blanksOnceAlone({ ...wheel, fading: { try: 'blank', balance: 'blank' } })).toBe(true);
+    expect(
+      lastLines(roomOne, {
+        machine: 0,
+        pans: equation('x = 5'),
+        lines: [],
+        dialX: 0,
+        phase: 'arrive',
+        jam: null,
+      }),
+    ).toBeNull();
   });
 
   it('room 4: none until x is alone, then x = ☐ and 2 · ☐ + 5 = 23, then the check line alone', () => {
     const at = (pans: string, ...lines: NotebookLine[]) =>
-      shown(lastLines(wheel, { machine: 0, pans: equation(pans), lines: [given, ...lines] }));
+      shown(
+        lastLines(wheel, {
+          machine: 0,
+          pans: equation(pans),
+          lines: [given, ...lines],
+          dialX: 0,
+          phase: 'arrive',
+          jam: null,
+        }),
+      );
     expect(at('2x + 5 = 23')).toEqual([]);
     expect(at('2x = 18')).toEqual([]);
     expect(at('x = 9')).toEqual(['x = ☐', '2 · ☐ + 5 = 23']);

@@ -236,7 +236,7 @@ export function handoverView(
   const fresh = applying.find((id) => !met.includes(handoverMet(id)));
   if (fresh) return fresh;
   // Past these the game waits for a line he must know to write: it always says so.
-  const waiting = applying.find((id) => id === 'answer' || id === 'check' || id === 'drag-off');
+  const waiting = applying.find((id) => ['write', 'answer', 'check', 'drag-off'].includes(id));
   if (waiting) return waiting;
   return room.stage.idle ? (applying[0] ?? null) : null;
 }

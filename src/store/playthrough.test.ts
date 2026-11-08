@@ -324,7 +324,7 @@ function playRoomEleven(game: Game) {
 function playRoomTwelve(game: Game) {
   travel(game, 'r12');
   for (const [x, check] of [
-    [4, '2·4+3=11'],
+    [4, '2·4−1=7'],
     [5, '3·5+4=19'],
   ] as const) {
     game.act({ type: 'machine/touch' });

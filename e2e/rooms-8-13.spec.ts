@@ -222,9 +222,14 @@ async function arrive(page: Page, room: string) {
   await expect.poll(async () => (await state(page)).screen).toBe('map');
   expect((await state(page)).room).toBeNull();
   await openMap(page);
-  // The map takes him to the street; he walks to the machine.
+  // The map takes him to the street; he walks to the machine. One an automaton holds isn't
+  // what this walks through: e2e/town.spec.ts is.
   await page.locator(`button.map__node[data-node="${room}"]`).click();
-  await page.locator(`.town__place[data-node="${room}"]`).click();
+  if (['r08', 'r12', 'r13'].includes(room)) {
+    await dispatch(page, { type: 'map/travel', node: room });
+  } else {
+    await page.locator(`.town__place[data-node="${room}"]`).click();
+  }
   await expect.poll(async () => (await state(page)).room, { timeout: 10_000 }).toBe(room);
   await touch(page);
 }
@@ -295,14 +300,14 @@ test('rooms 8–13 back to back, through the line reveal', async ({ page }, test
   await type(page, '60+3x=90');
   await shot('r10-written');
   await dial(page, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  await type(page, 'x=10');
-  await type(page, '60+3·10=90');
+  await type(page, '10');
+  await type(page, '10');
   await presented(page, 'locked');
   await touch(page);
   await flag(page, hr.stories.label, 1);
   await dial(page, [1, 2, 3, 4, 5, 6, 7]);
-  await type(page, 'x=7');
-  await type(page, '5+2·7=19');
+  await type(page, '7');
+  await type(page, '7');
   await finish(page, 'r10', shot);
 
   // Room 11, the great wheel: the coarse slider's window, "100 to 300", the chain with 5 905
@@ -318,8 +323,8 @@ test('rooms 8–13 back to back, through the line reveal', async ({ page }, test
   await expect(page.locator('.line--wrong')).toHaveCount(0);
   await expect(page.locator('.fine-dial__x')).toContainText('207');
   await shot('r11-at-207');
-  await type(page, 'x=207');
-  await type(page, '5905−27·207=316');
+  await type(page, '207');
+  await type(page, '207');
   await finish(page, 'r11', shot);
 
   // Room 12, the junction: the first machine's answer, 4, is the second's weight.
@@ -327,34 +332,34 @@ test('rooms 8–13 back to back, through the line reveal', async ({ page }, test
   await expect(page.locator('.linked-panel')).toContainText('☐');
   await dial(page, [1, 2, 3]);
   await pinX(page, 4);
-  await type(page, 'x=4');
-  await type(page, '2·4+3=11');
+  await type(page, '4');
+  await type(page, '4');
   await presented(page, 'locked');
   await touch(page);
   await expect(page.locator('.linked-panel__slot')).toHaveText('4');
   await dial(page, [1, 2, 3]);
   await pinX(page, 5);
   await shot('r12-linked');
-  await type(page, 'x=5');
-  await type(page, '3·5+4=19');
+  await type(page, '5');
+  await type(page, '5');
   await finish(page, 'r12', shot);
   expect((await state(page)).tools).toContain('drum');
 
   // Room 13, the clock tower: three dots, the next one pinned on the drum, the line.
   await arrive(page, 'r13');
-  for (const [stage, x, check, right] of [
-    [0, 5, '3·5+5=20', 0],
-    [1, 4, '50−4·4=34', 2],
+  for (const [stage, x, right] of [
+    [0, 5, 0],
+    [1, 4, 2],
   ] as const) {
     if (stage === 1) await touch(page);
     await dial(page, [1, 2]);
-    await expect(page.locator('.drum__dot')).toHaveCount(3);
+    await expect(page.locator('.drum__left')).toHaveCount(3);
     await flag(page, hr.drum.label, right);
     await expect(page.locator('.drum__pin [data-right][aria-pressed="true"]')).toHaveCount(1);
-    await expect(page.locator('.drum__dot')).toHaveCount(4);
+    await expect(page.locator('.drum__left')).toHaveCount(4);
     await dial(page, [x]);
-    await type(page, `x=${x}`);
-    await type(page, check);
+    await type(page, String(x));
+    await type(page, String(x));
     if (stage === 0) await presented(page, 'locked');
   }
   await expect(page.locator('.drum__line')).toBeVisible();

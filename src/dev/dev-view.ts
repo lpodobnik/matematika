@@ -40,6 +40,12 @@ export function jumpTargets(list: readonly RoomSpec[]): JumpTarget[] {
   });
 }
 
+/** The tools he has earned by a room in play order: what a dev jump gives him. */
+export function toolsBefore(list: readonly RoomSpec[], roomId: string): ToolId[] {
+  const at = list.findIndex((room) => room.id === roomId);
+  return list.slice(0, Math.max(at, 0)).flatMap((room) => (room.earns ? [room.earns] : []));
+}
+
 export function verdictText(verdict: Verdict): string {
   if (verdict.kind !== 'valid') return verdict.kind;
   return `valid, ${verdict.move.kind}, ${verdict.progress ? 'progress' : 'no progress'}`;

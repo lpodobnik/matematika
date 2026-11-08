@@ -259,14 +259,14 @@ const gddRooms: readonly {
     id: 'r12',
     machine: 'junction',
     xIs: 'Gear sizes, the first passed to the second',
-    equations: ['2x + 3 = 11', '3x + 4 = 19'],
+    equations: ['2x − 1 = 7', '3x + 4 = 19'],
     answers: [4, 5],
     types: ['solve', 'solve'],
     dials: [
-      { min: 0, max: 10, step: 1 },
+      { min: 1, max: 9, step: 1 },
       { min: 0, max: 10, step: 1 },
     ],
-    pokeNotches: [4, 4],
+    pokeNotches: [3, 4],
     pins: [{ kind: 'level-x' }, { kind: 'level-x' }],
     ways: ['try', 'balance', 'undo'],
     earns: 'drum',
@@ -467,8 +467,24 @@ describe('rooms', () => {
 
     it('gives x = ☐ and 2 · ☐ + 5 = 23 once x is alone, and 9 fills them', () => {
       const lines = [stageEquation(stage), equationOf('2x = 18')];
-      expect(lastLines(stage, { machine: 0, pans: equationOf('2x = 18'), lines: [] })).toEqual([]);
-      const templates = lastLines(stage, { machine: 0, pans: equationOf('x = 9'), lines: [] });
+      expect(
+        lastLines(stage, {
+          machine: 0,
+          pans: equationOf('2x = 18'),
+          lines: [],
+          dialX: 0,
+          phase: 'arrive',
+          jam: null,
+        }),
+      ).toEqual([]);
+      const templates = lastLines(stage, {
+        machine: 0,
+        pans: equationOf('x = 9'),
+        lines: [],
+        dialX: 0,
+        phase: 'arrive',
+        jam: null,
+      });
       expect(templates).toEqual([
         ['x', '=', '☐'],
         ['2', '·', '☐', '+', '5', '=', '2', '3'],
@@ -927,6 +943,9 @@ describe('rooms', () => {
       const templates = lastLines(stage, {
         machine: 0,
         pans: equationOf(`x = ${answer}`),
+        dialX: 0,
+        phase: 'arrive',
+        jam: null,
         lines: [],
       });
       const digits = tokenize(String(answer));

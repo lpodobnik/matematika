@@ -115,7 +115,7 @@ export const hr = {
      */
     roles: {
       penkala: 'kondukter',
-      nikola: 'sin palitelja',
+      nikola: 'sin nažigača',
       faust: 'mehaničar',
     } as Partial<Record<'penkala' | 'nikola' | 'faust' | 'kristijan' | 'automaton', string>>,
     /** In a line that takes his name, before he has one (a dev jump). */
@@ -182,14 +182,14 @@ export const hr = {
         },
       ],
       r12: [
-        { who: 'faust', text: 'Ovo je Kristijanov bubanj. Pamti svaki x koji isprobaš.' },
-        { who: 'nikola', text: 'Na njemu su točkice. Kao da nešto crta.' },
+        { who: 'faust', text: 'Ovo je Kristijanova zapisna ploča. Pamti svaki x koji isprobaš.' },
+        { who: 'nikola', text: 'Na njoj su brojevi. Kao da sama nešto zapisuje.' },
       ],
       r13: [
         { who: 'nikola', text: 'Sve točkice leže na jednoj liniji. I cijela četvrt opet radi!' },
         {
           who: 'faust',
-          text: 'Zadnji trag na bubnju vodi ravno do ljevaonice. A ona je zatvorena.',
+          text: 'Zadnji trag na ploči vodi ravno do ljevaonice. A ona je zatvorena.',
         },
       ],
       r09: [
@@ -445,7 +445,7 @@ export const hr = {
       },
       nikola: {
         name: 'Nikola',
-        who: 'sin palitelja',
+        who: 'sin nažigača',
         before: [
           'Tata pali svjetiljke svaku večer. Sad ne gori nijedna.',
           'Kristijan bi znao. Ali Kristijana nema.',
@@ -564,14 +564,19 @@ export const hr = {
       hillNikola: {
         before: [
           'Toranj nije zvonio otkad je Kristijan otišao.',
-          'Kažu da bubanj pamti sve što stroj radi.',
+          'Kažu da ploča pamti sve što stroj radi.',
         ],
-        after: ['Čuješ? Svi strojevi odjednom!', 'Crta s bubnja vodi do ljevaonice. Što je tamo?'],
+        after: [
+          'Čuješ li? Svi strojevi u gradu opet rade!',
+          'Crta s ploče vodi do ljevaonice. Što je tamo?',
+        ],
       },
     },
     places: {
       /** A machine he can play: its name is enough; this is what a locked one says. */
       locked: 'Ovaj stroj čeka. Prvo neki drugi.',
+      /** A machine whose parts the street's automaton took: beat it first. */
+      held: 'Automat je skinuo dijelove s ovog stroja. Pobijedi ga da ih vratiš.',
       /** A locked machine, naming the machines it waits for (from the map's gates). */
       waits: (machines: readonly string[]) =>
         `Ovaj stroj čeka. Prvo popravi: ${machines.join(' i ')}.`,
@@ -608,7 +613,7 @@ export const hr = {
       /** Story 4.6: room 11's range pin, at the notebook: about how big x is. */
       range: 'Koliki je x otprilike? Stavi zastavicu.',
       /** Story 4.8: room 13's drum pin, at the notebook: where the next dot lands. */
-      'next-dot': 'Gdje će pasti sljedeća točkica? Stavi zastavicu.',
+      'next-dot': 'Koliki je sljedeći broj? Stavi zastavicu.',
       effect: 'Kad x raste, na koju će se stranu vaga nagnuti?',
       /** Story 2.8: room 5's second stage, after the load changed: the change's own tag. */
       change: 'Teret se promijenio. Gdje će vaga sada biti u ravnoteži?',
@@ -633,7 +638,7 @@ export const hr = {
     /** Story 2.10: at the notebook, once the logbook's wrong line is found: write it again. */
     rewrite: 'Prekriženi redak nije točan. Napiši ga ispravno.',
     /** At the notebook, when his dial first levels the pans. */
-    write: 'Vaga je u ravnoteži. Upiši x u bilježnicu.',
+    write: 'Vaga je ravna. Upiši u bilježnicu broj s klizača.',
     /** Story 1.16: at the notebook, when x is alone on the pans and no answer is written. */
     answer: 'x je sam na vagi. Upiši koliko je x.',
     /** At the notebook, after the answer line. */
@@ -672,9 +677,13 @@ export const hr = {
   },
   /** Story 4.8: the recording drum (room 13), at the top of the notebook. */
   drum: {
-    label: 'Bubanj',
+    label: 'Zapisna ploča',
+    /** The table's rows: the x tried, and what each side weighs there. */
+    x: 'x',
+    left: 'lijevo',
+    right: 'desno',
     /** For screen readers: what the drum shows. */
-    read: (n: number) => `Bubanj: ${n} ${dotsWord(n)} i crta ravnoteže`,
+    read: (n: number) => `Ploča: ${n} ${dotsWord(n)} i crta ravnoteže`,
   },
   /** Story 4.7: linked machines (room 12), at the top of the notebook. */
   linked: {
@@ -972,10 +981,11 @@ export const hr = {
       'linked-slot': 'Prazno mjesto u sljedećem stroju čeka baš taj broj.',
       'linked-fed': 'Broj iz prvog stroja sad je uteg na ovoj vagi.',
       // Room 13: the recording drum and its next-dot pin.
-      drum: 'Ovo je bubanj. Za svaki x koji probaš nacrta točkicu.',
-      'drum-dot': 'Točkica je težina lijeve strane. Crta je težina desne.',
-      'drum-try': 'Probaj klizač na prvim mjestima i gledaj točkice.',
-      'drum-pin': 'Gdje pada sljedeća točkica? Stavi zastavicu, pa Potvrdi.',
+      drum: 'Ovo je zapisna ploča. Za svaki x zapiše koliko teži koja strana.',
+      'drum-dot': 'Gledaj red lijevo: za koliko se broj mijenja kad x poraste za 1?',
+      'drum-try': 'Probaj klizač na prvim mjestima i gledaj brojeve.',
+      'drum-pin': 'Koliki je sljedeći broj? Stavi zastavicu, pa Potvrdi.',
+      'drum-cross': 'Gdje su lijevo i desno jednaki, vaga je ravna: tu je tvoj x.',
     },
   },
   /**

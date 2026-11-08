@@ -55,12 +55,13 @@ export const districtMap: MapSpec = {
     ['r10', 'r11'],
     ['r11', 'r12'],
     ['r12', 'r13'],
-    // Off the rooms (GDD: lairs hang off rooms 2, 5, 8 and 12; the workshop and the
-    // foundry gate off room 6).
+    // Off the rooms: an automaton shows as its street opens, since it holds that street's
+    // machine (the GDD had them after rooms 2, 5, 8 and 12); the workshop and the foundry
+    // gate off room 6.
     ['r02', 'lair-20'],
-    ['r05', 'lair-30'],
-    ['r08', 'lair-45'],
-    ['r12', 'lair-60'],
+    ['r02', 'lair-30'],
+    ['r07', 'lair-45'],
+    ['r11', 'lair-60'],
     ['r06', 'workshop'],
     ['r06', 'foundry'],
   ],

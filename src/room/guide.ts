@@ -150,7 +150,8 @@ export type GuideStepId =
   | 'drum'
   | 'drum-dot'
   | 'drum-try'
-  | 'drum-pin';
+  | 'drum-pin'
+  | 'drum-cross';
 
 export interface GuideStepSpec {
   id: GuideStepId;
@@ -396,6 +397,7 @@ const topics: Readonly<Record<GuideTopic, TopicSpec>> = {
       { id: 'drum-dot', targets: ['drum'] },
       { id: 'drum-try', targets: ['dial'], waits: 'dial', skip: (room) => !drumAsks(room) },
       { id: 'drum-pin', targets: ['drum'], waits: 'pin-confirm', skip: (room) => !drumAsks(room) },
+      { id: 'drum-cross', targets: ['drum'] },
     ],
   },
 };

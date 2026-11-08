@@ -36,7 +36,7 @@ const r08 = '4x + 9 = 41';
 const r09 = '135 − 5x = 100';
 const r10a = '60 + 3x = 90';
 const r10b = '5 + 2x = 19';
-const r12a = '2x + 3 = 11';
+const r12a = '2x − 1 = 7';
 const r12b = '3x + 4 = 19';
 const r13a = '3x + 5 = 20';
 const r13b = '50 − 4x = 34';
@@ -516,33 +516,33 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
       note: 'divided wrong',
     },
   ],
-  'r12 junction (2x + 3 = 11, then 3x + 4 = 19)': [
+  'r12 junction (2x − 1 = 7, then 3x + 4 = 19)': [
     // Story 4.7: two linked machines, each solved every way; the second's 4 came from the
     // first.
     { stage: r12a, line: 'x = 4', verdict: 'answer' },
-    { stage: r12a, before: ['x = 4'], line: '2 · 4 + 3 = 11', verdict: 'check' },
+    { stage: r12a, before: ['x = 4'], line: '2 · 4 − 1 = 7', verdict: 'check' },
     { stage: r12a, line: '2x = 8', verdict: 'valid', progress: true, move: 'add-both' },
     { stage: r12a, before: ['2x = 8'], line: 'x = 4', verdict: 'answer' },
-    { stage: r12a, before: ['2x = 8', 'x = 4'], line: '2 · 4 + 3 = 11', verdict: 'check' },
-    { stage: r12a, line: '2x = 11 − 3', verdict: 'valid', progress: true, move: 'move-across' },
-    { stage: r12a, before: ['2x = 11 − 3'], line: '2x = 8', verdict: 'valid', progress: true },
+    { stage: r12a, before: ['2x = 8', 'x = 4'], line: '2 · 4 − 1 = 7', verdict: 'check' },
+    { stage: r12a, line: '2x = 7 + 1', verdict: 'valid', progress: true, move: 'move-across' },
+    { stage: r12a, before: ['2x = 7 + 1'], line: '2x = 8', verdict: 'valid', progress: true },
     {
       stage: r12a,
-      before: ['2x = 11 − 3', '2x = 8'],
+      before: ['2x = 7 + 1', '2x = 8'],
       line: 'x = 8 : 2',
       verdict: 'valid',
       progress: true,
     },
     {
       stage: r12a,
-      before: ['2x = 11 − 3', '2x = 8', 'x = 8 : 2'],
+      before: ['2x = 7 + 1', '2x = 8', 'x = 8 : 2'],
       line: 'x = 4',
       verdict: 'answer',
     },
     {
       stage: r12a,
-      before: ['2x = 11 − 3', '2x = 8', 'x = 8 : 2', 'x = 4'],
-      line: '2 · 4 + 3 = 11',
+      before: ['2x = 7 + 1', '2x = 8', 'x = 8 : 2', 'x = 4'],
+      line: '2 · 4 − 1 = 7',
       verdict: 'check',
     },
     { stage: r12a, line: '2x = 14', verdict: 'wrong', note: '11 + 3' },

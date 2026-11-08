@@ -14,6 +14,7 @@ import {
   type QualityReadout,
   qualityReadout,
   toggledBalance,
+  toolsBefore,
 } from '@/dev/dev-view';
 import { type Quality, qualities } from '@/store/quality';
 import { useGame } from '@/store/store';
@@ -60,9 +61,11 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
       targets={targets}
       balance={tools.includes('balance')}
       profiling={copies === 3}
-      onJump={(target) =>
-        dispatch({ type: 'room/enter', roomId: target.roomId, stage: target.stage })
-      }
+      onJump={(target) => {
+        // With the tools he would have by then, so the puzzle plays as it does in the game.
+        dispatch({ type: 'dev/set-tools', tools: toolsBefore(rooms, target.roomId) });
+        dispatch({ type: 'room/enter', roomId: target.roomId, stage: target.stage });
+      }}
       onToggleBalance={() => dispatch({ type: 'dev/set-tools', tools: toggledBalance(tools) })}
       onForceQuality={(forced) => dispatch({ type: 'quality/force', quality: forced })}
       onProfile={() => {

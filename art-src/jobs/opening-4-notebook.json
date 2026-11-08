@@ -1,0 +1,16 @@
+{
+ "name": "opening-4-notebook",
+ "seed": 7204,
+ "size": {
+  "width": 1920,
+  "height": 1080
+ },
+ "style": "v4",
+ "notes": "Town slice opening panel (story 5.0).",
+ "slots": {
+  "subject": "A small worn leather notebook with a brass clasp lies alone on old wooden floorboards, next to a stub of pencil, among scattered loose pages. No people, no hands, nobody in the picture.",
+  "camera": "Close view from above at a slight angle.",
+  "composition": "The notebook in the centre, large.",
+  "state": "Still and quiet."
+ }
+}

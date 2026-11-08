@@ -840,6 +840,12 @@ export const town = {
 };
 
 /** The area that holds a room, so he comes out where he went in. */
+/** Whether every machine in a street runs (a place that isn't a room, like the workshop, doesn't count). */
+export function streetRestored(area: AreaId, done: readonly string[]): boolean {
+  const machines = town.areas[area].places.filter((place) => /^r\d\d$/.test(place.node));
+  return machines.length > 0 && machines.every((place) => done.includes(place.node));
+}
+
 export function areaOf(node: string | null): AreaId | null {
   if (!node) return null;
   for (const area of Object.values(town.areas)) {

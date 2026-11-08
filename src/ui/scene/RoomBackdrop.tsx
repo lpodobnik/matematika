@@ -1,7 +1,7 @@
 import { extend } from '@pixi/react';
 import { Assets, ColorMatrixFilter, Sprite, type Texture } from 'pixi.js';
 import { useEffect, useMemo, useState } from 'react';
-import { areaOf } from '@/content/town';
+import { areaOf, streetRestored } from '@/content/town';
 import { useGame } from '@/store/store';
 import { sceneSize } from '@/ui/scene/fit-scene';
 import { areaArt } from '@/ui/town/art';
@@ -44,7 +44,8 @@ export function RoomBackdrop() {
   }, [src]);
 
   if (!texture || !id) return null;
-  const restored = (done as readonly string[]).includes(id);
+  // As the town shows it: in colour once every machine in the street runs.
+  const restored = area !== null && streetRestored(area, done);
   return (
     <pixiSprite
       texture={texture}
