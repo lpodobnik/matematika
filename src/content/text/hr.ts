@@ -220,7 +220,7 @@ export const hr = {
       ],
       r09: [
         { who: 'automaton', text: 'DIZALO JE ZAPEČAĆENO PO UPUTAMA. OTVARANJE NIJE PREDVIĐENO.' },
-        { who: 'nikola', text: 'Pečat je pao. Ali tko lijepi te papire po cijelom gradu?' },
+        { who: 'nikola', text: 'Pečat je pao. Dizalo opet radi!' },
       ],
     },
     /** The city's log on the map: every line he has been told, to read again. */

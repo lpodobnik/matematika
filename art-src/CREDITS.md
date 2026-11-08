@@ -1,4 +1,4 @@
-images generated: 81/100
+images generated: 82/100
 
 # Art credits
 
@@ -1413,3 +1413,19 @@ nothing. Each names its source and the exact command.
   The First Automaton: a very tall, thin, very old brass and black-iron machine man standing in the huge open doorway of a dark foundry, seen from below, fire glowing orange behind him so that he is mostly a looming silhouette. His head is a narrow riveted helmet with two small cold glowing round eyes and no mouth. A long strip of pale punched paper tape spills from a slot in his chest and curls down to the floor. In one long jointed hand he holds a thick old leather book, open, as if reading it. He is alone and very still. Unsettling and quiet, not gory, suitable for a children's storybook. Low angle looking up at him from the ground. The figure stands in the centre and fills most of the picture's height, the doorway framing him, deep shadows around. Completely still, sparks drifting faintly behind him. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
   ```
 - story-first-automaton.t81 (2026-11-08): the reveal after room 7; darkened with a vignette and cold eyes in first-automaton.webp.
+
+### 82. `tests/town-bridge-down.t82.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 8702
+- Generated at 1920 × 1200 PNG; saved as WebP 1600 × 1000, quality 46, 299 KB
+- References: `town-bridge-down.t60.png`
+- Style block: v4
+- Date: 2026-11-08
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Town: the bridge once it works. Retry of t60: Luka could not read the row of balls on chains under the deck.
+- Prompt:
+
+  ```text
+  Edit image 1. Keep everything exactly as it is: the same composition, camera angle, buildings, ground, scale and drawing style. Change only what follows. Remove every round ball and every chain hanging under the bridge deck, and the big round pulley and the chain beside the stone pier, with their shadows and reflections. Under the deck there is now only empty air and the river below. The bridge deck stays level and complete, resting on its piers, an ordinary finished bridge. No people, no animals. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
