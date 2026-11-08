@@ -1,8 +1,8 @@
 ---
 stepsCompleted: [1, 2, 3, 4]
-status: 'epic 1 ready for development'
+status: 'epics 7 and 8 ready for development'
 mode: 'decide-and-flag: Claude made the calls; each is open to Luka''s veto (see Calls Open to Veto)'
-revised: '2026-11-05, after the implementation readiness review'
+revised: '2026-11-08, part 2 added'
 inputDocuments:
   - '_bmad-output/planning-artifacts/gdds/gdd-matematika-2026-11-05/gdd.md'
   - '_bmad-output/planning-artifacts/gdds/gdd-matematika-2026-11-05/epics.md'
@@ -1283,6 +1283,210 @@ Make it hold up against Zelda on first contact. **Stories are detailed before th
 5. The line-checker table is complete for all 13 rooms.
 6. The paper test is ready, and none of its equations appear in a room.
 
+## Part 2: The Trail
+
+Epics 7–12 build the GDD's "Part 2: The Trail", following "Part 2 Architecture" and the narrative's Part 2. Epics 7 and 8 are broken down in full; later epics are detailed further when they start, because playing the first lead may change them. Everything stays off behind `tuning.part2.live` until Luka opens it, and part 1 must not change for a player with the switch off.
+
+## Epic 7: The gate and the little one
+
+**Goal:** his live save reaches something new, and he has a companion he likes. Depends on epics 1–6.
+
+### Story 7.1: Split the town screen
+
+As a developer, I want `TownScreen.tsx` split with no change in behaviour, so that part 2 has somewhere to go.
+
+**Acceptance criteria**
+1. The walking loop is a hook, and board parts are components, with `TownScreen.tsx` well under its current 994 lines.
+2. Nothing changes on screen. Unit tests and the town browser specs pass unchanged.
+3. There is a single place in the loop that runs every frame in every street, ready for the follower.
+
+### Story 7.2: The switch and the save
+
+As Luka, I want part 2's data and switch in place, so that nothing can reach my son by accident.
+
+**Acceptance criteria**
+1. `tuning.part2.live` is `false`, and a test pins it. `ui.preview` comes from `wantsDev` through `boot/start`, and is never saved. `partTwoOn(state)` reads both.
+2. `save.hunt` and `save.companion` exist in `SaveV1`, `v` stays 1, and a save without them loads with safe defaults. Fixtures at points through part 1 load unchanged.
+3. `hunt` and `companion` have fixed keys, and a test shows `overKept` doesn't resurrect anything.
+4. A backup link carries neither his name nor the little one's. Restore keeps the device's names.
+5. `hunt/` is a pure folder in `architecture.test.ts`.
+
+### Story 7.3: The gate
+
+As Luka's son, I want to open the foundry gate, so that the story goes on.
+
+**Acceptance criteria**
+1. `gateState(save, on)` gives `sealed`, `waiting`, `ready` or `opened`. With the switch off, the foundry behaves exactly as today. Tests cover the moment before it opens as well as after.
+2. When `ready`, he hears the knock, sees `5 · x = 40`, and solves it with part 1's `check()`: `x = 8`, then `5 · 8 = 40`. A wrong line gets a knock back, with no cost.
+3. `gateOpened` is a ratchet: waking the lairs with the dev panel doesn't shut it.
+4. The empty foundry shows, with the notice that Kristijan has been moved.
+5. With the switch on, the "needs a tool" line and "Nastavak slijedi" no longer appear.
+
+### Story 7.4: The little one
+
+As Luka's son, I want a tiny automaton that follows me, so that I'm not alone in this.
+
+**Acceptance criteria**
+1. In the foundry it is still knocking, then knocks on his boot. He names it through the same dialog as his own name. The name stays on the device.
+2. It follows him in every street within 1–2 body lengths, on `city/follow.ts`, through refs, and resets on arrival. `followStep` has unit tests, including never leaving the ground.
+3. It idles, hops and beeps. Tapping it prints "Zašto?".
+4. It has no legs. It's drawn in code, until final art comes in epic 12.
+5. Its position isn't saved, and it survives a reload.
+
+### Story 7.5: The first new street, and Vučetić
+
+As Luka's son, I want to walk out of the foundry into somewhere new, with someone who seems to help.
+
+**Acceptance criteria**
+1. Street `u1` is reached from the foundry and back, on the same walking. Exits and people accept `RoomId | HuntMark`. Part 1's data is unchanged, and part 1's map doesn't show `u1`.
+2. Vučetić arrives at the foundry, hands over the map, and says his line. The little one hides behind him.
+3. Art for `u1` is decoded on entry, not at launch.
+
+### Story 7.6: Play epic 7 on screen
+
+**Acceptance criteria**
+1. From a finished part 1 save with the switch on, a browser run opens the gate, names the little one, walks to `u1` and back, and reloads along the way. Screenshots are looked at.
+2. With the switch off, a browser run confirms the ending is as it was.
+
+## Epic 8: Clues and doors
+
+**Goal:** one complete lead, played from the trail map to the written line, shows whether clues are clearer than rooms. Depends on epic 7.
+
+### Story 8.1: The statement language
+
+As a developer, I want the new line forms parsed and judged apart from equations, so that rooms can't be disturbed.
+
+**Acceptance criteria**
+1. `math/statement-tokens.ts`, `math/statement.ts` and `math/truth.ts` follow Pattern 5. `formatStatementLine` is in `math/format.ts`. `q.pow` is added to `rational.ts`.
+2. `TOKENS`, `Expr`, `Equation`, `Verdict` and `maxNumber` are unchanged, and room links' fixtures still decode.
+3. `math/statements.table.ts` holds true, false and refused rows for every form, including 18 499 000 ≈ 19 000 000 being false and `55 : 9 = 5 ost. 10` being false.
+4. Parsing never throws. A property test covers it.
+
+### Story 8.2: Leads as data, and the hunt reducer
+
+As a developer, I want leads as data and one reducer layer, following the fight's precedent.
+
+**Acceptance criteria**
+1. `hunt/types.ts` and `hunt/lead.ts` define leads and the steps show → try → fix → play → write → thread → done, with illegal actions ignored.
+2. `withHunt` in `store/hunt-reducer.ts` handles `hunt/*`, emits past-tense events, and emits `SaveChanged` when `save` changes.
+3. A new `hunt` screen is in `ScreenInPlay`, with the town restored on leaving.
+4. A scene in progress survives a reload. A saved scene that doesn't fit its spec restarts the scene and keeps the lead.
+
+### Story 8.3: The trail map
+
+As Luka's son, I want to see where the hunt stands and pick where to go.
+
+**Acceptance criteria**
+1. In the new district the map overlay shows the trail: pins for open leads and places, and a red thread through what's solved, derived from `save.hunt`. Vučetić marks finds.
+2. Picking a pin says what's there, and walking to it starts the lead. A tap area in the street starts it too.
+3. Part 1's map is unchanged.
+
+### Story 8.4: The hunt notebook
+
+As Luka's son, I want to write lines in the notebook the same way I always have.
+
+**Acceptance criteria**
+1. `ui/notebook/Pad.tsx` is extracted, and `NumberPad` wraps it. The room notebook and its tests are unchanged.
+2. The hunt notebook holds clues, his lines, and a draft, with keys per line and pages if needed, at least 48 px each at 640 × 360.
+3. Tapping a line strikes it through and tapping again restores it.
+4. In a Knock, the pad shows all the signs taught so far. For a working line, it shows only what that line needs.
+5. The notebook is never an `<input>`, and the OS keyboard doesn't open.
+
+### Story 8.5: Knock
+
+As Luka's son, I want my lines to light and darken the doors, so that working it out is how I find the door.
+
+**Acceptance criteria**
+1. `hunt/knock.ts` derives lit doors from active lines, using the GDD's table. Refused lines get the shake and light nothing.
+2. A row of 10–70 doors scrolls sideways natively, with big plates in order. A control crosses the road, and a lift shows floors from 0.
+3. The little one knocks only when one door is lit. Tapping a door before then gets the shake and points at the next clue.
+4. Striking a line relights what it ruled out.
+5. A wrong door shows what his idea caused and strikes the line. After that, in this scene, a sum must be worked line by line, each judged true.
+6. Help rises with each wrong door and each 60 seconds idle, to a worked example with other numbers. No limit, no cost.
+7. A right door opens, with 2 parts if no line was struck and no exact-move hint was taken. Reloading can't earn them twice.
+
+### Story 8.6: The cylinder and the objects
+
+As Luka's son, I want to see a new idea with things I can move before I have to use it.
+
+**Acceptance criteria**
+1. A lesson is data: an object and a script of moves. It plays for up to 60 seconds, with up to 2 short lines per step. One tap speeds it up. It can't be skipped the first time.
+2. The pairs and line objects work, with goal predicates that have tests.
+3. The try step takes him from objects to numbers in the notebook.
+4. "Zašto?" replays the current lesson.
+
+### Story 8.7: Fixing the little one
+
+As Luka's son, I want to show the little one where it went wrong, so that I can see it learn.
+
+**Acceptance criteria**
+1. It writes its working in its own wobbly hand, visibly its own attempt.
+2. He taps the wrong line, shows it right with the object, and writes the right line. Wrong taps get help, at no cost.
+3. The fix goes into `companion.taught`, with lead, mistake and line. That mistake never comes back.
+4. The `?` hint and help stay truthful and separate.
+
+### Story 8.8: The first lead
+
+As Luka's son, I want the whole of "Two sides" to work, from the map to the written line.
+
+**Acceptance criteria**
+1. `content/leads/l01-two-sides.ts` has a lesson, a mistake, a Knock, a write-up and a find, with Croatian in `content/text/hunt.ts`, flagged as drafts for Luka.
+2. After the door he writes `0 ∉ N`, `0 ∈ N₀` and `7 · 2 + 1 = 15` in school form, with fading, and false lines bounce.
+3. The thread moves, colour and people return to the place, and an explanation card follows.
+4. A first-time guide teaches Knock, with only the asked move passing.
+5. `hunt/solve.ts` proves the lead: the clues leave exactly one door.
+
+### Story 8.9: Play the first lead
+
+**Acceptance criteria**
+1. A browser run plays it on tablet and phone sizes, wrong door included. Screenshots are looked at, and layout bugs are measured.
+2. The report for Luka says plainly whether clues look clearer than rooms, and what to check himself.
+
+## Epic 9: Three more ways to play
+
+**Goal:** each scene type works once, and he can learn it from play. Depends on epic 8. Detailed further when it starts.
+
+- **Story 9.1: Sneak.** Turn-based boards, patrols with drawn routes, moves and waiting, being caught at no cost, line boards where the exit lights only once he writes it. A search proves boards solvable.
+- **Story 9.2: The tram line lead.** `l04`, with `A = 25` and the line object.
+- **Story 9.3: Unmask.** People and documents, question cards with at least 2 required, working shown, two wrong in different ways, a wrong accusation shows why, and the scene ends when he writes the corrected line.
+- **Story 9.4: The newspaper lead.** `l06`, with Zagorka, `≈`, and the error.
+- **Story 9.5: Little one alone.** Playing as it, junctions with place-value signs, dead ends that show what his route means, its built-in lamp.
+- **Story 9.6: The archive lead.** `l03`, with powers, the crates object, and the clerk's register both ways.
+- **Story 9.7: Guides and help for each,** then play all three on screen.
+
+## Epic 10: The whole trail
+
+**Goal:** the chapter is complete, from gate to near miss. Depends on epic 9. Detailed further when it starts.
+
+- **Story 10.1: Act 1.** The neighbours, Knot 1 and its rule guard, the hook.
+- **Story 10.2: Rule guards.** Tiles, the written line, first-try payment, jamming. All four, including the zero guard, which keeps spinning in its street.
+- **Story 10.3: The black thread.** Deterministic targets, shown in advance, two seals at most, a plain Sneak board on a sealed lead, decoy doors after the coat.
+- **Story 10.4: Act 2.** The little one wandering off, the witnesses, the ledgers, the facade with the hook, Knot 2 and the forged note, corrected streets.
+- **Story 10.5: Act 3.** The crate yard, the sixth cart with Load the carts, the coat with its planted clues, the real Vučetić, Knot 3.
+- **Story 10.6: Act 4.** Bracket locks first, two witnesses, the loop with loop boards, the hoist with Level the load.
+- **Story 10.7: The last lead.** Charts, the zero guard, the warm lamp, the note, the First Automaton's question, the front page, the next trail.
+- **Story 10.8: Prove it.** The statement table complete, `hunt/solve.ts` over every lead, and a playthrough from the real path, with every wrong path tried and saves reloaded.
+
+## Epic 11: Growth and fights
+
+**Goal:** there is always a reason to go somewhere else, and a reason to fight. Depends on epic 10. Detailed further when it starts.
+
+- **Story 11.1: Gear and looks.** Bought with parts at Faust's, shown on the little one. A content test fails if a lead needs bought gear.
+- **Story 11.2: Secrets.** 8 caches, 2 in the old streets.
+- **Story 11.3: New lairs.** Armour and parts set by simulation, for reasoning and random players. They hold no lead.
+- **Story 11.4: Brackets.** An upgrade on sale after the coat, a choice per strike, and "Udari" asks how big it will be.
+- **Story 11.5: Nikola's automaton.**
+
+## Epic 12: Ready for him
+
+**Goal:** the part holds up on his tablet. Depends on epics 7–11. Detailed further when it starts.
+
+- **Story 12.1: Art.** 12 street paintings, 3 door facades, the little one and new characters, within `art-src/CREDITS.md`.
+- **Story 12.2: Sound.** Its beeps, knocks and the tape printer, and a layer per act.
+- **Story 12.3: Text.** About 300 lines, on Luka's review page.
+- **Story 12.4: Paper test** for this part, with none of its numbers in a lead.
+- **Story 12.5: Open it.** Luka decides, and `tuning.part2.live` becomes true.
+
 ## Validation
 
 | Check | Result |
@@ -1309,3 +1513,4 @@ Make it hold up against Zelda on first contact. **Stories are detailed before th
 - **Quality thresholds** of 18 ms and 25 ms at the 95th percentile.
 - **Hints are not logged**, following the GDD's "free and never recorded".
 - **The style guide is in epic 2**, with test images from fal.ai.
+- **Part 2's story order** starts with splitting the town screen, because every later story touches it. Epics 9–12 are outlined and detailed when they start, because playing the first lead may change them.

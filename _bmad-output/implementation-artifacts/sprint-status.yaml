@@ -116,3 +116,28 @@ development_status:
   6-3-rooms-in-their-streets-and-the-ending: review
   6-4-deploy-to-github-pages: ready-for-luka
   epic-6-retrospective: optional
+
+  # Part 2: The Trail. Stays off behind tuning.part2.live until Luka opens it.
+  epic-7: in-progress
+  7-1-split-the-town-screen: ready-for-dev
+  7-2-the-switch-and-the-save: ready-for-dev
+  7-3-the-gate: ready-for-dev
+  7-4-the-little-one: ready-for-dev
+  7-5-the-first-new-street-and-vucetic: ready-for-dev
+  7-6-play-epic-7-on-screen: ready-for-dev
+
+  epic-8: backlog
+  8-1-the-statement-language: ready-for-dev
+  8-2-leads-as-data-and-the-hunt-reducer: ready-for-dev
+  8-3-the-trail-map: ready-for-dev
+  8-4-the-hunt-notebook: ready-for-dev
+  8-5-knock: ready-for-dev
+  8-6-the-cylinder-and-the-objects: ready-for-dev
+  8-7-fixing-the-little-one: ready-for-dev
+  8-8-the-first-lead: ready-for-dev
+  8-9-play-the-first-lead: ready-for-dev
+
+  epic-9: backlog
+  epic-10: backlog
+  epic-11: backlog
+  epic-12: backlog
