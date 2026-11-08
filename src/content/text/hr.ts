@@ -879,6 +879,7 @@ export const hr = {
       ask: 'Koliki će biti udarac?',
       check: 'Provjeri',
       change: 'Promijeni kockice',
+      erase: 'Obriši zadnju znamenku',
       wrong: 'Nije. Prvo pomnoži, pa dodaj.',
       right: (damage: number, armour: number) => `Točno: udarac je ${damage}, a oklop ${armour}.`,
     },

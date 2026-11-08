@@ -36,6 +36,10 @@ export function StrikeGuess({
     setStage('asking');
     setTyped((now) => (stage === 'wrong' ? `${digit}` : `${now}${digit}`.slice(0, MAX_DIGITS)));
   };
+  const erase = () => {
+    setStage('asking');
+    setTyped((now) => now.slice(0, -1));
+  };
   const check = () => setStage(Number(typed) === damage ? 'right' : 'wrong');
 
   return (
@@ -57,10 +61,10 @@ export function StrikeGuess({
               {hr.fight.guess.right(damage, armour)}
             </p>
             <div className="fight__confirm-buttons">
-              <button type="button" className="fight__stay" onClick={onBack}>
+              <button type="button" className="fight__go" onClick={onBack}>
                 {hr.fight.guess.change}
               </button>
-              <button type="button" className="fight__go" onClick={onStrike}>
+              <button type="button" className="fight__stay" onClick={onStrike}>
                 {hr.fight.strike}
               </button>
             </div>
@@ -83,14 +87,26 @@ export function StrikeGuess({
                   {digit}
                 </button>
               ))}
+              <button
+                type="button"
+                className="fight__guess-key fight__guess-erase"
+                aria-label={hr.fight.guess.erase}
+                disabled={typed === ''}
+                onClick={erase}
+              >
+                <svg viewBox="0 0 32 24" aria-hidden="true">
+                  <path d="M10 3h19v18H10L2 12z" />
+                  <path d="M15 8l8 8M23 8l-8 8" />
+                </svg>
+              </button>
             </div>
             <div className="fight__confirm-buttons">
-              <button type="button" className="fight__stay" onClick={onBack}>
+              <button type="button" className="fight__go" onClick={onBack}>
                 {hr.fight.guess.change}
               </button>
               <button
                 type="button"
-                className="fight__go"
+                className="fight__stay"
                 disabled={typed === '' || stage === 'wrong'}
                 onClick={check}
               >

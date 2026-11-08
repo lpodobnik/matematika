@@ -972,7 +972,7 @@
 
 .fight__guess-pad {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 6px;
 }
 
@@ -990,4 +990,24 @@
 .fight__guess-key:active {
   background: var(--ink);
   color: var(--paper);
+}
+
+/* Beside the digits, both rows tall. */
+.fight__guess-erase {
+  grid-column: 6;
+  grid-row: 1 / span 2;
+}
+
+.fight__guess-erase:disabled {
+  opacity: 0.4;
+}
+
+.fight__guess-erase svg {
+  width: 32px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }

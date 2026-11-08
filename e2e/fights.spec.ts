@@ -174,6 +174,12 @@ test('once he has beaten an automaton, a strike asks how big it will be', async 
   // A wrong answer doesn't strike.
   await page.locator('.fight__strike').click();
   const damage = await guessDamage(page);
+  // A slip can be taken back, a digit at a time.
+  await tapNumber(page, 21);
+  await guess.getByRole('button', { name: 'Obriši zadnju znamenku' }).click();
+  await expect(page.getByTestId('guess-formula')).toContainText('= 2');
+  await guess.getByRole('button', { name: 'Obriši zadnju znamenku' }).click();
+  await expect(page.getByTestId('guess-formula')).toContainText('= ?');
   await tapNumber(page, damage + 1);
   await guess.getByRole('button', { name: 'Provjeri' }).click();
   await expect(guess).toContainText('Nije');
