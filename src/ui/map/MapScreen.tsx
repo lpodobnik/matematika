@@ -26,7 +26,7 @@ const authored = rooms.map((room) => room.id);
  * A place he can see but not open yet shows its name, and its lock shows what opens it
  * (story 2.3).
  */
-export function MapScreen() {
+export function MapScreen({ onTravel }: { onTravel?(node: NodeId): void } = {}) {
   const roomsDone = useGame((s) => s.save.progress.roomsDone);
   const tools = useGame((s) => s.save.progress.tools);
   const started = useGame((s) => s.save.progress.started);
@@ -70,7 +70,7 @@ export function MapScreen() {
       wakes={wakes}
       pages={pages}
       parts={economy.parts}
-      onTravel={(node) => dispatch({ type: 'map/travel', node })}
+      onTravel={onTravel ?? ((node) => dispatch({ type: 'map/travel', node }))}
     />
   );
 }

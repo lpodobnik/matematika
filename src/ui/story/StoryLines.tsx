@@ -24,7 +24,10 @@ export function StoryLines({ room, name }: { room: RoomId; name: string | null }
     <ul className="story__lines">
       {storyLines(room).map((line) => (
         <li key={`${line.who}-${lineText(line, name)}`} className="story__item" data-who={line.who}>
-          <span className="story__who">{hr.story.speakers[line.who]}</span>
+          <span className="story__who">
+            {hr.story.speakers[line.who]}
+            <span className="story__role">{hr.story.roles[line.who]}</span>
+          </span>
           <p className="story__text">{lineText(line, name)}</p>
         </li>
       ))}
@@ -41,7 +44,10 @@ export function IdeaCards({ ideas }: { ideas: readonly IdeaId[] }) {
   return (
     <div className="story__ideas">
       <div className="story__item" data-who="nikola">
-        <span className="story__who">{hr.story.speakers.nikola}</span>
+        <span className="story__who">
+          {hr.story.speakers.nikola}
+          <span className="story__role">{hr.story.roles.nikola}</span>
+        </span>
         <p className="story__text">{hr.ideas.ask}</p>
       </div>
       {ideas.map((idea) => (

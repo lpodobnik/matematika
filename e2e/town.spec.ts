@@ -112,6 +112,12 @@ test('a new game: the opening, the naming, the town, room 1 and back', async ({ 
     null,
     { timeout: 20_000 },
   );
+  // Nobody speaks without an introduction: Penkala says who he is, and his role is under his name.
+  await expect(page.locator('.story__item[data-who="penkala"] .story__role').first()).toHaveText(
+    'kondukter, sve radi po Knjizi',
+  );
+  await expect(page.locator('.story__text').first()).toContainText('Ja sam Penkala');
+  await shot(page, '4b-penkala-introduces-himself');
   await page.getByRole('button', { name: 'Dalje' }).click();
 
   // Back in the town, outside the gate, now in colour; Nikola is there.
@@ -173,6 +179,45 @@ test('a fixed machine runs on: tapping it shows a bubble, not the room again', a
   await expect(page.locator('.town__bubble')).toContainText('radi', { timeout: 8000 });
   expect((await state(page)).ui.screen).toBe('map');
   expect((await state(page)).room).toBeNull();
+});
+
+test('a tap on the district map takes him to the street, beside the machine', async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await hook(page);
+  await page.evaluate(() => {
+    const g = window as unknown as Game;
+    const s = g.__s.getState();
+    g.__d({
+      type: 'boot/start',
+      save: {
+        ...s.save,
+        character: { name: 'Ivo', look: 'look-5' },
+        progress: {
+          ...s.save.progress,
+          introSeen: true,
+          roomsDone: ['r01', 'r02'],
+          told: ['r01', 'r02'],
+          onMap: true,
+        },
+      },
+      room: null,
+    });
+  });
+  await expect(page.locator('.town__board[data-area="square"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Karta četvrti' }).click();
+  await page.locator('.map__node[data-node="r03"]').click();
+  // Not into the puzzle: into the canal street, the map closed, the sluice gate beside him.
+  await expect(page.locator('.town__board[data-area="canal"]')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('.map__board')).toHaveCount(0);
+  expect((await state(page)).room).toBeNull();
+  await page.waitForTimeout(400);
+  await shot(page, '10-map-to-canal');
+  // He walks the last step himself.
+  await page.locator('.town__place[data-node="r03"]').click();
+  await expect.poll(async () => (await state(page)).ui.screen, { timeout: 8000 }).toBe('room');
 });
 
 test('fixed machines open the way on: square, canal, mill', async ({ page }) => {

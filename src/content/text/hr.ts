@@ -109,6 +109,14 @@ export const hr = {
       kristijan: 'Majstor Kristijan',
       automaton: 'Prvi Automat',
     },
+    /** Under each name, every time: who they are, so nobody speaks without an introduction. */
+    roles: {
+      penkala: 'kondukter, sve radi po Knjizi',
+      nikola: 'sin palitelja svjetiljki',
+      faust: 'stari mehaničar',
+      kristijan: 'nestali majstor, njegova bilješka',
+      automaton: 'obavijest na bušenoj traci',
+    },
     /** In a line that takes his name, before he has one (a dev jump). */
     noName: 'šegrte',
     next: 'Dalje',
@@ -116,7 +124,7 @@ export const hr = {
       r01: [
         {
           who: 'penkala',
-          text: 'Kaj? Prema Knjizi, vrata se dižu kurblom. Tri okreta, ni više ni manje.',
+          text: 'Kaj? Ja sam Penkala, kondukter. Po Knjizi, vrata se dižu kurblom.',
         },
         { who: 'penkala', text: 'A ova su se digla bez kurble. Toga nema u Knjizi.' },
       ],

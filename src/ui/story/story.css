@@ -58,6 +58,12 @@
   opacity: 0.75;
 }
 
+.story__role {
+  margin-left: 0.5em;
+  font-weight: 400;
+  font-style: italic;
+}
+
 .story__text {
   align-self: flex-start;
   margin: 0;

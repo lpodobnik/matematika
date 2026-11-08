@@ -244,6 +244,29 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
     [nodes, onTravel, wakesIn, done, met],
   );
 
+  // A tap on the district map: to the street that holds the place, standing beside it.
+  const pick = useCallback(
+    (node: NodeId) => {
+      const to = streetOf(node);
+      if (!to) {
+        onTravel(node);
+        return;
+      }
+      const there = town.areas[to];
+      const stand = there.places.find((p) => p.node === node)?.stand ?? there.arrive;
+      path.current = [];
+      errand.current = null;
+      setWalking(false);
+      setShowMap(false);
+      setAreaId(to);
+      meRef.current = stand;
+      setStart(stand);
+      botRef.current = botAt(there.patrol);
+      setBubble(null);
+    },
+    [onTravel],
+  );
+
   // One loop moves him along his path and the automaton along its round. It pauses while
   // the district map is open.
   useEffect(() => {
@@ -575,7 +598,7 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
           </svg>
         </button>
       </main>
-      {showMap && <MapOverlay onClose={() => setShowMap(false)} />}
+      {showMap && <MapOverlay onClose={() => setShowMap(false)} onPick={pick} />}
       {showIntro && (
         <div className="town__overlay">
           <OpeningPanels onDone={() => setShowIntro(false)} />
@@ -585,8 +608,11 @@ export function TownBoard({ view, done, fresh, look, parts, wakesIn, onTravel }:
   );
 }
 
-/** The district map over the town, for the rooms that have no street yet; Escape closes it. */
-function MapOverlay({ onClose }: { onClose(): void }) {
+/**
+ * The district map over the town; Escape closes it. A place with a street takes him to that
+ * street, beside its machine, so he walks up to it; a place with none, straight in.
+ */
+function MapOverlay({ onClose, onPick }: { onClose(): void; onPick(node: NodeId): void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -596,7 +622,7 @@ function MapOverlay({ onClose }: { onClose(): void }) {
   }, [onClose]);
   return (
     <div className="town__overlay">
-      <MapScreen />
+      <MapScreen onTravel={onPick} />
       <button type="button" className="town__close" onClick={onClose}>
         {hr.town.close}
       </button>
@@ -615,6 +641,12 @@ function place(el: HTMLElement | null, at: Point, facing: 1 | -1, picture: 1 | -
   el.style.zIndex = String(Math.round(at.y));
   const img = el.firstElementChild as HTMLElement | null;
   if (img) img.style.transform = `scaleX(${facing * picture})`;
+}
+
+/** The street a map place stands in: a machine, or the automaton on patrol there. */
+function streetOf(node: NodeId): AreaId | null {
+  const area = Object.values(town.areas).find((a) => a.lair === node);
+  return areaOf(node) ?? area?.id ?? null;
 }
 
 /** A person's lines: before the room that changes them, or after. */
