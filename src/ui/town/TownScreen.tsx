@@ -1,7 +1,7 @@
 import '@/ui/town/town.css';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { LookId } from '@/city/character';
-import { type MapView, mapView, type NodeView } from '@/city/reach';
+import { type MapView, mapView } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { findPath, type Point } from '@/city/walk';
 import { tuning } from '@/config/tuning';
@@ -13,7 +13,6 @@ import {
   type AreaId,
   areaOf,
   type PersonId,
-  type Rect,
   streetRestored,
   type TownExit,
   type TownPerson,
@@ -22,23 +21,28 @@ import {
 } from '@/content/town';
 import { asleepLairs } from '@/fight/settle';
 import type { LairId } from '@/fight/types';
-import { activePlayer, playerKeys, playersHash } from '@/lib/player';
+import { playersHash } from '@/lib/player';
 import type { RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { Automaton } from '@/ui/fight/fight-art';
-import { MapScreen } from '@/ui/map/MapScreen';
 import { logbookArt, outroArt } from '@/ui/opening/art';
 import { OpeningPanels, StoryPanels } from '@/ui/opening/OpeningScreen';
 import { areaArt, areaChange, lookFacing, looks, personArt, personFacing } from '@/ui/town/art';
+import { bloomMask, pct, place, rectStyle, sameRect } from '@/ui/town/town-geometry';
+import { type Bubble, ExitSign, MapOverlay, PlaceButton, SpeechBubble } from '@/ui/town/town-parts';
+import {
+  readMet,
+  readOutroSeen,
+  readWhere,
+  writeMet,
+  writeOutroSeen,
+  writeWhere,
+} from '@/ui/town/town-storage';
+import { botAt, useTownLoop } from '@/ui/town/use-town-loop';
 import { useTownSound } from '@/ui/town/use-town-sound';
 
 const authored = rooms.map((room) => room.id);
-
-/** Walking speed, in town units a second. */
-const SPEED = 320;
-/** The automaton's speed, slower than his. */
-const PATROL_SPEED = 60;
 
 /**
  * The town (story 5.0): the square he walks through instead of a list of rooms. It replaces
@@ -108,43 +112,12 @@ interface BoardProps {
   onTravel(node: NodeId): void;
 }
 
-type Bubble = {
-  who: PersonId | 'self';
-  at: Point;
-  lines: readonly string[];
-  line: number;
-  intro?: string;
-};
-
 /** What happens when he reaches where he was walking to. */
 type Errand =
   | { kind: 'place'; place: TownPlace }
   | { kind: 'person'; person: TownPerson }
   | { kind: 'automaton'; at: Point }
   | { kind: 'exit'; exit: TownExit };
-
-const pct = (p: Point) => ({
-  left: `${(p.x / town.width) * 100}%`,
-  top: `${(p.y / town.height) * 100}%`,
-});
-
-/** The automaton at the start of its round. */
-const botAt = (patrol: readonly Point[]) => ({
-  at: patrol[0] ?? { x: 0, y: 0 },
-  target: 1,
-  dir: 1,
-  facing: -1 as 1 | -1,
-});
-
-function readMet(): PersonId[] {
-  try {
-    const raw = localStorage.getItem(playerKeys(activePlayer()).met);
-    const met: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(met) ? met.filter((id): id is PersonId => id in hr.town.people) : [];
-  } catch {
-    return [];
-  }
-}
 
 /** The rooms that give the tools gates ask for (content/map.ts). */
 const toolRooms: Record<string, RoomId> = {
@@ -165,53 +138,6 @@ function waitsFor(node: NodeId, done: readonly RoomId[]): string[] {
   return [...new Set(rooms)]
     .filter((room) => !done.includes(room))
     .map((room) => hr.map.nodes[room]);
-}
-
-/** The district's end is told once. */
-function readOutroSeen(): boolean {
-  try {
-    return localStorage.getItem(`${playerKeys(activePlayer()).met}:outro`) !== null;
-  } catch {
-    return false;
-  }
-}
-
-function writeOutroSeen() {
-  try {
-    localStorage.setItem(`${playerKeys(activePlayer()).met}:outro`, '1');
-  } catch {
-    // A private window: it is told again next time.
-  }
-}
-
-/** Where he left the town from: the street and the spot, for when he comes back. */
-function readWhere(): { area: AreaId; at: Point } | null {
-  try {
-    const raw = sessionStorage.getItem(playerKeys(activePlayer()).where);
-    const where = raw ? (JSON.parse(raw) as { area?: unknown; at?: Point }) : null;
-    if (!where || typeof where.area !== 'string' || !(where.area in town.areas) || !where.at) {
-      return null;
-    }
-    return { area: where.area as AreaId, at: where.at };
-  } catch {
-    return null;
-  }
-}
-
-function writeWhere(area: AreaId, at: Point) {
-  try {
-    sessionStorage.setItem(playerKeys(activePlayer()).where, JSON.stringify({ area, at }));
-  } catch {
-    // A private window: he comes back to the square.
-  }
-}
-
-function writeMet(met: PersonId[]) {
-  try {
-    localStorage.setItem(playerKeys(activePlayer()).met, JSON.stringify(met));
-  } catch {
-    // A private window: he is introduced again next time.
-  }
 }
 
 /** The town from props: the square, its machines, people and automaton, and his figure. */
@@ -249,22 +175,22 @@ export function TownBoard({
     return done.includes('r13') && beaten('lair-60') && !readOutroSeen() ? 'outro' : null;
   });
   const [met, setMet] = useState<PersonId[]>(readMet);
-  const path = useRef<Point[]>([]);
-  const errand = useRef<Errand | null>(null);
   const board = useRef<HTMLDivElement>(null);
-  // His figure and the automaton move every frame, so they move through their elements,
-  // not through React state: the board renders only when something else changes.
-  const meRef = useRef(start);
-  const meFacing = useRef<1 | -1>(1);
-  const meEl = useRef<HTMLDivElement>(null);
   const lookRef = useRef(look);
   lookRef.current = look;
-  const botRef = useRef(botAt(area.patrol));
-  const patrol = useRef(area.patrol);
-  patrol.current = area.patrol;
   const lairHere = useRef(area.lair);
   lairHere.current = area.lair;
-  const botEl = useRef<HTMLButtonElement>(null);
+  const arrivedRef = useRef<(job: Errand | null) => void>(() => {});
+  // His figure and the automaton move every frame, so they move through their elements,
+  // not through React state: the board renders only when something else changes.
+  const { meRef, meFacing, meEl, path, errand, botRef, botEl } = useTownLoop<Errand>({
+    start,
+    patrol: area.patrol,
+    picture: () => lookFacing[lookRef.current],
+    paused: showMap || showIntro || slides !== null,
+    onStopped: () => setWalking(false),
+    onArrive: (job) => arrivedRef.current(job),
+  });
 
   const arrived = useCallback(
     (job: Errand | null) => {
@@ -350,8 +276,9 @@ export function TownBoard({
           : undefined,
       });
     },
-    [nodes, onTravel, wakesIn, beaten, done, met],
+    [nodes, onTravel, wakesIn, beaten, done, met, meFacing, meEl, meRef, botRef],
   );
+  arrivedRef.current = arrived;
 
   // A tap on the district map: to the street that holds the place, standing beside it.
   const pick = useCallback(
@@ -373,65 +300,8 @@ export function TownBoard({
       botRef.current = botAt(there.patrol);
       setBubble(null);
     },
-    [onTravel],
+    [onTravel, path, meRef, errand, botRef],
   );
-
-  // One loop moves him along his path and the automaton along its round. It pauses while
-  // the district map is open.
-  useEffect(() => {
-    if (showMap || showIntro || slides) return;
-    let frame = 0;
-    let last = performance.now();
-    const tick = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      const next = path.current[0];
-      if (next) {
-        const at = meRef.current;
-        const dx = next.x - at.x;
-        const dy = next.y - at.y;
-        const d = Math.hypot(dx, dy);
-        const step = SPEED * dt;
-        if (Math.abs(dx) > 2) meFacing.current = dx > 0 ? 1 : -1;
-        if (d <= step) {
-          path.current.shift();
-          meRef.current = next;
-          if (path.current.length === 0) {
-            setWalking(false);
-            const job = errand.current;
-            errand.current = null;
-            arrived(job);
-          }
-        } else {
-          meRef.current = { x: at.x + (dx / d) * step, y: at.y + (dy / d) * step };
-        }
-        place(meEl.current, meRef.current, meFacing.current, lookFacing[lookRef.current]);
-      }
-      const b = botRef.current;
-      const round = patrol.current;
-      const target = round[b.target];
-      if (!target) {
-        frame = requestAnimationFrame(tick);
-        return;
-      }
-      const bx = target.x - b.at.x;
-      const by = target.y - b.at.y;
-      const bd = Math.hypot(bx, by);
-      const bstep = PATROL_SPEED * dt;
-      if (bd <= bstep) {
-        b.at = target;
-        if (b.target + b.dir < 0 || b.target + b.dir >= round.length) b.dir = -b.dir;
-        b.target += b.dir;
-      } else {
-        b.at = { x: b.at.x + (bx / bd) * bstep, y: b.at.y + (by / bd) * bstep };
-        if (Math.abs(bx) > 2) b.facing = bx > 0 ? 1 : -1;
-      }
-      place(botEl.current, b.at, b.facing);
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [arrived, showMap, showIntro, slides]);
 
   const walkTo = (target: Point, job: Errand | null) => {
     setBubble(null);
@@ -821,171 +691,10 @@ export function TownBoard({
   );
 }
 
-/**
- * The district map over the town; Escape closes it. A place with a street takes him to that
- * street, beside its machine, so he walks up to it; a place with none, straight in.
- */
-function MapOverlay({ onClose, onPick }: { onClose(): void; onPick(node: NodeId): void }) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-  return (
-    <div className="town__overlay">
-      <MapScreen onTravel={onPick} />
-      <button type="button" className="town__close" onClick={onClose}>
-        {hr.town.close}
-      </button>
-    </div>
-  );
-}
-
-/**
- * Moves a figure to `at`, facing `facing` (1 right, -1 left), in front of what stands behind.
- * `picture` is the way its picture faces: it is mirrored only to face the other way.
- */
-function place(el: HTMLElement | null, at: Point, facing: 1 | -1, picture: 1 | -1 = -1) {
-  if (!el) return;
-  el.style.left = `${(at.x / town.width) * 100}%`;
-  el.style.top = `${(at.y / town.height) * 100}%`;
-  el.style.zIndex = String(Math.round(at.y));
-  const img = el.firstElementChild as HTMLElement | null;
-  if (img) img.style.transform = `scaleX(${facing * picture})`;
-}
-
 /** A person's lines: before the room that changes them, or after. */
 function personLines(person: TownPerson, done: readonly RoomId[]): readonly string[] {
   const text = person.scene ? hr.town.scenes[person.scene] : hr.town.people[person.id];
   return done.includes(person.changesWith) ? text.after : text.before;
-}
-
-/**
- * The colour layer's mask: a soft circle of colour over each restored place. The room just
- * restored blooms open (town.css, `town-bloom`).
- */
-function bloomMask(restored: readonly TownPlace[], fresh: RoomId | null): string {
-  if (restored.length === 0) return 'linear-gradient(transparent, transparent)';
-  return restored
-    .map((place) => {
-      const { x, y, r } = place.bloom;
-      const radius = place.node === fresh ? 'var(--bloom)' : `${(r / town.width) * 100}cqw`;
-      return `radial-gradient(circle ${radius} at ${(x / town.width) * 100}% ${(y / town.height) * 100}%, #000 62%, transparent 100%)`;
-    })
-    .join(', ');
-}
-
-function PlaceButton({
-  place,
-  node,
-  onTap,
-}: {
-  place: TownPlace;
-  node: NodeView | undefined;
-  onTap(): void;
-}) {
-  const state = node?.state ?? 'closed';
-  const label = `${hr.map.nodes[place.node]}, ${hr.map.states[state]}`;
-  return (
-    <button
-      type="button"
-      className="town__place"
-      data-node={place.node}
-      data-state={state}
-      style={rectStyle(place.area)}
-      aria-label={label}
-      onClick={onTap}
-    />
-  );
-}
-
-function SpeechBubble({ bubble, onNext }: { bubble: Bubble; onNext(): void }) {
-  const text = bubble.lines[bubble.line] ?? '';
-  // Above the speaker when there is room; below one standing near the top of the square.
-  const above = bubble.at.y > town.height * 0.48;
-  return (
-    <button
-      type="button"
-      className="town__bubble"
-      data-who={bubble.who}
-      data-above={above}
-      aria-live="polite"
-      style={{
-        ...pct({ x: Math.min(town.width - 300, Math.max(300, bubble.at.x)), y: bubble.at.y }),
-        zIndex: 5000,
-      }}
-      onClick={onNext}
-    >
-      {bubble.intro && <span className="town__intro">{bubble.intro}</span>}
-      <span className="town__line">{text}</span>
-    </button>
-  );
-}
-
-const sameRect = (a: Rect, b: Rect) => a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
-
-/** A tap area's place over the board, in percent. */
-function rectStyle(rect: Rect) {
-  return {
-    left: `${(rect.x / town.width) * 100}%`,
-    top: `${(rect.y / town.height) * 100}%`,
-    width: `${(rect.w / town.width) * 100}%`,
-    height: `${(rect.h / town.height) * 100}%`,
-  };
-}
-
-/** A way's label, by where it leads from and to. */
-/** A way out, signposted: an arrow towards the street's edge, or a lock until its room. */
-function ExitSign({ exit, open, onGo }: { exit: TownExit; open: boolean; onGo(): void }) {
-  const angle =
-    (Math.atan2(exit.marker.y - town.height / 2, exit.marker.x - town.width / 2) * 180) / Math.PI;
-  // Near a side it hangs inwards from the marker, clear of the corner buttons, so it is
-  // never cut off by the edge of the street or hidden under the map.
-  const edge = exit.marker.x < 300 ? 'start' : exit.marker.x > town.width - 300 ? 'end' : 'mid';
-  const left =
-    edge === 'start'
-      ? Math.max(exit.marker.x - 60, 180)
-      : edge === 'end'
-        ? Math.min(exit.marker.x + 60, town.width - 180)
-        : exit.marker.x;
-  // An open way takes the tap too: children go for the arrow. A closed one lets it through,
-  // to the machine or the closed way under it.
-  const Tag = open ? 'button' : 'span';
-  return (
-    <Tag
-      className="town__sign"
-      data-sign={exit.to}
-      data-open={open}
-      data-edge={edge}
-      style={pct({ x: left, y: exit.marker.y })}
-      aria-hidden={open ? undefined : 'true'}
-      {...(open ? { type: 'button' as const, onClick: onGo } : {})}
-    >
-      {open ? (
-        <svg
-          className="town__sign-icon"
-          aria-hidden="true"
-          viewBox="-10 -10 20 20"
-          style={{ transform: `rotate(${angle}deg)` }}
-        >
-          <path d="M-8 -3.5 H1 V-8 L9 0 L1 8 V3.5 H-8 Z" />
-        </svg>
-      ) : (
-        <svg className="town__sign-icon" viewBox="-10 -10 20 20" aria-hidden="true">
-          <path
-            className="town__sign-shackle"
-            d="M-5 -2 V-5 A5 5 0 0 1 5 -5 V-2"
-            fill="none"
-            strokeWidth="2.4"
-          />
-          <rect x="-7.5" y="-2" width="15" height="11" rx="2" />
-        </svg>
-      )}
-      {hr.town.signs[exit.to]}
-    </Tag>
-  );
 }
 
 function exitLabel(from: AreaId, to: AreaId): string {
