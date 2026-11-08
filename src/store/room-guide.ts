@@ -13,7 +13,6 @@ import {
   guideAdvance,
   guideMet,
   guideSpent,
-  guideStepIndex,
   type RoomGuideState,
   roomGuideView,
 } from '@/room/guide';
@@ -83,17 +82,6 @@ function guideNext(state: GameState): Step {
   return settled(state, next, next ? null : view.topic);
 }
 
-/**
- * He tapped the chain's last link and the picker opened (it lives in the notebook, not the
- * room): straight on to the step that has a Pokreni to press, from wherever he was.
- */
-function chainOpened(state: GameState): Step {
-  const view = roomGuideOf(state);
-  const step = guideStepIndex('chain', 'chain-run');
-  if (view?.topic !== 'chain' || view.step >= step) return { state, events: [] };
-  return settled(state, { topic: 'chain', step }, null);
-}
-
 /** A move that makes the topic's explaining pointless: he went another way, or already did it. */
 function endsTopic(topic: GuideTopic, move: GuideMove | null): boolean {
   if (topic === 'chain') return move === 'chain' || move === 'tray' || move === 'split';
@@ -134,7 +122,6 @@ function afterAction(before: GameState, action: Action, result: Step): Step {
 export function withRoomGuide(inner: Reduce): Reduce {
   return (state, action, ctx) => {
     if (action.type === 'room/guide-next') return guideNext(state);
-    if (action.type === 'chain/open') return chainOpened(state);
     return afterAction(state, action, inner(state, action, ctx));
   };
 }

@@ -8,6 +8,7 @@ import {
   type JumpTarget,
   jumpTargets,
   type LineReadout,
+  metBefore,
   opensOnLoad,
   profileRoomId,
   profileToggle,
@@ -51,6 +52,7 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
   const parts = useGame((s) => s.save.economy.parts);
   const seed = useGame((s) => s.ui.fightSeed);
   const dispatch = useGame((s) => s.dispatch);
+  const loading = useGame((s) => s.ui.screen === 'loading');
   const readout = useMemo(() => (room ? devReadout(room, tools) : null), [room, tools]);
   const quality = useMemo(() => qualityReadout(qualityState), [qualityState]);
   const targets = useMemo(() => jumpTargets(rooms), []);
@@ -62,8 +64,13 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
       balance={tools.includes('balance')}
       profiling={copies === 3}
       onJump={(target) => {
+        if (loading) return;
         // With the tools he would have by then, so the puzzle plays as it does in the game.
-        dispatch({ type: 'dev/set-tools', tools: toolsBefore(rooms, target.roomId) });
+        dispatch({
+          type: 'dev/set-tools',
+          tools: toolsBefore(rooms, target.roomId),
+          firstUse: metBefore(rooms, target.roomId),
+        });
         dispatch({ type: 'room/enter', roomId: target.roomId, stage: target.stage });
       }}
       onToggleBalance={() => dispatch({ type: 'dev/set-tools', tools: toggledBalance(tools) })}

@@ -165,7 +165,7 @@ describe('enter judges the draft (story 1.3)', () => {
     expect(result.verdict.kind).toBe('wrong');
     expect(result.room.stage.draft).toEqual(tokens('x = 6'));
     expect(result.room.stage.lines).toEqual(room.stage.lines);
-    expect(result.room.stage.jam).toEqual({ kind: 'line' });
+    expect(result.room.stage.jam).toMatchObject({ kind: 'line' });
     expect(result.room.stage.refused).toBe(0);
     expect(result.events).toEqual([
       { type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' },
@@ -302,7 +302,7 @@ describe('a wrong line jams the machine (Pattern 2)', () => {
 
   it('clears the line jam on any edit, the only jam there is (story 1.15 refuses uneven splits)', () => {
     const jammed = written(roomOne(), 'x = 6').room;
-    expect(jammed.stage.jam).toEqual({ kind: 'line' });
+    expect(jammed.stage.jam).toMatchObject({ kind: 'line' });
     expect(enterLine(jammed, 0)).toBeNull();
     expect(step(typeToken(jammed, '1')).room.stage.jam).toBeNull();
     expect(step(deleteToken(jammed)).room.stage.jam).toBeNull();
@@ -437,7 +437,7 @@ describe('a wrong line jams the machine (story 1.7)', () => {
   it('is acted out, stays in the draft, not in lines, and fires MachineJammed', () => {
     const result = written(roomOne(), 'x = 6');
     const { stage } = result.room;
-    expect(stage.jam).toEqual({ kind: 'line' });
+    expect(stage.jam).toMatchObject({ kind: 'line' });
     expect(stage.lines).toHaveLength(1);
     expect(stage.draft).toEqual(tokens('x = 6'));
     expect(jammedLine(stage)).toEqual(equation('x = 6'));
@@ -728,7 +728,7 @@ describe('simplify first (story 1.16)', () => {
     expect(answered.room.stage.refusal).toBeNull();
     // A wrong line still jams, with no tag; an incomplete one wiggles with no tag.
     const wrong = written(balanceOnly('2x + 5 = 23'), 'x = 8').room;
-    expect(wrong.stage.jam).toEqual({ kind: 'line' });
+    expect(wrong.stage.jam).toMatchObject({ kind: 'line' });
     expect(wrong.stage.refusal).toBeNull();
     const incomplete = written(balanceOnly('2x + 5 = 23'), 'x =').room;
     expect(incomplete.stage.refused).toBe(1);

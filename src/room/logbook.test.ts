@@ -60,7 +60,7 @@ describe('the old logbook (room 7, story 2.10)', () => {
         { type: 'PredictionMade', roomId: 'r07', stage: 0, right: index === 2 },
       ]);
       // The machine tests it where the stage equation levels, with the pinned line shown.
-      expect(room.stage).toMatchObject({ dialX: 6, shownLine: index, phase: 'open' });
+      expect(room.stage).toMatchObject({ dialX: 6, shownLine: null, phase: 'open' });
       expect(room.stage.planted?.found).toBe(true);
       // x = ☐, then the check line, as blanks; the pans take 3x = 18.
       expect(room.stage.templates).toHaveLength(2);

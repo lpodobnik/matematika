@@ -426,8 +426,12 @@ function saveBefore(save: SaveState, action: Action, now: number): SaveState {
     }
     case 'dev/new-game':
       return { ...newSave(isoTime(now)), settings: save.settings };
-    case 'dev/set-tools':
-      return withTools(save, action.tools);
+    case 'dev/set-tools': {
+      const withThem = withTools(save, action.tools);
+      if (!action.firstUse) return withThem;
+      const firstUse = [...new Set([...withThem.progress.firstUse, ...action.firstUse])];
+      return { ...withThem, progress: { ...withThem.progress, firstUse } };
+    }
     default:
       return save;
   }

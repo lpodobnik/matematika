@@ -15,7 +15,7 @@ import { panPieces } from '@/room/pieces';
 import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { scaleView } from '@/room/scale';
-import { splitBothPans } from '@/room/splitter';
+import { splitBothPans, splitterOffered } from '@/room/splitter';
 import {
   balanceFading,
   canStep,
@@ -70,11 +70,7 @@ function waterWheel(): RoomState {
   return step(setDial(openWheel(), 6)).room;
 }
 
-/**
- * Room 4 as a stage Try values could finish, on the dial of 0–6 it had until Luka ran it
- * past the answer: there the tray waits until the dial has stood at its end, 6, without
- * levelling the pans (story 1.15).
- */
+/** Room 4 as a stage Try values could finish too, on the dial of 0–6 it had once. */
 const triedWheel: RoomSpec = {
   ...r04,
   stages: [
@@ -86,15 +82,15 @@ const triedWheel: RoomSpec = {
   ],
 };
 
-/** The tried wheel, open after his first touch; the tray isn't offered yet. */
+/** The tried wheel, open after his first touch. */
 function openTriedWheel(): RoomState {
   return step(touchMachine(enterRoom(triedWheel).room)).room;
 }
 
 /**
  * Room 4 as it was until story 1.16, with a "where it levels" pin beyond its dial of 0–6
- * and a poke window over 0–3, on the tried wheel so the tray waits: the pin's rules stay
- * for later rooms, so their tests keep it.
+ * and a poke window over 0–3, on the tried wheel: the pin's rules stay for later rooms, so
+ * their tests keep it.
  */
 const pinnedWheel: RoomSpec = {
   ...triedWheel,
@@ -182,25 +178,30 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
     expect(trayOffered(room, balance)).toBe(false);
   });
 
-  // Story 1.16: only where Try values can finish the stage; room 4 offers it at once.
-  it('waits in a fresh stage Try values can finish until his dial has been at its maximum without levelling the pans', () => {
-    const open = openTriedWheel();
-    expect(trayOffered(open, balance)).toBe(false);
-    expect(trayView(open, balance)).toBeNull();
-    expect(dropOnScale(open, balance, 'float')).toBeNull();
-    const five = step(setDial(open, 5)).room;
-    expect(trayOffered(five, balance)).toBe(false);
-    const six = step(setDial(five, 6)).room;
-    expect(six.stage.balance.dialMaxed).toBe(true);
-    expect(trayOffered(six, balance)).toBe(true);
-    // A dial whose maximum levels the pans never offers it: he solves it with the dial.
-    const reachable = openStage('x + 4 = 9', 'auto', { min: 0, max: 5, step: 1 }, [
-      'try',
-      'balance',
-    ]);
-    const levelled = step(setDial(reachable, 5)).room;
-    expect(levelled.stage.balance.dialMaxed).toBe(false);
-    expect(trayOffered(levelled, balance)).toBe(false);
+  // One tool to a room: the ways decide, not what he did with the dial.
+  it('is offered from the start wherever the stage lists Balance, and never where it doesn’t', () => {
+    expect(trayOffered(openTriedWheel(), balance)).toBe(true);
+    const trying = openStage('x + 12 = 19', 'auto', { min: 0, max: 5, step: 1 }, ['try']);
+    expect(trayOffered(trying, balance)).toBe(false);
+    expect(trayView(trying, balance)).toBeNull();
+    expect(dropOnScale(trying, balance, 'float')).toBeNull();
+    // The dial at its maximum without levelling the pans changes nothing.
+    const maxed = step(setDial(trying, 5)).room;
+    expect(maxed.stage.balance.dialMaxed).toBe(true);
+    expect(trayOffered(maxed, balance)).toBe(false);
+    // Nor does a stage that remembers the tray or a Balance move: the slider's room stays its.
+    const remembered = rememberTray(maxed, ['tray']);
+    expect(remembered.stage.balance.trayMet).toBe(true);
+    expect(trayOffered(remembered, balance)).toBe(false);
+    const moved = {
+      ...maxed,
+      stage: { ...maxed.stage, balance: { ...maxed.stage.balance, moves: 1 } },
+    };
+    expect(trayOffered(moved, balance)).toBe(false);
+    // The splitter too, though `2x = 18` holds only x pieces.
+    const split = openStage('2x = 18', 'auto', undefined, ['try']);
+    expect(splitterOffered(split, balance)).toBe(false);
+    expect(splitterOffered(openStage('2x = 18'), balance)).toBe(true);
   });
 
   it('is offered from the start where Try values can’t finish: room 4, before any notch or move (story 1.16)', () => {
@@ -225,7 +226,7 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
   // Story 1.15 review: a pin at 6 has the machine park the dial at its maximum itself, and
   // his grab there sends `dial/set 6`, which the dial already has, so it was never maxed.
   // Story 1.16 took room 4's pin away; the rule stays for later rooms, on the pinned wheel.
-  it("is offered when the machine's pin test leaves the dial at its maximum with the pans tipped", () => {
+  it("notes when the machine's pin test leaves the dial at its maximum with the pans tipped", () => {
     const poking = step(touchMachine(enterRoom(pinnedWheel).room)).room;
     const atSix = step(confirmPin(step(setPin(poking, { kind: 'x', x: 6 })).room)).room;
     expect(atSix.stage.dialX).toBe(6);
@@ -236,7 +237,7 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
     const atFive = step(confirmPin(step(setPin(poking, { kind: 'x', x: 5 })).room)).room;
     expect(atFive.stage.balance.dialMaxed).toBe(false);
     const atNineBeyond = step(confirmPin(step(setPin(poking, { kind: 'x', x: 9 })).room)).room;
-    expect(trayOffered(atNineBeyond, balance)).toBe(false);
+    expect(atNineBeyond.stage.balance.dialMaxed).toBe(false);
     // Nor does one that levels the pans at the maximum: the dial solves it there.
     const reachable: RoomSpec = {
       ...pinnedWheel,
@@ -254,28 +255,18 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
     expect(trayOffered(step(resetStage(back)).room, balance)).toBe(true);
   });
 
-  it('is offered at once in a stage after the one where he met it', () => {
+  it('remembers in the stage that he met it', () => {
     const open = openTriedWheel();
-    expect(trayOffered(open, balance)).toBe(false);
     const remembered = rememberTray(open, ['pin', 'tray']);
     expect(remembered.stage.balance.trayMet).toBe(true);
-    expect(trayOffered(remembered, balance)).toBe(true);
     // Not met yet, or already remembered: the same room, untouched.
     expect(rememberTray(open, ['pin'])).toBe(open);
     expect(rememberTray(remembered, ['pin', 'tray'])).toBe(remembered);
   });
 
-  it('is offered once a Balance move was made this stage, even by the splitter', () => {
-    const fresh = openStage('2x = 18', 'auto', undefined, ['try', 'balance']);
-    expect(trayOffered(fresh, balance)).toBe(false);
-    const halved = step(splitBothPans(fresh, balance)).room;
-    expect(halved.stage.balance.moves).toBe(1);
-    expect(trayOffered(halved, balance)).toBe(true);
-  });
-
   it('is offered but does nothing while the machine is jammed', () => {
     const jammed = step(enterLine(typed(waterWheel(), 'x = 8'), 0)).room;
-    expect(jammed.stage.jam).toEqual({ kind: 'line' });
+    expect(jammed.stage.jam).toMatchObject({ kind: 'line' });
     expect(trayOffered(jammed, balance)).toBe(true);
     expect(trayWorks(jammed, balance)).toBe(false);
     expect(trayView(jammed, balance)?.works).toBe(false);
@@ -328,6 +319,17 @@ describe('when the tray is offered (story 1.15: one tool at a time)', () => {
   });
 });
 
+describe('a wrong line after a move on a blank page', () => {
+  it('goes back with ⌫ to where the move left the pans, ahead of the written lines', () => {
+    const moved = drop(openStage('2x + 5 = 23', 'blank'), 'float', 5).room;
+    expect(shown(moved)).toBe('2x = 18');
+    expect(written(moved)).toEqual(['2x + 5 = 23']);
+    const jammed = step(enterLine(typed(moved, '2x = 7'), 0)).room;
+    expect(jammed.stage.jam).toMatchObject({ kind: 'line' });
+    expect(shown(step(deleteToken(jammed)).room)).toBe('2x = 18');
+  });
+});
+
 describe('the stepper', () => {
   it('numbers each piece 1–99, one step at a time', () => {
     let room = waterWheel();
@@ -350,7 +352,8 @@ describe('the stepper', () => {
     expect(stepped.room.stage.pans).toBe(room.stage.pans);
     expect(stepped.events).toEqual([]);
     expect(stepTray(room, [], 'weight', 1)).toBeNull();
-    expect(stepTray(openTriedWheel(), balance, 'weight', 1)).toBeNull();
+    const trying = openStage('x + 4 = 9', 'auto', undefined, ['try']);
+    expect(stepTray(trying, balance, 'weight', 1)).toBeNull();
   });
 
   it('keeps its numbers when the stage is reset', () => {

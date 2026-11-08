@@ -100,14 +100,14 @@ describe('devReadout', () => {
   });
 
   it('shows the tray once Balance is earned and the stage offers it, and switches Balance', () => {
-    const fresh = opened(freeRoomOne);
-    expect(trayText(fresh, ['balance'])).toBe('off');
-    // Story 1.15: the dial at its maximum without levelling the pans offers the tray.
-    const room = setDial(fresh, 10)?.room;
-    if (!room) throw new Error('the dial did not turn');
+    // One tool to a room: room 1 is about the slider, even at the dial's end.
+    const trying = setDial(opened(freeRoomOne), 10)?.room;
+    if (!trying) throw new Error('the dial did not turn');
+    expect(trayText(trying, ['balance'])).toBe('off');
+    const room = opened({ ...freeRoomOne, stages: [{ ...freeStage, ways: ['balance'] }] });
     expect(trayText(room, [])).toBe('off');
     expect(trayText(room, ['balance'])).toBe('weight 1, float 1');
-    const jammed = enterLine(typed(room, 'x = 6'), 0)?.room;
+    const jammed = enterLine(typed(room, 'x + 4 = 8'), 0)?.room;
     if (!jammed) throw new Error('enter was ignored');
     expect(trayText(jammed, ['balance'])).toBe('weight 1, float 1, jammed');
     expect(devReadout(room, ['balance']).tray).toBe('weight 1, float 1');
@@ -117,11 +117,12 @@ describe('devReadout', () => {
 
   it('shows the splitter once Balance is earned and a side holds only x pieces, and jammed', () => {
     expect(splitterText(opened(freeRoomOne), ['balance'])).toBe('off');
-    // Story 1.15: room 2's `3x = 12` holds only x pieces on the left from the start.
+    // Story 1.15: `3x = 12` holds only x pieces on the left, where the stage lists Balance.
     const freeRoomTwo: RoomSpec = {
       ...r02,
-      stages: [{ ...(r02.stages[0] as StageSpec), fading: { try: 'blank' } }],
+      stages: [{ ...(r02.stages[0] as StageSpec), ways: ['balance'], fading: { try: 'blank' } }],
     };
+    expect(splitterText(opened(r02), ['balance'])).toBe('off');
     const room = opened(freeRoomTwo);
     expect(splitterText(room, [])).toBe('off');
     expect(splitterText(room, ['balance'])).toBe('2 parts');

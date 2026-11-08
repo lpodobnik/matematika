@@ -1,127 +1,68 @@
 import { hr } from '@/content/text/hr';
-import { type Link, type LinkOp, linkOps, linkText } from '@/math/chain';
+import { inverseOf, type Link, linkText } from '@/math/chain';
 import { formatNumber } from '@/math/format';
-import { isDigit } from '@/math/tokens';
 import type { ChainView } from '@/room/chain';
-import type { NotebookKey } from '@/room/notebook';
 import { primaryPress } from '@/ui/notebook/pad-keys';
 
-/** What he has picked so far for the last link: an operation, and the digits he typed. */
-export interface ChainPick {
-  op: LinkOp | null;
-  digits: string;
-  /** The link and output it was opened for (`pickFor`): it closes when they change. */
-  for?: string;
+/** One of the two answers to "what undoes the last step?": what it says, and what it runs. */
+export interface ChainChoice {
+  text: string;
+  link: Link;
+  /** Scene and tests only ever need to know this for the hint's pulse. */
+  right: boolean;
 }
-
-/** What a pick is for: the chain's last link and its output, as a key. */
-export function pickFor(view: ChainView | null): string | null {
-  if (!view || view.tappable === null || !view.links) return null;
-  const link = view.links[view.tappable];
-  return link ? `${link.op} ${link.n} ${view.output}` : null;
-}
-
-/** The operation a computer's key picks while the picker is open (keyboard parity). */
-const keyOps: Partial<Record<NotebookKey, LinkOp>> = {
-  '+': 'add',
-  '−': 'sub',
-  '·': 'mul',
-  ':': 'div',
-};
-
-/** The choice his pick makes, once it has an operation and a number. */
-export function pickedLink(pick: ChainPick): Link | null {
-  if (pick.op === null || pick.digits === '') return null;
-  return { op: pick.op, n: Number(pick.digits) };
-}
-
-/** A number on a link has at most as many digits as the largest number literal. */
-const pickMaxDigits = 7;
 
 /**
- * A pad key while the picker is open: a digit types its number, delete takes the last digit
- * back (then the operation), enter runs it once it has both. Other keys do nothing.
+ * The two answers for the last step, always in the same order, so the right one isn't always
+ * first: `+ 9` and `− 9`; `· 4` and `: 4`. A step taking x away from a number, `135 − ☐`,
+ * asks what ☐ is: `☐ = 135 − 100` or `☐ = 135 + 100`. Every number is already in place: the
+ * one thing left to decide is which way undoes the step.
  */
-export function pickAfterKey(pick: ChainPick, key: NotebookKey): { pick: ChainPick; run: boolean } {
-  if (key === 'enter') return { pick, run: pickedLink(pick) !== null };
-  if (key === 'delete') {
-    if (pick.digits !== '')
-      return { pick: { ...pick, digits: pick.digits.slice(0, -1) }, run: false };
-    return { pick: { ...pick, op: null }, run: false };
+export function chainChoices(last: Link, output: number): ChainChoice[] {
+  const right = inverseOf(last);
+  if (last.op === 'from') {
+    const n = formatNumber(last.n);
+    const out = formatNumber(output);
+    return [
+      { text: `☐ = ${n} − ${out}`, link: right, right: true },
+      { text: `☐ = ${n} + ${out}`, link: { op: 'add', n: last.n }, right: false },
+    ];
   }
-  const op = keyOps[key];
-  if (op) return { pick: { ...pick, op }, run: false };
-  if (!isDigit(key) || pick.digits.length >= pickMaxDigits) return { pick, run: false };
-  const digits = pick.digits === '0' ? key : pick.digits + key;
-  return { pick: { ...pick, digits }, run: false };
-}
-
-/** The pick as it reads so far: `− 9`, `135 − ☐`, or the operation alone. */
-export function pickText(pick: ChainPick): string {
-  if (pick.op === null) return '';
-  if (pick.digits === '') return pick.op === 'from' ? '… − ☐' : `${opFace(pick.op)} …`;
-  return linkText({ op: pick.op, n: Number(pick.digits) });
-}
-
-/** How an operation's button reads: `+`, `−`, `·`, `:`, and `… − ☐` for a number minus x's side. */
-function opFace(op: LinkOp): string {
-  switch (op) {
-    case 'add':
-      return '+';
-    case 'sub':
-      return '−';
-    case 'mul':
-      return '·';
-    case 'div':
-      return ':';
-    case 'from':
-      return '… − ☐';
-  }
+  const pair: Link[] =
+    last.op === 'add' || last.op === 'sub'
+      ? [
+          { op: 'add', n: last.n },
+          { op: 'sub', n: last.n },
+        ]
+      : [
+          { op: 'mul', n: last.n },
+          { op: 'div', n: last.n },
+        ];
+  return pair.map((link) => ({
+    text: linkText(link),
+    link,
+    right: link.op === right.op,
+  }));
 }
 
 interface Props {
   view: ChainView;
-  /** His pick for the last link while the picker is open, else null. */
-  pick: ChainPick | null;
-  /** The hint points at the last link (story 4.1): it pulses. */
+  /** The hint points at the choice: it pulses. */
   pulse?: boolean;
-  /** A tag about the chain (its handover, or the hint), as one line under the links. */
+  /** A tag about it (its handover, or the hint), as one line under the steps. */
   note?: string | null;
-  onTap(): void;
-  onOp(op: LinkOp): void;
-  onRun(): void;
-  onCancel(): void;
-}
-
-/** The iron ring joining two links, with the way the chain runs. */
-function ChainJoin() {
-  return (
-    <svg className="chain__join" viewBox="0 0 30 16" aria-hidden="true">
-      <rect x="1.5" y="3.5" width="17" height="9" rx="4.5" />
-      <path d="M21 8 H28 M24.5 4.5 L28 8 L24.5 11.5" />
-    </svg>
-  );
+  onRun(link: Link): void;
 }
 
 /**
- * The gear chain at the top of the notebook (story 4.1; GDD, Gear chain): the pans as links
- * from x to the number, `x → · 4 → + 9 → 41`, the undone ones dark. He taps the last link,
- * picks an operation, types its number on the pad below, and runs it. The chain never
- * offers the answer: every operation is there, and the number is his.
+ * The way back at the top of the notebook (story 4.1; GDD, Gear chain): the machine's recipe
+ * as steps from x to the number, `x → · 4 → + 9 → 41`, the undone ones dark. To find x he
+ * walks it backwards: the last step, and two buttons for what undoes it. One tap: the scale
+ * and the notebook follow, and a wrong one tips the scale.
  */
-export function ChainStrip({
-  view,
-  pick,
-  pulse = false,
-  note = null,
-  onTap,
-  onOp,
-  onRun,
-  onCancel,
-}: Props) {
+export function ChainStrip({ view, pulse = false, note = null, onRun }: Props) {
   const { links, output, tappable } = view;
-  const last = tappable === null ? null : links?.[tappable];
-  const ready = pick ? pickedLink(pick) !== null : false;
+  const last = tappable === null ? null : (links?.[tappable] ?? null);
   return (
     <section className="chain" aria-label={hr.chain.label}>
       <p className="chain__title" aria-hidden="true">
@@ -132,88 +73,61 @@ export function ChainStrip({
       ) : (
         <ol className="chain__links">
           <li className="chain__end">x</li>
-          {links.map((link, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: a link's place in the chain is its identity
-            <li key={i} className="chain__step">
-              <ChainJoin />
-              {i === tappable ? (
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  className="chain__link chain__link--last"
-                  aria-pressed={pick !== null}
-                  aria-label={hr.chain.tap(linkText(link))}
-                  data-pulse={pulse || undefined}
-                  onPointerDown={(event) => primaryPress(event, onTap)}
-                >
+          {links.map((link, i) =>
+            // An undone step is gone: what is left still reads true, `x → · 4 = 32`.
+            link.dark ? null : (
+              // biome-ignore lint/suspicious/noArrayIndexKey: a link's place in the chain is its identity
+              <li key={i} className="chain__step">
+                <ChainJoin />
+                <span className={i === tappable ? 'chain__link chain__link--last' : 'chain__link'}>
                   {linkText(link)}
-                </button>
-              ) : (
-                <span className="chain__link" data-dark={link.dark || undefined}>
-                  {linkText(link)}
-                  {link.dark && <span className="chain__said">{hr.chain.undone}</span>}
                 </span>
-              )}
-            </li>
-          ))}
+              </li>
+            ),
+          )}
           <li className="chain__step">
-            <ChainJoin />
+            <span className="chain__equals">=</span>
             <span className="chain__end chain__out">{formatNumber(output)}</span>
           </li>
         </ol>
       )}
-      {note && !pick && (
+      {last && output !== null && (
+        <fieldset className="chain-pick" data-pulse={pulse || undefined}>
+          <legend className="chain-pick__ask">
+            {last.op === 'from'
+              ? hr.chain.whatIsBox(formatNumber(last.n), formatNumber(output))
+              : hr.chain.undo(linkText(last))}
+          </legend>
+          <div className="chain-pick__ops">
+            {chainChoices(last, output).map((choice) => (
+              <button
+                key={choice.text}
+                type="button"
+                tabIndex={-1}
+                className="chain-pick__op"
+                onPointerDown={(event) => primaryPress(event, () => onRun(choice.link))}
+              >
+                {choice.text}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
+      {note && (
         <p className="chain__note" role="note">
           {note}
         </p>
       )}
-      {pick && last && (
-        <fieldset className="chain-pick" aria-label={hr.chain.undo(linkText(last))}>
-          <div className="chain-pick__ops">
-            {linkOps.map((op) => (
-              <button
-                key={op}
-                type="button"
-                tabIndex={-1}
-                className="chain-pick__op"
-                data-op={op}
-                aria-pressed={pick.op === op}
-                aria-label={hr.chain.ops[op]}
-                onPointerDown={(event) => primaryPress(event, () => onOp(op))}
-              >
-                {opFace(op)}
-              </button>
-            ))}
-          </div>
-          {pick.op === null && <p className="chain-pick__prompt">{hr.chain.pickOp}</p>}
-          <div className="chain-pick__row">
-            <span className="chain-pick__for" aria-hidden="true">
-              {linkText(last)}
-            </span>
-            <output className="chain-pick__show" aria-live="polite">
-              {pick.op === null ? '…' : pickText(pick) || '…'}
-            </output>
-            <button
-              type="button"
-              tabIndex={-1}
-              className="chain-pick__run"
-              disabled={!ready}
-              onPointerDown={(event) => primaryPress(event, onRun)}
-            >
-              {hr.chain.run}
-            </button>
-            <button
-              type="button"
-              tabIndex={-1}
-              className="chain-pick__cancel"
-              aria-label={hr.chain.cancel}
-              onPointerDown={(event) => primaryPress(event, onCancel)}
-            >
-              ✕
-            </button>
-          </div>
-        </fieldset>
-      )}
     </section>
+  );
+}
+
+/** The ring joining two steps, with the way the recipe runs. */
+function ChainJoin() {
+  return (
+    <svg className="chain__join" viewBox="0 0 30 16" aria-hidden="true">
+      <rect x="1.5" y="3.5" width="17" height="9" rx="4.5" />
+      <path d="M21 8 H28 M24.5 4.5 L28 8 L24.5 11.5" />
+    </svg>
   );
 }

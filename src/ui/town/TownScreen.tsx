@@ -258,7 +258,9 @@ export function TownBoard({
         }
         // The street's automaton took this machine's parts: it comes first.
         const lairId = lairHere.current;
-        if (node?.kind === 'room' && node.state === 'open' && lairId && !beaten(lairId)) {
+        // Not the hill: automaton 60 is an optional boss (39% with perfect play, no upgrades).
+        const holds = lairId && lairId !== 'lair-60' && !beaten(lairId);
+        if (node?.kind === 'room' && node.state === 'open' && holds) {
           setBubble({ who: 'self', at: job.place.marker, lines: [hr.town.places.held], line: 0 });
           return;
         }

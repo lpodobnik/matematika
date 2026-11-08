@@ -21,7 +21,7 @@ export const r06: RoomSpec = {
       dial: { min: 20, max: 40, step: 1 },
       pin: { kind: 'level-x' },
       readouts: false,
-      ways: ['try', 'balance'],
+      ways: ['try'],
       fading: { try: 'blank', balance: 'auto' },
     },
   ],

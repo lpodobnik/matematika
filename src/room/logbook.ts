@@ -103,6 +103,8 @@ export function foundMistake(stage: StageState, spec: StageSpec): StageState {
   return {
     ...stage,
     planted: { ...stage.planted, found: true },
+    // Off the scale with it: what stands there now is the line he goes on from.
+    shownLine: null,
     templates: [[...answerTemplate], checkTemplate(spec, stage.machine)],
     pans: last ? equationOf(last.tokens) : stage.pans,
   };

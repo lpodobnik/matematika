@@ -22,7 +22,7 @@ export const r05: RoomSpec = {
       pokeNotches: 4,
       pin: { kind: 'level-x' },
       readouts: true,
-      ways: ['try', 'balance'],
+      ways: ['try'],
       fading: { try: 'blank', balance: 'auto' },
     },
     {
@@ -33,7 +33,7 @@ export const r05: RoomSpec = {
       pin: { kind: 'level-x' },
       change: { after: 'locked', from: 22, to: 25 },
       readouts: true,
-      ways: ['try', 'balance'],
+      ways: ['try'],
       fading: { try: 'blank', balance: 'auto' },
     },
   ],

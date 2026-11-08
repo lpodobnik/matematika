@@ -230,7 +230,7 @@ describe('notebook actions', () => {
     const store = roomOneStore(seen);
     typeLine(store, 'x=6');
     store.getState().dispatch({ type: 'notebook/enter' });
-    expect(store.getState().room?.stage.jam).toEqual({ kind: 'line' });
+    expect(store.getState().room?.stage.jam).toMatchObject({ kind: 'line' });
     expect(seen).toEqual([
       { type: 'LineWrong', roomId: 'r01', stage: 0, line: 'x = 6' },
       { type: 'MachineJammed', roomId: 'r01', kind: 'line' },
@@ -536,7 +536,7 @@ describe('a room from arrival to restart (story 1.8)', () => {
     game.act({ type: 'machine/touch' });
     game.act({ type: 'dial/set', x: 9 });
     game.solve('9'); // a wrong answer jams the machine
-    expect(game.store.getState().room?.stage.jam).toEqual({ kind: 'line' });
+    expect(game.store.getState().room?.stage.jam).toMatchObject({ kind: 'line' });
     game.seen.length = 0;
     game.act({ type: 'stage/reset' });
     const room = game.store.getState().room as RoomState;
@@ -834,18 +834,10 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
     return { store, seen, act, stage, lines, type };
   }
 
-  // Story 1.16: only where Try values can finish; room 4 offers it from the start.
-  it('offers the tray once his dial reaches its end, 6, without levelling the pans, and wiggles it then', () => {
+  // One tool to a room: a stage that lists Balance has it from the start, Try values or not.
+  it('offers the tray from the start where Try values could finish too, and wiggles it then', () => {
     const game = inRoomFour(['pin'], triedWheel);
     expect(game.stage()?.phase).toBe('open');
-    expect(
-      game.store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
-    ).toEqual(['pin']);
-    for (const x of [4, 5]) game.act({ type: 'dial/set', x });
-    expect(
-      game.store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
-    ).toEqual(['pin']);
-    game.act({ type: 'dial/set', x: 6 });
     expect(
       game.store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
     ).toEqual(['pin', 'tray']);
@@ -960,25 +952,20 @@ describe('balance with the tray (story 1.10; both sides at once, story 1.15)', (
   it('wiggles the tray when the dev panel grants Balance in a stage that offers it', () => {
     const store = createGameStore({ makeCtx: () => fixedCtx });
     const act = (action: Action) => store.getState().dispatch(action);
+    const met = () =>
+      store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-'));
+    // Room 1 never offers it: it is about the slider, even at the dial's end.
     act({ type: 'room/enter', roomId: 'r01' });
     act({ type: 'machine/touch' });
     act({ type: 'dev/set-tools', tools: ['balance'] });
-    // Room 1 offers neither yet: x stands alone, and the dial hasn't been to 10.
-    expect({
-      ...store.getState().save.progress,
-      firstUse: store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
-    }).toEqual({
-      roomsDone: [],
-      started: [],
-      onMap: false,
-      told: [],
-      ideasSeen: [],
-      tornPages: [],
-      introSeen: false,
-      tools: ['balance'],
-      firstUse: [],
-    });
     act({ type: 'dial/set', x: 10 });
+    expect(met()).toEqual([]);
+    act({ type: 'dev/set-tools', tools: [] });
+    // Room 4 does, as soon as he has Balance.
+    act({ type: 'room/enter', roomId: 'r04' });
+    act({ type: 'machine/touch' });
+    expect(met()).toEqual([]);
+    act({ type: 'dev/set-tools', tools: ['balance'] });
     expect({
       ...store.getState().save.progress,
       firstUse: store.getState().save.progress.firstUse.filter((id) => !id.startsWith('handover-')),
@@ -1246,28 +1233,5 @@ describe('effects', () => {
       (event) => calls.push(`b${event.type === 'StageArrived' ? event.stage : ''}`),
     ]);
     expect(calls).toEqual(['a0', 'b0', 'a1', 'b1']);
-  });
-});
-
-describe('a tapped line and the tray (room 7, story 2.10 review)', () => {
-  it('takes the tapped line off the scale before a move on the pans', () => {
-    const store = createGameStore({
-      effects: [],
-      initialState: {
-        ...initialGameState(),
-        save: {
-          ...initialGameState().save,
-          progress: { ...initialGameState().save.progress, tools: ['balance'] },
-        },
-      },
-    });
-    const act = (action: Action) => store.getState().dispatch(action);
-    act({ type: 'room/enter', roomId: 'r07' });
-    act({ type: 'machine/touch' });
-    act({ type: 'pin/set', value: { kind: 'line', index: 2 } });
-    act({ type: 'pin/confirm' });
-    expect(store.getState().room?.stage.shownLine).toBe(2);
-    act({ type: 'tray/drop', kind: 'weight' });
-    expect(store.getState().room?.stage.shownLine).toBeNull();
   });
 });

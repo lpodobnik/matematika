@@ -216,7 +216,7 @@ describe('when the splitter is offered (story 1.15: one tool at a time)', () => 
 
   it('is offered but does nothing while a wrong line jams the machine', () => {
     const jammed = write(atTwoXEighteen(), 'x = 8').room;
-    expect(jammed.stage.jam).toEqual({ kind: 'line' });
+    expect(jammed.stage.jam).toMatchObject({ kind: 'line' });
     expect(splitterOffered(jammed, balance)).toBe(true);
     expect(splitterWorks(jammed, balance)).toBe(false);
     expect(splitterView(jammed, balance)).toMatchObject({ works: false });

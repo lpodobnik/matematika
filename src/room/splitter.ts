@@ -29,7 +29,7 @@ import { div, type Equation, type Expr, num } from '@/math/expr';
 import * as q from '@/math/rational';
 import { chainBlankWaits } from '@/room/chain';
 import { committedEquations } from '@/room/notebook';
-import type { RoomStep } from '@/room/room';
+import { currentStageSpec, type RoomStep } from '@/room/room';
 import { type PieceView, sideViews } from '@/room/scale';
 import { storyWaits } from '@/room/story';
 import { balanceMove, type Linear, linearSide, readyToSplit, sideExpr } from '@/room/tray';
@@ -43,6 +43,8 @@ import type { RoomState, Side, ToolId } from '@/room/types';
 export function splitterOffered(room: RoomState, tools: readonly ToolId[]): boolean {
   const { stage } = room;
   if (!tools.includes('balance') || stage.phase !== 'open') return false;
+  // One tool to a room: only where this room is about it.
+  if (!currentStageSpec(room).ways.includes('balance')) return false;
   // Story 4.5 review: nor while a story waits to be written (a reset keeps `splitterSeen`).
   if (storyWaits(room)) return false;
   return (

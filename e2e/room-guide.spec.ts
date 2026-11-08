@@ -35,7 +35,6 @@ const topics = [
   'gear',
   'story',
   'story-choice',
-  'coarse',
   'range',
   'linked',
   'linked-fed',
@@ -191,8 +190,6 @@ interface Scenario {
   stage?: number;
   topics: string[];
   tools: string[];
-  /** Controls met before (the tray, so room 9 offers it at once). */
-  controls?: string[];
   /** Before the guide: the first touch, and what opens the stage. */
   setup?: Move;
   /** By step id: the move that takes a waiting step on. */
@@ -281,15 +278,10 @@ const scenarios: Scenario[] = [
     room: 'r08',
     topics: ['chain'],
     tools: allTools,
-    setup: async (page) => {
-      await touch(page);
-      await dispatch(page, { type: 'pin/set', value: { kind: 'x', x: 8 } });
-      await confirmPin(page);
-    },
+    setup: touch,
     moves: {
-      // A real tap: the picker opens, and only then does the guide ask for Pokreni.
-      'chain-undo': (page) => page.locator('button.chain__link--last').click(),
-      'chain-run': (page) => dispatch(page, { type: 'chain/run', op: 'sub', n: 9 }),
+      // A real tap: `− 9`, the second of the two buttons.
+      'chain-run': (page) => page.locator('button.chain-pick__op').nth(1).click(),
     },
   },
   {
@@ -297,12 +289,7 @@ const scenarios: Scenario[] = [
     room: 'r09',
     topics: ['gear'],
     tools: allTools,
-    controls: ['tray'],
-    setup: async (page) => {
-      await touch(page);
-      await dispatch(page, { type: 'pin/set', value: { kind: 'x', x: 7 } });
-      await confirmPin(page);
-    },
+    setup: touch,
     moves: {
       'gear-why': async (page) => {
         for (let i = 0; i < 4; i += 1) {
@@ -330,19 +317,6 @@ const scenarios: Scenario[] = [
     moves: {
       'story-flag': async (page) => {
         await dispatch(page, { type: 'pin/set', value: { kind: 'choice', index: 1 } });
-        await dispatch(page, { type: 'pin/confirm' });
-      },
-    },
-  },
-  {
-    name: 'r11',
-    room: 'r11',
-    topics: ['coarse', 'range'],
-    tools: allTools,
-    setup: touch,
-    moves: {
-      'range-flag': async (page) => {
-        await dispatch(page, { type: 'pin/set', value: { kind: 'bucket', index: 1 } });
         await dispatch(page, { type: 'pin/confirm' });
       },
     },
@@ -383,7 +357,7 @@ test('every room’s guide, step by step', async ({ page }, testInfo) => {
   await hook(page);
   for (const scenario of scenarios) {
     const met = topics.filter((t) => !scenario.topics.includes(t)).map((t) => `guide-${t}`);
-    await startOnTheMap(page, scenario.tools, [...(scenario.controls ?? []), ...met]);
+    await startOnTheMap(page, scenario.tools, met);
     await dispatch(page, { type: 'room/enter', roomId: scenario.room, stage: scenario.stage ?? 0 });
     await expect.poll(async () => (await state(page)).screen).toBe('room');
     await page.waitForTimeout(500);

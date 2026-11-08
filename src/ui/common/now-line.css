@@ -1,0 +1,23 @@
+/* What he is doing right now, at the top of the notebook: as prominent as anything on it. */
+.now-line {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 6px 10px;
+  border-bottom: 3px solid var(--ink);
+  background: var(--lamp-wash);
+  color: var(--ink);
+  font-size: clamp(16px, 2.6dvh, 21px);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.now-line__heading {
+  font-weight: 800;
+}
+
+@media (max-height: 499.98px) {
+  .now-line {
+    padding: 3px 8px;
+    font-size: 14px;
+  }
+}

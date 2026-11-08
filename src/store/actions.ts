@@ -9,7 +9,7 @@ import type { LinkOp } from '@/math/chain';
 import type { Token } from '@/math/tokens';
 import type { PresentationView } from '@/room/phases';
 import type { SavedRoom } from '@/room/resume';
-import type { PinValue, RoomId, RoomSpec, Side, ToolId, TrayKind } from '@/room/types';
+import type { FirstUseId, PinValue, RoomId, RoomSpec, Side, ToolId, TrayKind } from '@/room/types';
 import type { Stamp } from '@/save/schema';
 import type { QualityAction } from '@/store/quality';
 import type { SaveState, SceneCopies } from '@/store/types';
@@ -148,8 +148,6 @@ export type Action =
    * the machine loops heard follow it (store/effects/audio.ts). Changes no state.
    */
   | { type: 'town/area'; area: AreaId | null }
-  /** The chain's picker opened (the notebook's own state): the room guide moves on. */
-  | { type: 'chain/open' }
   /** Story 6.1: a room guide's "Dalje": the next step, or the topic is over (room/guide.ts). */
   | { type: 'room/guide-next' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */
@@ -161,7 +159,7 @@ export type Action =
   /** The dev panel only: a new game, from room 1; the settings stay. */
   | { type: 'dev/new-game' }
   /** The dev panel only (architecture, Debug Tools): sets the tools he has earned. */
-  | { type: 'dev/set-tools'; tools: ToolId[] }
+  | { type: 'dev/set-tools'; tools: ToolId[]; firstUse?: FirstUseId[] }
   /** The dev panel only: draws the scene once, or three times side by side for the profile. */
   | { type: 'dev/set-copies'; copies: SceneCopies }
   /** The frame-time test's report, and the dev panel's forced setting (store/quality.ts). */

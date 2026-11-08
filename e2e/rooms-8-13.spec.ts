@@ -1,13 +1,13 @@
 // Story 4.9: rooms 8–13 back to back, in a real browser, at the tablet's 1280 × 800 and the
 // phone's 640 × 360. From a game with rooms 1–7 done (set up through the store, as a save
-// would bring it), every notebook control the epic added is tapped for real: the gear chain's
-// last link, its operations and Pokreni, the pad's digits and enter, the story room's
-// stories and Potvrdi, room 11's ranges and its − step, and the drum's heights; and every
-// pin must be right (it pays). The scene is drawn on the canvas, so its moves (the dial, an
-// x pin's value, the tray's x-gear) go to the game's store as the scene would send them; the
-// first touch on the canvas and the pin's confirm are real taps. Locks and restarts play
-// out on their own, within the scene's time. Every room is left back to the town (story 5.0)
-// and the next is reached through its district map. Each room's key moments are screenshotted.
+// would bring it), every room is solved with its one tool, and every notebook control the
+// epic added is tapped for real: the way back's two buttons, the pad's digits and enter, the
+// story room's stories and Potvrdi, room 11's − step, and the drum's heights; and every pin
+// must be right (it pays). The scene is drawn on the canvas, so its moves (the dial, the
+// tray, the splitter) go to the game's store as the scene would send them; the first touch
+// on the canvas is a real tap. Locks and restarts play out on their own, within the scene's
+// time. Every room is left back to the town (story 5.0) and the next is reached through its
+// district map. Each room's key moments are screenshotted.
 //
 //   npm run e2e                                       (starts its own server on 5291)
 //   E2E_URL=http://localhost:5290/ npm run e2e        (uses a server already running)
@@ -20,7 +20,15 @@ const playsWithinMs = 6000;
 
 interface GameState {
   ui: { screen: string };
-  room: { spec: { id: string }; stageIndex: number; stage: { phase: string } } | null;
+  room: {
+    spec: { id: string };
+    stageIndex: number;
+    stage: {
+      phase: string;
+      tray: { weight: number; float: number; gear: number };
+      splitter: number;
+    };
+  } | null;
   save: { progress: { roomsDone: string[]; tools: string[] }; economy: { parts: number } };
 }
 
@@ -158,22 +166,39 @@ async function paysForIt(page: Page, before: number) {
   await expect.poll(async () => (await state(page)).parts).toBe(before + 2);
 }
 
-/** An x pin set on the scene, then confirmed with its button; it must be right. */
-async function pinX(page: Page, x: number) {
-  const before = (await state(page)).parts;
-  await dispatch(page, { type: 'pin/set', value: { kind: 'x', x } });
-  await page.locator('button.pin-confirm').click();
-  await expect.poll(async () => (await state(page)).phase).toBe('open');
-  await paysForIt(page, before);
+/**
+ * The way back: one of the two buttons for the last step, always in the same order (+ then
+ * −, · then :, and for `135 − ☐` the right one first).
+ */
+async function wayBack(page: Page, button: 0 | 1) {
+  await page.locator('button.chain-pick__op').nth(button).click();
 }
 
-/** The gear chain's last link run backward: tapped, an operation, a number on the pad. */
-async function runLink(page: Page, op: string, n: string, by: 'enter' | 'button' = 'enter') {
-  await page.locator('.chain__link--last').click();
-  await page.locator(`.chain-pick__op[data-op="${op}"]`).click();
-  for (const digit of n) await key(page, digit).click();
-  if (by === 'enter') await key(page, 'enter').click();
-  else await page.locator('.chain-pick__run').click();
+const stageNow = (page: Page) =>
+  page.evaluate(() => {
+    const stage = (window as unknown as Game).__s.getState().room?.stage;
+    if (!stage) throw new Error('no room');
+    return { tray: stage.tray, splitter: stage.splitter };
+  });
+
+/** A piece of this number from the tray, stepped there and dropped, as the scene sends it. */
+async function drop(page: Page, kind: 'weight' | 'float' | 'gear', value: number) {
+  const { tray } = await stageNow(page);
+  const by = tray[kind] < value ? 1 : -1;
+  for (let i = tray[kind]; i !== value; i += by) {
+    await dispatch(page, { type: 'tray/step', kind, by });
+  }
+  await dispatch(page, { type: 'tray/drop', kind });
+}
+
+/** The splitter set to `parts` and dropped, as the scene sends it. */
+async function split(page: Page, parts: number) {
+  const { splitter } = await stageNow(page);
+  const by = splitter < parts ? 1 : -1;
+  for (let i = splitter; i !== parts; i += by) {
+    await dispatch(page, { type: 'splitter/step', by });
+  }
+  await dispatch(page, { type: 'splitter/split' });
 }
 
 /**
@@ -252,71 +277,66 @@ test('rooms 8–13 back to back, through the line reveal', async ({ page }, test
   await hook(page);
   await startOnTheMap(page);
 
-  // Room 8, the tram: the pin at 8, then the chain, − 9 (a wrong + 9 first, which jams and
-  // is deleted) and : 4, then the two blanks.
+  // Room 8, the tram: the way back, − 9 (a wrong + 9 first, which jams and is deleted) and
+  // : 4, then the two blanks.
   await arrive(page, 'r08');
-  await dial(page, [1, 2, 3]);
-  await pinX(page, 8);
-  await runLink(page, 'add', '9');
+  await wayBack(page, 0);
   await expect(page.locator('.line--wrong')).toBeVisible();
   for (let i = 0; i < 12 && (await page.locator('.line--wrong').count()) > 0; i += 1) {
     await key(page, 'delete').click();
   }
   await expect(page.locator('.line--wrong')).toHaveCount(0);
-  await runLink(page, 'sub', '9', 'button');
-  await runLink(page, 'div', '4');
+  await wayBack(page, 1);
+  await expect(page.locator('.notebook__lines')).toContainText('4x = 32');
+  await wayBack(page, 1);
   await expect(page.locator('.notebook__lines')).toContainText('x = 32 : 4');
   await shot('r08-chain');
   await type(page, '8');
   await type(page, '8');
   await finish(page, 'r08', shot);
 
-  // Room 9, the steam lift: the pin at 7; the tray's x-gear set to 5 and dropped (as the
-  // scene would send it), which cancels the balloons, then a reset; then 135 − ☐ with 135,
-  // its blank, : 5 and the last two blanks.
+  // Room 9, the steam lift, the tray from the start: the x-gear set to 5 and dropped (as the
+  // scene would send it), which cancels the balloons; the 100 dragged off, more than the
+  // tray's stepper reaches; a split by 5; and the last two blanks. No way back here.
   await arrive(page, 'r09');
-  await dial(page, [1, 2, 3]);
-  await pinX(page, 7);
-  for (let i = 0; i < 4; i += 1) await dispatch(page, { type: 'tray/step', kind: 'gear', by: 1 });
-  await dispatch(page, { type: 'tray/drop', kind: 'gear' });
-  await expect(page.locator('.chain__links')).toContainText('+ 100');
+  await expect(page.locator('.chain')).toHaveCount(0);
+  await drop(page, 'gear', 5);
+  await expect(page.locator('.notebook__lines')).toContainText('135 = 5x + 100');
   await shot('r09-gear');
-  await dispatch(page, { type: 'stage/reset' });
-  await expect(page.locator('.chain__links')).toContainText('135 − ☐');
-  await runLink(page, 'from', '135');
-  await expect(page.locator('.notebook__lines')).toContainText('5x = 135 − 100');
-  await type(page, '35');
-  await runLink(page, 'div', '5');
-  await shot('r09-chain');
+  await dispatch(page, { type: 'tray/take', side: 'right', key: 'right-weight-0' });
+  await split(page, 5);
+  await shot('r09-alone');
   await expect(page.locator('.line--wrong')).toHaveCount(0);
   await type(page, '7');
   await type(page, '7');
   await finish(page, 'r09', shot);
 
-  // Room 10, the market scales: the story written as an equation, then 10 and both lines;
-  // then the story that fits the pans, flagged, then 7 and both lines.
+  // Room 10, the market scales: the story written as an equation, then a balloon of 60, a
+  // split by 3 and both blanks; then the story that fits the pans, flagged, then a balloon
+  // of 5, a split by 2 and both blanks.
   await arrive(page, 'r10');
   await expect(page.locator('.story-panel')).toBeVisible();
   await type(page, '60+3x=90');
   await shot('r10-written');
-  await dial(page, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  await drop(page, 'float', 60);
+  await split(page, 3);
   await type(page, '10');
   await type(page, '10');
   await presented(page, 'locked');
   await touch(page);
   await flag(page, hr.stories.label, 1);
-  await dial(page, [1, 2, 3, 4, 5, 6, 7]);
+  await drop(page, 'float', 5);
+  await split(page, 2);
   await type(page, '7');
   await type(page, '7');
   await finish(page, 'r10', shot);
 
-  // Room 11, the great wheel: the coarse slider's window, "100 to 300", the chain with 5 905
-  // and 27, then the slider to 207 by − from 210 as his check, and both lines.
+  // Room 11, the great wheel: the way back, − 316 and : 27, the numbers already on its
+  // buttons, then the slider to 207 by − from 210 as his check, and both blanks.
   await arrive(page, 'r11');
-  await dial(page, [10, 20, 30]);
-  await flag(page, hr.range.label, 1);
-  await runLink(page, 'from', '5905');
-  await runLink(page, 'div', '27');
+  await wayBack(page, 1);
+  await expect(page.locator('.notebook__lines')).toContainText('27x =');
+  await wayBack(page, 1);
   await dial(page, [210]);
   const down = page.getByRole('button', { name: hr.fineDial.down });
   for (let i = 0; i < 3; i += 1) await down.click();
@@ -327,18 +347,19 @@ test('rooms 8–13 back to back, through the line reveal', async ({ page }, test
   await type(page, '207');
   await finish(page, 'r11', shot);
 
-  // Room 12, the junction: the first machine's answer, 4, is the second's weight.
+  // Room 12, the junction: a weight of 1 and a split by 2; the first machine's answer, 4, is
+  // the second's weight: a balloon of 4 and a split by 3.
   await arrive(page, 'r12');
   await expect(page.locator('.linked-panel')).toContainText('☐');
-  await dial(page, [1, 2, 3]);
-  await pinX(page, 4);
+  await drop(page, 'weight', 1);
+  await split(page, 2);
   await type(page, '4');
   await type(page, '4');
   await presented(page, 'locked');
   await touch(page);
   await expect(page.locator('.linked-panel__slot')).toHaveText('4');
-  await dial(page, [1, 2, 3]);
-  await pinX(page, 5);
+  await drop(page, 'float', 4);
+  await split(page, 3);
   await shot('r12-linked');
   await type(page, '5');
   await type(page, '5');

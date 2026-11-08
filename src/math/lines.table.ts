@@ -42,7 +42,7 @@ const r13a = '3x + 5 = 20';
 const r13b = '50 − 4x = 34';
 /** U+202F, the thousands separator the notebook writes. */
 const nnbsp = ' ';
-const r11 = `5${nnbsp}905 − 27x = 316`;
+const r11 = `27x + 316 = 5${nnbsp}905`;
 
 export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
   'story 1.3 acceptance criteria (2x + 7 = 25)': [
@@ -441,7 +441,7 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r10b, line: '2x = 24', verdict: 'wrong', note: '19 + 5' },
     { stage: r10b, before: ['2x = 14'], line: 'x = 28', verdict: 'wrong', note: 'multiplied' },
   ],
-  'r11 great wheel (5 905 − 27x = 316)': [
+  'r11 great wheel (27x + 316 = 5 905)': [
     // Story 4.6: simplified first, by the chain or by hand; the gear's Balance, its 316
     // dragged off and the split by 27 written; and the wrong lines big numbers invite (the
     // first move, the answer and the check are in epic 1's rows below).
@@ -473,7 +473,7 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
         `x = 5${nnbsp}589 : 27`,
         'x = 207',
       ],
-      line: `5${nnbsp}905 − 27 · 207 = 316`,
+      line: `27 · 207 + 316 = 5${nnbsp}905`,
       verdict: 'check',
     },
     {
@@ -481,7 +481,7 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
       line: `5${nnbsp}905 = 27x + 316`,
       verdict: 'valid',
       progress: false,
-      move: 'add-both',
+      move: 'swap',
     },
     {
       stage: r11,
@@ -499,7 +499,7 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     {
       stage: r11,
       before: [`5${nnbsp}905 = 27x + 316`, `5${nnbsp}589 = 27x`, '207 = x'],
-      line: `5${nnbsp}905 − 27 · 207 = 316`,
+      line: `27 · 207 + 316 = 5${nnbsp}905`,
       verdict: 'check',
     },
     {
@@ -689,11 +689,11 @@ export const LINE_TABLE: Readonly<Record<string, readonly LineRow[]>> = {
     { stage: r11, line: `27x = 5${nnbsp}589`, verdict: 'valid', progress: true },
     { stage: r11, line: `x = 5${nnbsp}589 : 27`, verdict: 'valid', progress: true },
     { stage: r11, line: 'x = 207', verdict: 'answer' },
-    { stage: r11, before: ['x = 207'], line: `5${nnbsp}905 − 27 · 207 = 316`, verdict: 'check' },
-    { stage: r11, before: ['x = 207'], line: '5905-27*207=316', verdict: 'check', note: 'typed' },
+    { stage: r11, before: ['x = 207'], line: `27 · 207 + 316 = 5${nnbsp}905`, verdict: 'check' },
+    { stage: r11, before: ['x = 207'], line: '27*207+316=5905', verdict: 'check', note: 'typed' },
     { stage: r11, line: `27x = 6${nnbsp}221`, verdict: 'wrong', note: '5 905 + 316' },
     { stage: r11, line: `x = 5${nnbsp}589`, verdict: 'wrong', note: 'not divided' },
-    { stage: r11, line: `5${nnbsp}905 − 27 · 207 = 316`, verdict: 'aside', note: 'before x = 207' },
+    { stage: r11, line: `27 · 207 + 316 = 5${nnbsp}905`, verdict: 'aside', note: 'before x = 207' },
   ],
   // Story 1.7: Try values `blanks` (rooms 1–3). The notebook writes `x = ☐`, then the check
   // line with x blanked (`blankOutX`: `3x` becomes `3 · ☐`), and he fills in a number. The

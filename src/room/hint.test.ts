@@ -136,12 +136,12 @@ describe('the next move (story 1.16)', () => {
     expect(nextMove(atThree, balance)).toEqual({ kind: 'split', parts: 2 });
   });
 
-  // Story 1.16: only where Try values could finish but the dial stops short of x, so the
-  // tray waits for the dial's end; where they can't, the tray is offered from the start.
-  it('slides toward the dial’s end in a Balance stage until the tray is offered', () => {
+  // One tool to a room: a stage that lists Balance offers the tray from the start, so no
+  // hint sends him to the dial's end for it.
+  it('goes straight to the tray in a Balance stage, with no sliding first', () => {
     const room = opened(enterRoom(balanceRoom('2x + 5 = 23', 6, ['try', 'balance'])).room);
-    expect(trayOffered(room, balance)).toBe(false);
-    expect(nextMove(room, balance)).toEqual({ kind: 'slide', direction: 1 });
+    expect(trayOffered(room, balance)).toBe(true);
+    expect(nextMove(room, balance)).toEqual({ kind: 'tray', piece: 'float', amount: 5 });
     const balanceOnly = opened(enterRoom(balanceRoom('2x + 5 = 23')).room);
     expect(trayOffered(balanceOnly, balance)).toBe(true);
     expect(nextMove(balanceOnly, balance)).toEqual({ kind: 'tray', piece: 'float', amount: 5 });
@@ -188,7 +188,7 @@ describe('the first press’s step (story 1.16)', () => {
   // the slider's), whose control is frozen then; a jam is its own step now.
   it('is the jam while the machine is jammed', () => {
     const jammed = write(dialTo(opened(enterRoom(r01).room), 5), '4');
-    expect(jammed.stage.jam).toEqual({ kind: 'line' });
+    expect(jammed.stage.jam).toMatchObject({ kind: 'line' });
     expect(hintStep(jammed, [])).toBe('jam');
     expect(hintWorks(jammed, [])).toBe(true);
   });
@@ -255,12 +255,12 @@ describe('the hint after the review of story 1.16', () => {
 
   // Bug: it decided the answer on the literal `x = 9`, so the split's own line,
   // `2x : 2 = 18 : 2` (one gear against a 9), asked to split by 1.
-  it('asks for x once x is alone on the pans, also on the split’s line after a deleted jam', () => {
+  it('asks for x once x is alone on the pans, also after a deleted jam', () => {
     const jammed = write(split(), '6');
-    expect(jammed.stage.jam).toEqual({ kind: 'line' });
+    expect(jammed.stage.jam).toMatchObject({ kind: 'line' });
     const deleted = step(deleteToken(jammed)).room;
     expect(deleted.stage.jam).toBeNull();
-    expect(formatEquation(deleted.stage.pans)).toBe('2x : 2 = 18 : 2');
+    expect(formatEquation(deleted.stage.pans)).toBe('x = 9');
     expect(nextMove(deleted, balance)).toEqual({ kind: 'answer', x: 9 });
     expect(hintStep(deleted, balance)).toBe('answer');
   });
@@ -282,7 +282,7 @@ describe('the hint after the review of story 1.16', () => {
     const roomFour = write(wheel(), 'x = 8');
     const blank = write(split(), '8');
     for (const jammed of [roomOne, roomFour, blank]) {
-      expect(jammed.stage.jam).toEqual({ kind: 'line' });
+      expect(jammed.stage.jam).toMatchObject({ kind: 'line' });
       expect(hintStep(jammed, balance)).toBe('jam');
       expect(nextMove(jammed, balance)).toEqual({ kind: 'jam' });
       expect(hintView(jammed, balance, { level: 1, presses: 1 })).toEqual({
@@ -329,15 +329,22 @@ describe('the hint after the review of story 1.16', () => {
   });
 });
 
-describe('the hint in a room with both ways (room 5, story 2.8 review)', () => {
+describe('the hint and the ways a stage lists (story 2.8 review)', () => {
+  const movedOnce = (room: RoomState): RoomState => ({
+    ...room,
+    stage: { ...room.stage, balance: { ...room.stage.balance, moves: 1 } },
+  });
+
   it('goes on with Balance once he has made a Balance move, though the slider reaches x', () => {
+    const room = opened(enterRoom(balanceRoom('3x + 4 = 22', 10, ['try', 'balance'])).room);
+    expect(nextMove(room, balance)?.kind).toBe('slide');
+    expect(nextMove(movedOnce(room), balance)?.kind).toBe('tray');
+  });
+
+  it('keeps to the slider in room 5, which is about it, with Balance earned', () => {
     let room = touchMachine(enterRoom(r05Bridge, 1).room)?.room as RoomState;
     room = { ...room, stage: { ...room.stage, phase: 'open', pin: null } };
     expect(nextMove(room, balance)?.kind).toBe('slide');
-    const moved = {
-      ...room,
-      stage: { ...room.stage, balance: { ...room.stage.balance, moves: 1 } },
-    };
-    expect(nextMove(moved, balance)?.kind).not.toBe('slide');
+    expect(nextMove(movedOnce(room), balance)?.kind).toBe('slide');
   });
 });

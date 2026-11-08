@@ -184,6 +184,7 @@ function applies(id: HandoverId, s: Situation): boolean {
         !s.answered &&
         !s.balanced &&
         !s.tray &&
+        !s.chain &&
         !s.wrote &&
         !s.levelAtDial &&
         !s.rewrites
@@ -235,8 +236,8 @@ export function handoverView(
   const applying = handoverOrder.filter((id) => applies(id, situation));
   const fresh = applying.find((id) => !met.includes(handoverMet(id)));
   if (fresh) return fresh;
-  // Past these the game waits for a line he must know to write: it always says so.
-  const waiting = applying.find((id) => ['write', 'answer', 'check', 'drag-off'].includes(id));
+  // Nobody should click 300 times: this one always says so.
+  const waiting = applying.find((id) => id === 'drag-off');
   if (waiting) return waiting;
   return room.stage.idle ? (applying[0] ?? null) : null;
 }

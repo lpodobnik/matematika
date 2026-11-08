@@ -15,14 +15,12 @@ export const r09: RoomSpec = {
   xMeaning: 'pressure per valve',
   stages: [
     {
-      type: 'predict',
+      type: 'solve',
       machines: [{ equation: '135 − 5x = 100' }],
       dial: { min: 0, max: 10, step: 1 },
-      tiltPerUnit: 0.4,
-      pokeNotches: 4,
-      pin: { kind: 'level-x' },
+      tiltPerUnit: 0.2,
       readouts: true,
-      ways: ['try', 'balance', 'undo'],
+      ways: ['balance'],
       fading: { try: 'blank', balance: 'blank', undo: 'blanks' },
       trayGear: true,
     },

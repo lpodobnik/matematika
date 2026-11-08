@@ -6,10 +6,9 @@ import * as q from '@/math/rational';
 import { runLink } from '@/room/chain';
 import { nextMove } from '@/room/hint';
 import { touchMachine } from '@/room/phases';
-import { confirmPin, setPin } from '@/room/pin';
 import { enterRoom, type RoomStep } from '@/room/room';
 import { dropOnScale, stepTray, trayView, trayWorks, xOnBothSides } from '@/room/tray';
-import type { RoomState, ToolId } from '@/room/types';
+import type { RoomSpec, RoomState, StageSpec, ToolId } from '@/room/types';
 
 const tools: ToolId[] = ['balance', 'workshop', 'chain'];
 
@@ -18,13 +17,16 @@ function step(result: RoomStep | null): RoomStep {
   return result;
 }
 
-/** Room 9, open after the pin at 7, with the tray met in an earlier room (so it is offered). */
+/** Room 9, open after his first touch: no pin, and the tray from the start. */
 function steamLift(): RoomState {
-  const touched = step(touchMachine(enterRoom(r09).room)).room;
-  const pinned = step(setPin(touched, { kind: 'x', x: 7 })).room;
-  const open = step(confirmPin(pinned)).room;
-  return { ...open, stage: { ...open.stage, balance: { ...open.stage.balance, trayMet: true } } };
+  return step(touchMachine(enterRoom(r09).room)).room;
 }
+
+/** Room 9 as a stage that lists Undo too: the rules between the two ways stay for such a stage. */
+const bothWays: RoomSpec = {
+  ...r09,
+  stages: [{ ...(r09.stages[0] as StageSpec), ways: ['balance', 'undo'] }],
+};
 
 describe('the tray’s x-gear (story 4.2)', () => {
   it('leaves the tray once the balloons are gone: there is nothing left for it to do', () => {
@@ -83,15 +85,17 @@ describe('the tray’s x-gear (story 4.2)', () => {
   });
 
   it('waits, with the splitter, while a chain run’s result waits as a blank', () => {
-    const room = steamLift();
+    const room = step(touchMachine(enterRoom(bothWays).room)).room;
+    expect(nextMove(room, tools)).toEqual({ kind: 'chain', op: 'from', n: 135 });
     const ran = step(runLink(room, tools, { op: 'from', n: 135 })).room;
     expect(trayWorks(ran, tools)).toBe(false);
     expect(nextMove(ran, tools)).toEqual({ kind: 'blank', value: 35 });
   });
 
-  it('hints the chain before any move, and dragging the 100 off after the gear', () => {
+  it('hints the gear from the start, and dragging the 100 off after it', () => {
     let room = steamLift();
-    expect(nextMove(room, tools)).toEqual({ kind: 'chain', op: 'from', n: 135 });
+    expect(runLink(room, tools, { op: 'from', n: 135 })).toBeNull();
+    expect(nextMove(room, tools)).toEqual({ kind: 'tray', piece: 'gear', amount: 5 });
     for (let i = 0; i < 4; i += 1) room = step(stepTray(room, tools, 'gear', 1)).room;
     const geared = step(dropOnScale(room, tools, 'gear')).room;
     expect(nextMove(geared, tools)).toEqual({ kind: 'take-off', amount: 100 });

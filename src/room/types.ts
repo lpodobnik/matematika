@@ -205,7 +205,6 @@ export type HandoverId = (typeof handoverIds)[number];
  * brings, in the order the game first needs them. Nikola talks him through each once.
  */
 export const guideTopicIds = [
-  'chain-from',
   'dial',
   'notebook',
   'check',
@@ -281,6 +280,8 @@ export type Jam = {
    * pans are ahead of the committed lines).
    */
   back?: Equation;
+  /** A typed wrong line: the pans before it, which may be ahead of the committed lines. */
+  pans?: Equation;
 };
 
 /**

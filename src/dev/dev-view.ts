@@ -12,10 +12,21 @@ import { formatEquation, formatTokens } from '@/math/format';
 import { complexity, type ProgressTuple } from '@/math/moves';
 import { parse } from '@/math/parse';
 import type { Token } from '@/math/tokens';
+import { guideHome, guideMet } from '@/room/guide';
+import { handoverMet } from '@/room/handover';
 import { committedEquations, lineTokens } from '@/room/notebook';
 import { splitterView } from '@/room/splitter';
 import { trayView } from '@/room/tray';
-import type { PinState, RoomId, RoomSpec, RoomState, ToolId } from '@/room/types';
+import {
+  type FirstUseId,
+  guideTopicIds,
+  handoverIds,
+  type PinState,
+  type RoomId,
+  type RoomSpec,
+  type RoomState,
+  type ToolId,
+} from '@/room/types';
 import type { Action } from '@/store/actions';
 import { type Quality, type QualityState, qualityInUse } from '@/store/quality';
 import type { SceneCopies } from '@/store/types';
@@ -44,6 +55,16 @@ export function jumpTargets(list: readonly RoomSpec[]): JumpTarget[] {
 export function toolsBefore(list: readonly RoomSpec[], roomId: string): ToolId[] {
   const at = list.findIndex((room) => room.id === roomId);
   return list.slice(0, Math.max(at, 0)).flatMap((room) => (room.earns ? [room.earns] : []));
+}
+
+/** What he has met by a room in play order: its guides show, earlier rooms' don't. */
+export function metBefore(list: readonly RoomSpec[], roomId: string): FirstUseId[] {
+  const at = list.findIndex((room) => room.id === roomId);
+  const before = new Set<string>(list.slice(0, Math.max(at, 0)).map((room) => room.id));
+  const guides = guideTopicIds.filter((topic) => before.has(guideHome(topic))).map(guideMet);
+  if (at < 1) return guides;
+  const firsts: FirstUseId[] = ['pin', 'tray', 'splitter'];
+  return [...guides, ...firsts, ...handoverIds.map(handoverMet)];
 }
 
 export function verdictText(verdict: Verdict): string {

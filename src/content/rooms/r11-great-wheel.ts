@@ -1,6 +1,6 @@
 import type { RoomSpec } from '@/room/types';
 
-// GDD, Puzzle Progression, room 11: the great wheel, `5 905 − 27x = 316` (x = 207), the
+// GDD, Puzzle Progression, room 11: the great wheel, `27x + 316 = 5 905` (x = 207), the
 // deliberate hard point (story 4.6): too slow to drag. The slider runs in tens, with − and
 // + for single steps, so it can reach 207 but only slowly; he simplifies instead, and the
 // slider is his check. The GDD's 0–300 would weigh the left side below 0 past 218, so the
@@ -17,15 +17,12 @@ export const r11: RoomSpec = {
   stages: [
     {
       type: 'solve',
-      machines: [{ equation: '5905 − 27x = 316' }],
+      machines: [{ equation: '27x + 316 = 5905' }],
       dial: { min: 0, max: 210, step: 1, coarse: 10 },
       tiltPerUnit: 0.0025,
-      pokeNotches: 4,
-      pin: { kind: 'range', bounds: [100, 300] },
       readouts: true,
-      ways: ['balance', 'undo'],
-      fading: { try: 'blank', balance: 'blank', undo: 'blank' },
-      trayGear: true,
+      ways: ['undo'],
+      fading: { try: 'blank', balance: 'blank', undo: 'auto' },
     },
   ],
   earns: null,

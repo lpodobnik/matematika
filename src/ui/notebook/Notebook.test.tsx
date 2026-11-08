@@ -380,11 +380,11 @@ describe('the old logbook in the notebook (room 7, story 2.10)', () => {
     expect(html).toContain(hr.logbook.tap);
   });
 
-  it('asks which line is wrong once he has tapped one, and confirms a flagged line', () => {
+  it('leaves the question to the now line once he has tapped one, and confirms a flagged line', () => {
     const html = page(enterRoom(r01).room, {
       logbook: { ...logbook, tapped: true, pinAt: 2, pinConfirmable: true, shown: 2 },
     });
-    expect(html).toContain(hr.pin.questions['wrong-line']);
+    expect(html).not.toContain(hr.pin.questions['wrong-line']);
     expect(html).toMatch(/class="line__flag"[^>]*aria-pressed="true"/);
     expect(html).toContain('class="line__confirm"');
     expect(html).toMatch(/class="line__tap"[^>]*aria-pressed="true"/);

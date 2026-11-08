@@ -62,7 +62,7 @@ describe('the range panel (story 4.6 review)', () => {
   it('turns − and + off at the ends of the reach, and both off while the dial is held', () => {
     const base = dialView(wheel());
     if (!base) throw new Error('no dial');
-    const top = renderToString(<FineDial dial={{ ...base, x: 30 }} onNudge={() => {}} />);
+    const top = renderToString(<FineDial dial={{ ...base, x: base.openMax }} onNudge={() => {}} />);
     expect(top.match(/disabled=""/g)).toHaveLength(1);
     const held = renderToString(
       <FineDial dial={{ ...base, x: 10, turns: false }} onNudge={() => {}} />,

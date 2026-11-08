@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { hr } from '@/content/text/hr';
-import type { LinkOp } from '@/math/chain';
+import type { Link } from '@/math/chain';
 import type { LineSegment } from '@/math/format';
 import type { LineToken, Token } from '@/math/tokens';
 import { type ChainView, chainView } from '@/room/chain';
@@ -43,13 +43,8 @@ import {
   notebookHint,
   notebookRefusal,
 } from '@/ui/common/hint-text';
-import {
-  type ChainPick,
-  ChainStrip,
-  pickAfterKey,
-  pickedLink,
-  pickFor,
-} from '@/ui/notebook/ChainStrip';
+import { NowLine } from '@/ui/common/NowLine';
+import { ChainStrip } from '@/ui/notebook/ChainStrip';
 import { DrumPanel } from '@/ui/notebook/DrumPanel';
 import {
   HandoverNote,
@@ -90,6 +85,12 @@ const noTemplates: LineToken[][] = [];
  * action, a press of the hint button included: a hint pressed after it takes its place
  * (story 1.16 review). While the machine is jammed, the hint's tag pulses the delete key.
  */
+/** A tag at the notebook, except what the now line (NowLine) already says. */
+function notebookTag(step: string | null): step is NotebookHandover {
+  if (!isNotebookHandover(step)) return false;
+  return step !== 'write' && step !== 'answer' && step !== 'check' && step !== 'chain';
+}
+
 export function Notebook() {
   const lines = useGame((s) => s.room?.stage.lines ?? noLines);
   const draft = useGame((s) => s.room?.stage.draft ?? noTokens);
@@ -160,38 +161,11 @@ export function Notebook() {
     !drum?.pin?.asks &&
     !guideInNotebook;
   const dispatch = useGame((s) => s.dispatch);
-  // Story 4.1: the gear chain, and his pick for its last link while the picker is open.
+  // Story 4.1: the way back.
   // Its links are a fresh array on every read, so the selector returns them as text.
   const chainKey = useGame((s) => JSON.stringify(chainView(s.room, s.save.progress.tools)));
   const chain = useMemo(() => JSON.parse(chainKey) as ChainView | null, [chainKey]);
   const chainHint = useGame((s) => hintMoveKind(s) === 'chain');
-  const [pick, setPick] = useState<ChainPick | null>(null);
-  const openFor = pickFor(chain);
-  const picking = pick !== null && openFor !== null && pick.for === openFor;
-  // The picker closes once the link it was opened for changes or goes (a Balance move, a
-  // jam, a tapped line: story 4.1 review).
-  useEffect(() => {
-    if (pick !== null && pick.for !== openFor) setPick(null);
-  }, [pick, openFor]);
-  // A computer's Escape closes it.
-  useEffect(() => {
-    if (!picking) return;
-    const close = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setPick(null);
-    };
-    window.addEventListener('keydown', close);
-    return () => window.removeEventListener('keydown', close);
-  }, [picking]);
-  const runPick = useCallback(
-    (current: ChainPick) => {
-      const link = pickedLink(current);
-      if (!link) return;
-      setPick(null);
-      dispatch({ type: 'chain/run', op: link.op, n: link.n });
-    },
-    [dispatch],
-  );
-
   // While a story is built, his line is the stage's equation: line 0 stays hidden.
   const building = story?.build != null;
   const shown = useMemo(
@@ -201,16 +175,9 @@ export function Notebook() {
   const display = useMemo(() => draftDisplay({ draft, templates }), [draft, templates]);
   const send = useCallback(
     (key: NotebookKey) => {
-      // While the chain's picker is open, the pad types its number (story 4.1).
-      if (picking && pick) {
-        const next = pickAfterKey(pick, key);
-        if (next.run) runPick(next.pick);
-        else setPick(next.pick);
-        return;
-      }
       dispatch(keyAction(key));
     },
-    [dispatch, picking, pick, runPick],
+    [dispatch],
   );
   // The page asks for the opposite of what it shows; the waiting pin (or the scene's
   // handover tag) decides what that means.
@@ -232,7 +199,7 @@ export function Notebook() {
       refused={refused}
       writes={writes}
       aside={aside}
-      handover={!hinting && guiding === null && isNotebookHandover(step) ? step : null}
+      handover={!hinting && guiding === null && notebookTag(step) ? step : null}
       hint={hintNote === null ? null : { text: hintNote, presses, key: hintPadKey }}
       refusal={refusal}
       help={structure || example ? { structure, example } : null}
@@ -249,16 +216,8 @@ export function Notebook() {
       linked={linked}
       drum={drum}
       chain={chain}
-      pick={picking ? pick : null}
       chainPulse={chainHint}
-      onChainTap={() => {
-        const opens = !picking && openFor !== null;
-        setPick(opens ? { op: null, digits: '', for: openFor } : null);
-        if (opens) dispatch({ type: 'chain/open' });
-      }}
-      onChainOp={(op) => setPick((current) => (current ? { ...current, op } : current))}
-      onChainRun={() => pick && runPick(pick)}
-      onChainCancel={() => setPick(null)}
+      onChainRun={(link) => dispatch({ type: 'chain/run', op: link.op, n: link.n })}
       onKey={send}
       onSlide={slide}
     />
@@ -281,14 +240,9 @@ export interface NotebookPageProps {
   onNudge?(by: 1 | -1): void;
   /** Story 4.1: the gear chain, or null in a stage without it. */
   chain?: ChainView | null;
-  /** His pick for the chain's last link while its picker is open. */
-  pick?: ChainPick | null;
   /** The hint points at the chain's last link. */
   chainPulse?: boolean;
-  onChainTap?(): void;
-  onChainOp?(op: LinkOp): void;
-  onChainRun?(): void;
-  onChainCancel?(): void;
+  onChainRun?(link: Link): void;
   /** Story 2.10: room 7's logbook, or null in any other stage. */
   logbook?: LogbookView | null;
   onShowLine?(line: number): void;
@@ -358,12 +312,8 @@ export function NotebookPage({
   linked = null,
   drum = null,
   chain = null,
-  pick = null,
   chainPulse = false,
-  onChainTap = () => {},
-  onChainOp = () => {},
   onChainRun = () => {},
-  onChainCancel = () => {},
   onShowLine = () => {},
   onPinLine = () => {},
   onConfirmPin = () => {},
@@ -386,19 +336,9 @@ export function NotebookPage({
         onConfirm={onConfirmPin}
       />
     ) : null;
-  // While the mistake pin is offered, its tag: first how to put a line on the scale, then
-  // the pin's question.
-  const logbookTag = logbook?.pinAsks
-    ? logbook.tapped
-      ? hr.pin.questions['wrong-line']
-      : hr.logbook.tap
-    : story?.asks
-      ? hr.pin.questions['story-choice']
-      : range?.asks
-        ? hr.pin.questions.range
-        : drum?.pin?.asks
-          ? hr.pin.questions['next-dot']
-          : null;
+  // While the mistake pin is offered, how to put a line on the scale. The pin's question is
+  // on the now line (NowLine), not here too.
+  const logbookTag = logbook?.pinAsks && !logbook.tapped ? hr.logbook.tap : null;
   const listRef = useRef<HTMLOListElement>(null);
   // A tag hangs under the lines: the refusal's, else the hint's, else the handover's. Only a
   // handover's or a hint's makes the line to write pulse; a refusal's doesn't.
@@ -446,9 +386,10 @@ export function NotebookPage({
       <div
         className="notebook"
         data-handover={tagged}
-        data-picking={pick !== null || undefined}
         data-choosing={story?.asks || range?.asks || drum?.pin?.asks || undefined}
+        data-reading={logbook?.pinAsks || undefined}
       >
+        <NowLine />
         {story && <StoryPanel view={story} onFlag={onFlagStory} onConfirm={onConfirmPin} />}
         {range && <RangePanel view={range} onFlag={onFlagRange} onConfirm={onConfirmPin} />}
         {linked && <LinkedPanel view={linked} />}
@@ -457,13 +398,9 @@ export function NotebookPage({
         {chain && (
           <ChainStrip
             view={chain}
-            pick={pick}
             note={chainNote}
             pulse={chainPulse || chainNote !== null}
-            onTap={onChainTap}
-            onOp={onChainOp}
             onRun={onChainRun}
-            onCancel={onChainCancel}
           />
         )}
         <ol className="notebook__lines" ref={listRef}>
@@ -510,12 +447,7 @@ export function NotebookPage({
           handover && <HandoverNote step={handover} />
         )}
         {help && <HelpNote structure={help.structure} example={help.example} />}
-        <NumberPad
-          writes={writes || pick !== null}
-          blank={blank || pick !== null}
-          pulse={hint?.key ?? null}
-          onKey={onKey}
-        />
+        <NumberPad writes={writes} blank={blank} pulse={hint?.key ?? null} onKey={onKey} />
       </div>
     </aside>
   );

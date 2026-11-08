@@ -72,7 +72,7 @@ describe('writing the story (story 4.5)', () => {
 
   it('jams a wrong story, acted out on the pans', () => {
     const room = write(wrench(), '60x + 3 = 90');
-    expect(room.stage.jam).toEqual({ kind: 'line' });
+    expect(room.stage.jam).toMatchObject({ kind: 'line' });
     expect(storyWaits(room)).toBe(true);
   });
 

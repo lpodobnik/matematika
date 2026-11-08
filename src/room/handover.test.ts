@@ -70,10 +70,7 @@ function waterWheel(): RoomState {
   return dialTo(opened(enterRoom(r04).room), 6);
 }
 
-/**
- * Room 4 as a stage Try values could finish, on the dial of 0–6 it had until Luka ran it
- * past the answer: the tray waits there for the dial's end, so the dial's step applies first.
- */
+/** Room 4 as a stage Try values could finish, on the dial of 0–6 it had once. */
 const triedWheel: RoomSpec = {
   ...r04,
   stages: [
@@ -151,7 +148,7 @@ describe('which handover applies (story 1.15)', () => {
     // Room 3's second stage pins before the dial moves.
     expect(handoverView(opened(enterRoom(r03, 1).room), [], [])).toBeNull();
     const jammed = write(dialTo(doorLift(), 5), '4');
-    expect(jammed.stage.jam).toEqual({ kind: 'line' });
+    expect(jammed.stage.jam).toMatchObject({ kind: 'line' });
     expect(handoverView(jammed, [], [])).toBeNull();
   });
 
@@ -203,8 +200,10 @@ describe('which handover applies (story 1.15)', () => {
     // balance, so it isn't `write` ("the scale is level") any more: `answer` asks for x.
     expect(handoverApplies('write', alone, balance)).toBe(false);
     expect(handoverView(alone, metBut('write', 'answer'), balance)).toBe('answer');
-    // Past this the game waits for a line he must know to write: it always says so.
-    expect(handoverView(alone, allMet, balance)).toBe('answer');
+    // Once met, it comes back only when he idles.
+    expect(handoverView(alone, allMet, balance)).toBeNull();
+    const idle = { ...alone, stage: { ...alone.stage, idle: true } };
+    expect(handoverView(idle, allMet, balance)).toBe('answer');
   });
 
   // Story 1.16 review: x alone is judged on the pans' pieces, the rule the blanks and
@@ -246,7 +245,8 @@ describe('which handover applies (story 1.15)', () => {
     expect(handoverApplies('answer', alone, balance)).toBe(true);
     // Nothing earlier applies, even for a player who has met nothing.
     expect(handoverView(alone, [], balance)).toBe('answer');
-    expect(handoverView(alone, metBut('splitter'), balance)).toBe('answer');
+    expect(handoverView(alone, metBut('answer'), balance)).toBe('answer');
+    expect(handoverView(alone, allMet, balance)).toBeNull();
     const backwards = { ...twoX, stage: { ...twoX.stage, pans: equation('9 = x') } };
     expect(handoverApplies('answer', backwards, balance)).toBe(true);
     // Not while x has company, nor once the answer is written.
@@ -276,13 +276,14 @@ describe('which handover applies (story 1.15)', () => {
   });
 
   // Story 1.15 kept the dial's tag away while a written line was acted out; now he has
-  // written a line himself. On the tried wheel: room 4 offers the tray at once, so its
-  // dial's step never applies with Balance.
+  // written a line himself. Without Balance: where the tray is offered, the dial's step
+  // never applies.
   it('stops telling him to turn the dial once he writes a line himself', () => {
     const open = opened(enterRoom(triedWheel).room);
-    expect(handoverApplies('dial', open, balance)).toBe(true);
+    expect(handoverApplies('dial', open, [])).toBe(true);
+    expect(handoverApplies('dial', open, balance)).toBe(false);
     const typedLine = write(open, '2x = 18');
-    expect(handoverApplies('dial', typedLine, balance)).toBe(false);
+    expect(handoverApplies('dial', typedLine, [])).toBe(false);
     expect(handoverView(typedLine, metBut('splitter'), balance)).toBe('splitter');
   });
 

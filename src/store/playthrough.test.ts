@@ -21,7 +21,7 @@ import { refusalView } from '@/room/notebook';
 import { scaleView } from '@/room/scale';
 import { splitterOffered } from '@/room/splitter';
 import { trayOffered } from '@/room/tray';
-import type { RoomId, RoomState } from '@/room/types';
+import type { RoomId, RoomState, TrayKind } from '@/room/types';
 import type { Action } from '@/store/actions';
 import { type DomainEvent, isRoomEvent } from '@/store/events';
 import { createGameStore } from '@/store/store';
@@ -133,6 +133,27 @@ function playRoomThree(game: Game) {
   game.act({ type: 'story/next' });
 }
 
+/** The tray's number for a kind, stepped there as he would. */
+function setTray(game: Game, kind: TrayKind, value: number) {
+  while (game.stage().tray[kind] !== value) {
+    game.act({ type: 'tray/step', kind, by: game.stage().tray[kind] < value ? 1 : -1 });
+  }
+}
+
+/** A piece of this number from the tray, dropped over the scale. */
+function dropPiece(game: Game, kind: TrayKind, value: number) {
+  setTray(game, kind, value);
+  game.act({ type: 'tray/drop', kind });
+}
+
+/** The splitter set to `parts`, then dropped over the scale. */
+function splitInto(game: Game, parts: number) {
+  while (game.stage().splitter !== parts) {
+    game.act({ type: 'splitter/step', by: game.stage().splitter < parts ? 1 : -1 });
+  }
+  game.act({ type: 'splitter/split' });
+}
+
 /** The dial turned notch by notch from where it stands up to `to`. */
 function dialUpTo(game: Game, to: number) {
   for (let x = game.stage().dialX + 1; x <= to; x += 1) game.act({ type: 'dial/set', x });
@@ -169,9 +190,9 @@ function playRoomFour(game: Game) {
 }
 
 /**
- * Room 5, the bridge (story 2.8): a poke window of 0–3, the pin at 6, then x = 6 typed and
- * 6 into the check line's blank; then the change, 22 to 25, the pin at 7 before the slider
- * opens, x = 7 and 7 into the blank.
+ * Room 5, the bridge (story 2.8), the slider's room: a poke window of 0–3, the pin at 6 (the
+ * machine turns the slider there, so the pans level and `x = ☐` comes up), and 6 into both
+ * blanks; then the change, 22 to 25, the pin at 7 before the slider opens, and 7 twice.
  */
 function playRoomFive(game: Game) {
   travel(game, 'r05');
@@ -179,13 +200,13 @@ function playRoomFive(game: Game) {
   for (const x of [1, 2, 3]) game.act({ type: 'dial/set', x });
   game.act({ type: 'pin/set', value: { kind: 'x', x: 6 } });
   game.act({ type: 'pin/confirm' });
-  game.write('x=6');
+  game.write('6');
   game.write('6');
   game.presented();
   game.act({ type: 'machine/touch' });
   game.act({ type: 'pin/set', value: { kind: 'x', x: 7 } });
   game.act({ type: 'pin/confirm' });
-  game.write('x=7');
+  game.write('7');
   game.write('7');
   game.presented();
   game.presented();
@@ -194,14 +215,14 @@ function playRoomFive(game: Game) {
 
 /**
  * Room 6, the weighing yard (story 2.9): the readouts hidden, he pins 29 before anything
- * moves, writes x = 29 and fills 29 into the check line's blank.
+ * moves (the machine turns the slider there), and fills 29 into both blanks.
  */
 function playRoomSix(game: Game) {
   travel(game, 'r06');
   game.act({ type: 'machine/touch' });
   game.act({ type: 'pin/set', value: { kind: 'x', x: 29 } });
   game.act({ type: 'pin/confirm' });
-  game.write('x=29');
+  game.write('29');
   game.write('29');
   game.presented();
   game.presented();
@@ -229,16 +250,12 @@ function playRoomSeven(game: Game) {
 }
 
 /**
- * Room 8, the tram (story 4.3): he pokes the window, pins 8 and confirms (the machine turns
- * the dial to 8), then runs the gear chain backward, `− 9` and `: 4`, which writes the
- * moves and their results for him, and fills the last two blanks.
+ * Room 8, the tram (story 4.3): no pin. He goes the way back, `− 9` and `: 4`, which writes
+ * the moves and their results for him, and fills the last two blanks.
  */
 function playRoomEight(game: Game) {
   travel(game, 'r08');
   game.act({ type: 'machine/touch' });
-  for (const x of [1, 2, 3]) game.act({ type: 'dial/set', x });
-  game.act({ type: 'pin/set', value: { kind: 'x', x: 8 } });
-  game.act({ type: 'pin/confirm' });
   game.act({ type: 'chain/run', op: 'sub', n: 9 });
   game.act({ type: 'chain/run', op: 'div', n: 4 });
   game.write('8');
@@ -249,19 +266,15 @@ function playRoomEight(game: Game) {
 }
 
 /**
- * Room 9, the steam lift (story 4.4): he pins 7, runs `135 − ☐` with 135 (Undo `blanks`
- * writes `5x = 135 − 100` and leaves `5x = ☐`), fills 35, runs `: 5`, and fills the last
- * two blanks.
+ * Room 9, the steam lift (story 4.4), the tray from the start: the gear set to 5 and dropped
+ * (`135 = 5x + 100`, written for him), the 100 dragged off, a split by 5, and his two blanks.
  */
 function playRoomNine(game: Game) {
   travel(game, 'r09');
   game.act({ type: 'machine/touch' });
-  for (const x of [1, 2, 3]) game.act({ type: 'dial/set', x });
-  game.act({ type: 'pin/set', value: { kind: 'x', x: 7 } });
-  game.act({ type: 'pin/confirm' });
-  game.act({ type: 'chain/run', op: 'from', n: 135 });
-  game.write('35');
-  game.act({ type: 'chain/run', op: 'div', n: 5 });
+  dropPiece(game, 'gear', 5);
+  game.act({ type: 'tray/take', side: 'right', key: 'right-weight-0' });
+  splitInto(game, 5);
   game.write('7');
   game.write('7');
   game.presented();
@@ -270,71 +283,69 @@ function playRoomNine(game: Game) {
 }
 
 /**
- * Room 10, the market scales (story 4.5): he writes the story as its equation, then finds
- * 10 on the dial and writes both lines; then he flags the story that fits the second pans,
- * finds 7 and writes both lines.
+ * Room 10, the market scales (story 4.5): he writes the story as its equation, takes the 60
+ * off with a balloon and splits by 3, then fills both blanks; then he flags the story that
+ * fits the second pans, and does the same with a balloon of 5 and a split by 2.
  */
 function playRoomTen(game: Game) {
   travel(game, 'r10');
   game.act({ type: 'machine/touch' });
   game.write('60+3x=90');
-  for (let x = 1; x <= 10; x += 1) game.act({ type: 'dial/set', x });
-  game.write('x=10');
-  game.write('60+3·10=90');
+  dropPiece(game, 'float', 60);
+  splitInto(game, 3);
+  game.write('10');
+  game.write('10');
   game.presented();
   game.act({ type: 'machine/touch' });
   game.act({ type: 'pin/set', value: { kind: 'choice', index: 1 } });
   game.act({ type: 'pin/confirm' });
-  for (let x = 1; x <= 7; x += 1) game.act({ type: 'dial/set', x });
-  game.write('x=7');
-  game.write('5+2·7=19');
+  dropPiece(game, 'float', 5);
+  splitInto(game, 2);
+  game.write('7');
+  game.write('7');
   game.presented();
   game.presented();
   game.act({ type: 'story/next' });
 }
 
 /**
- * Room 11, the great wheel (story 4.6): he pokes the coarse dial's window in tens, pins
- * "100 to 300", runs the chain backward (`5 905 − ☐` with 5 905, then `: 27`, which with a
- * blank page moves only the pans), steps the slider to 207 one by one from 210 as his
- * check, and writes the answer and the check line.
+ * Room 11, the great wheel (story 4.6): no pin. He goes the way back, `− 316` and `: 27`,
+ * which writes the moves and their results for him, steps the slider to 207 one by one from
+ * 210 as his check, and fills both blanks.
  */
 function playRoomEleven(game: Game) {
   travel(game, 'r11');
   game.act({ type: 'machine/touch' });
-  for (const x of [10, 20, 30]) game.act({ type: 'dial/set', x });
-  game.act({ type: 'pin/set', value: { kind: 'bucket', index: 1 } });
-  game.act({ type: 'pin/confirm' });
-  game.act({ type: 'chain/run', op: 'from', n: 5905 });
+  game.act({ type: 'chain/run', op: 'sub', n: 316 });
   game.act({ type: 'chain/run', op: 'div', n: 27 });
   game.act({ type: 'dial/set', x: 210 });
   for (let i = 0; i < 3; i += 1) game.act({ type: 'dial/nudge', by: -1 });
-  game.write('x=207');
-  game.write('5905−27·207=316');
+  game.write('207');
+  game.write('207');
   game.presented();
   game.presented();
   game.act({ type: 'story/next' });
 }
 
 /**
- * Room 12, the junction (story 4.7): two linked machines. He pins 4, finds it on the dial
- * and writes both lines; the second machine arrives with that 4 as its weight; he pins 5,
- * finds it and writes both lines.
+ * Room 12, the junction (story 4.7): two linked machines, no pins. `2x − 1 = 7`: a weight of
+ * 1, a split by 2, and 4 twice; the second machine arrives with that 4 as its weight:
+ * `3x + 4 = 19`, a balloon of 4, a split by 3, and 5 twice.
  */
 function playRoomTwelve(game: Game) {
   travel(game, 'r12');
-  for (const [x, check] of [
-    [4, '2·4−1=7'],
-    [5, '3·5+4=19'],
-  ] as const) {
-    game.act({ type: 'machine/touch' });
-    for (const notch of [1, 2, 3]) game.act({ type: 'dial/set', x: notch });
-    game.act({ type: 'pin/set', value: { kind: 'x', x } });
-    game.act({ type: 'pin/confirm' });
-    game.write(`x=${x}`);
-    game.write(check);
-    game.presented();
-  }
+  game.act({ type: 'machine/touch' });
+  dropPiece(game, 'weight', 1);
+  splitInto(game, 2);
+  game.write('4');
+  game.write('4');
+  game.presented();
+  game.act({ type: 'machine/touch' });
+  dropPiece(game, 'float', 4);
+  splitInto(game, 3);
+  game.write('5');
+  game.write('5');
+  game.presented();
   game.presented();
   game.act({ type: 'story/next' });
 }
@@ -342,22 +353,22 @@ function playRoomTwelve(game: Game) {
 /**
  * Room 13, the clock tower (story 4.8): in each machine he pokes 0, 1, 2 (the drum draws
  * their dots), pins the next dot, confirms (the machine turns the slider to 3, so its dot
- * shows), then finds the answer on the dial and writes both lines.
+ * shows), then finds the answer on the dial, which brings up the blanks, and fills both.
  */
 function playRoomThirteen(game: Game) {
   // Each right pin pays (story 4.8 review: the store records the dots and pays the drum pin).
   travel(game, 'r13');
-  for (const [x, right, check] of [
-    [5, 0, '3·5+5=20'],
-    [4, 2, '50−4·4=34'],
+  for (const [x, right] of [
+    [5, 0],
+    [4, 2],
   ] as const) {
     game.act({ type: 'machine/touch' });
     for (const notch of [1, 2]) game.act({ type: 'dial/set', x: notch });
     game.act({ type: 'pin/set', value: { kind: 'choice', index: right } });
     game.act({ type: 'pin/confirm' });
     game.act({ type: 'dial/set', x });
-    game.write(`x=${x}`);
-    game.write(check);
+    game.write(`${x}`);
+    game.write(`${x}`);
     game.presented();
   }
   game.presented();
@@ -443,18 +454,14 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r07.0:locked',
       'r07.0:restart',
       'none',
-      // Story 4.3: room 8, a poke window, the pin, then the gear chain.
+      // Story 4.3: room 8, the way back from the start.
       'r08.0:arrive',
-      'r08.0:poke',
-      'r08.0:pin',
       'r08.0:open',
       'r08.0:locked',
       'r08.0:restart',
       'none',
-      // Story 4.4: room 9, the same, with Undo's blanks.
+      // Story 4.4: room 9, the tray from the start.
       'r09.0:arrive',
-      'r09.0:poke',
-      'r09.0:pin',
       'r09.0:open',
       'r09.0:locked',
       'r09.0:restart',
@@ -469,23 +476,17 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
       'r10.1:locked',
       'r10.1:restart',
       'none',
-      // Story 4.6: room 11, the coarse dial's window, the range pin, the chain.
+      // Story 4.6: room 11, the way back from the start, with the coarse dial to check.
       'r11.0:arrive',
-      'r11.0:poke',
-      'r11.0:pin',
       'r11.0:open',
       'r11.0:locked',
       'r11.0:restart',
       'none',
-      // Story 4.7: room 12, two linked machines, each with its poke window and pin.
+      // Story 4.7: room 12, two linked machines, the tray from the start in each.
       'r12.0:arrive',
-      'r12.0:poke',
-      'r12.0:pin',
       'r12.0:open',
       'r12.0:locked',
       'r12.1:arrive',
-      'r12.1:poke',
-      'r12.1:pin',
       'r12.1:open',
       'r12.1:locked',
       'r12.1:restart',
@@ -671,7 +672,7 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(game.seen.filter((event) => event.type === 'MachineJammed')).toEqual([]);
   });
 
-  it('writes room 9 with Undo’s blanks: each move, then his result (story 4.4)', () => {
+  it('writes room 9 the Balance way: the gear’s move and its result, then his two lines (story 4.4)', () => {
     const game = freshGame();
     for (const play of [
       playRoomOne,
@@ -698,9 +699,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     const lines = (last as RoomState | null)?.stage.lines ?? [];
     expect(lines.map((line) => [formatTokens(line.tokens), line.source])).toEqual([
       ['135 − 5x = 100', 'given'],
-      ['5x = 135 − 100', 'undo'],
-      ['5x = 35', 'typed'],
-      ['x = 35 : 5', 'undo'],
+      ['135 − 5x + 5x = 100 + 5x', 'balance'],
+      ['135 = 5x + 100', 'balance'],
       ['x = 7', 'typed'],
       ['135 − 5 · 7 = 100', 'typed'],
     ]);
@@ -836,8 +836,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(tag()).toBe('answer');
     game.write('9');
     expect(blanks()).toEqual(['2 · ☐ + 5 = 23']);
-    // The answer is written, and the check line still waits: it says so every time.
-    expect(tag()).toBe('check');
+    // The check line's tag is met from room 1: the "what now" line says it from here.
+    expect(tag()).toBeNull();
     expect(game.store.getState().save.progress.firstUse).toEqual(
       expect.arrayContaining(['handover-answer', 'handover-check']),
     );

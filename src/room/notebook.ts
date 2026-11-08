@@ -167,7 +167,8 @@ function withStage(room: RoomState, stage: StageState): RoomState {
 
 /**
  * The stage after an edit to the draft: any edit clears a line jam and returns the pans to
- * the last committed line (Pattern 1, two layers), and clears a refusal's tag (story 1.16).
+ * where they were before the wrong line, which may be ahead of the committed lines (a Balance
+ * move on a blank page), and clears a refusal's tag (story 1.16).
  */
 function edited(stage: StageState, draft: Token[]): StageState {
   if (stage.jam?.kind !== 'line') return { ...stage, draft, refusal: null };
@@ -177,7 +178,8 @@ function edited(stage: StageState, draft: Token[]): StageState {
     const typed = draft.length > stage.draft.length ? draft.slice(-1) : [];
     return { ...stage, draft: typed, refusal: null, jam: null, pans: back };
   }
-  return { ...stage, draft, refusal: null, jam: null, pans: lastCommitted(stage) };
+  const pans = stage.jam.pans ?? lastCommitted(stage);
+  return { ...stage, draft, refusal: null, jam: null, pans };
 }
 
 /**
@@ -302,6 +304,8 @@ function refusalOf(
   verdict: Verdict,
   tokens: readonly Token[],
 ): { refusal: Refusal | null } | null {
+  // The story comes first: nothing else he could be told is something he can act on yet.
+  if (storyWaits(room)) return null;
   if (isRefused(verdict)) return { refusal: null };
   if (!leavesXAlone(verdict, tokens)) return null;
   return answerAllowed(currentStageSpec(room), room.stage.pans) ? null : { refusal: 'simplify' };
@@ -347,7 +351,7 @@ export function enterLine(room: RoomState, now: number): EnterStep | null {
   if (verdict.kind === 'wrong') {
     const jammed: StageState = {
       ...stage,
-      jam: { kind: 'line' },
+      jam: { kind: 'line', pans: stage.pans },
       jamsInARow: stage.jamsInARow + 1,
       refusal: null,
     };

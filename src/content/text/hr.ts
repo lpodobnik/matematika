@@ -242,11 +242,11 @@ export const hr = {
       },
       'take-away': {
         term: 'Oduzimanje nepoznanice',
-        text: 'Kad se x oduzima, veći x čini stranu lakšom. Zato 135 − 5x = 100 vraćaš sa 135 − 100.',
+        text: 'Kad se x oduzima, veći x čini stranu lakšom. Zato prvo dodaj isto toliko x na obje strane.',
       },
       story: {
         term: 'Jednadžba iz priče',
-        text: 'Ono što ne znaš postaje x. Ono što je jednako stavi s obje strane znaka =.',
+        text: 'Ono što ne znaš zovi x. Zatim nađi dvije stvari koje su u priči jednake i stavi = između njih.',
       },
       simplify: {
         term: 'Pojednostavljivanje',
@@ -652,7 +652,7 @@ export const hr = {
     /** At the splitter, when it is first offered. */
     splitter: 'Razdjelnik dijeli obje strane na jednake dijelove.',
     /** Story 4.1: at the gear chain, when it first works: undo its last link. */
-    chain: 'Dodirni zadnju kariku lanca i poništi je.',
+    chain: 'Poništi zadnji korak: dodirni jedan od dva gumba.',
     /** Story 4.5: at the notebook, while a story waits to be written as its equation. */
     story: 'Pročitaj priču i zapiši je kao jednadžbu.',
   },
@@ -707,26 +707,13 @@ export const hr = {
   },
   /** Story 4.1: the gear chain at the top of the notebook (GDD, Gear chain). */
   chain: {
-    label: 'Lanac',
+    label: 'Unatrag',
     /** When the pans aren't a chain (x on both sides, or a sum not yet worked out). */
-    off: 'Lanac čeka: x mora biti samo s jedne strane.',
-    /** For screen readers: the last link, to tap. */
-    tap: (link: string) => `Karika ${link}: dodirni je i poništi`,
-    /** For screen readers: a link already undone, dark. */
-    undone: ', poništeno',
+    off: 'Ovo radi tek kad je x samo na jednoj strani.',
     /** The picker's name, for screen readers. */
     undo: (link: string) => `Što poništava ${link}?`,
-    /** Before he picks an operation. */
-    pickOp: 'Odaberi operaciju, pa upiši broj.',
-    ops: {
-      add: 'plus',
-      sub: 'minus',
-      mul: 'puta',
-      div: 'podijeljeno',
-      from: 'broj minus lanac',
-    },
-    run: 'Pokreni',
-    cancel: 'Zatvori',
+    /** A step taking x away from a number: the sum, and what is in its box. */
+    whatIsBox: (n: string, output: string) => `${n} − ☐ = ${output}. Koliko je ☐?`,
   },
   /** Story 1.16: the goal card in the scene while the tray is offered: what Balance aims for. */
   goal: {
@@ -786,12 +773,13 @@ export const hr = {
       fix: 'Obriši ga tipkom ⌫ i napiši ponovno.',
     },
     /** Story 4.1 review: at the notebook, the blank a chain run left (Undo `blanks`). */
-    blankWhat: 'Lanac je napravio korak. Upiši što je ostalo na vagi.',
+    blankWhat: 'Korak je napravljen. Upiši što je ostalo na vagi.',
     blank: (n: string) => `Upiši ${n} u prazno polje.`,
     /** Story 4.1, at the gear chain: the last link, and what undoes it. */
-    chain: (link: string, inverse: string) => `Dodirni kariku ${link} i odaberi ${inverse}.`,
+    chain: (link: string, inverse: string) =>
+      `Korak ${link} poništava ${inverse}. Dodirni taj gumb.`,
     /** A link that undoes itself, `135 − ☐`: the button to pick, and the number to type. */
-    chainFrom: (link: string, n: string) => `Dodirni kariku ${link}, odaberi … − ☐ i upiši ${n}.`,
+    chainFrom: (_link: string, n: string) => `Dodirni gumb na kojem se oduzima od ${n}.`,
   },
   /**
    * Epic 3: automaton fights (GDD, Automaton fights). He rolls dice, places them as blade
@@ -954,12 +942,9 @@ export const hr = {
       'logbook-tap': 'Sad dodirni retke. Uz točan redak vaga ostaje ravna, uz krivi se nagne.',
       'logbook-flag': 'Jedan redak ne vrijedi. Stavi zastavicu na njega, pa potvrdi.',
       // Room 8: the gear chain.
-      chain: 'Ovo je Kristijanov lanac. Karike kažu što stroj redom radi s x.',
-      'chain-why': 'x ne znamo, pa idemo od kraja: svaku kariku poništi njezinom suprotnom.',
-      'chain-undo': 'Dodirni zadnju kariku.',
-      'chain-run': 'Odaberi što je poništava, upiši broj i dodirni Pokreni. Vaga ide za lancem.',
-      // Room 9: a link where x is taken away from a number.
-      'chain-from': 'Ovdje se x oduzima od broja. Odaberi … − ☐ i upiši taj broj.',
+      chain: 'Ovo je recept stroja: što se redom radi s x, dok ne nastane broj na kraju.',
+      'chain-why': 'x ne znamo, pa idemo unatrag: zadnji korak poništava njegova suprotnost.',
+      'chain-run': 'Što poništava zadnji korak? Dodirni jedan od dva gumba.',
       // Room 9: the tray's x-gear.
       gear: 'Baloni s x dižu svoju stranu: što je x veći, ta je strana lakša.',
       'gear-why': 'Zupčanik x poništava balon s x. Namjesti koliko je balona, pa ga odvuci.',
@@ -968,7 +953,7 @@ export const hr = {
       // Room 10: the story, written; then the story that fits.
       story: 'Ovo je priča. U njoj se krije jednadžba.',
       'story-x': 'Ono što priča ne kaže je x. Ostale brojeve uzmi iz priče.',
-      'story-write': 'Zapiši priču kao redak i dodirni ↵. Onda se vaga napuni.',
+      'story-write': 'Zapiši priču kao redak i dodirni ↵. To će napuniti vagu.',
       'story-choice': 'Tri priče, a vagi odgovara samo jedna. Usporedi ih s vagom.',
       'story-flag': 'Stavi zastavicu na priču koja odgovara, pa dodirni Potvrdi.',
       // Room 11: the coarse slider and its single steps, the range pin.
@@ -1165,6 +1150,28 @@ export const hr = {
     enter: 'Upiši',
     pushAside: 'Skloni bilježnicu',
     bringBack: 'Vrati bilježnicu',
+  },
+  /**
+   * Always on screen in a room: what he is doing right now, in one plain sentence. The goal
+   * of the next step, never its numbers: the answer stays his.
+   */
+  now: {
+    heading: 'Što sad?',
+    touch: 'Dodirni stroj da ga pokreneš.',
+    confirm: 'Zatim dodirni Potvrdi.',
+    slide: 'Pomiči klizač dok vaga ne bude ravna.',
+    answer: 'Upiši koliko je x.',
+    check: 'Provjeri: upiši svoj broj umjesto x.',
+    weight: 'Stavi uteg na vagu: tako poništiš minus na obje strane.',
+    float: 'Stavi balon na vagu: tako makneš broj s obje strane.',
+    gear: 'Baloni s x smetaju: stavi zupčanik na vagu, koliko ih je.',
+    takeOff: 'Odvuci velik uteg s vage: skine se s obje strane.',
+    split: 'Podijeli obje strane razdjelnikom, da ostane jedan x.',
+    chain: 'Idi unatrag: poništi zadnji korak recepta.',
+    blank: 'Upiši broj koji je ostao na vagi.',
+    story: 'Zapiši priču kao jednadžbu.',
+    jam: 'Taj korak ne valja. Obriši ga tipkom ⌫ i probaj drugi.',
+    clear: 'Sad ne treba ništa upisivati. Obriši broj tipkom ⌫.',
   },
   /**
    * Story 1.16: the tag at the notebook when enter refuses a line for a reason beyond the

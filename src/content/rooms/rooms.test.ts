@@ -167,7 +167,7 @@ const gddRooms: readonly {
     // slider opens, after the change.
     pokeNotches: [4, undefined],
     pins: [{ kind: 'level-x' }, { kind: 'level-x' }],
-    ways: ['try', 'balance'],
+    ways: ['try'],
     earns: null,
   },
   {
@@ -181,7 +181,7 @@ const gddRooms: readonly {
     // Story 2.9: the pin before anything moves, with the readouts hidden.
     pokeNotches: [undefined],
     pins: [{ kind: 'level-x' }],
-    ways: ['try', 'balance'],
+    ways: ['try'],
     earns: 'workshop',
   },
   {
@@ -195,7 +195,7 @@ const gddRooms: readonly {
     dials: [{ min: 1, max: 10, step: 1 }],
     pokeNotches: ['all'],
     pins: [{ kind: 'wrong-line' }],
-    ways: ['balance'],
+    ways: ['try'],
     earns: 'chain',
   },
   {
@@ -206,9 +206,10 @@ const gddRooms: readonly {
     answers: [8],
     types: ['solve'],
     dials: [{ min: 0, max: 10, step: 1 }],
-    pokeNotches: [4],
-    pins: [{ kind: 'level-x' }],
-    ways: ['balance', 'undo'],
+    // The way back from the start: no pin, and the slider only checks.
+    pokeNotches: [undefined],
+    pins: [undefined],
+    ways: ['undo'],
     earns: null,
   },
   {
@@ -217,11 +218,12 @@ const gddRooms: readonly {
     xIs: 'Pressure per valve',
     equations: ['135 − 5x = 100'],
     answers: [7],
-    types: ['predict'],
+    types: ['solve'],
     dials: [{ min: 0, max: 10, step: 1 }],
-    pokeNotches: [4],
-    pins: [{ kind: 'level-x' }],
-    ways: ['try', 'balance', 'undo'],
+    // As room 4: the tray from the start, and the slider only checks.
+    pokeNotches: [undefined],
+    pins: [undefined],
+    ways: ['balance'],
     earns: null,
   },
   {
@@ -238,21 +240,21 @@ const gddRooms: readonly {
     // Story 4.5: the story is written before the dial moves, and the story pin before it opens.
     pokeNotches: [undefined, undefined],
     pins: [undefined, { kind: 'story-choice' }],
-    ways: ['try', 'balance', 'undo'],
+    ways: ['balance'],
     earns: null,
   },
   {
     id: 'r11',
     machine: 'great-wheel',
     xIs: 'Load per spoke',
-    equations: ['5905 − 27x = 316'],
+    equations: ['27x + 316 = 5905'],
     answers: [207],
     types: ['solve'],
     // Story 4.6: in tens with single steps; to 210, not 300, so no readout goes below 0.
     dials: [{ min: 0, max: 210, step: 1, coarse: 10 }],
-    pokeNotches: [4],
-    pins: [{ kind: 'range', bounds: [100, 300] }],
-    ways: ['balance', 'undo'],
+    pokeNotches: [undefined],
+    pins: [undefined],
+    ways: ['undo'],
     earns: null,
   },
   {
@@ -266,9 +268,9 @@ const gddRooms: readonly {
       { min: 1, max: 9, step: 1 },
       { min: 0, max: 10, step: 1 },
     ],
-    pokeNotches: [3, 4],
-    pins: [{ kind: 'level-x' }, { kind: 'level-x' }],
-    ways: ['try', 'balance', 'undo'],
+    pokeNotches: [undefined, undefined],
+    pins: [undefined, undefined],
+    ways: ['balance'],
     earns: 'drum',
   },
   {
@@ -286,7 +288,7 @@ const gddRooms: readonly {
     // with the drum" once it is pinned).
     pokeNotches: [3, 3],
     pins: [{ kind: 'next-dot' }, { kind: 'next-dot' }],
-    ways: ['try', 'balance', 'undo'],
+    ways: ['try'],
     earns: null,
   },
 ];
@@ -629,8 +631,8 @@ describe('rooms', () => {
   it('gives the tray its x-gear from room 9 on, where Balance is listed (GDD room 9)', () => {
     rooms.forEach((room, index) => {
       for (const stage of room.stages) {
-        const expected = index + 1 >= 9 && stage.ways.includes('balance') ? true : undefined;
-        expect(stage.trayGear, room.id).toBe(expected);
+        if (index + 1 < 9) expect(stage.trayGear, room.id).toBeUndefined();
+        else if (stage.ways.includes('balance')) expect(stage.trayGear, room.id).toBe(true);
       }
     });
   });
@@ -646,7 +648,14 @@ describe('rooms', () => {
         // and room 7's rewrite needs no Balance move.
         balance: number <= 3 ? undefined : number <= 7 ? 'auto' : 'blank',
         // The gear chain is earned at the end of room 7.
-        undo: number <= 7 ? undefined : number === 8 ? 'auto' : number === 9 ? 'blanks' : 'blank',
+        undo:
+          number <= 7
+            ? undefined
+            : number === 8 || number === 11
+              ? 'auto'
+              : number === 9
+                ? 'blanks'
+                : 'blank',
       };
     };
     rooms.forEach((room, index) => {

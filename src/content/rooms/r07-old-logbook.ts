@@ -8,8 +8,8 @@ import type { RoomSpec } from '@/room/types';
 // levels. He taps a written line to put it on the scale: at 6, `3x = 18` stays level and
 // `x = 15` tips. He pins the line he thinks is wrong; the machine puts it on the scale at 6,
 // and the wrong line is struck through for him to rewrite, `x = ☐` and the check line as
-// blanks, judged against the lines before it. Balance only, as the GDD lists it; Balance
-// `auto` (story 2.10's call, as in rooms 4–6), though the rewrite needs no Balance move.
+// blanks, judged against the lines before it. No shelf or divider: the room is about reading lines,
+// and the rewrite needs no Balance move.
 // At 0.8° a unit no notch hits the 15° clamp (15 apart at 1 is 12°). Earns the gear chain.
 export const r07: RoomSpec = {
   id: 'r07',
@@ -25,7 +25,7 @@ export const r07: RoomSpec = {
       pin: { kind: 'wrong-line' },
       presetLines: ['3x = 18', 'x = 15'],
       readouts: true,
-      ways: ['balance'],
+      ways: ['try'],
       fading: { try: 'blank', balance: 'auto' },
     },
   ],

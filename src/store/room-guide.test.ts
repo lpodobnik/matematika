@@ -74,7 +74,6 @@ function allMetBut(...topics: GuideTopic[]): FirstUseId[] {
     'splitter',
     'logbook',
     'chain',
-    'chain-from',
     'gear',
     'story',
     'story-choice',
@@ -269,7 +268,6 @@ describe('each room’s own guide comes first in its room', () => {
     ['r07', 0, 'logbook', 'logbook:logbook'],
     ['r10', 0, 'story', 'story:story'],
     ['r10', 1, 'story-choice', 'story-choice:story-choice'],
-    ['r11', 0, 'coarse', 'coarse:coarse'],
     ['r12', 0, 'linked', 'linked:linked'],
     ['r12', 1, 'linked-fed', 'linked-fed:linked-fed'],
     ['r13', 0, 'drum', 'drum:drum'],
@@ -281,60 +279,38 @@ describe('each room’s own guide comes first in its room', () => {
     readThrough(g, topic);
   });
 
-  it('room 11: the range pin, then, once it is confirmed, the coarse slider', () => {
-    const g = playing({ tools: allTools, firstUse: allMetBut('coarse', 'range') });
-    g.act({ type: 'room/enter', roomId: 'r11' });
-    g.act({ type: 'machine/touch' });
-    expect(g.shows()).toBe('range:range');
-    g.next();
-    expect(g.shows()).toBe('range:range-flag');
-    g.act({ type: 'pin/set', value: { kind: 'bucket', index: 1 } });
-    g.act({ type: 'pin/confirm' });
-    expect(g.met()).toContain('guide-range');
-    expect(g.shows()).toBe('coarse:coarse');
-    readThrough(g, 'coarse');
-    expect(g.met()).toContain('guide-coarse');
-  });
-
-  it('room 8: the gear chain once the pin is confirmed, waiting for a run', () => {
+  it('room 8: the way back from his first touch, waiting for a run', () => {
     const g = playing({ tools: allTools, firstUse: allMetBut('chain') });
     g.act({ type: 'room/enter', roomId: 'r08' });
-    g.act({ type: 'machine/touch' });
     expect(g.shows()).toBeNull();
-    g.act({ type: 'pin/set', value: { kind: 'x', x: 8 } });
-    g.act({ type: 'pin/confirm' });
+    g.act({ type: 'machine/touch' });
     expect(g.room().stage.phase).toBe('open');
     expect(g.shows()).toBe('chain:chain');
     g.next();
     expect(g.shows()).toBe('chain:chain-why');
     g.next();
-    // Pokreni isn't there until the picker opens, so nothing asks for it before.
-    expect(g.shows()).toBe('chain:chain-undo');
-    g.act({ type: 'chain/open' });
     expect(g.shows()).toBe('chain:chain-run');
     g.act({ type: 'chain/run', op: 'sub', n: 9 });
     expect(g.met()).toContain('guide-chain');
   });
 
-  it('room 8: the chain’s guide goes when he solves it with the tray instead', () => {
+  it('room 8: the tray isn’t there, and a run ends the guide before its last step', () => {
     const g = playing({ tools: allTools, firstUse: ['tray', 'splitter', ...allMetBut('chain')] });
     g.act({ type: 'room/enter', roomId: 'r08' });
     g.act({ type: 'machine/touch' });
-    g.act({ type: 'pin/set', value: { kind: 'x', x: 8 } });
-    g.act({ type: 'pin/confirm' });
     expect(g.shows()).toBe('chain:chain');
     g.act({ type: 'tray/drop', kind: 'float' });
+    expect(g.shows()).toBe('chain:chain');
+    expect(g.met()).not.toContain('guide-chain');
+    g.act({ type: 'chain/run', op: 'sub', n: 9 });
     expect(g.shows()).toBeNull();
     expect(g.met()).toContain('guide-chain');
   });
 
   it('room 9: the x-gear on the tray, once the stage opens', () => {
-    // He met the tray in room 4, so room 9 offers it at once.
     const g = playing({ tools: allTools, firstUse: ['tray', ...allMetBut('gear')] });
     g.act({ type: 'room/enter', roomId: 'r09' });
     g.act({ type: 'machine/touch' });
-    g.act({ type: 'pin/set', value: { kind: 'x', x: 7 } });
-    g.act({ type: 'pin/confirm' });
     expect(g.shows()).toBe('gear:gear');
     g.next();
     expect(g.shows()).toBe('gear:gear-why');
@@ -392,7 +368,6 @@ describe('every topic', () => {
       'gear',
       'story',
       'story-choice',
-      'coarse',
       'range',
       'linked',
       'linked-fed',

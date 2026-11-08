@@ -264,7 +264,7 @@ describe('reset (Pattern 2)', () => {
     room = step(enterLine(room, 0)).room; // x = 4: the machine moves to 0.9
     room = step(typeToken(room, '5')).room; // a wrong fill of the check line
     room = step(enterLine(room, 0)).room;
-    expect(room.stage.jam).toEqual({ kind: 'line' });
+    expect(room.stage.jam).toMatchObject({ kind: 'line' });
     expect(room.stage.machineProgress).toEqual([tuning.progressAnswer]);
 
     const reset = step(resetStage(room));

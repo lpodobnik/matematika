@@ -390,7 +390,7 @@
   .line--pulse,
   .line--pulse.line--wiggle,
   .pad__key[data-pulse="true"],
-  .chain__link--last[data-pulse="true"],
+  .chain-pick[data-pulse="true"] .chain-pick__op,
   .notebook-area[data-aside="true"] .notebook__handle[data-pulse="true"] {
     animation: pulse-blink 1600ms steps(2, jump-none) infinite;
   }
@@ -530,6 +530,21 @@
   stroke-linejoin: round;
 }
 
+.chain__equals {
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+/* Said to a screen reader only (the linked machines' panel uses it). */
+.chain__said {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .chain__end {
   font-weight: 700;
 }
@@ -548,22 +563,6 @@
   white-space: nowrap;
 }
 
-/* Said to a screen reader only: the link is undone. */
-.chain__said {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.chain__link[data-dark="true"] {
-  background: var(--ink);
-  color: var(--paper);
-  opacity: 0.75;
-}
-
 /* The link he can undo: a real touch target, raised like a key. */
 .chain__link--last {
   min-width: 48px;
@@ -573,17 +572,13 @@
   touch-action: manipulation;
 }
 
-.chain__link--last[aria-pressed="true"] {
-  background: var(--lamp-wash);
-  box-shadow: none;
-  transform: translateY(3px);
-}
-
-.chain__link--last[data-pulse="true"] {
+.chain-pick[data-pulse="true"] .chain-pick__op {
   animation: key-pulse 1600ms ease-in-out infinite;
 }
 
 .chain-pick {
+  min-width: 0;
+  min-inline-size: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -592,36 +587,27 @@
   border: 0;
 }
 
-.chain-pick__ops,
-.chain-pick__row {
+.chain-pick__ops {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
-.chain-pick__op,
-.chain-pick__run,
-.chain-pick__cancel {
+/* The one decision on the strip: big, the way the pad's keys are. */
+.chain-pick__op {
+  flex: 1 1 0;
   min-width: 48px;
-  min-height: 48px;
+  min-height: 56px;
   padding: 0 8px;
-  border: 2px solid var(--ink);
-  border-radius: 8px;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 0 3px 0 var(--ink);
   background: var(--paper);
   color: var(--ink);
   font: inherit;
-  font-size: clamp(18px, 3dvh, 24px);
+  font-size: clamp(20px, 3.4dvh, 28px);
+  font-weight: 700;
+  overflow-wrap: anywhere;
   touch-action: manipulation;
-}
-
-.chain-pick__op {
-  flex: 1 1 0;
-  white-space: nowrap;
-}
-
-.chain-pick__op[data-op="from"] {
-  flex-grow: 1.6;
-  padding: 0 4px;
-  font-size: clamp(15px, 2.4dvh, 20px);
 }
 
 .chain-pick__op[aria-pressed="true"] {
@@ -629,42 +615,10 @@
   color: var(--paper);
 }
 
-.chain-pick__prompt {
-  margin: 0;
-  font-size: 16px;
-}
-
-.chain-pick__show {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  min-width: 0;
-  padding: 0 8px;
-  border-bottom: 2px solid var(--ink);
-  font-size: clamp(18px, 3dvh, 24px);
-  font-variant-numeric: tabular-nums;
-}
-
-.chain-pick__for {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  padding: 0 8px;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  background: var(--lamp-wash);
-  font-size: clamp(16px, 2.6dvh, 22px);
-  white-space: nowrap;
-}
-
-.chain-pick__run {
-  flex: 0 0 auto;
-  background: var(--ink);
-  color: var(--paper);
-}
-
-.chain-pick__run:disabled {
-  opacity: 0.4;
+.chain-pick__ask {
+  padding: 0;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 @media (max-height: 499.98px) {
@@ -696,32 +650,12 @@
     gap: 4px;
   }
 
-  .chain-pick__op,
-  .chain-pick__run,
-  .chain-pick__cancel {
+  .chain-pick__op {
     min-height: 48px;
     font-size: 16px;
   }
 
-  .chain-pick__op[data-op="from"] {
-    font-size: 13px;
-  }
-
   /* While he picks, the picker takes the lines' place: the phone has no room for both. */
-  .notebook[data-picking="true"] {
-    gap: 4px;
-    padding: 6px;
-  }
-
-  .notebook[data-picking="true"] .notebook__lines,
-  .notebook[data-picking="true"] .help-note,
-  .notebook[data-picking="true"] .chain__links {
-    display: none;
-  }
-
-  .notebook[data-picking="true"] .chain-pick {
-    margin-top: 0;
-  }
 }
 
 /* Story 4.5: a story stage's story at the top of the notebook, and its story pin. */
@@ -838,6 +772,11 @@
   }
 
   /* While he chooses, the stories take the pad's place: it does nothing until he confirms. */
+  /* Reading the logbook's lines, nothing to type yet: the phone gives them the room. */
+  .notebook[data-reading="true"] .pad {
+    display: none;
+  }
+
   .notebook[data-choosing="true"] .pad,
   .notebook[data-choosing="true"] .notebook__lines,
   .notebook[data-choosing="true"] .fine-dial {
@@ -975,6 +914,7 @@
 .drum__plot {
   display: block;
   width: 100%;
+  margin-top: 4px;
   height: auto;
   max-height: 140px;
   border: 2px solid var(--ink);

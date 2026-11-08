@@ -19,7 +19,7 @@
 // leaves halfway starts again the next time it applies in another room. The root reducer
 // moves it on (store/room-guide.ts); the text is in hr.ts (`hr.roomGuide`).
 
-import { chainBlankWaits, chainView, chainWorks } from '@/room/chain';
+import { chainBlankWaits, chainWorks } from '@/room/chain';
 import { dialTurnsNow } from '@/room/dial';
 import { drumView } from '@/room/drum';
 import { handoverApplies } from '@/room/handover';
@@ -92,7 +92,6 @@ export type GuideMove =
   | 'tray'
   | 'split'
   | 'chain'
-  | 'chain-open'
   | 'enter'
   | 'show-line';
 
@@ -128,9 +127,7 @@ export type GuideStepId =
   | 'logbook-flag'
   | 'chain'
   | 'chain-why'
-  | 'chain-undo'
   | 'chain-run'
-  | 'chain-from'
   | 'gear'
   | 'gear-why'
   | 'gear-after'
@@ -297,20 +294,8 @@ const topics: Readonly<Record<GuideTopic, TopicSpec>> = {
     steps: [
       { id: 'chain', targets: ['chain'] },
       { id: 'chain-why', targets: ['chain'] },
-      // Tapped, the picker opens, and only then is there a Pokreni to press.
-      { id: 'chain-undo', targets: ['chain'], waits: 'chain-open' },
-      { id: 'chain-run', targets: ['chain', 'pad'], waits: 'chain' },
+      { id: 'chain-run', targets: ['chain'], waits: 'chain' },
     ],
-  },
-  'chain-from': {
-    home: 'r09',
-    applies: (room, tools) => {
-      if (!chainWorks(room, tools) || answered(room)) return false;
-      const view = chainView(room, tools);
-      const last = view?.tappable == null ? null : view.links?.[view.tappable];
-      return last?.op === 'from';
-    },
-    steps: [{ id: 'chain-from', targets: ['chain'] }],
   },
   gear: {
     home: 'r09',
@@ -360,7 +345,8 @@ const topics: Readonly<Record<GuideTopic, TopicSpec>> = {
   coarse: {
     home: 'r11',
     applies: (room) => {
-      const { dial } = currentStageSpec(room);
+      const { dial, ways } = currentStageSpec(room);
+      if (!ways.includes('try')) return false;
       return dial !== 'locked' && dial.coarse !== undefined && dialTurnsNow(room);
     },
     steps: [
@@ -424,17 +410,11 @@ export const guideOrder: readonly GuideTopic[] = [
   'linked-fed',
   'notebook',
   'check',
-  'chain-from',
   'chain',
   'tray',
   'gear',
   'splitter',
 ];
-
-/** Where a step stands in its topic. */
-export function guideStepIndex(topic: GuideTopic, id: GuideStepId): number {
-  return topics[topic].steps.findIndex((step) => step.id === id);
-}
 
 /** A topic's steps, in order. */
 export function guideSteps(topic: GuideTopic): readonly GuideStepSpec[] {

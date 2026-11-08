@@ -140,8 +140,8 @@ describe('givenLine', () => {
   });
 
   it('turns school notation into the tokens the pad would type', () => {
-    const room11 = { ...stage, machines: [{ equation: '5 905 − 27x = 316' }] };
-    expect(givenLine(room11, 0).tokens.join('')).toBe('5905−27x=316');
+    const room11 = { ...stage, machines: [{ equation: '27x + 316 = 5 905' }] };
+    expect(givenLine(room11, 0).tokens.join('')).toBe('27x+316=5905');
     const timesAndDivide = { ...stage, machines: [{ equation: '2 · 9 + x : 3 = 21' }] };
     expect(givenLine(timesAndDivide, 0).tokens.join('')).toBe('2·9+x:3=21');
   });

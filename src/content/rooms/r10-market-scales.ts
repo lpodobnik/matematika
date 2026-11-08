@@ -20,7 +20,7 @@ export const r10: RoomSpec = {
       dial: { min: 0, max: 15, step: 1 },
       tiltPerUnit: 0.45,
       readouts: true,
-      ways: ['try', 'balance', 'undo'],
+      ways: ['balance'],
       fading: { try: 'blank', balance: 'blank', undo: 'blank' },
       trayGear: true,
       story: { build: 'wrench' },
@@ -32,7 +32,7 @@ export const r10: RoomSpec = {
       tiltPerUnit: 0.8,
       pin: { kind: 'story-choice' },
       readouts: true,
-      ways: ['try', 'balance', 'undo'],
+      ways: ['balance'],
       fading: { try: 'blank', balance: 'blank', undo: 'blank' },
       trayGear: true,
       story: {
