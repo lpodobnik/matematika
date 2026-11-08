@@ -707,6 +707,9 @@ test('the district done: the foundry gate is marked, sealed, and to be continued
       room: null,
     });
   });
+  // The ending's panels come first, once.
+  for (let i = 0; i < 4; i += 1) await page.locator('.opening__panel').click();
+  await expect(page.locator('.opening__panel')).toHaveCount(0);
   const area = (id: string) => page.locator(`.town__board[data-area="${id}"]`);
   for (const to of ['canal', 'mill', 'yard']) {
     await page.locator(`.town__sign[data-sign="${to}"]`).click();
