@@ -51,7 +51,7 @@ Buildings, stone and water stay muted; full-strength brass and copper belong to 
 
 ## Scene zones
 
-In scene units of the 1600 × 1000 scene, from `src/art/scene-zones.ts`. On the tablet the pans and pieces of every GDD room sweep x 65–1535 and y 243–739, and the zones add a margin round that. `src/art/scene-zones.test.ts` fails when the scale in code leaves them; then the zones and this guide change together. These zones are for one machine; rooms with linked machines (r12, and friends' rooms with up to three) need their own layout, set in epic 4.
+In scene units of the 1600 × 1000 scene, from `src/art/scene-zones.ts`. On the tablet the pans and pieces of every GDD room sweep x 65–1535 and y 245–739, and the zones add a margin round that. `src/art/scene-zones.test.ts` fails when the scale in code leaves them; then the zones and this guide change together. These zones are for one machine; rooms with linked machines (r12, and friends' rooms with up to three) need their own layout, set in epic 4.
 
 | Zone | Where | What goes there |
 |---|---|---|

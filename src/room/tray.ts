@@ -245,6 +245,20 @@ export function trayHasGear(stage: StageSpec): boolean {
   return stage.trayGear === true;
 }
 
+/** Whether a side has x taken away, as balloons: the only thing an x-gear can do anything to. */
+export function hasXBalloons(pans: Equation): boolean {
+  return [pans.left, pans.right].some((side) => q.compare(linearSide(side).a, q.zero) < 0);
+}
+
+/** Whether the number beside x is more than the tray's stepper can reach: it comes off by hand. */
+export function overTheTray(pans: Equation): boolean {
+  const most = q.rational(tuning.trayMaxNumber);
+  return [pans.left, pans.right].some((side) => {
+    const { a, b } = linearSide(side);
+    return !q.isZero(a) && q.compare(b, most) > 0;
+  });
+}
+
 /**
  * `count` x-gears on both sides at once (story 4.2): `135 − 5x = 100` with 5 becomes
  * `135 − 5x + 5x = 100 + 5x`, then `135 = 5x + 100`, the gears and balloons on each pan
@@ -279,7 +293,7 @@ export function xOnBothSides(pans: Equation, count: q.Rational): BalanceChange |
  * minus 5 makes progress, of plus 3 doesn't. A line the checker wouldn't commit as valid
  * stops the writing.
  */
-export function balanceMove(room: RoomState, change: BalanceChange): RoomStep {
+export function balanceMove(room: RoomState, change: BalanceChange, writeOut = false): RoomStep {
   const { stage } = room;
   const spec = currentStageSpec(room);
   const at = { roomId: room.spec.id, stage: room.stageIndex };
@@ -289,8 +303,9 @@ export function balanceMove(room: RoomState, change: BalanceChange): RoomStep {
     moves: stage.balance.moves + 1,
     splitterSeen: stage.balance.splitterSeen || readyToSplit(change.pans),
   };
-  let next: StageState = { ...stage, balance };
-  if (balanceFading(spec) === 'auto') {
+  const refusal = stage.refusal === 'gear' ? null : stage.refusal;
+  let next: StageState = { ...stage, balance, refusal };
+  if (writeOut || balanceFading(spec) === 'auto') {
     const n = stageSolution(machineEquation(spec, stage.machine));
     const lines = isAnswerLine(change.pans, n) ? [change.line] : [change.line, change.pans];
     for (const line of lines) {
@@ -315,9 +330,11 @@ export function dropOnScale(
 ): RoomStep | null {
   if (!trayWorks(room, tools)) return null;
   if (kind === 'gear') {
-    if (!trayHasGear(currentStageSpec(room))) return null;
+    if (!trayHasGear(currentStageSpec(room)) || !hasXBalloons(room.stage.pans)) return null;
     const change = xOnBothSides(room.stage.pans, q.rational(room.stage.tray.gear));
-    return change ? balanceMove(room, change) : null;
+    // Written out, since nothing else shows how the pans changed; a wrong count says why.
+    if (change) return balanceMove(room, change, true);
+    return { room: { ...room, stage: { ...room.stage, refusal: 'gear' } }, events: [] };
   }
   const value = q.rational(room.stage.tray[kind]);
   const change = onBothSides(room.stage.pans, kind === 'weight' ? value : q.neg(value));
@@ -386,7 +403,7 @@ export function trayView(room: RoomState | null, tools: readonly ToolId[]): Tray
   return {
     weight: stage.tray.weight,
     float: stage.tray.float,
-    gear: trayHasGear(currentStageSpec(room)) ? stage.tray.gear : null,
+    gear: trayHasGear(currentStageSpec(room)) && hasXBalloons(stage.pans) ? stage.tray.gear : null,
     works: trayWorks(room, tools),
     wiggle: stage.hintLevel >= 1,
   };

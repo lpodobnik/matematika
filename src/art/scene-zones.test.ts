@@ -129,7 +129,7 @@ describe('sceneZones', () => {
     }
     expect(Math.round(sweep.x0)).toBe(65);
     expect(Math.round(sweep.x1)).toBe(1535);
-    expect(Math.round(sweep.y0)).toBe(243);
+    expect(Math.round(sweep.y0)).toBe(245);
     expect(Math.round(sweep.y1)).toBe(739);
   });
 

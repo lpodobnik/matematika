@@ -13,6 +13,7 @@ import {
   guideAdvance,
   guideMet,
   guideSpent,
+  guideStepIndex,
   type RoomGuideState,
   roomGuideView,
 } from '@/room/guide';
@@ -83,6 +84,24 @@ function guideNext(state: GameState): Step {
 }
 
 /**
+ * He tapped the chain's last link and the picker opened (it lives in the notebook, not the
+ * room): straight on to the step that has a Pokreni to press, from wherever he was.
+ */
+function chainOpened(state: GameState): Step {
+  const view = roomGuideOf(state);
+  const step = guideStepIndex('chain', 'chain-run');
+  if (view?.topic !== 'chain' || view.step >= step) return { state, events: [] };
+  return settled(state, { topic: 'chain', step }, null);
+}
+
+/** A move that makes the topic's explaining pointless: he went another way, or already did it. */
+function endsTopic(topic: GuideTopic, move: GuideMove | null): boolean {
+  if (topic === 'chain') return move === 'chain' || move === 'tray' || move === 'split';
+  if (topic === 'gear') return move === 'chain';
+  return false;
+}
+
+/**
  * After an action reached the room: in another room (or none) the guide starts over; in
  * the same room, a step waiting for the move he made, which did something, moves on.
  */
@@ -93,11 +112,17 @@ function afterAction(before: GameState, action: Action, result: Step): Step {
   let guide = same ? after.ui.roomGuide : null;
   let met: GuideTopic | null = null;
   const view = roomGuideOf(before);
-  const moved = view?.waits != null && view.waits === moveOf(action) && after.room !== before.room;
+  const move = moveOf(action);
+  // A gear that slid back changed the room only to say why: no move made.
+  const did = after.room !== before.room && after.room?.stage.refusal !== 'gear';
+  const moved = view?.waits != null && view.waits === move && did;
   if (view && same && moved && after.room) {
     const next = guideAdvance(view, after.room, after.save.progress.tools);
     guide = next;
     if (!next) met = view.topic;
+  } else if (view && same && did && endsTopic(view.topic, move)) {
+    guide = null;
+    met = view.topic;
   }
   const step = settled(after, guide, met);
   if (step.state === after) return result;
@@ -109,6 +134,7 @@ function afterAction(before: GameState, action: Action, result: Step): Step {
 export function withRoomGuide(inner: Reduce): Reduce {
   return (state, action, ctx) => {
     if (action.type === 'room/guide-next') return guideNext(state);
+    if (action.type === 'chain/open') return chainOpened(state);
     return afterAction(state, action, inner(state, action, ctx));
   };
 }

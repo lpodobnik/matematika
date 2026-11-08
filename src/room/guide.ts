@@ -19,7 +19,7 @@
 // leaves halfway starts again the next time it applies in another room. The root reducer
 // moves it on (store/room-guide.ts); the text is in hr.ts (`hr.roomGuide`).
 
-import { chainBlankWaits, chainWorks } from '@/room/chain';
+import { chainBlankWaits, chainView, chainWorks } from '@/room/chain';
 import { dialTurnsNow } from '@/room/dial';
 import { drumView } from '@/room/drum';
 import { handoverApplies } from '@/room/handover';
@@ -30,7 +30,14 @@ import { rangeView } from '@/room/range';
 import { currentStageSpec, pokeNotches } from '@/room/room';
 import { splitterOffered } from '@/room/splitter';
 import { storyView, storyWaits } from '@/room/story';
-import { balanceFading, readyToSplit, trayHasGear, trayOffered } from '@/room/tray';
+import {
+  balanceFading,
+  hasXBalloons,
+  overTheTray,
+  readyToSplit,
+  trayHasGear,
+  trayOffered,
+} from '@/room/tray';
 import type { FirstUseId, GuideTopic, Phase, RoomId, RoomState, ToolId } from '@/room/types';
 
 /**
@@ -85,6 +92,7 @@ export type GuideMove =
   | 'tray'
   | 'split'
   | 'chain'
+  | 'chain-open'
   | 'enter'
   | 'show-line';
 
@@ -115,13 +123,18 @@ export type GuideStepId =
   | 'splitter'
   | 'split'
   | 'logbook'
+  | 'logbook-level'
   | 'logbook-tap'
   | 'logbook-flag'
   | 'chain'
+  | 'chain-why'
   | 'chain-undo'
   | 'chain-run'
+  | 'chain-from'
   | 'gear'
   | 'gear-why'
+  | 'gear-after'
+  | 'gear-off'
   | 'story'
   | 'story-x'
   | 'story-write'
@@ -264,6 +277,11 @@ const topics: Readonly<Record<GuideTopic, TopicSpec>> = {
     steps: [
       { id: 'logbook', targets: ['logbook'] },
       {
+        id: 'logbook-level',
+        targets: ['scale'],
+        skip: (room) => room.stage.linesTapped,
+      },
+      {
         id: 'logbook-tap',
         targets: ['logbook'],
         waits: 'show-line',
@@ -277,9 +295,21 @@ const topics: Readonly<Record<GuideTopic, TopicSpec>> = {
     applies: (room, tools) => chainWorks(room, tools) && !answered(room),
     steps: [
       { id: 'chain', targets: ['chain'] },
-      { id: 'chain-undo', targets: ['chain'] },
+      { id: 'chain-why', targets: ['chain'] },
+      // Tapped, the picker opens, and only then is there a Pokreni to press.
+      { id: 'chain-undo', targets: ['chain'], waits: 'chain-open' },
       { id: 'chain-run', targets: ['chain', 'pad'], waits: 'chain' },
     ],
+  },
+  'chain-from': {
+    home: 'r09',
+    applies: (room, tools) => {
+      if (!chainWorks(room, tools) || answered(room)) return false;
+      const view = chainView(room, tools);
+      const last = view?.tappable == null ? null : view.links?.[view.tappable];
+      return last?.op === 'from';
+    },
+    steps: [{ id: 'chain-from', targets: ['chain'] }],
   },
   gear: {
     home: 'r09',
@@ -290,8 +320,23 @@ const topics: Readonly<Record<GuideTopic, TopicSpec>> = {
       !answered(room) &&
       room.stage.jam === null,
     steps: [
-      { id: 'gear', targets: ['tray'] },
-      { id: 'gear-why', targets: ['scale'] },
+      { id: 'gear', targets: ['scale'], skip: (room) => !hasXBalloons(room.stage.pans) },
+      {
+        id: 'gear-why',
+        targets: ['tray'],
+        waits: 'tray',
+        skip: (room) => !hasXBalloons(room.stage.pans),
+      },
+      {
+        id: 'gear-after',
+        targets: ['scale'],
+        skip: (room) => hasXBalloons(room.stage.pans) || room.stage.balance.moves === 0,
+      },
+      {
+        id: 'gear-off',
+        targets: ['scale'],
+        skip: (room) => hasXBalloons(room.stage.pans) || !overTheTray(room.stage.pans),
+      },
     ],
   },
   story: {
@@ -377,11 +422,17 @@ export const guideOrder: readonly GuideTopic[] = [
   'linked-fed',
   'notebook',
   'check',
+  'chain-from',
   'chain',
   'tray',
   'gear',
   'splitter',
 ];
+
+/** Where a step stands in its topic. */
+export function guideStepIndex(topic: GuideTopic, id: GuideStepId): number {
+  return topics[topic].steps.findIndex((step) => step.id === id);
+}
 
 /** A topic's steps, in order. */
 export function guideSteps(topic: GuideTopic): readonly GuideStepSpec[] {

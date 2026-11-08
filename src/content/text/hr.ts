@@ -327,7 +327,7 @@ export const hr = {
   /** Story 2.10: room 7, the old logbook's lines. */
   logbook: {
     /** The tag before he has tapped a line: tapping puts it on the scale. */
-    tap: 'Dodirni redak i vaga će ga složiti.',
+    tap: 'Dodirni redak i vaga će ga pokazati.',
     /** For screen readers: the flag beside a line, "this line is wrong". */
     flag: 'Pogrešan redak',
   },
@@ -657,13 +657,13 @@ export const hr = {
     label: 'Priča',
     /** 60 + 3x = 90. */
     wrench:
-      'Ključ košta 60 dijelova. Ključ i 3 jednaka zupčanika zajedno koštaju 90. Koliko košta jedan zupčanik?',
+      'Košara teži 60 dag. Košara i 3 jednake jabuke zajedno teže 90 dag. Koliko teži jedna jabuka?',
     /** 5x + 2 = 19. */
-    'five-cogs': '5 jednakih zupčanika i kutija teška 2 zajedno teže 19.',
+    'five-cogs': '5 jednakih šljiva i vrećica od 2 dag zajedno teže 19 dag.',
     /** 5 + 2x = 19: the one that fits room 10's second stage. */
-    'box-two-cogs': 'Kutija teži 5. Kutija i 2 jednaka zupčanika zajedno teže 19.',
+    'box-two-cogs': 'Vrećica teži 5 dag. Vrećica i 2 jednake šljive zajedno teže 19 dag.',
     /** 19 + 2x = 5. */
-    'box-nineteen': 'Kutija teži 19. Kutija i 2 jednaka zupčanika zajedno teže 5.',
+    'box-nineteen': 'Vrećica teži 19 dag. Vrećica i 2 jednake šljive zajedno teže 5 dag.',
     /** For screen readers, on a story's flag. */
     flag: (n: number) => `Zastavica na priču ${n}`,
     confirm: 'Potvrdi',
@@ -779,6 +779,8 @@ export const hr = {
     blank: (n: string) => `Upiši ${n} u prazno polje.`,
     /** Story 4.1, at the gear chain: the last link, and what undoes it. */
     chain: (link: string, inverse: string) => `Dodirni kariku ${link} i odaberi ${inverse}.`,
+    /** A link that undoes itself, `135 − ☐`: the button to pick, and the number to type. */
+    chainFrom: (link: string, n: string) => `Dodirni kariku ${link}, odaberi … − ☐ i upiši ${n}.`,
   },
   /**
    * Epic 3: automaton fights (GDD, Automaton fights). He rolls dice, places them as blade
@@ -937,15 +939,21 @@ export const hr = {
       split: 'Tipkama − i + biraš broj dijelova. Onda ga odvuci na vagu.',
       // Room 7: the old logbook and its wrong line.
       logbook: 'Ovo je stari dnevnik. Ovaj zadatak u njemu je već riješen.',
-      'logbook-tap': 'Dodirni redak i vaga će ga složiti. Gledaj je li ravna.',
+      'logbook-level': 'Prvo pomakni klizač dok vaga nije ravna.',
+      'logbook-tap': 'Sad dodirni retke. Uz točan redak vaga ostaje ravna, uz krivi se nagne.',
       'logbook-flag': 'Jedan redak ne vrijedi. Stavi zastavicu na njega, pa potvrdi.',
       // Room 8: the gear chain.
-      chain: 'Ovo je lanac. Karike redom pokazuju što se radi s x.',
-      'chain-undo': 'Dodirni zadnju kariku i odaberi što je poništava.',
-      'chain-run': 'Upiši broj i dodirni Pokreni. Vaga i bilježnica idu za lancem.',
+      chain: 'Ovo je Kristijanov lanac. Karike kažu što stroj redom radi s x.',
+      'chain-why': 'x ne znamo, pa idemo od kraja: svaku kariku poništi njezinom suprotnom.',
+      'chain-undo': 'Dodirni zadnju kariku.',
+      'chain-run': 'Odaberi što je poništava, upiši broj i dodirni Pokreni. Vaga ide za lancem.',
+      // Room 9: a link where x is taken away from a number.
+      'chain-from': 'Ovdje se x oduzima od broja. Odaberi … − ☐ i upiši taj broj.',
       // Room 9: the tray's x-gear.
-      gear: 'Na polici je sad i zupčanik x. On dodaje x na obje strane.',
-      'gear-why': 'Balon s x oduzima x. Zupčanik ga vraća, i to na obje strane.',
+      gear: 'Baloni s x dižu svoju stranu: što je x veći, ta je strana lakša.',
+      'gear-why': 'Zupčanik x poništava balon s x. Namjesti koliko je balona, pa ga odvuci.',
+      'gear-after': 'Balona više nema. Sad je kao prije: makni broj s obje strane, pa podijeli.',
+      'gear-off': 'Velik uteg odvuci s vage: skine se s obje strane.',
       // Room 10: the story, written; then the story that fits.
       story: 'Ovo je priča. U njoj se krije jednadžba.',
       'story-x': 'Ono što priča ne kaže je x. Ostale brojeve uzmi iz priče.',
@@ -1152,7 +1160,9 @@ export const hr = {
    */
   refusal: {
     /** An answer line before the pans are simplified, where Try values can't finish. */
-    simplify: 'Prvo pojednostavi vagu.',
+    simplify: 'Prvo ostavi x samog na vagi, pa upiši koliko je.',
+    /** A gear count that doesn't cancel the balloons: it slides back. */
+    gear: 'Zupčanika mora biti točno koliko je balona s x.',
     /** Story 4.5: while the story waits, a line that isn't the story as it is told. */
     story: 'Prvo zapiši priču onako kako je ispričana.',
   },

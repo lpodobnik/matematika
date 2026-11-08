@@ -72,9 +72,13 @@ function moveSpot(move: HintMove): HintSpot {
     case 'chain': {
       // The link he taps is the inverse's inverse (`n − ☐` undoes itself).
       const inverse = { op: move.op, n: move.n };
+      const link = linkText(inverseOf(inverse));
       return {
         place: 'notebook',
-        text: hr.hint.chain(linkText(inverseOf(inverse)), linkText(inverse)),
+        text:
+          move.op === 'from'
+            ? hr.hint.chainFrom(link, String(move.n))
+            : hr.hint.chain(link, linkText(inverse)),
       };
     }
   }

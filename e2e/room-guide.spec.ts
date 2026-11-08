@@ -286,7 +286,11 @@ const scenarios: Scenario[] = [
       await dispatch(page, { type: 'pin/set', value: { kind: 'x', x: 8 } });
       await confirmPin(page);
     },
-    moves: { 'chain-run': (page) => dispatch(page, { type: 'chain/run', op: 'sub', n: 9 }) },
+    moves: {
+      // A real tap: the picker opens, and only then does the guide ask for Pokreni.
+      'chain-undo': (page) => page.locator('button.chain__link--last').click(),
+      'chain-run': (page) => dispatch(page, { type: 'chain/run', op: 'sub', n: 9 }),
+    },
   },
   {
     name: 'r09',
@@ -299,7 +303,14 @@ const scenarios: Scenario[] = [
       await dispatch(page, { type: 'pin/set', value: { kind: 'x', x: 7 } });
       await confirmPin(page);
     },
-    moves: {},
+    moves: {
+      'gear-why': async (page) => {
+        for (let i = 0; i < 4; i += 1) {
+          await dispatch(page, { type: 'tray/step', kind: 'gear', by: 1 });
+        }
+        await dispatch(page, { type: 'tray/drop', kind: 'gear' });
+      },
+    },
   },
   {
     name: 'r10',

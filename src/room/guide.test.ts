@@ -42,8 +42,9 @@ describe('the room guides’ topics (story 6.1)', () => {
       const steps = guideSteps(topic);
       for (const step of steps)
         expect(step.targets.length, `${topic}:${step.id}`).toBeGreaterThan(0);
-      // check's two steps are each other's alternatives: one of them always shows.
-      if (topic !== 'check')
+      // check's two steps are each other's alternatives: one of them always shows. gear's
+      // are all about balloons: with none on the pans it has nothing to say, and is spent.
+      if (topic !== 'check' && topic !== 'gear')
         expect(
           steps.some((step) => !step.skip),
           topic,

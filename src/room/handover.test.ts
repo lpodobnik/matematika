@@ -203,7 +203,8 @@ describe('which handover applies (story 1.15)', () => {
     // balance, so it isn't `write` ("the scale is level") any more: `answer` asks for x.
     expect(handoverApplies('write', alone, balance)).toBe(false);
     expect(handoverView(alone, metBut('write', 'answer'), balance)).toBe('answer');
-    expect(handoverView(alone, allMet, balance)).toBeNull();
+    // Past this the game waits for a line he must know to write: it always says so.
+    expect(handoverView(alone, allMet, balance)).toBe('answer');
   });
 
   // Story 1.16 review: x alone is judged on the pans' pieces, the rule the blanks and
@@ -244,7 +245,7 @@ describe('which handover applies (story 1.15)', () => {
     expect(handoverApplies('answer', alone, balance)).toBe(true);
     // Nothing earlier applies, even for a player who has met nothing.
     expect(handoverView(alone, [], balance)).toBe('answer');
-    expect(handoverView(alone, metBut('splitter'), balance)).toBeNull();
+    expect(handoverView(alone, metBut('splitter'), balance)).toBe('answer');
     const backwards = { ...twoX, stage: { ...twoX.stage, pans: equation('9 = x') } };
     expect(handoverApplies('answer', backwards, balance)).toBe(true);
     // Not while x has company, nor once the answer is written.

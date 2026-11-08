@@ -204,6 +204,7 @@ export type HandoverId = (typeof handoverIds)[number];
  * brings, in the order the game first needs them. Nikola talks him through each once.
  */
 export const guideTopicIds = [
+  'chain-from',
   'dial',
   'notebook',
   'check',
@@ -286,7 +287,7 @@ export type Jam = {
  * line before the pans are simplified, in a stage that Try values can't finish
  * (room/notebook.ts, `answerAllowed`). Its text is in hr.ts (`hr.refusal`).
  */
-export type Refusal = 'simplify' | 'story';
+export type Refusal = 'simplify' | 'story' | 'gear';
 
 /**
  * What the stage remembers about Balance, so the tray and the splitter appear one at a

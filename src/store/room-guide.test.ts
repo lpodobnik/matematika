@@ -74,6 +74,7 @@ function allMetBut(...topics: GuideTopic[]): FirstUseId[] {
     'splitter',
     'logbook',
     'chain',
+    'chain-from',
     'gear',
     'story',
     'story-choice',
@@ -305,9 +306,25 @@ describe('each room’s own guide comes first in its room', () => {
     expect(g.room().stage.phase).toBe('open');
     expect(g.shows()).toBe('chain:chain');
     g.next();
+    expect(g.shows()).toBe('chain:chain-why');
     g.next();
+    // Pokreni isn't there until the picker opens, so nothing asks for it before.
+    expect(g.shows()).toBe('chain:chain-undo');
+    g.act({ type: 'chain/open' });
     expect(g.shows()).toBe('chain:chain-run');
     g.act({ type: 'chain/run', op: 'sub', n: 9 });
+    expect(g.met()).toContain('guide-chain');
+  });
+
+  it('room 8: the chain’s guide goes when he solves it with the tray instead', () => {
+    const g = playing({ tools: allTools, firstUse: ['tray', 'splitter', ...allMetBut('chain')] });
+    g.act({ type: 'room/enter', roomId: 'r08' });
+    g.act({ type: 'machine/touch' });
+    g.act({ type: 'pin/set', value: { kind: 'x', x: 8 } });
+    g.act({ type: 'pin/confirm' });
+    expect(g.shows()).toBe('chain:chain');
+    g.act({ type: 'tray/drop', kind: 'float' });
+    expect(g.shows()).toBeNull();
     expect(g.met()).toContain('guide-chain');
   });
 
@@ -319,7 +336,20 @@ describe('each room’s own guide comes first in its room', () => {
     g.act({ type: 'pin/set', value: { kind: 'x', x: 7 } });
     g.act({ type: 'pin/confirm' });
     expect(g.shows()).toBe('gear:gear');
-    readThrough(g, 'gear');
+    g.next();
+    expect(g.shows()).toBe('gear:gear-why');
+    // The gear starts at 1, against five balloons: it slides back, and the step waits on.
+    g.act({ type: 'tray/drop', kind: 'gear' });
+    expect(g.shows()).toBe('gear:gear-why');
+    expect(g.room().stage.refusal).toBe('gear');
+    for (let i = 0; i < 4; i += 1) g.act({ type: 'tray/step', kind: 'gear', by: 1 });
+    g.act({ type: 'tray/drop', kind: 'gear' });
+    expect(g.room().stage.refusal).toBeNull();
+    expect(g.shows()).toBe('gear:gear-after');
+    g.next();
+    // The 100 is over what the tray's stepper reaches.
+    expect(g.shows()).toBe('gear:gear-off');
+    g.next();
     expect(g.met()).toContain('guide-gear');
   });
 
@@ -338,6 +368,8 @@ describe('each room’s own guide comes first in its room', () => {
     const g = playing({ tools: allTools, firstUse: allMetBut('logbook') });
     g.act({ type: 'room/enter', roomId: 'r07' });
     g.act({ type: 'machine/touch' });
+    g.next();
+    expect(g.shows()).toBe('logbook:logbook-level');
     g.next();
     expect(g.shows()).toBe('logbook:logbook-tap');
     g.act({ type: 'notebook/show-line', line: 1 });

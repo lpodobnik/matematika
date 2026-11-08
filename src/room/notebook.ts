@@ -104,6 +104,7 @@ export function refusalView(room: RoomState | null): Refusal | null {
   if (!room || room.stage.refusal === null) return null;
   // Story 4.5: the story's tag holds while the story waits.
   if (room.stage.refusal === 'story') return storyWaits(room) ? 'story' : null;
+  if (room.stage.refusal === 'gear') return 'gear';
   return answerAllowed(currentStageSpec(room), room.stage.pans) ? null : room.stage.refusal;
 }
 

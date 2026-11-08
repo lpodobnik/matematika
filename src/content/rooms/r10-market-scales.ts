@@ -1,8 +1,8 @@
 import type { RoomSpec } from '@/room/types';
 
 // GDD, Puzzle Progression, room 10: the market scales, a story room (story 4.5), and a
-// breather. Stage 1 opens with a story and empty pans: a wrench costs 60, and with 3 equal
-// cogs the lot costs 90. He writes it as the notebook's first line, `60 + 3x = 90`, and
+// breather. Stage 1 opens with a story and empty pans: a basket weighs 60 dag, and with 3 equal
+// apples the lot weighs 90. He writes it as the notebook's first line, `60 + 3x = 90`, and
 // the pans fill from it; then he solves it (x = 10). Stage 2 opens with the pans for
 // `5 + 2x = 19` and three stories; before the slider opens he flags the one that fits,
 // then solves it (x = 7). The slider runs 0–15. All three ways can finish; every way has

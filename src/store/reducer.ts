@@ -338,6 +338,8 @@ function withRefusalDown(
 ): RoomStep | null {
   if (!step || step.room === before) return step;
   if (notHis.has(action.type) || action.type === 'notebook/enter') return step;
+  // A gear that slid back has just said why.
+  if (action.type === 'tray/drop' && step.room.stage.refusal === 'gear') return step;
   const room = withoutRefusal(step.room);
   return room === step.room ? step : { ...step, room };
 }

@@ -836,8 +836,8 @@ describe('rooms 1–4 back to back (story 1.13)', () => {
     expect(tag()).toBe('answer');
     game.write('9');
     expect(blanks()).toEqual(['2 · ☐ + 5 = 23']);
-    // Met once per game: answer now, and check back in room 1.
-    expect(tag()).toBeNull();
+    // The answer is written, and the check line still waits: it says so every time.
+    expect(tag()).toBe('check');
     expect(game.store.getState().save.progress.firstUse).toEqual(
       expect.arrayContaining(['handover-answer', 'handover-check']),
     );

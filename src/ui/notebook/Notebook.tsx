@@ -251,9 +251,11 @@ export function Notebook() {
       chain={chain}
       pick={picking ? pick : null}
       chainPulse={chainHint}
-      onChainTap={() =>
-        setPick(picking || openFor === null ? null : { op: null, digits: '', for: openFor })
-      }
+      onChainTap={() => {
+        const opens = !picking && openFor !== null;
+        setPick(opens ? { op: null, digits: '', for: openFor } : null);
+        if (opens) dispatch({ type: 'chain/open' });
+      }}
       onChainOp={(op) => setPick((current) => (current ? { ...current, op } : current))}
       onChainRun={() => pick && runPick(pick)}
       onChainCancel={() => setPick(null)}

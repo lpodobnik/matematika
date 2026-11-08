@@ -354,7 +354,8 @@ export function layoutPan(
       }
       left += item.width + gap;
     }
-    bottom -= Math.max(...itemRow.map((item) => item.height)) + gap;
+    // The next row rests on this one, touching it.
+    bottom -= Math.max(...itemRow.map((item) => item.height));
   }
   return boxes;
 }

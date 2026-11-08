@@ -27,6 +27,14 @@ function steamLift(): RoomState {
 }
 
 describe('the tray’s x-gear (story 4.2)', () => {
+  it('leaves the tray once the balloons are gone: there is nothing left for it to do', () => {
+    let room = steamLift();
+    for (let i = 0; i < 4; i += 1) room = step(stepTray(room, tools, 'gear', 1)).room;
+    const dropped = step(dropOnScale(room, tools, 'gear')).room;
+    expect(trayView(dropped, tools)?.gear).toBeNull();
+    expect(dropOnScale(dropped, tools, 'gear')).toBeNull();
+  });
+
   it('shows from room 9, with its count, and adds that many x to both sides', () => {
     let room = steamLift();
     expect(trayView(room, tools)?.gear).toBe(1);
@@ -35,10 +43,11 @@ describe('the tray’s x-gear (story 4.2)', () => {
     const dropped = step(dropOnScale(room, tools, 'gear'));
     expect(formatEquation(dropped.room.stage.pans)).toBe('135 = 5x + 100');
     expect(dropped.events[0]).toMatchObject({ type: 'WayUsed', way: 'balance' });
-    // Balance has faded to a blank page in room 9: the move writes nothing.
-    expect(dropped.room.stage.lines.map((line) => formatTokens(line.tokens))).toEqual([
-      '135 − 5x = 100',
-    ]);
+    // Balance has faded to a blank page in room 9, but nothing else shows what a gear did:
+    // this move is written out, and its result.
+    expect(dropped.room.stage.lines.map((line) => formatTokens(line.tokens)).at(-1)).toBe(
+      '135 = 5x + 100',
+    );
   });
 
   it('isn’t there before room 9', () => {
@@ -59,7 +68,10 @@ describe('the tray’s x-gear (story 4.2)', () => {
 
   it('slides back unless its count cancels a side’s x-balloons exactly (story 4.2 review)', () => {
     const room = steamLift();
-    expect(dropOnScale(room, tools, 'gear')).toBeNull();
+    // One gear against five balloons: nothing moves, and it says why.
+    const refused = step(dropOnScale(room, tools, 'gear')).room;
+    expect(refused.stage.pans).toEqual(room.stage.pans);
+    expect(refused.stage.refusal).toBe('gear');
     const eq = (text: string) => {
       const parsed = parse(text);
       if (!parsed.ok) throw new Error(text);

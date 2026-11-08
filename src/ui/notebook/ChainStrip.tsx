@@ -93,6 +93,16 @@ interface Props {
   onCancel(): void;
 }
 
+/** The iron ring joining two links, with the way the chain runs. */
+function ChainJoin() {
+  return (
+    <svg className="chain__join" viewBox="0 0 30 16" aria-hidden="true">
+      <rect x="1.5" y="3.5" width="17" height="9" rx="4.5" />
+      <path d="M21 8 H28 M24.5 4.5 L28 8 L24.5 11.5" />
+    </svg>
+  );
+}
+
 /**
  * The gear chain at the top of the notebook (story 4.1; GDD, Gear chain): the pans as links
  * from x to the number, `x → · 4 → + 9 → 41`, the undone ones dark. He taps the last link,
@@ -114,6 +124,9 @@ export function ChainStrip({
   const ready = pick ? pickedLink(pick) !== null : false;
   return (
     <section className="chain" aria-label={hr.chain.label}>
+      <p className="chain__title" aria-hidden="true">
+        {hr.chain.label}
+      </p>
       {links === null || output === null ? (
         <p className="chain__off">{hr.chain.off}</p>
       ) : (
@@ -122,9 +135,7 @@ export function ChainStrip({
           {links.map((link, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: a link's place in the chain is its identity
             <li key={i} className="chain__step">
-              <span className="chain__arrow" aria-hidden="true">
-                →
-              </span>
+              <ChainJoin />
               {i === tappable ? (
                 <button
                   type="button"
@@ -146,9 +157,7 @@ export function ChainStrip({
             </li>
           ))}
           <li className="chain__step">
-            <span className="chain__arrow" aria-hidden="true">
-              →
-            </span>
+            <ChainJoin />
             <span className="chain__end chain__out">{formatNumber(output)}</span>
           </li>
         </ol>
@@ -176,12 +185,13 @@ export function ChainStrip({
               </button>
             ))}
           </div>
+          {pick.op === null && <p className="chain-pick__prompt">{hr.chain.pickOp}</p>}
           <div className="chain-pick__row">
             <span className="chain-pick__for" aria-hidden="true">
               {linkText(last)}
             </span>
             <output className="chain-pick__show" aria-live="polite">
-              {pick.op === null ? hr.chain.pickOp : pickText(pick) || '…'}
+              {pick.op === null ? '…' : pickText(pick) || '…'}
             </output>
             <button
               type="button"

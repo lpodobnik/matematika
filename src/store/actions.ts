@@ -148,6 +148,8 @@ export type Action =
    * the machine loops heard follow it (store/effects/audio.ts). Changes no state.
    */
   | { type: 'town/area'; area: AreaId | null }
+  /** The chain's picker opened (the notebook's own state): the room guide moves on. */
+  | { type: 'chain/open' }
   /** Story 6.1: a room guide's "Dalje": the next step, or the topic is over (room/guide.ts). */
   | { type: 'room/guide-next' }
   /** The dev panel only: sets his parts (architecture, Debug Tools). */

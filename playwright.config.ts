@@ -20,6 +20,7 @@ export default defineConfig({
     ? undefined
     : {
         command: 'npx vite --port 5291 --strictPort',
+        env: { VITE_CACHE_DIR: 'node_modules/.vite-e2e' },
         url,
         reuseExistingServer: false,
         timeout: 60_000,
