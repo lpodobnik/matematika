@@ -1,12 +1,15 @@
 // The play log on the device (story 2.11; architecture, Data Persistence: `matematika:log`,
-// append-only, capped at 20,000 events, oldest dropped first). Separate from the save: the
-// backup link never carries it. Read leniently: entries that don't read are left out.
+// append-only, capped at 20,000 events, oldest dropped first), one per player (lib/player.ts).
+// Separate from the save: the backup link never carries it. Read leniently: entries that don't
+// read are left out.
 
 import { recordError } from '@/lib/error-log';
+import { activePlayer, firstPlayer, playerKeys } from '@/lib/player';
 import { appended, type PlayLogEvent } from '@/playlog/log';
 import type { KeyValueStorage } from '@/save/storage';
 
-export const logKey = 'matematika:log';
+/** The first player's log; each other player has their own (lib/player.ts). */
+export const logKey = playerKeys(firstPlayer).log;
 
 export interface LogStorage {
   /** The log as it is on the device, oldest first; empty when there is none. */
@@ -35,11 +38,14 @@ export function createLogStorage(
   schedule: (write: () => void) => void = (write) => {
     globalThis.setTimeout?.(write, logWriteDelayMs);
   },
+  keyOf: () => string = () => playerKeys(activePlayer()).log,
 ): LogStorage {
   let cache: PlayLogEvent[] | null = null;
   /** The device's log couldn't be read: it is never written over (story 2.11 review). */
   let unreadable = false;
   let waiting = false;
+  /** Whose log this is, from the first read on: entries never reach another player's. */
+  let key: string | null = null;
 
   function reach(): KeyValueStorage | null {
     try {
@@ -51,9 +57,10 @@ export function createLogStorage(
 
   function read(): PlayLogEvent[] {
     if (cache) return cache;
+    key ??= keyOf();
     let raw: string | null = null;
     try {
-      raw = reach()?.getItem(logKey) ?? null;
+      raw = reach()?.getItem(key) ?? null;
     } catch (error) {
       recordError('save', error);
       unreadable = true;
@@ -76,9 +83,9 @@ export function createLogStorage(
 
   function flush(): void {
     waiting = false;
-    if (unreadable || !cache) return;
+    if (unreadable || !cache || !key) return;
     try {
-      reach()?.setItem(logKey, JSON.stringify(cache));
+      reach()?.setItem(key, JSON.stringify(cache));
     } catch (error) {
       recordError('save', error);
     }

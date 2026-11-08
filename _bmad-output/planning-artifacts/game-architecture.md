@@ -189,8 +189,13 @@ export type Reduce = (state: GameState, action: Action, ctx: Ctx) => { state: Ga
 |---|---|---|
 | `matematika:save` | `SaveV1`: progress, economy, workshop rooms, the room and fight in progress, settings, name and look | After every committed line, fight round, purchase, room built, stamp and settings change |
 | `matematika:log` | Play log events, append-only, capped at 20,000 events, oldest dropped first | On every play-log event |
-| `matematika:errors` | The last 50 caught errors | On error |
+| `matematika:errors` | The last 50 caught errors, for the whole device | On error |
+| `matematika:town:met` | The people a player has met in the town | On each introduction |
+| `matematika:town:where` (`sessionStorage`) | The street and spot the town was left from | On leaving the town |
+| `matematika:player` (`sessionStorage`) | Which player this tab plays as | On picking a player |
+| `matematika:player:<id>:…` | Every player but the first: their own `save`, `save:corrupt:<ISO time>`, `log`, `town:met` and `town:where` | As above |
 
+- **Players** (`lib/player.ts`, `save/players.ts`): a player is a save on the device, so the list is read off the keys and there is no registry to keep in step. The first player keeps the original keys, so a save from before there were players is the first player with nothing copied or written, and an older build still reads it. "Tko igra?" (`#igraci`, `app/players.tsx`) asks at launch when there are two or more and the tab has no player; a reload stays with the tab's player. `SaveStorage.load` ties the session to the active player. A friend's page picks no player and writes nothing, the play log included; a reply link goes to the player whose wall holds the room; Luka's log and a backup link ask which player.
 - Every save carries `v`. On load, migrations run in order (`migrations[1]` turns v1 into v2, and so on). A save from a newer version is never overwritten: the game loads it read-only and says so.
 - Corrupt JSON is copied to `matematika:save:corrupt:<ISO time>` before a fresh save starts, so Luka can recover it by hand.
 - On the first launch, `navigator.storage.persist()` asks the browser to keep the data.

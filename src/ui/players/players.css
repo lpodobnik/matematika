@@ -1,0 +1,230 @@
+/* "Tko igra?": big cards to tap, a row that wraps and scrolls on a phone, and the changes
+   behind a quiet button. Buttons act on release, have no hover states, and are at least 48 CSS
+   px. Looks in grey, like the naming's (NFR12). */
+.players {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: clamp(8px, 3dvh, 28px);
+  padding: 12px;
+  overflow: auto;
+  background: var(--table);
+  color: var(--ink);
+}
+
+.players__title {
+  margin: 0;
+  font-size: clamp(22px, 4vw, 42px);
+  font-weight: 600;
+}
+
+.players__warning {
+  margin: 0;
+  color: var(--jam);
+  font-size: clamp(14px, 1.8vw, 20px);
+}
+
+.players__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 20px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.players__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: clamp(112px, 17vw, 200px);
+}
+
+.players__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 6px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.players__card:active {
+  background: var(--sheet);
+}
+
+.players__card:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.players__card--new {
+  border-style: dashed;
+}
+
+.players__portrait {
+  display: block;
+  width: auto;
+  height: clamp(96px, 34dvh, 280px);
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  filter: grayscale(1);
+  fill: var(--rule);
+  pointer-events: none;
+}
+
+.players__plus {
+  display: grid;
+  place-items: center;
+  height: clamp(96px, 34dvh, 280px);
+  font-size: clamp(48px, 16dvh, 120px);
+  line-height: 1;
+}
+
+.players__name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: clamp(16px, 2.2vw, 26px);
+  font-weight: 600;
+}
+
+.players__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.players__foot {
+  display: flex;
+  gap: 12px;
+}
+
+.players__small {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(14px, 1.8vw, 20px);
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.players__small--quiet {
+  border-color: var(--rule);
+  background: transparent;
+}
+
+.players__confirm {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: min(100%, 760px);
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.players__confirm .players__portrait {
+  flex: 0 0 auto;
+}
+
+.players__speech {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.players__warn {
+  margin: 0;
+  font-size: clamp(15px, 2vw, 22px);
+}
+
+.players__choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+/* "No" is the big one, the one a tap lands on. */
+.players__no {
+  min-width: 48px;
+  min-height: 56px;
+  padding: 0 24px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: clamp(16px, 2.2vw, 24px);
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.players__yes {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--jam);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--jam);
+  font: inherit;
+  font-size: clamp(14px, 1.8vw, 20px);
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.players__yes:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+@media (max-height: 499.98px) {
+  .players {
+    padding: 6px;
+  }
+
+  .players__portrait,
+  .players__plus {
+    height: min(30dvh, 110px);
+  }
+
+  /* The two buttons under each card need the room: "Gotovo" stays on the screen. */
+  .players[data-editing="true"] {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .players[data-editing="true"] .players__card .players__portrait {
+    height: 56px;
+  }
+
+  .players[data-editing="true"] .players__card {
+    padding: 4px;
+  }
+
+  .players[data-editing="true"] .players__title {
+    font-size: 20px;
+  }
+
+  .players__confirm {
+    padding: 10px;
+  }
+}

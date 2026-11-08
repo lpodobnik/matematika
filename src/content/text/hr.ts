@@ -75,6 +75,29 @@ export const hr = {
    * The naming after room 1 (story 2.4; narrative design, Opening): the conductor, Gospon
    * Penkala, finally asks who he is. The only time the keyboard comes up.
    */
+  /** "Tko igra?": the players on this device, at launch and from the town's corner. */
+  players: {
+    title: 'Tko igra?',
+    /** Over the list when Luka opens the log or a backup link on a shared device. */
+    titleLog: 'Čiji dnevnik?',
+    titleRestore: 'Kome vratiti kopiju?',
+    newPlayer: 'Novi igrač',
+    /** A player not named yet, or whose save can't be read. */
+    unnamed: 'Bez imena',
+    back: 'Natrag',
+    manage: 'Uredi igrače',
+    manageDone: 'Gotovo',
+    restart: 'Ispočetka',
+    remove: 'Izbriši',
+    confirmRestart: (name: string) => `${name}: ispočetka?`,
+    confirmRemove: (name: string) => `${name}: izbrisati?`,
+    warnRestart: 'Sav napredak nestaje, a ime ostaje. To se ne može vratiti.',
+    warnRemove: 'Igrač i sav napredak nestaju. To se ne može vratiti.',
+    yesRestart: 'Da, ispočetka',
+    yesRemove: 'Da, izbriši',
+    no: 'Ne, ostavi',
+    failed: 'To nije uspjelo na ovom uređaju.',
+  },
   naming: {
     speaker: 'Gospon Penkala',
     ask: 'Čekaj malo. A tko si ti uopće?',
@@ -273,6 +296,8 @@ export const hr = {
   luka: {
     title: 'Dnevnik igre',
     back: 'Natrag u igru',
+    /** Whose log or save this is, when the device has more than one player. */
+    player: (name: string) => `Igrač: ${name}`,
     notSaving: 'Napredak se trenutno ne sprema na ovom uređaju.',
     sessions: 'Igranje po danima',
     sessionsNone: 'Još nema zapisa.',
@@ -393,6 +418,8 @@ export const hr = {
   town: {
     /** The district map, a tap away in the town's corner. */
     map: 'Karta četvrti',
+    /** The player's own face in the corner: to "Tko igra?". */
+    switchPlayer: 'Promijeni igrača',
     /** The opening again, from the town's corner. */
     intro: 'Priča od početka',
     /** Ways between areas, for the tap areas' labels. */

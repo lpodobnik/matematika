@@ -1,14 +1,16 @@
 // The save's storage adapter (story 2.1; architecture, Data Persistence): `localStorage`,
-// synchronous, one JSON value under `matematika:save`. It is the only code that reads or
-// writes the save. Nothing is written before the save has been read at launch (`load`), so
+// synchronous, one JSON value per player (lib/player.ts names the keys; the first player's is
+// `matematika:save`). It is the only code that reads or writes the game in play. `load` ties
+// the session to the player who is active then, so it can never write to another. Nothing is written before the save has been read at launch (`load`), so
 // a launch can never overwrite his progress with a fresh game; a save from a newer version
 // of the game is never written over. A failure to read or write never stops the game: it
 // keeps running in memory, and the failure goes to the error log.
 
 import { recordError } from '@/lib/error-log';
+import { activePlayer, type PlayerKeys, playerKeys } from '@/lib/player';
 import { decodeSave, isObject } from '@/save/decode';
 import { type Migration, migrate, migrations } from '@/save/migrate';
-import { corruptKeyPrefix, currentVersion, type SaveV1, saveKey } from '@/save/schema';
+import { currentVersion, type SaveV1 } from '@/save/schema';
 
 export type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem'>;
 type Json = Record<string, unknown>;
@@ -70,6 +72,8 @@ export interface SaveStorageOptions {
   /** The migrations and the version they lead to (tests bring their own). */
   migrations?: Readonly<Record<number, Migration>>;
   version?: number;
+  /** Whose keys to use, asked at `load`: the active player's, unless a test brings its own. */
+  keys?: () => Pick<PlayerKeys, 'save' | 'corruptPrefix'>;
 }
 
 function browserStorage(): KeyValueStorage | null {
@@ -108,7 +112,11 @@ function overKept(kept: Json | null, save: SaveV1): Json {
 }
 
 export function createSaveStorage(options: SaveStorageOptions = {}): SaveStorage {
-  const { storage = browserStorage, persist = askToPersist } = options;
+  const {
+    storage = browserStorage,
+    persist = askToPersist,
+    keys = () => playerKeys(activePlayer()),
+  } = options;
   const table = options.migrations ?? migrations;
   const version = options.version ?? currentVersion;
   /**
@@ -120,6 +128,8 @@ export function createSaveStorage(options: SaveStorageOptions = {}): SaveStorage
   /** The save as read, so fields this build doesn't know are written back (`overKept`). */
   let kept: Json | null = null;
   let lastWritten: string | null = null;
+  /** The player this session plays as, from `load` on. */
+  let at: Pick<PlayerKeys, 'save' | 'corruptPrefix'> = keys();
 
   function reach(): KeyValueStorage | null {
     try {
@@ -135,7 +145,7 @@ export function createSaveStorage(options: SaveStorageOptions = {}): SaveStorage
    */
   function keepAside(store: KeyValueStorage, raw: string, now: string): boolean {
     try {
-      store.setItem(`${corruptKeyPrefix}${now}`, raw);
+      store.setItem(`${at.corruptPrefix}${now}`, raw);
       return true;
     } catch (error) {
       recordError('save', error);
@@ -144,11 +154,12 @@ export function createSaveStorage(options: SaveStorageOptions = {}): SaveStorage
   }
 
   function read(now: string): LoadResult {
+    at = keys();
     const store = reach();
     if (!store) return { save: null, status: 'unavailable', saving: false };
     let raw: string | null;
     try {
-      raw = store.getItem(saveKey);
+      raw = store.getItem(at.save);
     } catch (error) {
       recordError('save', error);
       return { save: null, status: 'unavailable', saving: false };
@@ -188,7 +199,7 @@ export function createSaveStorage(options: SaveStorageOptions = {}): SaveStorage
       if (!store) return false;
       try {
         const text = JSON.stringify(json);
-        store.setItem(saveKey, text);
+        store.setItem(at.save, text);
         kept = json;
         lastWritten = text;
         return true;
@@ -204,7 +215,7 @@ export function createSaveStorage(options: SaveStorageOptions = {}): SaveStorage
       const store = reach();
       if (!store) return false;
       try {
-        store.setItem(saveKey, text);
+        store.setItem(at.save, text);
         lastWritten = text;
         return true;
       } catch (error) {

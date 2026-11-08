@@ -22,6 +22,7 @@ import {
 } from '@/content/town';
 import { asleepLairs } from '@/fight/settle';
 import type { LairId } from '@/fight/types';
+import { activePlayer, playerKeys, playersHash } from '@/lib/player';
 import type { RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
@@ -136,7 +137,7 @@ const botAt = (patrol: readonly Point[]) => ({
 
 function readMet(): PersonId[] {
   try {
-    const raw = localStorage.getItem('matematika:town:met');
+    const raw = localStorage.getItem(playerKeys(activePlayer()).met);
     const met: unknown = raw ? JSON.parse(raw) : [];
     return Array.isArray(met) ? met.filter((id): id is PersonId => id in hr.town.people) : [];
   } catch {
@@ -168,7 +169,7 @@ function waitsFor(node: NodeId, done: readonly RoomId[]): string[] {
 /** Where he left the town from: the street and the spot, for when he comes back. */
 function readWhere(): { area: AreaId; at: Point } | null {
   try {
-    const raw = sessionStorage.getItem('matematika:town:where');
+    const raw = sessionStorage.getItem(playerKeys(activePlayer()).where);
     const where = raw ? (JSON.parse(raw) as { area?: unknown; at?: Point }) : null;
     if (!where || typeof where.area !== 'string' || !(where.area in town.areas) || !where.at) {
       return null;
@@ -181,7 +182,7 @@ function readWhere(): { area: AreaId; at: Point } | null {
 
 function writeWhere(area: AreaId, at: Point) {
   try {
-    sessionStorage.setItem('matematika:town:where', JSON.stringify({ area, at }));
+    sessionStorage.setItem(playerKeys(activePlayer()).where, JSON.stringify({ area, at }));
   } catch {
     // A private window: he comes back to the square.
   }
@@ -189,7 +190,7 @@ function writeWhere(area: AreaId, at: Point) {
 
 function writeMet(met: PersonId[]) {
   try {
-    localStorage.setItem('matematika:town:met', JSON.stringify(met));
+    localStorage.setItem(playerKeys(activePlayer()).met, JSON.stringify(met));
   } catch {
     // A private window: he is introduced again next time.
   }
@@ -737,6 +738,18 @@ export function TownBoard({
           <svg viewBox="0 0 32 32" aria-hidden="true">
             <path d="M4 8 L11 5 L21 8 L28 5 V24 L21 27 L11 24 L4 27 Z M11 5 V24 M21 8 V27" />
           </svg>
+        </button>
+        <button
+          type="button"
+          className="town__player-button"
+          aria-label={hr.town.switchPlayer}
+          onClick={() => {
+            // "Tko igra?" opens in place of the game (main.tsx); he comes back where he stood.
+            writeWhere(areaRef.current, meRef.current);
+            location.replace(playersHash);
+          }}
+        >
+          <img src={looks[look]} alt="" draggable={false} />
         </button>
         <button
           type="button"

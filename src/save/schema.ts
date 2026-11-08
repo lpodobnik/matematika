@@ -7,6 +7,7 @@
 import type { LookId } from '@/city/character';
 import type { Economy } from '@/economy/types';
 import type { FightState, PageId } from '@/fight/types';
+import { firstPlayer, playerKeys } from '@/lib/player';
 import type { SavedRoom } from '@/room/resume';
 import type { FirstUseId, IdeaId, RoomId, ToolId } from '@/room/types';
 
@@ -33,10 +34,11 @@ export interface WorkshopSave {
   rooms: SentRoom[];
 }
 
-export const saveKey = 'matematika:save';
+/** The first player's save; each other player has their own (lib/player.ts). */
+export const saveKey = playerKeys(firstPlayer).save;
 
-/** A save that can't be read is kept under this prefix and the time, for Luka to recover. */
-export const corruptKeyPrefix = 'matematika:save:corrupt:';
+/** The first player's prefix for a save that can't be read, kept for Luka to recover. */
+export const corruptKeyPrefix = playerKeys(firstPlayer).corruptPrefix;
 
 export const currentVersion = 1;
 
