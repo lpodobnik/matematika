@@ -14,6 +14,8 @@ function when(at: string | null): string {
 
 interface Props {
   summary: LogSummary;
+  /** Whose log this is, on a device with more than one player. */
+  player?: string | null;
   /** The save isn't being written on this device (story 2.1's storage status). */
   notSaving: boolean;
   /** Makes the backup link (async: it compresses the save); null when there is no save. */
@@ -28,7 +30,14 @@ interface Props {
  * the play log on this device, and a backup link that restores the whole save elsewhere.
  * For Luka: plain tables, no game skin. Linked from nowhere in the game.
  */
-export function LukaView({ summary, notSaving, makeBackupLink, exportLog, onBack }: Props) {
+export function LukaView({
+  summary,
+  player = null,
+  notSaving,
+  makeBackupLink,
+  exportLog,
+  onBack,
+}: Props) {
   const [link, setLink] = useState<string | null>(null);
   // What the last try to make or copy the link said: nothing yet, done, or why not.
   const [note, setNote] = useState<'copied' | 'copyByHand' | 'noSave' | 'cantMake' | null>(null);
@@ -44,6 +53,7 @@ export function LukaView({ summary, notSaving, makeBackupLink, exportLog, onBack
           {hr.luka.back}
         </button>
       </header>
+      {player && <p>{hr.luka.player(player)}</p>}
       {notSaving && <p className="luka__warning">{hr.luka.notSaving}</p>}
 
       <section>
@@ -212,6 +222,8 @@ export function LukaView({ summary, notSaving, makeBackupLink, exportLog, onBack
 }
 
 interface RestoreProps {
+  /** Whose save the backup replaces, on a device with players to choose from. */
+  player?: string | null;
   /** Rooms done in the backup, or null when the link doesn't read as one. */
   incoming: number | null;
   /** This device can't keep a save (no storage, or a newer version's save): say so first. */
@@ -229,6 +241,7 @@ interface RestoreProps {
  * and asks before replacing it (story 2.11).
  */
 export function RestoreView({
+  player = null,
   incoming,
   notSaving = false,
   current,
@@ -239,6 +252,7 @@ export function RestoreView({
   return (
     <main className="luka">
       <h1>{hr.luka.restore.title}</h1>
+      {player && <p>{hr.luka.player(player)}</p>}
       {notSaving && <p className="luka__warning">{hr.luka.notSaving}</p>}
       {incoming === null ? (
         <p className="luka__warning">{hr.luka.restore.broken}</p>

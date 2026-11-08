@@ -1,13 +1,17 @@
 // Luka's view and the backup link's restore (story 2.11), as main.tsx opens them in place of
 // the game: `#dnevnik`, or a backup link `#b=…`. The game doesn't run on this page, so the two
 // never write the save at once. It reads the save and the play log from the device, and
-// restoring writes the save and then opens the game, which loads it.
+// restoring writes the save and then opens the game, which loads it. All of it is the active
+// player's: main.tsx asks whose first, on a device with more than one.
 
 import { useEffect, useMemo, useState } from 'react';
 import { type Backup, decodeBackup, encodeBackup, restoredJson } from '@/app/backup';
+import { hr } from '@/content/text/hr';
+import { activePlayer } from '@/lib/player';
 import { backupPayload } from '@/links/backup';
 import { summarize } from '@/playlog/log';
 import { logStorage } from '@/save/log-storage';
+import { listPlayers, rememberPlayer } from '@/save/players';
 import type { SaveV1 } from '@/save/schema';
 import { saveStorage } from '@/save/storage';
 import { LukaView, RestoreView } from '@/ui/luka/LukaView';
@@ -17,15 +21,27 @@ function openGame(): void {
   location.replace(`${location.pathname}${location.search}`);
 }
 
+/** Whose this is, named on a device with other players on it; null with only the one. */
+function namedPlayer(): string | null {
+  const players = listPlayers();
+  if (players.length < 2) return null;
+  const player = players.find((candidate) => candidate.id === activePlayer());
+  return player ? (player.name ?? hr.players.unnamed) : hr.players.newPlayer;
+}
+
 export default function LukaApp({ hash }: { hash: string }) {
   // Read once for this page: the save on the device, and whether this device writes.
   const loaded = useMemo(() => saveStorage.load(new Date().toISOString()), []);
+  const player = useMemo(namedPlayer, []);
   const payload = backupPayload(hash);
   if (payload !== null) {
-    return <Restore payload={payload} current={loaded.save} saving={loaded.saving} />;
+    return (
+      <Restore payload={payload} player={player} current={loaded.save} saving={loaded.saving} />
+    );
   }
   return (
     <LukaView
+      player={player}
       summary={summarize(logStorage.read())}
       notSaving={!loaded.saving}
       makeBackupLink={async () => {
@@ -52,10 +68,12 @@ export default function LukaApp({ hash }: { hash: string }) {
 
 function Restore({
   payload,
+  player,
   current,
   saving,
 }: {
   payload: string;
+  player: string | null;
   current: SaveV1 | null;
   saving: boolean;
 }) {
@@ -67,14 +85,18 @@ function Restore({
   if (incoming === 'reading') return null;
   return (
     <RestoreView
+      player={player}
       incoming={incoming ? incoming.save.progress.roomsDone.length : null}
       notSaving={!saving}
       current={current ? current.progress.roomsDone.length : null}
       failed={failed}
       onAccept={() => {
         if (!incoming) return;
-        if (saveStorage.replace(restoredJson(incoming, current))) openGame();
-        else setFailed(true);
+        if (saveStorage.replace(restoredJson(incoming, current))) {
+          // The game opens as the player who just got it back.
+          rememberPlayer(activePlayer());
+          openGame();
+        } else setFailed(true);
       }}
       onDecline={openGame}
     />
