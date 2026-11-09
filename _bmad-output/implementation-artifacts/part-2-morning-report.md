@@ -34,7 +34,7 @@ I can't tell without him. Writing a line and seeing the doors change looks clear
 ## How it was checked
 
 - **Unit tests:** 3,613 pass. `src/store/hunt-playthrough.test.ts` plays the whole chapter through the store, with a reload in every scene.
-- **Browser:** the last full suite passed 94 of 94, before the fix pass below. Part 2's own specs were rerun after it, on tablet and phone sizes.
+- **Browser:** the full suite passes 94 of 94 at `c9c5e9d`, on tablet and phone sizes, with part 2's specs and part 1's together.
 - **Screens:** I looked at the main boards on both sizes. I haven't seen every lead's screens, only one of each kind.
 - **Review:** one independent read found 23 things, and I fixed the ones listed below.
 
