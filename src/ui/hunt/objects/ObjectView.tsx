@@ -242,23 +242,36 @@ function Stacks({ stacks, onMove }: { stacks: StacksState; onMove?(move: ObjectM
   );
 }
 
+/** A chart: its marks, lines and bars share one plot, so that what he reads is what it is. */
 function Bars({ bars }: { bars: BarsState }) {
-  const top = Math.max(bars.step, ...bars.bars.map((bar) => bar.value));
+  const highest = Math.max(bars.step, ...bars.bars.map((bar) => bar.value));
+  const top = Math.ceil(highest / bars.step) * bars.step;
   const marks: number[] = [];
   for (let mark = 0; mark <= top; mark += bars.step) marks.push(mark);
+  const height = (value: number) => `${(value / top) * 100}%`;
   return (
     <div className="bars-object">
-      <ol className="bars-object__axis">
+      <div className="bars-object__plot">
         {marks.map((mark) => (
-          <li key={mark}>{formatNumber(mark)}</li>
+          <span key={mark} className="bars-object__mark" style={{ bottom: height(mark) }}>
+            <span className="bars-object__value">{formatNumber(mark)}</span>
+          </span>
         ))}
-      </ol>
-      <div className="bars-object__bars">
+        <div className="bars-object__bars">
+          {bars.bars.map((bar) => (
+            <span
+              key={bar.label}
+              className="bars-object__fill"
+              style={{ height: height(bar.value) }}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="bars-object__labels">
         {bars.bars.map((bar) => (
-          <div key={bar.label} className="bars-object__bar">
-            <span className="bars-object__fill" style={{ height: `${(bar.value / top) * 100}%` }} />
-            <span className="bars-object__label">{bar.label}</span>
-          </div>
+          <span key={bar.label} className="bars-object__label">
+            {bar.label}
+          </span>
         ))}
       </div>
     </div>

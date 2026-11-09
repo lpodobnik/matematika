@@ -182,7 +182,8 @@ test('part 2 on: through the gate, the empty foundry, the name, and up the first
   await page.locator('.town__bubble').click();
   await page.locator('.town__bubble').click();
   await little.click();
-  await expect(page.locator('.town__bubble')).toHaveText('Zašto?');
+  await expect(page.locator('.town__bubble')).toContainText('Zašto?');
+  await expect(page.locator('.town__bubble')).toContainText('Bip');
   await page.locator('.town__bubble').click();
 
   // The way back through the foundry, and it comes along.

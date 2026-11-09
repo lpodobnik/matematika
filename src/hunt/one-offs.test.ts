@@ -439,9 +439,12 @@ describe('the loop’s lamps', () => {
     expect(oneOffEarns({ ...next, opened: true })).toBe(false);
   });
 
-  it('a false division with the right lamp isn’t right', () => {
+  it('a false division on the right lamp bounces, and doesn’t say the lamp was wrong', () => {
     const lie = loopEnter(loop, type(newLoop(), ['2', 'ost.', '2']));
     expect(lie.got).toBe(false);
+    expect(lie.notice).toBeNull();
+    expect(lie.bounced).toBe(true);
+    expect(lie.bell).toBe(0);
   });
 
   it('a remainder too big bounces: that makes another group', () => {

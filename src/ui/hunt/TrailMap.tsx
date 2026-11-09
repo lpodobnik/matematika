@@ -26,6 +26,7 @@ export function TrailMap({
   target = null,
   onPick,
   onClose,
+  onOldMap,
 }: {
   done: readonly TrailId[];
   /** What he can go to now. Pins for what's still ahead don't show. */
@@ -35,6 +36,8 @@ export function TrailMap({
   target?: LeadId | null;
   onPick(lead: TrailId): void;
   onClose(): void;
+  /** To the old district's map. */
+  onOldMap?(): void;
 }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -88,6 +91,14 @@ export function TrailMap({
             );
           })}
       </div>
+      {(target || sealed.some((lead) => !done.includes(lead))) && (
+        <p className="trail__legend">{target ? trailText.heading : trailText.reached}</p>
+      )}
+      {onOldMap && (
+        <button type="button" className="trail__old-map" onClick={onOldMap}>
+          {trailText.oldMap}
+        </button>
+      )}
       <button type="button" className="town__close" onClick={onClose}>
         {hr.town.close}
       </button>

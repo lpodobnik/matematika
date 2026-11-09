@@ -20,7 +20,7 @@ export const l03: LeadSpec = {
         say: text.lesson.steps[0],
       },
       {
-        object: { kind: 'places', names: hundreds, counts: [1, 0, 0] },
+        object: { kind: 'places', names: text.thousands, counts: [1, 0, 0, 0] },
         say: text.lesson.steps[1],
       },
       {
@@ -60,7 +60,12 @@ export const l03: LeadSpec = {
     write: {
       say: text.mistake.write,
       start: '507 =',
-      accepts: ['507 = 5 · 10² + 7', '507 = 5 · 10² + 0 · 10 + 7'],
+      accepts: [
+        '507 = 5 · 10² + 7',
+        '507 = 5 · 10² + 0 · 10 + 7',
+        '507 = 5 · 100 + 7',
+        '507 = 500 + 7',
+      ],
       keys: ['·', '+', '^'],
     },
     thanks: text.mistake.thanks,

@@ -962,6 +962,8 @@ const u1: TownArea = {
       facing: -1,
       after: 'gate',
       changesWith: 'map',
+      // The coat: he isn't what he seemed, and he isn't here any more.
+      until: 'l11',
       scene: 'u1Vucetic',
     },
   ],

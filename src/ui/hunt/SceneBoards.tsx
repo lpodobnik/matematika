@@ -326,7 +326,11 @@ export function UnmaskBoardView({
           )}
           {state.tooSoon && <p className="hunt__note">{huntUiText.askMore(spec.required)}</p>}
           {state.bounced && <p className="hunt__note">{huntUiText.bounce}</p>}
-          {state.refused && <p className="hunt__note">{huntUiText.refuse}</p>}
+          {state.refused && (
+            <p className="hunt__note">
+              {state.refused === 'off' ? huntUiText.offTask : huntUiText.refuse}
+            </p>
+          )}
           {state.hintLevel > 0 && (
             <p className="hunt__note">{state.hintLevel === 1 ? spec.hint.step : spec.hint.move}</p>
           )}
@@ -344,7 +348,7 @@ export function UnmaskBoardView({
               key={state.bounced || state.refused ? 'wiggle' : 'still'}
               start={readLine(spec.fix.start) ?? []}
               draft={state.draft}
-              wiggle={state.bounced || state.refused}
+              wiggle={state.bounced || Boolean(state.refused)}
             />
             <StatementPad signs={spec.fix.keys} onKey={onKey} />
           </>

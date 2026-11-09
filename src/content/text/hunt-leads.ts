@@ -207,6 +207,7 @@ export const l03Text = {
   title: 'Arhiv',
   places: ['dvorana', 'red', 'polica', 'kutija', 'fascikl'],
   hundreds: ['stotice', 'desetice', 'jedinice'],
+  thousands: ['tisućice', 'stotice', 'desetice', 'jedinice'],
   lesson: {
     found:
       'Arhivar pokaže na mala vrata: "Ovuda ja ne prolazim." Mali automat nađe valjak i pusti ga.',
@@ -231,7 +232,7 @@ export const l03Text = {
     say: 'Mali automat rastavlja brojeve. Jedan njegov redak nije točan. Dodirni ga.',
     nudge: 'Taj je redak točan. Izračunaj oba dijela pa zbroji.',
     show: 'Pokaži mu: složi 507. Koliko je desetica?',
-    write: 'Sad napiši točan redak.',
+    write: 'Sad napiši točan redak. Tipka ⁿ piše mali broj: 10, pa ⁿ, pa 2 daje 10².',
     thanks: 'Mali automat kima. Više neće ispuštati nule.',
   },
   scene: {
@@ -241,13 +242,13 @@ export const l03Text = {
     opened: 'Mali automat vraća se ponosan i nosi list papira: otpremnicu iz ljevaonice.',
     hint: {
       step: 'Znak kaže koje se mjesto bira. Što u tragu stoji uz to mjesto?',
-      move: 'Polica je 10². Uz 10² u tragu nema ničega, pa je to 0.',
+      move: 'Nađi u tragu broj uz to mjesto. Ako uz njega nema ničega, biraš 0.',
     },
     example: ['Primjer: 2 · 10³ + 5 znači 2 005.', 'Stotica i desetica nema, pa je tamo 0.'],
   },
   write: {
     fade: 'Zapiši rastav. Što ide u kvadratić?',
-    whole: 'A sad cijeli rastav broja 34 072.',
+    whole: 'A sad cijeli rastav broja 34 072. Tipka ⁿ piše mali broj.',
   },
   find: {
     say: 'Otpremnica iz ljevaonice: Majstor Kristijan otpremljen je kolima, i to je netko potpisao.',
@@ -308,7 +309,7 @@ export const sceneGuideText = {
   carts: {
     intro: 'Sanduci su na zemlji, a svaki se tovar slaže po deset.',
     load: 'Dodirni kola da ih natovariš. Kad je sve na kolima, pritisni Kreni.',
-    write: 'Napiši što si upravo napravio.',
+    write: 'Sad to napiši u bilježnicu.',
   },
   level: {
     intro: 'Greda je nagnuta. Ravna je tek kad su svi stupci jednaki.',
@@ -339,7 +340,9 @@ export const huntUiText = {
   clues: 'Tragovi',
   yourLines: 'Tvoji redci',
   ok: 'U redu',
-  shake: 'Mali automat vrti glavom i pokazuje na trag.',
+  shake:
+    'Mali automat vrti glavom i pokazuje na trag. Ako neki tvoj redak ne valja, dodirni ga i on će se prekrižiti.',
+  offTask: 'To je točno, ali nije ono što se traži. Pročitaj zadatak još jednom.',
   bounce: 'To nije točno. Pogledaj redak još jednom.',
   refuse: 'To se ne može pročitati. Pogledaj redak još jednom.',
   working: 'Sad računaj redak po redak. Svaki mora biti točan.',
@@ -374,6 +377,9 @@ export const huntUiText = {
 /** The trail map's labels. */
 export const trailText = {
   title: 'Trag',
+  heading: 'Crna nit ide prema tragu s tamnim prstenom. Ako ga ti prvi počneš, skrenut će.',
+  reached: 'Crna nit stigla je do tamne točke. Trag nije izgubljen, samo ga čuvaju automati.',
+  oldMap: 'Stari grad',
   leads: {
     l01: 'Dvije strane',
     l02: 'Susjedi',

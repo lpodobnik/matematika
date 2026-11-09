@@ -129,7 +129,9 @@ export function TownScreen() {
             ]
           : []
       }
-      hasLittleOne={partTwo && companion !== null}
+      // While it has wandered off, it isn't there.
+      hasLittleOne={partTwo && companion !== null && !openTrail(hunt).includes('w1')}
+      littleName={companion?.name ?? ''}
       onGate={() => dispatch({ type: 'hunt/gate-open' })}
       onMapGiven={() => dispatch({ type: 'hunt/map-given' })}
       onLead={(lead) => dispatch({ type: 'hunt/lead-start', lead })}
@@ -161,6 +163,7 @@ interface BoardProps {
   /** What he has reached in the hunt, for ways and people that wait on it. */
   marks?: readonly string[];
   hasLittleOne?: boolean;
+  littleName?: string;
   onGate?(): void;
   onMapGiven?(): void;
   onLead?(lead: TrailId): void;
@@ -217,6 +220,7 @@ export function TownBoard({
   gate = 'sealed',
   marks = [],
   hasLittleOne = false,
+  littleName = '',
   onGate,
   onMapGiven,
   onLead,
@@ -232,7 +236,13 @@ export function TownBoard({
   // He comes out where he went in: the area holding the room just restarted, or else the
   // street and spot he left from (a fight, a room left halfway), or else the square.
   const [where] = useState(() => (fresh ? null : readWhere()));
-  const [areaId, setAreaId] = useState<AreaId>(() => areaOf(fresh) ?? where?.area ?? town.start);
+  // Once he's on the trail, a new session starts him where the trail is.
+  const [areaId, setAreaId] = useState<AreaId>(
+    () =>
+      areaOf(fresh) ??
+      where?.area ??
+      (reached.includes('map') && open.length > 0 ? 'u1' : town.start),
+  );
   const area = town.areas[areaId];
   useTownSound(areaId);
   const [start, setStart] = useState<Point>(
@@ -245,6 +255,8 @@ export function TownBoard({
   const [walking, setWalking] = useState(false);
   const [bubble, setBubble] = useState<Bubble | null>(null);
   const [showMap, setShowMap] = useState(false);
+  /** On the trail, the map opens on the trail; the old district's is a tap away. */
+  const [oldMap, setOldMap] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
   const [slides, setSlides] = useState<'logbook' | 'outro' | 'ending' | null>(() => {
     if (partTwo && reached.includes('near-miss') && !readEndingSeen()) return 'ending';
@@ -730,6 +742,7 @@ export function TownBoard({
                   at: follow.current.at,
                   lines: [hr.hunt.littleOne.why],
                   line: 0,
+                  intro: littleName,
                 })
               }
             >
@@ -886,7 +899,7 @@ export function TownBoard({
         </button>
       </main>
       {showMap &&
-        (area.spots && reached.includes('map') ? (
+        (reached.includes('map') && !oldMap ? (
           <TrailMap
             done={leadsDone}
             open={open}
@@ -894,9 +907,16 @@ export function TownBoard({
             target={threadHeading}
             onPick={pickLead}
             onClose={() => setShowMap(false)}
+            onOldMap={() => setOldMap(true)}
           />
         ) : (
-          <MapOverlay onClose={() => setShowMap(false)} onPick={pick} />
+          <MapOverlay
+            onClose={() => {
+              setShowMap(false);
+              setOldMap(false);
+            }}
+            onPick={pick}
+          />
         ))}
       {bossWaits && !slides && !showMap && !showIntro && (
         <p className="town__goal" role="status">

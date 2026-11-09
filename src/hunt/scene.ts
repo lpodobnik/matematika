@@ -480,6 +480,8 @@ export interface SceneGuide {
 }
 
 const writing: readonly SceneAction['kind'][] = ['type', 'delete', 'enter'];
+/** In a Knock he can always take a line back: a typo mustn't force him to a false one. */
+const fixing: readonly SceneAction['kind'][] = [...writing, 'strike', 'pick-clue'];
 
 /** The guide of the first time, derived from the scene's state, so it can't get out of step. */
 export function sceneGuide(spec: SceneSpec, state: SceneState): SceneGuide | null {
@@ -490,9 +492,9 @@ export function sceneGuide(spec: SceneSpec, state: SceneState): SceneGuide | nul
       const step = knockGuide(spec, state as KnockState);
       if (!step) return null;
       if (step.kind === 'cross') return { say: 'cross', allows: ['cross'] };
-      if (step.kind === 'door') return { say: 'door', allows: ['door'] };
+      if (step.kind === 'door') return { say: 'door', allows: ['door', ...fixing] };
       if (step.kind === 'intro') return { say: 'intro', allows: 'read' };
-      return { say: step.first ? 'line' : 'next', allows: writing };
+      return { say: step.first ? 'line' : 'next', allows: fixing };
     }
     case 'sneak': {
       const sneak = state as SneakState;

@@ -97,7 +97,19 @@ export function decodeHunt(value: unknown): HuntSave {
     firstTries: decodeFirstTries(value.firstTries),
     told: strings(value.told),
     scene: decodeScene(value.scene),
+    parked: decodeParked(value.parked),
   };
+}
+
+/** Leads waiting for him. A scene that doesn't read is dropped: the lead starts over. */
+function decodeParked(value: unknown): HuntSave['parked'] {
+  if (!isObject(value)) return {};
+  const parked: HuntSave['parked'] = {};
+  for (const [id, entry] of Object.entries(value)) {
+    const scene = decodeScene(entry);
+    if (scene && scene.of === id && scene.of !== 'gate') parked[scene.of] = scene;
+  }
+  return parked;
 }
 
 function decodeTaught(value: unknown): TaughtEntry[] {

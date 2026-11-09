@@ -41,7 +41,8 @@ export const act4Text = {
     write: {
       sum: 'Zapiši kako se otvara brava gospona Penkale. Koliki je rezultat?',
       nested: 'Zagrada u zagradi: prvo okrugla, pa uglata, pa vitičasta. Koliki je rezultat?',
-      whole: 'I brava s oduzimanjem, cijeli redak. Minus ispred zagrade oduzima cijelu zagradu.',
+      whole:
+        'I brava s oduzimanjem: 258 − (34 + 41). Napiši cijeli redak. Minus ispred zagrade oduzima cijelu zagradu.',
     },
     find: {
       say: 'Iza zadnjih vrata na zidu je kredom nacrtana strelica uzbrdo. A crna nit luta prema krivim vratima.',
@@ -244,7 +245,7 @@ export const act4Text = {
     },
     write: {
       fade: 'Zapiši prvi teret. Što ide u kvadratić?',
-      whole: 'Sad teret s tri stupca, cijeli redak.',
+      whole: 'Sad teret s tri stupca: 3, 5 i 10. Napiši cijeli redak.',
       month:
         'U rujnu dizalica digne u prosjeku 38 sanduka na dan. Rujan ima 30 dana. Koliko je to ukupno?',
     },
@@ -407,7 +408,8 @@ export const act4Text = {
     },
     write: {
       fade: 'Zapiši račun s dijagrama za dva tjedna. Koliki je rezultat?',
-      whole: 'I račun s prvog dijagrama, cijeli redak.',
+      whole:
+        'Na prvom dijagramu Pusta troši 60 litara, a Most 35. Koliko više? Napiši cijeli redak.',
     },
     find: {
       say: 'Iza vrata 40 su stube. Odozgo miriše na toplo ulje.',

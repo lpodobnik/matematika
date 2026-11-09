@@ -415,52 +415,62 @@
 
 .bars-object {
   display: flex;
-  gap: 6px;
-  height: 200px;
+  flex-direction: column;
   width: min(100%, 460px);
+  padding: 8px 0 0 40px;
 }
 
-.bars-object__axis {
-  display: flex;
-  flex-direction: column-reverse;
-  justify-content: space-between;
-  margin: 0;
-  padding: 0 0 22px;
-  list-style: none;
-  font-size: 15px;
-  text-align: right;
-}
-
-.bars-object__bars {
-  flex: 1 1 auto;
-  display: flex;
-  justify-content: space-around;
-  gap: 8px;
+.bars-object__plot {
+  position: relative;
+  height: 170px;
   border-left: 3px solid var(--ink);
   border-bottom: 3px solid var(--ink);
 }
 
-.bars-object__bar {
-  flex: 1 1 0;
-  position: relative;
+/* A line across the plot at each mark, with its number to the left of the axis. */
+.bars-object__mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid var(--table);
+}
+
+.bars-object__value {
+  position: absolute;
+  right: 100%;
+  top: -10px;
+  margin-right: 6px;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.bars-object__bars {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding-bottom: 22px;
-  height: 100%;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 0 6px;
 }
 
 .bars-object__fill {
-  display: block;
+  flex: 1 1 0;
   background: var(--brass);
   border: 2px solid var(--ink);
+  border-bottom: 0;
+}
+
+.bars-object__labels {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 2px 6px 0;
 }
 
 .bars-object__label {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex: 1 1 0;
   font-size: 14px;
   text-align: center;
 }
@@ -777,6 +787,11 @@
 /* The sound button sits in this corner. */
 .clues > li:first-child .clue {
   padding-right: 56px;
+}
+
+.clue[data-gone="true"] {
+  color: var(--ink-soft);
+  text-decoration: line-through;
 }
 
 .clue[data-current="true"] {
@@ -1510,6 +1525,24 @@
 
   .knock__intro {
     display: none;
+  }
+
+  /* A chart's intro says how to read it. */
+  .knock[data-picture="true"] .knock__intro {
+    display: block;
+    font-size: 12px;
+  }
+
+  .bars-object__plot {
+    height: 80px;
+  }
+
+  .bars-object__value {
+    font-size: 11px;
+  }
+
+  .bars-object__label {
+    font-size: 11px;
   }
 
   .knock__side-name {

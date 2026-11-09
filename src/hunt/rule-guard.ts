@@ -3,8 +3,9 @@
 // line that breaks the rule. A wrong pick makes the guard thank him, at no cost.
 
 import type { RuleGuardId } from '@/hunt/ids';
+import { flagsOf, judgeLine } from '@/hunt/line-judge';
 import { parseStatement } from '@/math/statement';
-import { fillLine, isSToken, readLine, readTokens, type SToken } from '@/math/statement-tokens';
+import { isSToken, readTokens, type SToken } from '@/math/statement-tokens';
 import { isTrue } from '@/math/truth';
 
 export interface GuardTile {
@@ -39,7 +40,7 @@ export interface GuardState {
   said: string | null;
   draft: SToken[];
   bounced: boolean;
-  refused: boolean;
+  refused: boolean | 'off';
   help: number;
   hintLevel: number;
   exactTaken: boolean;
@@ -89,20 +90,11 @@ export function guardDelete(state: GuardState): GuardState {
 /** The line that breaks the rule jams it. A false one bounces. */
 export function guardEnter(spec: GuardSpec, state: GuardState): GuardState {
   if (state.phase !== 'write' || state.opened) return state;
-  const tokens = fillLine(readLine(spec.write.start) ?? [], state.draft);
-  const same = spec.write.accepts.some((line) => {
-    const accepted = readTokens(line);
-    return (
-      accepted !== null &&
-      accepted.length === tokens.length &&
-      accepted.every((token, i) => token === tokens[i])
-    );
-  });
-  if (same)
+  const { verdict } = judgeLine(spec.write.start, spec.write.accepts, state.draft);
+  if (verdict === 'right') {
     return { ...state, opened: true, draft: [], bounced: false, refused: false, guide: null };
-  const parsed = parseStatement(tokens);
-  const bounces = parsed.ok && !isTrue(parsed.statement);
-  return { ...state, bounced: bounces, refused: !bounces };
+  }
+  return { ...state, ...flagsOf(verdict) };
 }
 
 export function guardIdle(state: GuardState): GuardState {

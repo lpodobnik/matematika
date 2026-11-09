@@ -93,6 +93,60 @@ describe('the foundry gate, in the store', () => {
     expect(off.getState().ui.screen).not.toBe('hunt');
   });
 
+  it('a lead he leaves for another waits for him, where he left it', () => {
+    const save = endOfPartOne(['r12', 'r13'], true);
+    save.companion = { name: 'Bip', looks: [], wearing: [], gear: [], taught: [] };
+    save.hunt.gateOpened = true;
+    save.hunt.beats = ['foundry', 'named', 'map-given'];
+    const store = started(save, true);
+    store.getState().dispatch({ type: 'hunt/lead-start', lead: 'l01' });
+    store.getState().dispatch({ type: 'hunt/lead', action: { kind: 'next' } });
+    store.getState().dispatch({ type: 'hunt/lead', action: { kind: 'next' } });
+    const at = () => {
+      const scene = store.getState().save.hunt.scene;
+      return scene ? (scene.state as { at: number }).at : -1;
+    };
+    expect(at()).toBe(2);
+    store.getState().dispatch({ type: 'hunt/leave' });
+    store.getState().dispatch({ type: 'hunt/lead-start', lead: 'l03' });
+    expect(store.getState().save.hunt.scene?.of).toBe('l03');
+    expect(at()).toBe(0);
+    expect(store.getState().save.hunt.parked.l01?.of).toBe('l01');
+    store.getState().dispatch({ type: 'hunt/leave' });
+    store.getState().dispatch({ type: 'hunt/lead-start', lead: 'l01' });
+    expect(store.getState().save.hunt.scene?.of).toBe('l01');
+    expect(at()).toBe(2);
+    expect(store.getState().save.hunt.parked.l01).toBeUndefined();
+    expect(store.getState().save.hunt.parked.l03?.of).toBe('l03');
+  });
+
+  it('a saved knot that no longer fits starts over, from a step it has', () => {
+    const save = endOfPartOne(['r12', 'r13'], true);
+    save.companion = { name: 'Bip', looks: [], wearing: [], gear: [], taught: [] };
+    save.hunt.gateOpened = true;
+    save.hunt.beats = ['foundry', 'named', 'map-given'];
+    save.hunt.scene = { of: 'k1', index: 9, state: { step: 'play', at: 9, draft: [] } };
+    const store = createGameStore();
+    store.getState().dispatch({ type: 'dev/preview' });
+    store.getState().dispatch({ type: 'boot/start', save, room: null });
+    const play = store.getState().save.hunt.scene?.state as { step: string; at: number };
+    expect(play.step).toBe('play');
+    expect(play.at).toBe(0);
+  });
+
+  it('naming the little one again keeps what it has learnt', () => {
+    const save = endOfPartOne(['r12', 'r13'], true);
+    const taught = [{ lead: 'l01', mistake: 'm', line: 'x', at: 'now' }] as never;
+    save.companion = { name: 'Bip', looks: [], wearing: [], gear: [], taught };
+    const store = started(save, true);
+    store.getState().dispatch({ type: 'hunt/gate-open' });
+    write(store, 'x=8');
+    write(store, '5·8=40');
+    store.getState().dispatch({ type: 'hunt/foundry-done' });
+    store.getState().dispatch({ type: 'hunt/name', name: 'Novi' });
+    expect(store.getState().save.companion?.taught).toHaveLength(1);
+  });
+
   it('takes the map once, the first time Vučetić gives it', () => {
     const store = started(endOfPartOne(['r12', 'r13'], true), true);
     store.getState().dispatch({ type: 'hunt/map-given' });

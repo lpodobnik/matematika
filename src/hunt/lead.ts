@@ -5,6 +5,7 @@
 import type { AloneState } from '@/hunt/alone';
 import type { RuleGuardId } from '@/hunt/ids';
 import type { KnockState } from '@/hunt/knock';
+import { flagsOf, judgeLine } from '@/hunt/line-judge';
 import { applyMove, goalMet, type ObjectMove, type ObjectState } from '@/hunt/objects';
 import type { CartsState, LevelState, LocksState, LoopState, WindowsState } from '@/hunt/one-offs';
 import type { GuardState } from '@/hunt/rule-guard';
@@ -25,9 +26,7 @@ import type { SneakState } from '@/hunt/sneak';
 import type { LeadSpec, LineTask } from '@/hunt/spec';
 import type { UnmaskState } from '@/hunt/unmask';
 import { formatStatementLine } from '@/math/format';
-import { parseStatement } from '@/math/statement';
-import { fillLine, isSToken, readLine, readTokens, type SToken } from '@/math/statement-tokens';
-import { isTrue } from '@/math/truth';
+import { isSToken, type SToken } from '@/math/statement-tokens';
 
 export type LeadStep = 'show' | 'try' | 'fix' | 'play' | 'write' | 'thread';
 export type FixPhase = 'spot' | 'show' | 'write' | 'thanks';
@@ -44,8 +43,8 @@ export interface LeadPlay {
   solved: boolean;
   /** A false line, back in the draft with a wobble. */
   bounced: boolean;
-  /** A line that reads but isn't what's asked, or doesn't read. */
-  refused: boolean;
+  /** A line that doesn't read; `off` is one that's true, but isn't what's asked. */
+  refused: boolean | 'off';
   fix: FixPhase;
   /** A tap on a line of the little one's that was right. */
   nudged: boolean;
@@ -190,49 +189,23 @@ function startWrite(spec: LeadSpec, base: LeadPlay): LeadPlay {
   return { ...base, ...blank, clean: base.clean, step, at: 0, written: [] };
 }
 
-/** The task's line as he has it so far. */
-export function taskLine(task: LineTask, draft: readonly SToken[]): SToken[] {
-  return fillLine(readLine(task.start) ?? [], draft);
-}
-
 const textOf = (tokens: readonly SToken[]) =>
   formatStatementLine(tokens)
     .map((segment) => segment.text)
     .join('');
 
-/** Whether a line is what's asked: the same line, whatever way he spaced it. */
-function isAccepted(task: LineTask, tokens: readonly SToken[]): boolean {
-  return task.accepts.some((line) => {
-    const accepted = readTokens(line);
-    return (
-      accepted !== null &&
-      accepted.length === tokens.length &&
-      accepted.every((token, i) => token === tokens[i])
-    );
-  });
-}
-
-/** His line goes in. True and asked for is ink; false bounces; anything else gets a wiggle. */
+/** His line goes in. What's asked is ink; false bounces; anything else says why it isn't. */
 function enterLine(task: LineTask, play: LeadPlay): { play: LeadPlay; line: string | null } {
-  if (play.draft.length === 0)
+  if (play.draft.length === 0) {
     return { play: { ...play, refused: true, bounced: false }, line: null };
-  const tokens = taskLine(task, play.draft);
-  if (isAccepted(task, tokens)) {
-    const line = textOf(tokens);
-    return {
-      play: {
-        ...play,
-        draft: [],
-        written: [...play.written, line],
-        bounced: false,
-        refused: false,
-      },
-      line,
-    };
   }
-  const parsed = parseStatement(tokens);
-  const bounces = parsed.ok && !isTrue(parsed.statement, task.context);
-  return { play: { ...play, bounced: bounces, refused: !bounces }, line: null };
+  const { verdict, tokens } = judgeLine(task.start, task.accepts, play.draft, task.context);
+  if (verdict !== 'right') return { play: { ...play, ...flagsOf(verdict) }, line: null };
+  const line = textOf(tokens);
+  return {
+    play: { ...play, draft: [], written: [...play.written, line], bounced: false, refused: false },
+    line,
+  };
 }
 
 /** A move in the scene, with what it changes outside the lead. */

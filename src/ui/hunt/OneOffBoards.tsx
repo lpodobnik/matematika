@@ -63,7 +63,7 @@ interface Shell {
     help: number;
     opened: boolean;
     bounced?: boolean;
-    refused?: boolean;
+    refused?: boolean | 'off';
     draft: readonly SToken[];
   };
   spec: {
@@ -102,7 +102,7 @@ function OneOffShell({
     start.includes('☐') ? start : [...start, ...state.draft],
     start.includes('☐') ? state.draft : [],
   );
-  const wiggle = state.bounced === true || state.refused === true;
+  const wiggle = state.bounced === true || Boolean(state.refused);
   return (
     <main className="hunt">
       <section className={`hunt__scene ${className}`}>
@@ -131,7 +131,11 @@ function OneOffShell({
         <div className="hunt__page">
           {say && <p className="hunt__task">{say}</p>}
           {state.bounced && <p className="hunt__note">{huntUiText.bounce}</p>}
-          {state.refused && <p className="hunt__note">{huntUiText.refuse}</p>}
+          {state.refused && (
+            <p className="hunt__note">
+              {state.refused === 'off' ? huntUiText.offTask : huntUiText.refuse}
+            </p>
+          )}
           {state.hintLevel > 0 && (
             <p className="hunt__note">{state.hintLevel === 1 ? spec.hint.step : spec.hint.move}</p>
           )}
@@ -296,7 +300,9 @@ export function LevelBoardView({
   useIdle(act, `${state.stacks.join()},${state.draft.length},${state.help}`, state.opened);
   const round = spec.rounds[state.round];
   if (!round) return null;
-  const tilt = levelTilt(state.stacks);
+  // Balanced isn't level: it stays a little tilted until all the stacks match.
+  const even = new Set(state.stacks).size === 1;
+  const tilt = levelTilt(state.stacks) || (even ? 0 : 2);
   const line = state.phase === 'write' ? round.line : null;
   return (
     <OneOffShell

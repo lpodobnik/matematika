@@ -168,6 +168,34 @@ describe('Sneak', () => {
     expect(sneakEarns({ ...on, opened: true })).toBe(false);
   });
 
+  it('never asks next for the stop he has just found empty', () => {
+    const emptyAtNext: SneakSpec = {
+      ...sneak,
+      boards: [
+        {
+          ...board,
+          patrols: [],
+          line: {
+            first: 0,
+            step: 5,
+            labelled: [0, 2, 4],
+            asks: [
+              { at: 5, label: 'A' },
+              { at: 1, label: 'A' },
+              { at: 3, label: 'A' },
+            ],
+          },
+        },
+      ],
+    };
+    const lit = sneakEnter(emptyAtNext, { ...newSneak(), draft: ['5'] });
+    expect(lit.lit).toBe(1);
+    const there = sneakStep(emptyAtNext, lit, 1);
+    expect(there.notice).toBe('empty');
+    // The next ask would be stop 1, where he stands; it goes on to stop 3.
+    expect(there.ask).toBe(2);
+  });
+
   it('the right stop ends the board, and the last board ends the scene', () => {
     const one = sneakDismiss(sneak, walk(sneakEnter(sneak, typed(newSneak(), '25'))));
     expect(one.board).toBe(1);

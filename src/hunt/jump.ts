@@ -27,9 +27,13 @@ export function huntAt(
   facts: {
     beatsOf(id: TrailId): readonly BeatId[];
     guardOf(id: TrailId): RuleGuardId | null;
+    /** What it has told him, such as a scene type's guide. */
+    toldBy(id: TrailId): readonly string[];
   },
 ): { hunt: HuntSave; companion: CompanionSave | null } {
-  if (place === 'gate') return { hunt: { ...hunt, gateOpened: false, scene: null }, companion };
+  if (place === 'gate') {
+    return { hunt: { ...hunt, gateOpened: false, scene: null, parked: {} }, companion };
+  }
   const before = place === 'street' ? [] : trailOrder.slice(0, trailOrder.indexOf(place));
   const isLead = (id: TrailId): id is LeadId => id.startsWith('l');
   const leadsDone = before.filter(isLead);
@@ -49,6 +53,8 @@ export function huntAt(
         return guard ? [guard] : [];
       }),
       beats: ['foundry', 'named', 'map-given', ...before.flatMap((id) => facts.beatsOf(id))],
+      told: [...new Set(before.flatMap((id) => facts.toldBy(id)))],
+      parked: {},
       scene: null,
     },
     companion: {
@@ -56,7 +62,7 @@ export function huntAt(
       looks: companion?.looks ?? [],
       wearing: companion?.wearing ?? [],
       gear: hooked ? ['hook'] : [],
-      taught: companion?.taught ?? [],
+      taught: (companion?.taught ?? []).filter((entry) => leadsDone.includes(entry.lead)),
     },
   };
 }

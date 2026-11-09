@@ -17,7 +17,15 @@ import {
 } from '@/hunt/gate';
 import { inList, knotIds, type LeadId, leadIds } from '@/hunt/ids';
 import { huntAt } from '@/hunt/jump';
-import { type LeadAction, type LeadPlay, leadPlayFrom, leadStep, newLeadPlay } from '@/hunt/lead';
+import {
+  type LeadAction,
+  type LeadFacts,
+  type LeadPlay,
+  leadPlayFrom,
+  leadStep,
+  newLeadPlay,
+} from '@/hunt/lead';
+import { guideTold } from '@/hunt/scene';
 import type { LeadSpec } from '@/hunt/spec';
 import { partTwoOn } from '@/hunt/switch';
 import { openTrail, type TrailId, threadAfterLead, threadTarget } from '@/hunt/trail';
@@ -143,6 +151,7 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
         const moved = threadAfterLead(saved, lead);
         saved.sealed = [...moved.sealed];
         saved.thread = { ...moved.thread, target: threadTarget(saved) };
+        delete saved.parked[lead];
         saved.scene = null;
         draft.ui.screen = 'map';
       }
@@ -155,11 +164,12 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
 function resumedScene(
   scene: NonNullable<GameState['save']['hunt']['scene']>,
   sealed: readonly LeadId[],
+  facts: LeadFacts,
 ): typeof scene {
   if (scene.of === 'gate' || !isTrail(scene.of)) return scene;
   const spec = playedSpec(scene.of, sealed);
   if (!spec) return scene;
-  return { ...scene, state: leadPlayFrom(spec, scene.state) ?? newLeadPlay() };
+  return { ...scene, state: leadPlayFrom(spec, scene.state) ?? newLeadPlay(spec, facts) };
 }
 
 export function withHunt(inner: Reduce): Reduce {
@@ -193,6 +203,7 @@ export function withHunt(inner: Reduce): Reduce {
         if (!state.ui.preview) return same(state);
         const { hunt, companion } = huntAt(state.save.hunt, state.save.companion, action.to, {
           beatsOf: (id) => leadSpecs[id]?.beats ?? [],
+          toldBy: (id) => leadSpecs[id]?.scenes.map((scene) => guideTold(scene.kind)) ?? [],
           guardOf: (id) => {
             const guard = leadSpecs[id]?.scenes.find((scene) => scene.kind === 'guard');
             return guard?.kind === 'guard' ? guard.id : null;
@@ -229,10 +240,20 @@ export function withHunt(inner: Reduce): Reduce {
           openTrail(hunt).includes(action.lead);
         if (!allowed) return same(state);
         const waiting = hunt.scene?.of === action.lead;
+        const parked = hunt.parked[action.lead];
         return {
           state: produce(state, (draft) => {
             draft.ui.screen = 'hunt';
             if (waiting) return;
+            const saved = draft.save.hunt;
+            // The one he's leaving waits for him.
+            const leaving = hunt.scene;
+            if (leaving && leaving.of !== 'gate') saved.parked[leaving.of] = castDraft(leaving);
+            if (parked) {
+              saved.scene = castDraft(parked);
+              delete saved.parked[action.lead];
+              return;
+            }
             if (isLead(action.lead) && !draft.save.hunt.leadsStarted.includes(action.lead)) {
               draft.save.hunt.leadsStarted.push(action.lead);
             }
@@ -276,7 +297,14 @@ export function withHunt(inner: Reduce): Reduce {
         if (scene?.phase !== 'name' || !name) return same(state);
         return {
           state: produce(state, (draft) => {
-            draft.save.companion = { name, looks: [], wearing: [], gear: [], taught: [] };
+            const had = draft.save.companion;
+            draft.save.companion = {
+              name,
+              looks: had?.looks ?? [],
+              wearing: had?.wearing ?? [],
+              gear: had?.gear ?? [],
+              taught: had?.taught ?? [],
+            };
             draft.save.hunt.scene = null;
             if (!draft.save.hunt.beats.includes('named')) draft.save.hunt.beats.push('named');
             draft.ui.screen = 'map';
@@ -294,7 +322,11 @@ export function withHunt(inner: Reduce): Reduce {
           draft.ui.screen = 'hunt';
           const scene = result.state.save.hunt.scene;
           const { sealed } = result.state.save.hunt;
-          if (scene) draft.save.hunt.scene = castDraft(resumedScene(scene, sealed));
+          const facts = {
+            taught: result.state.save.companion?.taught.map((entry) => entry.mistake) ?? [],
+            told: result.state.save.hunt.told,
+          };
+          if (scene) draft.save.hunt.scene = castDraft(resumedScene(scene, sealed, facts));
         }),
         events: result.events,
       };

@@ -28,11 +28,13 @@ export interface LineTask {
   keys: readonly SToken[];
   /** What the line leans on in the scene, such as what a point is worth. */
   context?: TruthContext;
+  /** What's on the scene side while he writes it. */
+  object?: ObjectState;
 }
 
 export type TryTask =
   | { kind: 'object'; say: string; object: ObjectState; goal: ObjectGoal }
-  | ({ kind: 'line'; object?: ObjectState } & LineTask);
+  | ({ kind: 'line' } & LineTask);
 
 /** The little one's wrong working, and how he shows it right. */
 export interface MistakeSpec {
@@ -44,6 +46,8 @@ export interface MistakeSpec {
   wrong: number;
   /** What its lines lean on. */
   context?: TruthContext;
+  /** What's on the scene side while he looks for the wrong line. */
+  spot?: ObjectState;
   /** What a tap on a right line gets. */
   nudge: string;
   /** He shows it right with the object. */

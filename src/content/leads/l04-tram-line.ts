@@ -59,6 +59,7 @@ export const l04: LeadSpec = {
     lines: ['A = 10', 'B = 3'],
     wrong: 1,
     context: { points: { A: 10, B: 15 } },
+    spot: { ...fives, point: { at: 15, label: 'B' } },
     nudge: text.mistake.nudge,
     show: { say: text.mistake.show, object: fives, goal: { kind: 'line-mark', at: 15 } },
     write: {
@@ -142,6 +143,7 @@ export const l04: LeadSpec = {
       accepts: ['A = 25'],
       keys: [],
       context: { points: { A: 25 } },
+      object: { ...fives, point: { at: 25, label: 'A' } },
     },
   ],
   find: { say: text.find.say, title: text.find.title, card: text.find.card },

@@ -58,6 +58,15 @@ The son plays on a live save. Lair and room ids are stored in saves, so they sta
 - Record every image in `art-src/CREDITS.md`. Its cap is self-imposed: use an image when it's the better fix.
 - The `art-src/jobs/*.json` files in git status have never been committed. They only record how images were made, so don't be surprised by them.
 
+## Part 2
+
+Part 2 ("The Trail") is built and off for everyone: `tuning.part2.live` is false, pinned by `src/hunt/switch.test.ts`. `?dev` previews it, and the dev panel jumps to any lead. It writes the active player's real save, so use a second player (`#igraci`).
+
+- Rules are in `src/hunt/`, pure. Leads are data in `src/content/leads/`, with Croatian in `src/content/text/hunt*.ts`. `hunt/solve.ts` proves each lead, and `src/store/hunt-playthrough.test.ts` plays the whole chapter through the store.
+- All leads start in Gornja ulica (`u1`), until the other five streets are painted.
+- Luka's review page for part 2's text is `_bmad-output/tekst-drugi-dio-za-pregled.md`. Regenerate it after text changes with a temporary Vitest test that walks `huntText`.
+- Where it stands: `_bmad-output/implementation-artifacts/part-2-morning-report.md`.
+
 ## Where things stand (2026-11-08)
 
 Everything is live at commit `2dd6b9b`; CI and Deploy are green, and unit tests pass. Town and fight browser specs passed before the last one-line fix, and the new boss test passes on both screens. The full e2e suite hasn't been rerun since that fix.

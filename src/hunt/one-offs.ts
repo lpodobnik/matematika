@@ -1,6 +1,7 @@
 // The one-offs (GDD, Scene types; architecture, Pattern 7): small models, each used by one lead.
 // Load the carts, Level the load, Bracket locks, the facade's windows and the loop's lamps.
 
+import { flagsOf, judgeLine } from '@/hunt/line-judge';
 import { toText } from '@/math/rational';
 import { parseStatement } from '@/math/statement';
 import { fillLine, isSToken, readLine, readTokens, type SToken } from '@/math/statement-tokens';
@@ -22,7 +23,7 @@ interface Common {
   opened: boolean;
   draft: SToken[];
   bounced: boolean;
-  refused: boolean;
+  refused: boolean | 'off';
   /** What's just been said, until he's read it. */
   notice: string | null;
   /** He tried something that went wrong: no first-try parts. */
@@ -42,22 +43,6 @@ function common(guided: boolean): Common {
     notice: null,
     slips: 0,
   };
-}
-
-/** A round's line: what it says happens to the line typed. */
-function judge(line: RoundLine, draft: readonly SToken[]): 'right' | 'false' | 'refused' {
-  const tokens = fillLine(readLine(line.start) ?? [], draft);
-  const same = line.accepts.some((text) => {
-    const accepted = readTokens(text);
-    return (
-      accepted !== null &&
-      accepted.length === tokens.length &&
-      accepted.every((token, i) => token === tokens[i])
-    );
-  });
-  if (same) return 'right';
-  const parsed = parseStatement(tokens);
-  return parsed.ok && !isTrue(parsed.statement) ? 'false' : 'refused';
 }
 
 function commonFrom<T extends Common>(saved: Partial<T>): Common | null {
@@ -219,9 +204,9 @@ export function cartsDismiss(spec: CartsSpec, state: CartsState): CartsState {
 export function cartsEnter(spec: CartsSpec, state: CartsState): CartsState {
   const round = spec.rounds[state.round];
   if (!round || state.phase !== 'write' || round.kind === 'no-carts') return state;
-  const verdict = judge(round.line, state.draft);
+  const { verdict } = judgeLine(round.line.start, round.line.accepts, state.draft);
   if (verdict === 'right') return cartsNext(spec, state);
-  return { ...state, bounced: verdict === 'false', refused: verdict === 'refused' };
+  return { ...state, ...flagsOf(verdict) };
 }
 
 export function proveCarts(spec: CartsSpec): string[] {
@@ -308,10 +293,8 @@ export function levelDismiss(state: LevelState): LevelState {
 export function levelEnter(spec: LevelSpec, state: LevelState): LevelState {
   const round = spec.rounds[state.round];
   if (!round || state.phase !== 'write' || state.notice) return state;
-  const verdict = judge(round.line, state.draft);
-  if (verdict !== 'right') {
-    return { ...state, bounced: verdict === 'false', refused: verdict === 'refused' };
-  }
+  const { verdict } = judgeLine(round.line.start, round.line.accepts, state.draft);
+  if (verdict !== 'right') return { ...state, ...flagsOf(verdict) };
   const next = state.round + 1;
   if (next >= spec.rounds.length) return { ...state, opened: true, guide: null, draft: [] };
   return {
@@ -599,8 +582,11 @@ export function loopEnter(spec: LoopSpec, state: LoopState): LoopState {
   const steps = loopSteps(board, state);
   const really = steps % board.lamps;
   const { rest } = parsed.statement;
-  if (rest >= board.lamps) return { ...state, bounced: true, refused: false };
-  const right = rest === really && isTrue(parsed.statement);
+  // Too big a remainder makes another group; a false line on the right lamp isn't the reason.
+  if (rest >= board.lamps || (rest === really && !isTrue(parsed.statement))) {
+    return { ...state, bounced: true, refused: false };
+  }
+  const right = rest === really;
   return {
     ...state,
     pinned: rest,

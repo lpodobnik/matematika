@@ -1,0 +1,1175 @@
+# Tekst drugog dijela, za pregled
+
+Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi što ne valja, makar grubo: dovoljno je napisati novu rečenicu iza stare. Redoslijed prati igru.
+
+## Vrata ljevaonice
+
+- `knock`: Iza vrata netko kuca: pet puta, pa osam.
+- `task`: Riješi jednadžbu s pločice, pa je provjeri.
+- `knockBack`: S druge strane netko kucne natrag. To nije to.
+- `refused`: Ovo se ne može pročitati. Pogledaj redak još jednom.
+- `waiting.1`: Ljevaonica. Na vratima je pločica i žig Prvog Automata.
+- `waiting.2`: Iza vrata netko kuca. Prvo treba pokrenuti cijeli grad.
+- `outroLast`: Iza vrata netko kuca: pet puta, pa osam. Bilježnica je još otvorena.
+- `ready`: Iza vrata netko kuca: pet puta, pa osam.
+
+## Prazna ljevaonica
+
+- `panels.1`: Vrata se otvaraju. Ljevaonica je hladna i prazna.
+- `panels.2`: Stolac, šalica, alat uredno na mjestu. Majstora Kristijana nema.
+- `panels.3`: Na stolu je traka: MAJSTOR JE PREMJEŠTEN. OVO JE ISPRAVLJENO. HVALA. PRVI AUTOMAT
+- `panels.4`: A kucanje se ne prekida. Sad je tik uz tvoju nogu.
+
+## Imenovanje malog automata
+
+- `ask`: Mali automat od starog željeza gleda te. Zna samo kucati. Kako će se zvati?
+- `label`: Ime malog automata
+- `confirm`: To je to
+
+## Mali automat
+
+- `label`: Mali automat
+- `why`: Zašto?
+
+## Vučetić i karta
+
+- `before.1`: Vrata su otvorena. Zapisano.
+- `before.2`: Evo karte. Što god nađeš, ja to zapišem.
+- `after.1`: Zapisano.
+- `after.2`: Sve sam zapisao.
+
+## Prvo kucanje (Nikola vodi)
+
+- `intro`: Tragovi su u bilježnici, pa ih ne moraš pamtiti. Svaki redak koji napišeš pali ili gasi vrata.
+- `cross`: Jedan trag kaže na kojoj je strani ulice. Prijeđi cestu.
+- `line`: Ovaj je redak već započet. Izračunaj, dopiši rezultat i pritisni tipku za potvrdu.
+- `next`: Još jedan trag. Napiši i njega.
+- `door`: Sad svijetle samo jedna vrata. Dodirni ih i mali će automat pokucati.
+
+## Dvije strane (N, N₀, parni i neparni)
+
+- `title`: Dvije strane
+- `spot`: Trag: dvije strane ulice
+- `lesson.found`: Mali automat nešto je našao pod klupom: valjak Majstora Kristijana. Pušta ga.
+- `lesson.steps.1.1`: Kuće se broje od 1: 1, 2, 3 i tako dalje, bez kraja.
+- `lesson.steps.1.2`: To su prirodni brojevi. Njihov se skup zove N.
+- `lesson.steps.2.1`: Lift ima prizemlje, a to je kat 0.
+- `lesson.steps.2.2`: Nula nije prirodni broj: 0 ∉ N. Ali je u skupu N₀.
+- `lesson.steps.3.1`: Svjetiljke stoje u parovima. Kad nijedna ne ostane sama, broj je paran.
+- `lesson.steps.3.2`: 14 = 7 · 2
+- `lesson.steps.4.1`: Još jedna, i ona ostane sama. Takav je broj neparan.
+- `lesson.steps.4.2`: 15 = 7 · 2 + 1
+- `lesson.steps.5.1`: Zato su kuće s parnim brojevima na jednoj strani ulice, a s neparnima na drugoj.
+- `tries.lamps`: Dodaj svjetiljke dok ih ne bude 7. Koliko je parova? Koliko ih ostane?
+- `tries.sum`: Tri para i jedna viška. Koliko je to svjetiljki? Napiši.
+- `tries.member`: Je li 0 prirodni broj? Napiši znak koji to kaže.
+- `mistake.say`: Mali automat sad broji sam. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Izračunaj umnožak pa usporedi s brojem.
+- `mistake.show`: Pokaži mu: stavi 9 svjetiljki. Što ostane?
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Više neće tako brojati.
+- `street.intro`: Susjedi su vidjeli kola koja su odvezla Majstora. Svaki zna samo djelić.
+- `street.side`: Kola su krenula s neparne strane ulice.
+- `street.pairs`: Ispred te kuće je sedam parova svjetiljki i još jedna viška.
+- `street.almost`: Da je tamo još jedna svjetiljka, bilo bi točno osam parova.
+- `street.structurePairs`: Pomnoži broj parova s 2, pa dodaj onu viška.
+- `street.structureAlmost`: Pomnoži broj parova s 2, pa oduzmi onu koja nedostaje.
+- `street.opened`: Vrata se otvaraju. Susjed pokaže na lift: "Pitaj portira. Ja ništa nisam vidio."
+- `street.grumpy.1`: Nikakvih kola ovdje nije bilo. Laku noć.
+- `street.grumpy.2`: Krivi broj. I ne kucajte više.
+- `street.grumpy.3`: Ovdje živi moja mačka. Ona ništa ne zna.
+- `street.hint.step`: Prođi kroz tragove redom. Svaki trag koji upotrijebiš smanji broj upaljenih vrata.
+- `street.hint.move`: Prijeđi na neparnu stranu, zatim izračunaj 7 · 2 + 1 i 8 · 2 − 1.
+- `street.example.1`: Primjer s drugim brojevima:
+- `street.example.2`: 4 · 2 + 1 = 9
+- `street.example.3`: 5 · 2 − 1 = 9
+- `lift.intro`: Lift ima katove od 0. Portir zna tko je sve vidio.
+- `lift.floor`: Portir: "Vidjela je gospođa s kata čiji broj nije prirodni broj."
+- `lift.structure`: Koji se broj ne nalazi u skupu N? Upiši ga umjesto kvadratića.
+- `lift.opened`: Gospođa iz prizemlja sve je vidjela s prozora.
+- `lift.grumpy.1`: Ovdje stanuju samo Horvati. Oni spavaju.
+- `lift.grumpy.2`: Krivi kat. Ovdje nitko ništa nije vidio.
+- `lift.hint.step`: Prirodni brojevi počinju od 1. Koji kat nije među njima?
+- `lift.hint.move`: Upiši 0: to je prizemlje.
+- `lift.example.1`: Primjer:
+- `lift.example.2`: 5 ∈ N
+- `lift.example.3`: 1 ∈ N
+- `write.notN`: Zapiši u bilježnicu kako se to piše u školi. Nula nije prirodni broj.
+- `write.inN0`: U skupu N₀ nula jest.
+- `write.sum`: I još ono o svjetiljkama: sedam parova i jedna viška.
+- `find.say`: Gospođa je vidjela: kola su krenula s neparne strane i otišla uzbrdo.
+- `find.title`: Prirodni brojevi. Parni i neparni.
+- `find.card.1`: Prirodni brojevi su brojevi kojima brojimo: 1, 2, 3 i tako dalje, bez kraja. Njihov se skup zove N. Kad mu dodamo nulu, dobijemo skup N₀.
+- `find.card.2`: Broj je paran ako se sve može složiti u parove. Ako jedan ostane sam, broj je neparan.
+- `find.card.3`: Znak ∈ znači "pripada", a znak ∉ znači "ne pripada": 10 ∈ N, 0 ∉ N.
+
+## Susjedi (prethodnik i sljedbenik)
+
+- `title`: Susjedi
+- `lesson.found`: Svjedok ne otvara vrata. Mali automat ispod otirača nađe valjak Majstora Kristijana i pusti ga.
+- `lesson.steps.1.1`: Broj obično ima dva susjeda: jedan je za 1 manji, a drugi za 1 veći.
+- `lesson.steps.2.1`: Manji susjed je neposredni prethodnik.
+- `lesson.steps.2.2`: Neposredni prethodnik broja 7 je 6.
+- `lesson.steps.3.1`: Veći susjed je neposredni sljedbenik.
+- `lesson.steps.3.2`: Neposredni sljedbenik broja 7 je 8.
+- `lesson.steps.4.1`: Kad broj završava na 9, sljedbenik mijenja i druge znamenke.
+- `lesson.steps.4.2`: 699 + 1 = 700
+- `lesson.steps.5.1`: Slovo n stoji umjesto nekog broja.
+- `lesson.steps.5.2`: Njegov je sljedbenik n + 1, a prethodnik n − 1.
+- `tries.mark`: Dodirni neposrednog sljedbenika broja 99.
+- `tries.up`: Koji je neposredni sljedbenik broja 4 999? Napiši.
+- `tries.down`: Koji je neposredni prethodnik broja 7 000? Napiši.
+- `mistake.say`: Mali automat traži sljedbenike. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Pogledaj što se događa kad je zadnja znamenka 9.
+- `mistake.show`: Pokaži mu: dodirni broj koji stoji odmah iza 299.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Više neće pisati 10 na kraj broja.
+- `street.intro`: U ovoj su ulici kuće samo s jedne strane, pa brojevi idu redom. Svjedok iz kuće 999 šuti.
+- `street.witness`: Svjedok kroz vrata: "Ja sam n = 999. Pitaj susjeda. Živi do mene, na n + 1."
+- `street.above`: Stanar kuće 1 001: "Onaj koji priča je moj neposredni prethodnik."
+- `street.postman`: Poštar: "Od kuće 998 idi jednu kuću dalje, pa još jednu."
+- `street.structureWitness`: n je 999. Dodaj 1.
+- `street.structureAbove`: Neposredni prethodnik je za 1 manji. Oduzmi 1.
+- `street.structurePostman`: Dodaj 1, pa još 1.
+- `street.wrongBelow`: Stanar kuće 998: "Ja sam mu prethodnik, a ti tražiš sljedbenika. Zbogom."
+- `street.wrongWitness`: Svjedok ne otvara. Kroz vrata: "Rekao sam: pitaj susjeda."
+- `street.grumpy.1`: Ja ništa ne znam. Pitaj nekog drugog.
+- `street.grumpy.2`: Krivi susjed. Pravi je malo dalje.
+- `street.grumpy.3`: Ovdje živimo samo ja i moj kašalj. Zbogom.
+- `street.opened`: Vrata se otvaraju. Susjed odmahne rukom prema svjedoku: "On nikad ne govori. Ja govorim, ali nisam ništa vidio. Znam tko je vidio."
+- `street.hint.step`: Neposredni sljedbenik je za 1 veći, a neposredni prethodnik za 1 manji.
+- `street.hint.move`: Izračunaj 999 + 1, pa 1 001 − 1, pa 998 + 1 + 1.
+- `street.example.1`: Primjer s drugim brojevima:
+- `street.example.2`: 699 + 1 = 700
+- `street.example.3`: 701 − 1 = 700
+- `riddle.intro`: Susjed zna tko je vidio kola. Ali voli zagonetke.
+- `riddle.clue`: Susjed: "Broj te kuće je neposredni prethodnik onog broja čiji je neposredni prethodnik 17."
+- `riddle.structure`: Prvo nađi broj čiji je neposredni prethodnik 17. Zatim nađi njegova prethodnika. Upiši ga umjesto kvadratića.
+- `riddle.wrongEighteen`: Stanar kuće 18: "Moj je prethodnik 17, to je točno. Ali ti tražiš njega, a ne mene."
+- `riddle.wrongSixteen`: Stanar kuće 16: "Jedan korak previše. Laku noć."
+- `riddle.grumpy.1`: Ja ništa ne znam. Pitaj nekog drugog.
+- `riddle.grumpy.2`: Krivi susjed. Pravi je malo dalje.
+- `riddle.grumpy.3`: Ovdje živimo samo ja i moj kašalj. Zbogom.
+- `riddle.opened`: Vrata kuće 17 otvara noćni čuvar. Susjed se smije preko ograde: "Mogao sam reći samo 17. Ali ovako je zabavnije."
+- `riddle.hint.step`: Zagonetka ima dva koraka. Prvo nađi broj čiji je neposredni prethodnik 17.
+- `riddle.hint.move`: Taj je broj 18. Njegov je neposredni prethodnik 17. Upiši 17.
+- `riddle.example.1`: Primjer s drugim brojem:
+- `riddle.example.2`: Broj čiji je prethodnik 40 je 41.
+- `riddle.example.3`: 41 − 1 = 40
+- `write.fade`: Zapiši u bilježnicu kako se to piše u školi. Svjedok je n = 999. Što ide u kvadratić?
+- `write.down`: A njegov neposredni prethodnik? Napiši cijeli redak, sa slovom n.
+- `find.say`: Noćni čuvar iz kuće 17 sve je vidio: kola je vozio automat, a Majstor Kristijan sjedio je straga.
+- `find.title`: Neposredni prethodnik i neposredni sljedbenik.
+- `find.card.1`: Neposredni sljedbenik broja n je za 1 veći: n + 1. Neposredni prethodnik je za 1 manji: n − 1.
+- `find.card.2`: Svaki prirodni broj ima sljedbenika. Svaki osim broja 1 ima i prethodnika među prirodnim brojevima, jer 0 nije prirodni broj.
+- `find.card.3`: Kad broj završava devetkama, sljedbenik mijenja i druge znamenke. Kad završava nulama, prethodnik ih mijenja u devetke.
+
+## Arhiv (potencije broja 10)
+
+- `title`: Arhiv
+- `places.1`: dvorana
+- `places.2`: red
+- `places.3`: polica
+- `places.4`: kutija
+- `places.5`: fascikl
+- `hundreds.1`: stotice
+- `hundreds.2`: desetice
+- `hundreds.3`: jedinice
+- `thousands.1`: tisućice
+- `thousands.2`: stotice
+- `thousands.3`: desetice
+- `thousands.4`: jedinice
+- `lesson.found`: Arhivar pokaže na mala vrata: "Ovuda ja ne prolazim." Mali automat nađe valjak i pusti ga.
+- `lesson.steps.1.1`: Deset fascikala stane u kutiju. Deset kutija na policu. I tako dalje.
+- `lesson.steps.1.2`: Svako mjesto vrijedi deset puta više od onoga desno.
+- `lesson.steps.2.1`: 10 · 10 · 10 kratko pišemo 10³: deset na treću.
+- `lesson.steps.2.2`: Mali broj kaže i koliko nula ima: 1 000.
+- `lesson.steps.3.1`: Znamenka vrijedi prema mjestu na kojem stoji.
+- `lesson.steps.3.2`: 354 = 3 · 10² + 5 · 10 + 4
+- `tries.places`: Složi 354: 3 stotice, 5 desetica, 4 jedinice.
+- `tries.power`: Koliko je 10³? Napiši.
+- `tries.words`: Trideset tisuća petnaest. Napiši taj broj znamenkama.
+- `mistake.say`: Mali automat rastavlja brojeve. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Izračunaj oba dijela pa zbroji.
+- `mistake.show`: Pokaži mu: složi 507. Koliko je desetica?
+- `mistake.write`: Sad napiši točan redak. Tipka ⁿ piše mali broj: 10, pa ⁿ, pa 2 daje 10².
+- `mistake.thanks`: Mali automat kima. Više neće ispuštati nule.
+- `scene.intro`: Ovuda može samo mali automat.
+- `scene.route`: 3 · 10⁴ + 4 · 10³ + 7 · 10 + 2
+- `scene.deadEnd`: Slijepa cijev. Na pločici piše što tvoj put dosad znači:
+- `scene.opened`: Mali automat vraća se ponosan i nosi list papira: otpremnicu iz ljevaonice.
+- `scene.hint.step`: Znak kaže koje se mjesto bira. Što u tragu stoji uz to mjesto?
+- `scene.hint.move`: Nađi u tragu broj uz to mjesto. Ako uz njega nema ničega, biraš 0.
+- `scene.example.1`: Primjer: 2 · 10³ + 5 znači 2 005.
+- `scene.example.2`: Stotica i desetica nema, pa je tamo 0.
+- `write.fade`: Zapiši rastav. Što ide u kvadratić?
+- `write.whole`: A sad cijeli rastav broja 34 072. Tipka ⁿ piše mali broj.
+- `find.say`: Otpremnica iz ljevaonice: Majstor Kristijan otpremljen je kolima, i to je netko potpisao.
+- `find.title`: Veliki brojevi. Potencije broja 10.
+- `find.card.1`: Pomakneš li znamenku jedno mjesto ulijevo, vrijedi deset puta više.
+- `find.card.2`: 10⁶ je kraći zapis za šest desetica pomnoženih međusobno. Čitamo: deset na šestu. Mali broj kaže i koliko nula ima iza jedinice.
+- `find.card.3`: Kad mjesto ostane prazno, pišemo 0: 507 je 5 stotica, 0 desetica i 7 jedinica.
+
+## Tramvajska linija (brojevni pravac)
+
+- `title`: Tramvajska linija
+- `lesson.found`: Belušić, vozač tramvaja, sve mjeri, a pamti samo neke stanice. Mali automat našao je valjak ispod sjedala.
+- `lesson.steps.1.1`: Na brojevnom pravcu svaki je korak jednako dug.
+- `lesson.steps.1.2`: Taj se korak zove jedinična dužina.
+- `lesson.steps.2.1`: Jedinična dužina ne mora biti 1.
+- `lesson.steps.2.2`: Od 0 do 10 su dva koraka, pa jedan korak vrijedi 5.
+- `lesson.steps.3.1`: Pravac ne mora početi od nule.
+- `lesson.steps.3.2`: Prvo izračunaj koliko vrijedi jedan korak.
+- `tries.mark`: Dodirni stanicu 25. Koliko vrijedi jedan korak?
+- `tries.point`: Stanica B je između 10 i 20. Koliko je B? Napiši.
+- `mistake.say`: Mali automat broji crtice. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Pogledaj koliko vrijedi jedan korak.
+- `mistake.show`: Pokaži mu: dodirni stanicu koja je tri koraka od nule.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Više neće brojati crtice.
+- `scene.intro`: Belušić pamti samo neke stanice. Automati patroliraju. Nađi stanicu gdje su kola ušla na liniju.
+- `scene.caught.1`: OPAŽENO. VRAĆENO NA POČETAK. HVALA.
+- `scene.caught.2`: NEOVLAŠTENO KRETANJE. ISPRAVLJENO. HVALA.
+- `scene.caught.3`: OVO JE ZABILJEŽENO. POČNI ISPOČETKA. HVALA.
+- `scene.empty`: Ovdje nema ničega. Belušić odmahuje: "Nije ta. Evo, pokušaj s drugom stanicom."
+- `scene.found`: Tu su! Na stanici je trag kotača.
+- `scene.opened`: Belušić zapisuje: "Točno. Tu su ušla kola."
+- `scene.hint.step`: Pogledaj dvije stanice s brojem. Koliko je koraka između njih? Koliko onda vrijedi jedan korak?
+- `scene.hint.move`: Podijeli razliku dvaju brojeva brojem koraka, pa broji od poznate stanice.
+- `scene.example.1`: Primjer: od 40 do 60 su 4 koraka.
+- `scene.example.2`: 20 : 4 = 5
+- `scene.example.3`: Jedan korak vrijedi 5.
+- `write.point`: Zapiši u bilježnicu gdje su kola ušla na liniju: stanica A na prvom pravcu.
+- `find.say`: Kola su ušla na liniju kod stanice 25.
+- `find.title`: Brojevni pravac. Jedinična dužina.
+- `find.card.1`: Na brojevnom pravcu svaki je korak jednako dug. Taj se korak zove jedinična dužina.
+- `find.card.2`: Jedinična dužina ne mora biti 1, a pravac ne mora početi od nule.
+- `find.card.3`: Da pročitaš broj na pravcu, prvo izračunaj koliko vrijedi jedan korak: razliku dvaju brojeva podijeli brojem koraka između njih.
+
+## Prvi čvor
+
+- `title`: Prvi čvor
+- `guard.rule`: ZNAMENKA VRIJEDI ISTO GDJE GOD STOJI.
+- `guard.intro`: Na putu do Fausta stoji automat s trakom i nikoga ne pušta dalje.
+- `guard.thanks.same`: HVALA. ISTO MJESTO, ISTA VRIJEDNOST. PRAVILO JE POTVRĐENO.
+- `guard.thanks.ones`: HVALA. ZNAMENKA 3 JE U OBA BROJA JEDINICA. PRAVILO JE POTVRĐENO.
+- `guard.thanks.tens`: HVALA. ZNAMENKA 3 JE U OBA BROJA DESETICA. PRAVILO JE POTVRĐENO.
+- `guard.thanks.other`: HVALA. TO SU RAZLIČITE ZNAMENKE. PRAVILO O NJIMA NE GOVORI.
+- `guard.thanks.long`: HVALA. ZNAMENKA 3 VRIJEDI ISTO U OBA BROJA. PRAVILO JE POTVRĐENO.
+- `guard.write`: U broju 30 znamenka 3 vrijedi tri desetice. Napiši to.
+- `guard.jammed`: Traka se zaglavi: 3 nije isto što i 30. Automat stane i pristojno zahvali.
+- `guard.hint.step`: Treba ti ista znamenka na dva različita mjesta.
+- `guard.hint.move`: Izaberi pločicu 3 i 30. Napiši 30 = 3 · 10.
+- `guard.example.1`: Primjer s drugom znamenkom:
+- `guard.example.2`: U broju 7 znamenka vrijedi sedam.
+- `guard.example.3`: 70 = 7 · 10
+- `knock.intro`: Faust okreće malog automata u rukama: "Ovo željezo poznam. Kristijan ga je negdje spremao." Tvoji tragovi kažu gdje.
+- `knock.side`: Gospođa iz prizemlja: kola su krenula s neparne strane.
+- `knock.slip`: Otpremnica iz arhiva: ispod potpisa piše 3 · 10 + 5.
+- `knock.tram`: Belušić: "Od stanice 25 još dva koraka. Jedan korak vrijedi 5."
+- `knock.watchman`: Noćni čuvar: "Neposredni sljedbenik broja 34. Prirodni broj, naravno."
+- `knock.structureSlip`: Pomnoži 3 · 10, pa dodaj 5.
+- `knock.structureTram`: Dva koraka po 5 je 2 · 5. Dodaj to broju 25.
+- `knock.structureWatchman`: Neposredni sljedbenik je za 1 veći. Upiši ga umjesto kvadratića.
+- `knock.grumpy.1`: Ja ništa ne znam. Pitaj nekog drugog.
+- `knock.grumpy.2`: Krivi susjed. Pravi je malo dalje.
+- `knock.grumpy.3`: Ovdje živimo samo ja i moj kašalj. Zbogom.
+- `knock.opened`: Iza vrata je Kristijanovo skrovište. Na polici je kuka za penjanje, premala za ljudsku ruku.
+- `knock.hint.step`: Prijeđi na pravu stranu ulice, pa napiši svaki trag.
+- `knock.hint.move`: Prijeđi na neparnu stranu, zatim izračunaj 3 · 10 + 5 i 25 + 2 · 5. Neposredni sljedbenik broja 34 je 35.
+- `knock.example.1`: Primjer s drugim brojevima:
+- `knock.example.2`: 4 · 10 + 3 = 43
+- `knock.example.3`: 33 + 2 · 5 = 43
+- `knock.example.4`: 43 ∈ N
+- `find.say`: Kuka je taman za malog automata. Majstor Kristijan znao je da će netko doći.
+- `find.title`: Znamenka i njezino mjesto.
+- `find.card.1`: Znamenka vrijedi prema mjestu na kojem stoji. Jedno mjesto ulijevo i vrijedi deset puta više.
+- `find.card.2`: Jedan primjer u kojem pravilo ne vrijedi dovoljan je da pravilo padne.
+
+## Gdje je mali automat?
+
+- `title`: Gdje je mali automat?
+- `knock.intro`: Ulica je pretiha. Malog automata nema, pa kucaš ti. Susjedi su nešto vidjeli.
+- `knock.side`: Gospođa s balkona: "Nešto malo kotrljalo se parnom stranom. Za nečim je išlo."
+- `knock.baker`: Pekar: "Stalo je kod neposrednog sljedbenika broja 63."
+- `knock.boy`: Dječak na biciklu: "Šest desetica i četiri jedinice. Zapamtio sam broj."
+- `knock.structureBaker`: Neposredni sljedbenik je za 1 veći. Dodaj 1.
+- `knock.structureBoy`: Šest desetica je 6 · 10. Dodaj 4.
+- `knock.grumpy.1`: Nema ovdje nikakvog malog automata. Ima samo mene, a ja spavam.
+- `knock.grumpy.2`: Onaj mali bar lijepo kuca. Ti lupaš. Ovdje ga nema.
+- `knock.grumpy.3`: Čuo sam pištanje, ali ne iza ovih vrata. Laku noć.
+- `knock.opened`: Vrata se otvaraju. U dvorištu igračka na navijanje hoda u zid, pa opet u zid. Mali automat ide za njom i ozbiljno kima. Kad te vidi, zapišti i dokotrlja se do tvoje noge.
+- `knock.hint.step`: Napiši što kaže svaki susjed. Kad ostanu jedna vrata, pokucaj.
+- `knock.hint.move`: Prijeđi na parnu stranu, zatim izračunaj 63 + 1 i 6 · 10 + 4.
+- `knock.example.1`: Primjer s drugim brojevima:
+- `knock.example.2`: 41 + 1 = 42
+- `knock.example.3`: 4 · 10 + 2 = 42
+- `find.say`: Nikola pocrveni: "To je moj prvi automat. Zna samo ići ravno." Ulica više nije tiha.
+- `find.title`: Tragovi zajedno.
+- `find.card.1`: Svaki trag sam po sebi kaže malo. Zajedno ostave samo jedna vrata.
+
+## Svjedoci (uspoređivanje)
+
+- `title`: Svjedoci
+- `lesson.found`: Svjedoci se svađaju nasred ulice. Mali automat pod klupom nađe valjak i pusti ga.
+- `lesson.steps.1.1`: Što je broj dalje udesno, to je veći.
+- `lesson.steps.1.2`: 47 < 52 čitamo: 47 je manji od 52.
+- `lesson.steps.2.1`: Broj s više znamenki je veći.
+- `lesson.steps.2.2`: Kad ih je jednako, odlučuje prva različita znamenka slijeva: 527 < 531.
+- `lesson.steps.3.1`: Raspon je dvije usporedbe odjednom.
+- `lesson.steps.3.2`: 12 < x < 16: x je veći od 12 i manji od 16.
+- `lesson.steps.4.1`: Znak < ne računa krajnji broj. Znak ≤ ga računa.
+- `lesson.steps.4.2`: 12 ≤ x < 16 računa i broj 12.
+- `lesson.steps.5.1`: Znak ≠ izbaci jedan broj: x ≠ 14.
+- `lesson.steps.5.2`: Što ostane, možemo nabrojati: {13, 15}.
+- `tries.mark`: Koji je najveći broj za koji vrijedi x < 26? Dodirni ga.
+- `tries.list`: Koji su brojevi u rasponu 20 < x < 24? Dopiši onaj koji nedostaje.
+- `tries.range`: Kuće iza 340, a prije 350. Napiši raspon.
+- `mistake.say`: Mali automat nabraja što je u rasponu. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Pogledaj znak <: računa li on krajnji broj?
+- `mistake.show`: Pokaži mu: koji je najmanji broj za koji vrijedi 2 < x < 5? Dodirni ga.
+- `mistake.write`: Sad napiši točan popis.
+- `mistake.thanks`: Mali automat kima. Krajnje brojeve više ne pušta unutra.
+- `scene.intro`: Svjedoci se svađaju gdje su kola skrenula. Svatko je vidio samo dio.
+- `scene.side`: Mljekarica: "Bila su na parnoj strani!"
+- `scene.range`: Pismonoša: "Prošla su 230, a nisu stigla do 240."
+- `scene.not`: Pekar: "Kod kuće 232 sigurno nisu skrenula. Tu sam ja stajao."
+- `scene.upTo`: Postolar: "Dalje od kuće 234 nisu išla. Ali do nje jesu."
+- `scene.structureRange`: Ni jedan ni drugi broj se ne računa. Napiši x između njih, sa znakom <.
+- `scene.structureNot`: Izbaci taj broj: x ≠ i broj.
+- `scene.structureUpTo`: Kuća 234 još se računa. Koji znak računa krajnji broj?
+- `scene.wrongBaker`: Pekar, sav u brašnu: "Rekao sam: ne kod mene!" Dodirni svoj redak koji ne valja, pa napiši drugi.
+- `scene.grumpy.1`: Što kucaš? Kola ne stanuju ovdje.
+- `scene.grumpy.2`: Krivi broj. Pitaj one što se svađaju.
+- `scene.grumpy.3`: Nisam svjedok. Ja samo želim spavati.
+- `scene.opened`: Vrata kuće 234 se otvaraju. Iza kuće je sporedna ulica, a na kamenu trag kotača. Svjedoci napokon zašute.
+- `scene.hint.step`: "Prošla su" i "nisu stigla" ne računaju taj broj. "Do nje jesu" ga računa.
+- `scene.hint.move`: Prijeđi na parnu stranu. Napiši 230 < x < 240, zatim x ≠ 232, zatim x ≤ 234.
+- `scene.example.1`: Primjer s drugim brojevima:
+- `scene.example.2`: 50 < x < 60
+- `scene.example.3`: x ≠ 52
+- `scene.example.4`: x ≤ 54
+- `write.range`: Zapiši raspon kako se piše u školi. Računa li se 230? Koji znak ide u kvadratić?
+- `write.list`: Sad napiši popis parnih brojeva iz tog raspona, od najmanjeg.
+- `find.say`: Kola su skrenula kod kuće 234, u sporednu ulicu.
+- `find.title`: Uspoređivanje brojeva. Produžena nejednakost.
+- `find.card.1`: Broj s više znamenki je veći. Kad brojevi imaju jednako znamenki, odlučuje prva različita znamenka slijeva, jer jedna jedinica višeg mjesta vrijedi više od svega desno od nje.
+- `find.card.2`: Raspon kao 2 ≤ x < 9 zove se produžena nejednakost: to su dvije usporedbe odjednom. Znak < ne računa krajnji broj, a znak ≤ ga računa.
+- `find.card.3`: Znak ≠ znači "je različit od". Brojeve iz raspona možemo nabrojati u vitičastim zagradama.
+
+## Novine (zaokruživanje)
+
+- `title`: Novine
+- `lesson.found`: Zagorka zaokružuje sve, pa i naslove. U uredništvu je pod stolom valjak.
+- `lesson.steps.1.1`: "Oko 330" znači bilo koji broj od 325 do 334.
+- `lesson.steps.1.2`: Pišemo 334 ≈ 330.
+- `lesson.steps.2.1`: Gledamo samo prvu znamenku iza mjesta na koje zaokružujemo.
+- `lesson.steps.2.2`: Ako je 5 ili više, idemo naviše. Ako je manja, ostajemo.
+- `lesson.steps.3.1`: Pogreška je razlika između broja i njegove zaokružene vrijednosti.
+- `lesson.steps.3.2`: 334 − 330 = 4
+- `tries.mark`: Na koju se deseticu zaokružuje 334? Dodirni je.
+- `tries.line`: Zaokruži 487 na desetice. Napiši.
+- `mistake.say`: Mali automat zaokružuje korak po korak. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Pogledaj samo prvu znamenku iza mjesta na koje zaokružuješ.
+- `mistake.show`: Pokaži mu: na koju se tisućicu zaokružuje 2 449? Dodirni je.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Sad gleda samo jednu znamenku.
+- `scene.intro`: Tri bilješke za isti članak, a brojevi se ne slažu. Jedna ne može biti točna.
+- `scene.who.zagorka`: Zagorka
+- `scene.who.slagar`: Slagar
+- `scene.who.raznosac`: Raznosač
+- `scene.offended.zagorka`: "Ja? Moji su naslovi zaokruženi, a ne lažni!"
+- `scene.offended.raznosac`: "Jednom sam se zabunio, i to je sve!"
+- `scene.why.zagorka`: Zagorka je svaki put pogledala pravu znamenku.
+- `scene.why.raznosac`: Raznosač je pogriješio samo jednom, a ostale je zaokružio točno.
+- `scene.cards.a`: Zaokruži 334 na desetice.
+- `scene.cards.b`: Zaokruži 5 632 na stotice.
+- `scene.cards.c`: Zaokruži 71 240 na tisućice.
+- `scene.reveal`: Slagar svaki put ide naviše, kakva god da je znamenka.
+- `scene.fix`: Napiši njegov prvi redak kako treba.
+- `scene.opened`: Zagorka podigne obrve: "E, to ću objaviti."
+- `scene.hint.step`: Tko griješi svaki put na isti način? Jedna pogreška još nije laž.
+- `scene.hint.move`: Pogledaj Slagara: svaki put ide naviše.
+- `scene.example.1`: Primjer s drugim brojem:
+- `scene.example.2`: 1 240 ≈ 1 000
+- `scene.example.3`: Znamenka iza tisućica je 2, pa ostajemo.
+- `write.approx`: Zapiši zaokruživanje.
+- `write.error`: Kolika je pogreška? Napiši razliku.
+- `find.say`: U novinama je zapisano kamo su kola krenula, zaokruženo, ali dovoljno točno.
+- `find.title`: Zaokruživanje. Procjena.
+- `find.card.1`: Kad zaokružujemo, gledamo samo prvu znamenku iza mjesta na koje zaokružujemo. Ako je 5 ili više, idemo naviše. Ako je manja, ostajemo.
+- `find.card.2`: Znak ≈ znači "približno jednako". Pogreška je razlika između broja i zaokružene vrijednosti.
+
+## Knjige računa (zbrajanje i oduzimanje)
+
+- `title`: Knjige računa
+- `places.1`: stotice
+- `places.2`: desetice
+- `places.3`: jedinice
+- `lesson.found`: Kotruljević svaki račun vodi dvaput. Između dviju knjiga mali automat nađe valjak i pusti ga.
+- `lesson.steps.1.1`: Zbrajanje je skakanje po pravcu: 9, pa još 5, i stojimo na 14.
+- `lesson.steps.1.2`: Brojevi 9 i 5 su pribrojnici, a 14 je zbroj.
+- `lesson.steps.2.1`: Krenemo li s 5, pa još 9, opet stojimo na 14.
+- `lesson.steps.2.2`: Redoslijed pribrojnika ne mijenja zbroj.
+- `lesson.steps.3.1`: Zato u dugom zbroju tražimo parove s okruglim zbrojem.
+- `lesson.steps.3.2`: 35 + 48 + 65 = 100 + 48 = 148
+- `lesson.steps.4.1`: Oduzimanje traži pribrojnik koji nedostaje: 14 − 5 = 9, jer je 5 + 9 = 14.
+- `lesson.steps.4.2`: Od umanjenika oduzimamo umanjitelj, i ostane razlika.
+- `lesson.steps.5.1`: Oduzeti dva broja zaredom isto je što i oduzeti njihov zbroj.
+- `lesson.steps.5.2`: 90 − 15 − 5 = 90 − 20 = 70
+- `tries.jump`: Skoči 7, pa još 6. Dodirni gdje staneš.
+- `tries.pair`: Nađi par s okruglim zbrojem, pa zbroji sve.
+- `tries.out`: Izašlo je 16, pa 24. Koliko je to ukupno? Upiši u kvadratić.
+- `mistake.say`: Mali automat oduzima. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Provjeri zbrajanjem: umanjitelj i razlika moraju dati umanjenik.
+- `mistake.show`: Pokaži mu: koliko je 300 − 189? Dodirni razliku.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Sad svaki račun provjeri zbrajanjem.
+- `scene.intro`: Kotruljević svaki račun vodi dvaput. Uz njegove dvije knjige leži i knjiga iz ljevaonice. Jedna ne govori istinu.
+- `scene.who.prva`: Prva knjiga
+- `scene.who.druga`: Druga knjiga
+- `scene.who.ljevaonica`: Knjiga iz ljevaonice
+- `scene.offended.prva`: Kotruljević: "Moja knjiga? Ja svaki račun vodim dvaput!"
+- `scene.offended.druga`: Kotruljević: "Jedna omaška, a ti me već zoveš lažljivcem?"
+- `scene.why.prva`: Prva knjiga svaki put oduzima zbroj i uvijek je točna.
+- `scene.why.druga`: Druga je knjiga pogriješila samo jednom, u jednoj znamenci. Ostali su redci točni.
+- `scene.cards.a`: Bilo je 423 sanduka. Izašlo je 37, pa 54.
+- `scene.cards.b`: Bilo je 5 200 sanduka. Izašlo je 480, pa 320.
+- `scene.cards.c`: Bilo je 700 000 000 vijaka. Izašlo je 30, pa 20.
+- `scene.reveal`: Knjiga iz ljevaonice svaki put oduzme razliku tih dvaju brojeva, a ne njihov zbroj. Tako je netko sakrio što nedostaje.
+- `scene.fix`: Napiši njezin prvi redak kako treba.
+- `scene.opened`: Kotruljević prekriži redak i zapiše ga dvaput, za svaki slučaj.
+- `scene.hint.step`: Dva oduzimanja zaredom isto su što i oduzimanje njihova zbroja. Tko to svaki put radi krivo? Jedna omaška još nije laž.
+- `scene.hint.move`: Pogledaj knjigu iz ljevaonice: umjesto zbroja oduzima razliku.
+- `scene.example.1`: Primjer s drugim brojevima:
+- `scene.example.2`: 90 − 15 − 5 = 90 − 20 = 70
+- `scene.example.3`: Izašlo je 15 i 5, dakle ukupno 20.
+- `write.pair`: Zapiši u bilježnicu kako se to piše u školi. Koliko je izašlo ukupno?
+- `write.whole`: Sad cijeli račun, s međukorakom.
+- `find.say`: U knjizi iz ljevaonice nedostaje 74 sanduka. Netko ih je odvezao i nije ih zapisao.
+- `find.title`: Zbrajanje i oduzimanje.
+- `find.card.1`: Brojevi koje zbrajamo su pribrojnici, a rezultat je zbroj. Zamjena mjesta pribrojnika zove se komutativnost, a združivanje asocijativnost: ni jedno ni drugo ne mijenja zbroj.
+- `find.card.2`: U oduzimanju su umanjenik, umanjitelj i razlika. Oduzimanje se provjerava zbrajanjem: umanjitelj + razlika = umanjenik.
+- `find.card.3`: Oduzeti dva broja zaredom isto je što i oduzeti njihov zbroj.
+- `find.card.4`: Ako jedan pribrojnik naraste za 47, a drugi za 26, zbroj naraste za 73, kakvi god bili ti brojevi.
+
+## Pročelje (množenje)
+
+- `title`: Pročelje
+- `lesson.found`: Na pločniku ispod pročelja mali automat nađe valjak Majstora Kristijana i pusti ga.
+- `lesson.steps.1.1`: Zgrada ima 4 reda prozora, a u svakom je redu 5 prozora.
+- `lesson.steps.1.2`: 5 + 5 + 5 + 5 = 4 · 5 = 20
+- `lesson.steps.2.1`: Množenje je kraće zbrajanje jednakih pribrojnika.
+- `lesson.steps.2.2`: Brojevi 4 i 5 su faktori, a 20 je umnožak.
+- `lesson.steps.3.1`: Prozori su numerirani redom, red po red.
+- `lesson.steps.3.2`: Zadnji prozor drugog reda ima broj 2 · 5 = 10.
+- `lesson.steps.4.1`: Množimo li okrugle brojeve, množimo bez nula, pa nule dopišemo.
+- `lesson.steps.4.2`: 3 · 10 = 30, a 30 · 100 = 3 000.
+- `lesson.steps.5.1`: A krilo u kojem redovi nemaju prozora? Nema što brojati.
+- `lesson.steps.5.2`: 5 · 0 = 0
+- `tries.build`: Složi zgradu: 3 reda, a u svakom redu 6 prozora.
+- `tries.last`: Zgrada ima 7 redova, a u svakom su redu 4 prozora. Koji broj ima zadnji prozor?
+- `tries.big`: Tvornica ima 40 redova prozora, a u svakom je redu 100 prozora. Koliko je to prozora?
+- `mistake.say`: Mali automat broji prozore po krilima. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Pogledaj redak s nulom.
+- `mistake.show`: Pokaži mu: ostavi 8 redova, ali bez ijednog prozora u redu.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Sad zna: u krilu bez prozora nema prozora.
+- `scene.intro`: Stanari spavaju. Majstor Kristijan kredom je označio prozore. Mali automat penje se sam, kukom.
+- `scene.rounds.first`: Kreda je na prozoru 42. U svakom je redu 7 prozora.
+- `scene.rounds.second`: Kreda je na prozoru 24. U svakom je redu 8 prozora.
+- `scene.rounds.third`: Sad veća zgrada. Kreda je na prozoru 54. U svakom je redu 9 prozora.
+- `scene.sleepy.1`: Stanar proviri: "Krivi prozor. Spavam."
+- `scene.sleepy.2`: Stanarka zijevne: "Opet kuka? Brojevi idu red po red. Laku noć."
+- `scene.sleepy.3`: Stanar trlja oči: "Ovdje nema krede. Ima samo mene."
+- `scene.reached`: Kuka zapne za okvir. Tu je Kristijanova kreda.
+- `scene.opened`: Zadnja kreda je strelica. Mali automat vraća se ponosan, s kredom na glavi.
+- `scene.hint.step`: Prozori idu red po red. Broj zadnjeg prozora u redu je: broj redova · broj prozora u redu.
+- `scene.hint.move`: Koliko redova treba da dobiješ broj s krede? Dodirni zadnji prozor u tom redu.
+- `scene.example.1`: Primjer s drugim brojevima:
+- `scene.example.2`: 3 · 5 = 15
+- `scene.example.3`: Ako je u svakom redu 5 prozora, prozor 15 je zadnji u trećem redu.
+- `write.fade`: Zapiši u bilježnicu kako se to piše u školi. Prozor 42, a u svakom je redu 7 prozora. Koliko je redova?
+- `write.whole`: A prozor 24, s 8 prozora u svakom redu? Napiši cijeli redak.
+- `find.say`: Na zadnjem je prozoru kredom nacrtana strelica. Odande se vidi kamo su kola otišla.
+- `find.title`: Množenje. Faktori i umnožak.
+- `find.card.1`: Množenje je kraće zbrajanje jednakih pribrojnika. Brojevi koje množimo su faktori, a rezultat je umnožak.
+- `find.card.2`: Stvari složene u redove i stupce brojimo množenjem: broj redova puta broj stvari u svakom redu.
+- `find.card.3`: Množimo li sa 10, 100 ili 1 000, dopisujemo nule. Broj pomnožen s 1 ostaje isti, a pomnožen s 0 daje 0.
+
+## Drugi čvor
+
+- `title`: Drugi čvor
+- `guard.rule`: 5 UVIJEK ZAOKRUŽUJEMO NANIŽE.
+- `guard.intro`: Još jedan automat s trakom. Ovaj ne voli peticu.
+- `guard.thanks.one`: HVALA. ZNAMENKA 1 IDE NANIŽE. TU NEMA PETICE. PRAVILO NIJE DIRNUTO.
+- `guard.thanks.four`: HVALA. ZNAMENKA 4 IDE NANIŽE. TU NEMA PETICE. PRAVILO NIJE DIRNUTO.
+- `guard.thanks.eight`: HVALA. ZNAMENKA 8 IDE NAVIŠE, ALI TO NIJE PETICA. PRAVILO NIJE DIRNUTO.
+- `guard.thanks.seven`: HVALA. ZNAMENKA 7 IDE NAVIŠE, ALI TO NIJE PETICA. PRAVILO NIJE DIRNUTO.
+- `guard.thanks.tens`: HVALA. PETICA JE NA DESETICAMA, A GLEDAMO JEDINICE. PRAVILO NIJE DIRNUTO.
+- `guard.write`: Zaokruži 25 na desetice kako treba.
+- `guard.jammed`: Traka se zaglavi: 25 ide naviše. Automat stane i pristojno zahvali.
+- `guard.hint.step`: Pravilo govori o broju koji završava na 5. Nađi takav broj.
+- `guard.hint.move`: Izaberi 25. Napiši 25 ≈ 30.
+- `guard.example.1`: Primjer s drugim brojem:
+- `guard.example.2`: 45 ≈ 50
+- `guard.example.3`: Prva znamenka iza desetica je 5, pa idemo naviše.
+- `knock.intro`: Svi tvoji nalazi vode u istu ulicu. A Vučetić donosi još jedan.
+- `knock.side`: Svjedoci: kola su stala na parnoj strani.
+- `knock.news`: Zagorkin naslov: "KOLA KOD KUĆE OKO 330!" To su kuće od 325 do 334, i one se računaju.
+- `knock.chalk`: Kreda s prozora: "Nije kuća 330."
+- `knock.books`: Kotruljević: "Broj kuće? Ono što ostane u knjizi."
+- `knock.note`: Vučetić donosi bilješku: "Rukopis Majstora Kristijana. 423 − 37 − 54 = 334. Zapisano."
+- `knock.structureNews`: Oba se broja računaju. Koji znak računa krajnji broj?
+- `knock.structureChalk`: Izbaci taj broj: x ≠ i broj.
+- `knock.structureBooks`: Od 423 oduzmi zbroj 37 + 54.
+- `knock.structureNote`: Bilješka kaže jedno, a račun možda drugo. Izračunaj i provjeri.
+- `knock.notice`: Iza vrata je samo traka: OVO JE ISPRAVLJENO. HVALA.
+- `knock.grumpy.1`: Opet netko kuca. Ovdje nema ničega.
+- `knock.grumpy.2`: Ako je to račun, nije moj. Laku noć.
+- `knock.opened`: Vrata se otvaraju. Soba je prazna, ali na stolu je Kristijanova kreda. Račun u bilješci nije točan, a Majstor Kristijan u računu ne griješi.
+- `knock.hint.step`: Provjeri svaki račun. Je li bilješka točna?
+- `knock.hint.move`: Izračunaj 423 − 37 − 54. Dobiješ 332, a ne 334. Prijeđi na parnu stranu, pa napiši 325 ≤ x ≤ 334, x ≠ 330 i račun iz knjige.
+- `knock.example.1`: Primjer s drugim brojevima:
+- `knock.example.2`: 90 − 15 − 5 = 70
+- `knock.example.3`: 65 ≤ x ≤ 74
+- `find.say`: Netko piše Kristijanovim rukopisom. Faust gleda bilješku, pa malog automata: "Znaš, ovaj mali napravljen je od..." Zastane i ne kaže ništa više.
+- `find.title`: Bilješka s greškom.
+- `find.card.1`: Svaki trag možeš provjeriti računom. Kad se bilješka i račun ne slažu, vjeruj računu.
+- `find.card.2`: Kad je prva znamenka iza mjesta na koje zaokružujemo 5 ili veća, idemo naviše.
+
+## Dvorište sanduka (svojstva množenja)
+
+- `title`: Dvorište sa sanducima
+- `lesson.found`: Mali automat nađe valjak među sanducima. Na njemu je urezano: "Kartu čita netko blizak."
+- `lesson.steps.1.1`: Sanduci stoje u 3 reda po 7.
+- `lesson.steps.1.2`: 3 i 7 su faktori, a 21 je umnožak.
+- `lesson.steps.2.1`: Okreni ih: sad je 7 redova po 3. Sanduka je jednako.
+- `lesson.steps.2.2`: 3 · 7 = 7 · 3
+- `lesson.steps.3.1`: Neki parovi faktora daju okrugao broj.
+- `lesson.steps.3.2`: 2 · 5 = 10, 25 · 4 = 100, 125 · 8 = 1 000
+- `lesson.steps.4.1`: Faktore smijemo i združiti: prvo par, pa ostatak.
+- `lesson.steps.4.2`: 3 · 2 · 5 = 3 · 10 = 30
+- `tries.turn`: Okreni sanduke: neka 4 reda po 6 postanu 6 redova po 4.
+- `tries.pair`: Spoji 2 i 5 u par. Koliko je 6 · 2 · 5? Napiši.
+- `tries.big`: Sad bez sanduka. Nađi par koji daje 100. Koliko je 25 · 9 · 4?
+- `mistake.say`: Mali automat računa umnoške. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Izračunaj umnoške u drugom retku.
+- `mistake.show`: Mali automat misli da je 4 · 3 više od 3 · 4. Pokaži mu: okreni sanduke.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Više ne misli da je važno tko stoji prvi.
+- `yard.intro`: Radnici ne pišu broj tovara, nego račun. Svaki zna samo djelić.
+- `yard.side`: Tovar stoji na parnoj strani dvorišta.
+- `yard.first`: Prvi radnik: "Na listu piše 125 · 7 · 8. Spoji 125 i 8."
+- `yard.second`: Drugi radnik: "Kod mene piše 8 · 7 · 125. Isti faktori, samo drugim redom."
+- `yard.structureFirst`: Prvo izračunaj 125 · 8. Zatim pomnoži sa 7.
+- `yard.structureSecond`: Faktori su isti, pa je i umnožak isti.
+- `yard.grumpy.1`: Krivo. Ovdje su samo moji krumpiri.
+- `yard.grumpy.2`: Ovdje živi samo moja teta. Ona ne čuje.
+- `yard.grumpy.3`: Spavam. Pokucaj kod susjeda.
+- `yard.grumpy.4`: Ništa ne znam. Ni moj pas ništa ne zna.
+- `yard.grumpy.5`: Krivi broj. Izračunaj ga još jednom.
+- `yard.grumpy.6`: Opet netko kuca? Krivo. Laku noć.
+- `yard.grumpy.7`: Ovdje nema ni kola ni sanduka. Samo juha.
+- `yard.grumpy.8`: Nismo ništa vidjeli. Ni ja ni moji brkovi.
+- `yard.opened`: Vrata skladišta se otvaraju. Radnik kima: "Sad veliki tovar. Taj je u dnu dvorišta."
+- `yard.hint.step`: Nađi par faktora koji daje okrugao broj.
+- `yard.hint.move`: Prijeđi na parnu stranu. 125 · 8 = 1 000, a 1 000 · 7 = 7 000.
+- `yard.example.1`: Primjer s drugim brojevima:
+- `yard.example.2`: 25 · 3 · 4 = 100 · 3 = 300
+- `big.intro`: Veliki tovar. Račun je dug, ali u njemu su parovi.
+- `big.side`: I veliki je tovar na parnoj strani.
+- `big.factors`: Radnik: "Na listu piše 5 · 73 · 2 · 125 · 8. Traži parove."
+- `big.rows`: Skladištar: "Složio sam ih u 730 redova po 1 000. Broji kako hoćeš."
+- `big.structureFactors`: Dva para: 5 · 2 i 125 · 8. Zatim pomnoži sa 73.
+- `big.structureRows`: Redovi puta sanduci u redu. Množenje s 1 000 dodaje tri nule.
+- `big.grumpy.1`: Krivo. Ovdje su samo moji krumpiri.
+- `big.grumpy.2`: Ovdje živi samo moja teta. Ona ne čuje.
+- `big.grumpy.3`: Spavam. Pokucaj kod susjeda.
+- `big.grumpy.4`: Ništa ne znam. Ni moj pas ništa ne zna.
+- `big.grumpy.5`: Krivi broj. Izračunaj ga još jednom.
+- `big.grumpy.6`: Opet netko kuca? Krivo. Laku noć.
+- `big.grumpy.7`: Ovdje nema ni kola ni sanduka. Samo juha.
+- `big.grumpy.8`: Nismo ništa vidjeli. Ni ja ni moji brkovi.
+- `big.opened`: Tovar je nađen, ali sanduka nema. Na zemlji su tragovi kotača.
+- `big.hint.step`: Traži dva para: jedan daje 10, drugi 1 000.
+- `big.hint.move`: Prijeđi na parnu stranu. 5 · 2 = 10, a 125 · 8 = 1 000. Ostaje još 73.
+- `big.example.1`: Primjer s drugim brojevima:
+- `big.example.2`: 5 · 41 · 2 · 25 · 4 = 10 · 100 · 41 = 41 000
+- `write.pair`: Zapiši par koji daje tisuću.
+- `write.whole`: A sad cijeli račun: 125 · 7 · 8. Prvo par, pa ostatak.
+- `find.say`: Radnik pokazuje na tragove: sanduci su otišli kolima, uzbrdo, istim putem kao i Majstor.
+- `find.title`: Zamjena i združivanje faktora.
+- `find.card.1`: Kad iste stvari brojimo po redovima ili po stupcima, dobijemo isti broj. Zato faktori smiju zamijeniti mjesta: 3 · 7 = 7 · 3. To je komutativnost, ili zamjena.
+- `find.card.2`: Faktore smijemo združiti kako nam je lakše, a umnožak ostaje isti: 3 · 2 · 5 = 3 · 10. To je asocijativnost, ili združivanje.
+- `find.card.3`: Zato tražimo parove koji daju okrugao broj: 2 · 5 = 10, 20 · 5 = 100, 25 · 4 = 100, 125 · 8 = 1 000.
+
+## Šesta kola (dijeljenje)
+
+- `title`: Šesta kola
+- `lesson.found`: Svjedok je vidio 5 kola i zna to napamet. Mali automat nađe valjak pod njegovom klupom.
+- `lesson.steps.1.1`: 12 sanduka slažemo po 4. Koliko je tovara?
+- `lesson.steps.1.2`: 12 : 4 = 3
+- `lesson.steps.2.1`: Ista slika: 12 sanduka na 3 kola. Koliko ide na svaka?
+- `lesson.steps.2.2`: 12 : 3 = 4
+- `lesson.steps.3.1`: U računu 12 : 3 = 4 broj 12 je djeljenik, a 3 je djelitelj.
+- `lesson.steps.3.2`: Rezultat, 4, je količnik.
+- `lesson.steps.4.1`: Dijeljenje traži faktor koji nedostaje.
+- `lesson.steps.4.2`: 3 · 4 = 12, pa je 12 : 3 = 4.
+- `lesson.steps.5.1`: Dijeljenje se piše i kosom crtom.
+- `lesson.steps.5.2`: 12 / 3 je isto što i 12 : 3.
+- `tries.per`: Slaži 8 sanduka po 2. Koliko je tovara?
+- `tries.share`: 18 sanduka na 3 kola. Koliko ide na svaka? Napiši.
+- `tries.slash`: Na listu piše 40 / 8. U bilježnici dijelimo dvotočkom. Napiši.
+- `mistake.say`: Mali automat čita "3 puta manje" i "za 3 manje". Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan: "za 3 manje" znači oduzeti 3.
+- `mistake.show`: "3 puta manje" znači podijeliti s 3. Pokaži mu: slaži 15 sanduka po 3.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Sad razlikuje "puta" i "za".
+- `scene.intro`: Svjedok je vidio 120 sanduka i 5 kola. Na jedna kola stane 20 sanduka. Provjeri.
+- `scene.share.say`: Na listu piše 120 / 6: 120 sanduka na 6 kola. Natovari ih jednako.
+- `scene.share.line`: Koliko je sanduka na svakim kolima? Napiši dvotočkom.
+- `scene.loads.say`: Sad drugo pitanje: na jedna kola ide 20. Natovari sve sanduke.
+- `scene.loads.line`: Koliko je kola potrebno? Svjedok kaže 5. Napiši.
+- `scene.fewer.say`: Svjedok se sjeti: jedna su kola nosila 3 puta manje od 60, a druga za 3 manje. Podijeli 60 sanduka na 3 kola.
+- `scene.fewer.line`: Koliko je "3 puta manje od 60"? Napiši.
+- `scene.big.say`: U skladištu je još 1 200 sanduka i 6 kola. Sad se slažu po 200.
+- `scene.big.line`: Koliko je na svakim kolima? Napiši.
+- `scene.noCarts.say`: Svjedok pita: "A da kola nije ni bilo?" Podijeli 120 sanduka na 0 kola. Pritisni Kreni.
+- `scene.noCarts.result`: Nema kola, pa sanduci ostaju na zemlji, zauvijek. Nijedan broj pomnožen s 0 ne daje 120. S nulom se ne dijeli.
+- `scene.noCrates.say`: A obrnuto? 3 kola, a 0 sanduka. Pritisni Kreni.
+- `scene.noCrates.line`: Svaka kola dobiju 0, i to je u redu. Napiši.
+- `scene.tipped`: Kola nisu jednako natovarena i prevrnu se. Natovari ih jednako.
+- `scene.left`: Neki su sanduci ostali na zemlji. Natovari i njih.
+- `scene.opened`: Kola je 6, a svjedok je vidio 5. Češe se po glavi: "Onda su jedna otišla drugim putem."
+- `scene.hint.step`: Dijeljenje pita dvoje: koliko na svaka kola, ili koliko kola.
+- `scene.hint.move`: Dodiruj kola redom dok zemlja ne ostane prazna. Zatim pritisni Kreni.
+- `scene.example.1`: Primjer s drugim brojevima:
+- `scene.example.2`: 80 : 4 = 20
+- `scene.example.3`: 80 : 20 = 4
+- `scene.example.4`: 0 : 5 = 0
+- `write.fewer`: Zapiši: 3 puta manje od 60.
+- `write.minus`: A sad: za 3 manje od 60.
+- `write.whole`: I još glavni račun: 120 sanduka, po 20 na kola. Koliko je kola?
+- `find.say`: Šesta kola nisu išla s ostalima. Netko ih je poslao drugim putem.
+- `find.title`: Dijeljenje. S nulom se ne dijeli.
+- `find.card.1`: Dijeljenje traži faktor koji nedostaje: količnik pomnožen s djeliteljem daje djeljenik.
+- `find.card.2`: Dijeljenje odgovara na dva pitanja: koliko je skupina, i koliko je u svakoj skupini. Znakovi : i / znače isto.
+- `find.card.3`: Nulu možemo podijeliti: 0 : 3 = 0. Ali s nulom se ne dijeli: svaki broj pomnožen s 0 daje 0, pa za 7 : 0 nema rezultata.
+- `find.card.4`: "3 puta manje" znači podijeliti s 3, a "za 3 manje" znači oduzeti 3.
+
+## Pet osoba (redoslijed računskih operacija)
+
+- `title`: Kaput
+- `lesson.found`: Vučetić je okupio ljude. Mali automat drži se podalje i pod klupom nađe valjak.
+- `lesson.steps.1.1`: 3 + 2 · 5 znači: 3 komada i još 2 svežnja po 5.
+- `lesson.steps.1.2`: Svežanj je množenje: 2 · 5 je 5 + 5.
+- `lesson.steps.2.1`: Svežanj prvo izbrojimo, a tek onda dodajemo.
+- `lesson.steps.2.2`: 3 + 2 · 5 = 3 + 10 = 13
+- `lesson.steps.3.1`: I dijeljenje ide prije zbrajanja i oduzimanja.
+- `lesson.steps.3.2`: 7 + 8 : 2 = 7 + 4 = 11
+- `lesson.steps.4.1`: Prvo množenje i dijeljenje, slijeva nadesno.
+- `lesson.steps.4.2`: Zatim zbrajanje i oduzimanje, slijeva nadesno.
+- `lesson.steps.5.1`: Automati znaju samo korake: uvijek slijeva nadesno.
+- `lesson.steps.5.2`: Zato griješe svaki put na isti način.
+- `tries.bundle`: Složi 3 svežnja po 5: 3 reda, u svakom 5.
+- `tries.add`: Dodaj još 4 komada. Koliko je 4 + 3 · 5? Napiši.
+- `tries.numbers`: Sad bez slike. Koliko je 20 − 12 : 4? Napiši.
+- `mistake.say`: Mali automat računa redom, kako piše. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan: tu množenje ionako stoji prvo.
+- `mistake.show`: Njegov redak znači 5 svežnjeva po 4. A svežnja su samo 3. Ostavi 3 reda.
+- `mistake.write`: Uz 3 svežnja po 4 stoje još 2 komada. Napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Sad prvo izbroji svežnjeve.
+- `unmask.intro`: Vučetić je sam okupio sve koji su vidjeli kartu. Zagorka traži da pitaš i njega, za novine. Po strani Gospon Penkala čita Knjigu: "2 + 2 : 2 je 2." Njega nitko nije pitao.
+- `unmask.who.milka`: Milka
+- `unmask.who.nikola`: Nikola
+- `unmask.who.belusic`: Belušić
+- `unmask.who.zagorka`: Zagorka
+- `unmask.who.vucetic`: Vučetić
+- `unmask.offended.milka`: "Ja? Ja pečem kifle, a ne račune!"
+- `unmask.offended.nikola`: "Ja? Pa ja samo pitam kako to radi!"
+- `unmask.offended.belusic`: "Ja? Ja sve mjerim! I ovaj sam račun izmjerio dvaput."
+- `unmask.offended.zagorka`: "Ja? 27 je oko 30. To je naslov, a ne laž!"
+- `unmask.why.milka`: Milka računa točno, svaki put.
+- `unmask.why.nikola`: Nikola se zabunio jednom, a ostalo je točno. Automat griješi svaki put isto.
+- `unmask.why.belusic`: Belušić računa točno, svaki put.
+- `unmask.why.zagorka`: Zagorka je jedan rezultat zaokružila za naslov. Ostalo je točno.
+- `unmask.cards.a`: Koliko je 2 + 2 : 2?
+- `unmask.cards.b`: Koliko je 6 + 4 · 2?
+- `unmask.cards.c`: Koliko je 30 − 6 : 2?
+- `unmask.cards.d`: Koliko je 200 − 50 · 2?
+- `unmask.reveal`: Šešir odskoči. Ispod njega su zupčanici. Automat u kaputu usporava i kaže još samo: "Zapisano." Mali automat, koji se od njega skriva još od ljevaonice, dokotrlja se do njega i ispiše: "Zašto?" Odgovora nema.
+- `unmask.fix`: Na traci su svi njegovi računi. Napiši prvi kako treba.
+- `unmask.opened`: Zagorka zapisuje, i ništa ne zaokružuje. Na traci je još nešto: adresa Majstora Kristijana, zapisana kao račun. Automat ju je nosio, a nikad je nije znao pročitati.
+- `unmask.hint.step`: Tko griješi svaki put na isti način? Jedna pogreška još nije automat.
+- `unmask.hint.move`: Pogledaj Vučetićeve račune: uvijek ide slijeva nadesno.
+- `unmask.example.1`: Primjer s drugim brojevima:
+- `unmask.example.2`: 5 + 6 : 3 = 5 + 2 = 7
+- `unmask.example.3`: Automat bi računao: 11 : 3.
+- `knock.intro`: Na traci je adresa Majstora Kristijana: jedan dugi račun. Izračunaj ga i nađi kuću.
+- `knock.side`: Traka kaže: neparna strana ulice.
+- `knock.tape`: Na traci piše: 100 − 20 · 3 + 10 : 2.
+- `knock.past`: Milka pamti samo ovo: kućni je broj veći od 40.
+- `knock.structureTape`: Prvo množenje i dijeljenje. Zatim zbrajanje i oduzimanje, slijeva nadesno.
+- `knock.structurePast`: Napiši x, znak > i broj iz traga.
+- `knock.wrong125`: Kuća 125 puna je automata. Prevrću namještaj i traže Majstora. Na traci im je isti račun, izračunat slijeva nadesno, kao i tvoj.
+- `knock.grumpy.1`: Krivo. Ovdje su samo moji krumpiri.
+- `knock.grumpy.2`: Ovdje živi samo moja teta. Ona ne čuje.
+- `knock.grumpy.3`: Spavam. Pokucaj kod susjeda.
+- `knock.grumpy.4`: Ništa ne znam. Ni moj pas ništa ne zna.
+- `knock.grumpy.5`: Krivi broj. Izračunaj ga još jednom.
+- `knock.grumpy.6`: Opet netko kuca? Krivo. Laku noć.
+- `knock.grumpy.7`: Ovdje nema ni kola ni sanduka. Samo juha.
+- `knock.grumpy.8`: Nismo ništa vidjeli. Ni ja ni moji brkovi.
+- `knock.opened`: Kuća 45. Obična vrata, i nigdje automata. Svi su na broju 125, jer računaju slijeva nadesno.
+- `knock.hint.step`: Prvo množenje i dijeljenje, pa tek onda ostalo.
+- `knock.hint.move`: 20 · 3 = 60 i 10 : 2 = 5. Ostaje 100 − 60 + 5.
+- `knock.example.1`: Primjer s drugim brojevima:
+- `knock.example.2`: 50 − 10 · 2 + 6 : 3 = 50 − 20 + 2 = 32
+- `write.fade`: Zapiši adresu kao u školi. Što ide u kvadratić?
+- `write.whole`: A sad dovrši: 100 − 60 + 5. Napiši cijeli redak.
+- `find.say`: Automat više ništa ne javlja. Ostali traže na broju 125, a broj 45 znaš samo ti.
+- `find.title`: Redoslijed računskih radnji.
+- `find.card.1`: U brojevnom izrazu prvo računamo množenje i dijeljenje. To su računske radnje višeg stupnja. Računamo ih slijeva nadesno.
+- `find.card.2`: Zatim računamo zbrajanje i oduzimanje, računske radnje nižeg stupnja, također slijeva nadesno.
+- `find.card.3`: Zašto? Množenje je skraćeno zbrajanje. U izrazu 2 + 3 · 4 stoje 2 i još tri četvorke, a tu skupinu treba prvo prebrojiti. Tako svi dobiju isti rezultat.
+
+## Treći čvor
+
+- `title`: Treći čvor
+- `guard.rule`: UVIJEK RAČUNAJ SLIJEVA NADESNO. HVALA.
+- `guard.intro`: Milki kod mosta već tjednima nestaju kifle. Pod mostom, u staroj četvrti, nalazi se alatnica. Pred njom stoji automat.
+- `guard.thanks.adds`: Hvala. Slijeva nadesno to je 15 − 5 = 10, i to je točno. Pravilo vrijedi.
+- `guard.thanks.timesFirst`: Hvala. Slijeva nadesno to je 12 + 2 = 14, i to je točno. Pravilo vrijedi.
+- `guard.thanks.divideFirst`: Hvala. Slijeva nadesno to je 4 + 6 = 10, i to je točno. Pravilo vrijedi.
+- `guard.thanks.minus`: Hvala. Slijeva nadesno to je 16 − 6 = 10, i to je točno. Pravilo vrijedi.
+- `guard.thanks.factors`: Hvala. Slijeva nadesno to je 10 · 3 = 30, i to je točno. Pravilo vrijedi.
+- `guard.write`: Slijeva nadesno to je 8 · 3 = 24. Napiši kako je točno.
+- `guard.jammed`: Traka zapinje: "Hvala. Hva... Hva..." Iza vrata netko viče: "Napokon! Tu sam još od prije prve obavijesti!"
+- `guard.hint.step`: Traži račun u kojem množenje stoji iza oduzimanja ili zbrajanja.
+- `guard.hint.move`: Izaberi 10 − 2 · 3. Prvo množenje: 10 − 6.
+- `guard.example.1`: Primjer s drugim brojevima:
+- `guard.example.2`: 7 + 2 · 5 = 7 + 10 = 17
+- `guard.example.3`: Slijeva nadesno bilo bi 9 · 5 = 45.
+- `knock.intro`: U alatnici je pravi Vučetić, gladan i ljut. Zidovi su puni zapisa, po datumu: "Dan 1.: Zaključan sam. Dan 2.: Još sam zaključan. Dan 3.: Kifla na rešetki. Hvala. I dalje sam ljut."
+- `knock.side`: Zid, dan 38.: "Čujem kola. Staju na neparnoj strani. Još sam ljut."
+- `knock.limit`: Zid, dan 39.: "Kućni broj manji je od 70. Kifla dobra. Još sam ljut."
+- `knock.story`: Zid, dan 40.: "Kola kreću od kuće 45 i prođu još nekoliko kuća. Tih je kuća 3 puta manje nego sanduka, a sanduka je 60. Ljut sam, po redu."
+- `knock.structureLimit`: Napiši x, znak < i broj iz traga.
+- `knock.structureStory`: 3 puta manje od 60 je 60 : 3. Prvo dijeljenje, pa zbrajanje.
+- `knock.wrong35`: Kuća 35. Na vratima traka: OVO JE ISPRAVLJENO. HVALA. Automati su već bili ovdje: i oni računaju slijeva nadesno.
+- `knock.grumpy.1`: Krivo. Ovdje su samo moji krumpiri.
+- `knock.grumpy.2`: Ovdje živi samo moja teta. Ona ne čuje.
+- `knock.grumpy.3`: Spavam. Pokucaj kod susjeda.
+- `knock.grumpy.4`: Ništa ne znam. Ni moj pas ništa ne zna.
+- `knock.grumpy.5`: Krivi broj. Izračunaj ga još jednom.
+- `knock.grumpy.6`: Opet netko kuca? Krivo. Laku noć.
+- `knock.grumpy.7`: Ovdje nema ni kola ni sanduka. Samo juha.
+- `knock.grumpy.8`: Nismo ništa vidjeli. Ni ja ni moji brkovi.
+- `knock.opened`: Vučetić zagrize kiflu i piše na zid: "Dan 41.: Netko pametan je tu. Malo sam manje ljut."
+- `knock.hint.step`: 3 puta manje od 60 je dijeljenje. Prvo to, pa zbrajanje.
+- `knock.hint.move`: Prijeđi na neparnu stranu. 60 : 3 = 20, a 45 + 20 = 65.
+- `knock.example.1`: Primjer s drugim brojevima:
+- `knock.example.2`: 20 + 12 : 4 = 20 + 3 = 23
+- `write.fade`: Zapiši ono sa zida: 3 puta manje od 60.
+- `write.whole`: Sad cijela priča u jednom redu: kuća 45, pa još 3 puta manje od 60.
+- `find.say`: Pravi Vučetić izlazi iz alatnice, s kiflom u ruci. "Karta je sad samo tvoja. Zapisano. I to pravo."
+- `find.title`: Priča kao brojevni izraz.
+- `find.card.1`: Priču možemo zapisati jednim brojevnim izrazom: svaki podatak je broj, a svaki korak računska radnja.
+- `find.card.2`: "Puta" znači množenje ili dijeljenje, a "za" zbrajanje ili oduzimanje.
+- `find.card.3`: Zatim vrijedi isti redoslijed: prvo množenje i dijeljenje, pa zbrajanje i oduzimanje.
+
+## Brave (zagrade)
+
+- `title`: Brave
+- `lesson.found`: Gospon Penkala stoji pred bravom i čita Knjigu. Pod otiračem je valjak.
+- `lesson.steps.1.1`: Bez zagrade prvo se množi.
+- `lesson.steps.1.2`: Tu su 2 komada i još 3 svežnja po 4.
+- `lesson.steps.2.1`: Zagrada kaže: ovo izračunaj prvo, kao da je jedan broj.
+- `lesson.steps.2.2`: (2 + 3) · 4 = 5 · 4 = 20
+- `lesson.steps.3.1`: Zagrada može biti i u zagradi. Kreni iznutra: ( ), pa [ ], pa { }.
+- `lesson.steps.3.2`: 2 · [3 + (4 − 1)] = 2 · 6 = 12
+- `tries.rows`: Složi (2 + 3) · 5. Dva reda po 5 već stoje. Dodaj još tri reda.
+- `tries.sum`: Koliko je (1 + 4) · 3? Prvo izračunaj zagradu.
+- `tries.place`: Stavi zagradu tako da bude točno: 6 + 2 · 3 = 24. Napiši cijeli redak.
+- `mistake.say`: Mali automat računa sa zagradama. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Izračunaj prvo ono što je u zagradi.
+- `mistake.show`: Pokaži mu: 3 + 2 su 5 redova. Složi 5 redova po 5.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Zagrade više nisu ukras.
+- `scene.intro`: Vrata Majstora Kristijana nemaju ključ, nego račun. Otvaraju se samo onome tko zna što rade zagrade.
+- `scene.shut`: Brava se ne miče. Tako ispada {1}.
+- `scene.opened`: Zadnja brava škljocne. Gospon Penkala ne diže pogled: "U Knjizi ovo ne piše."
+- `scene.hint.step`: Bez zagrade prvo se množi i dijeli. Što treba izračunati prvo da se dobije broj na bravi?
+- `scene.hint.move`: Što se mora izračunati prvo? Dodirni prvi broj tog računa, pa zadnji.
+- `scene.example.1`: Primjer s drugim brojevima:
+- `scene.example.2`: 1 + 2 · 6 = 13
+- `scene.example.3`: (1 + 2) · 6 = 18
+- `write.sum`: Zapiši kako se otvara brava gospona Penkale. Koliki je rezultat?
+- `write.nested`: Zagrada u zagradi: prvo okrugla, pa uglata, pa vitičasta. Koliki je rezultat?
+- `write.whole`: I brava s oduzimanjem: 258 − (34 + 41). Napiši cijeli redak. Minus ispred zagrade oduzima cijelu zagradu.
+- `find.say`: Iza zadnjih vrata na zidu je kredom nacrtana strelica uzbrdo. A crna nit luta prema krivim vratima.
+- `find.title`: Zagrade: okrugle, uglate, vitičaste.
+- `find.card.1`: Zagrada kaže: ono što je unutra izračunaj prvo, kao da je to jedan broj.
+- `find.card.2`: Kad je zagrada u zagradi, kreni iznutra: prvo okrugle ( ), zatim uglate [ ], na kraju vitičaste { }.
+- `find.card.3`: Isti brojevi sa zagradom na drugom mjestu mogu dati drugi rezultat.
+
+## Dva svjedoka (distributivnost)
+
+- `title`: Dva svjedoka
+- `lesson.found`: Pravi Vučetić ima prvi slučaj nakon povratka. Ispod hrpe njegovih bilješki je valjak.
+- `lesson.steps.1.1`: Evo dva reda po 4.
+- `lesson.steps.2.1`: I još tri reda po 4.
+- `lesson.steps.3.1`: Zajedno je to pet redova po 4. Možeš brojati sve odjednom ili dio po dio.
+- `lesson.steps.3.2`: (2 + 3) · 4 = 2 · 4 + 3 · 4
+- `lesson.steps.4.1`: Čitaj i obrnuto: isti se faktor ponavlja, pa ga možeš izlučiti. To je zajednički faktor.
+- `lesson.steps.4.2`: 6 · 5 + 4 · 5 = (6 + 4) · 5
+- `tries.rows`: Složi (1 + 3) · 6. Jedan red po 6 već stoji. Dodaj još tri reda.
+- `tries.parts`: Napiši to dio po dio: svaki pribrojnik pomnožen sa 6.
+- `tries.factor`: Koji je ovdje zajednički faktor? Izluči ga.
+- `mistake.say`: Mali automat množi zbroj. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Pogledaj je li pomnožen svaki pribrojnik.
+- `mistake.show`: Pokaži mu: tri reda, a u svakom 2 + 5. Složi 3 reda po 7.
+- `mistake.write`: Sad napiši točan redak: pomnoži oba pribrojnika.
+- `mistake.thanks`: Mali automat kima. Sad množi oba pribrojnika, a ne samo prvi.
+- `scene.intro`: Pravi Vučetić maše kiflom: "Tri svjedoka, isti sanduci. Sve sam zapisao, po datumu. Jedan laže. Ne računaj, nego gledaj."
+- `scene.who.zvonar`: Zvonar
+- `scene.who.mlinar`: Mlinar
+- `scene.who.dimnjacar`: Dimnjačar
+- `scene.offended.zvonar`: "Ja? Zvonim točno i brojim točno!"
+- `scene.offended.mlinar`: "Jedanput sam se zabunio! Zbog toga sam lažac?"
+- `scene.why.zvonar`: Zvonar svaki put pomnoži oba broja iz zagrade. Piše dugo, ali točno.
+- `scene.why.mlinar`: Mlinar prvo izračuna što je u zagradi. Jednom je krivo zbrojio, a ostalo mu je točno.
+- `scene.cards.a`: Pet redova, u svakom 3 + 4 sanduka. Kako se to još može napisati?
+- `scene.cards.b`: Dvanaest redova, u svakom 20 + 7 sanduka. Kako se to još može napisati?
+- `scene.cards.c`: Bilo je 409 redova po 86 sanduka, a 309 redova je otišlo. Kako se to još može napisati?
+- `scene.reveal`: Dimnjačar svaki put pomnoži samo prvi broj iz zagrade. Drugi zaboravi. Pravi Vučetić odloži kiflu: "Zapisano."
+- `scene.fix`: Napiši njegov prvi redak kako treba: pomnoži oba pribrojnika.
+- `scene.opened`: Dimnjačar pocrveni ispod čađe. Pravi Vučetić pojede kiflu: "Slučaj zatvoren. Zapisano."
+- `scene.hint.step`: Ne računaj. Gledaj je li svaki broj iz zagrade pomnožen. Jedna pogreška još nije laž.
+- `scene.hint.move`: Pogledaj Dimnjačara: drugi broj iz zagrade nikad ne pomnoži.
+- `scene.example.1`: Primjer s drugim brojevima:
+- `scene.example.2`: 3 · (10 + 2) = 3 · 10 + 3 · 2
+- `scene.example.3`: Oba su pribrojnika pomnožena.
+- `write.fade`: Zapiši što je točno. Što ide u kvadratić?
+- `write.whole`: A sad veliki račun. Izluči zajednički faktor, pa će biti lako.
+- `find.say`: Dimnjačar priznaje: kola nisu prošla ovuda. Pravi Vučetić crta novu strelicu na karti. Karta je sad samo tvoja.
+- `find.title`: Distributivnost. Zajednički faktor.
+- `find.card.1`: Kad broj množi zbroj u zagradi, množi svaki pribrojnik. Tako je i s razlikom. To se zove distributivnost.
+- `find.card.2`: Može i obrnuto: kad se isti faktor javlja u oba umnoška, možeš ga izlučiti. To je zajednički faktor.
+- `find.card.3`: Tako se i veliki računi mogu usporediti, a da ih ne računaš.
+
+## Krug (dijeljenje s ostatkom)
+
+- `title`: Krug svjetiljki
+- `lesson.found`: Automat s ključem hoda u krug. Iza stupa svjetiljke je valjak.
+- `lesson.steps.1.1`: 17 sanduka slažemo po 5. Tri su skupine pune, a 2 sanduka ostanu.
+- `lesson.steps.2.1`: Ta 2 ne čine novu skupinu. To je ostatak.
+- `lesson.steps.2.2`: Ostatak je uvijek manji od djelitelja.
+- `lesson.steps.3.1`: Krug od 4 svjetiljke je skupina od 4 koraka.
+- `lesson.steps.3.2`: 13 koraka su 3 cijela kruga i još 1 korak.
+- `lesson.steps.4.1`: Nakon cijelog kruga automat je opet kod svjetiljke 0.
+- `lesson.steps.4.2`: Zato ostatak kaže kod koje će svjetiljke stati.
+- `tries.pack`: Slaži 14 sanduka po 4. Koliko je cijelih skupina? Koliko ostane?
+- `tries.line`: Napiši to kao dijeljenje s ostatkom.
+- `tries.check`: Provjeri: pomnoži, pa dodaj ostatak. Dobiješ djeljenik.
+- `mistake.say`: Mali automat dijeli sam. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Pogledaj ostatak i djelitelj.
+- `mistake.show`: Pokaži mu: složi 55 sanduka po 9. Od onih 10 nastane još jedna skupina.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Ostatak mu je sad uvijek manji od djelitelja.
+- `scene.intro`: Prvi broj u retku je broj koraka do zvona, a drugi broj svjetiljki. Čekaj automat kod prave svjetiljke.
+- `scene.taken`: Automat zaspi točno kraj tebe. Ključ je tvoj.
+- `scene.missed`: Automat zaspi kod svjetiljke {1}, a ne kod tvoje. Sad zvono zvoni nakon drugog broja koraka.
+- `scene.opened`: Zadnji ključ okreće se u bravi. Automat i dalje spava kraj svoje svjetiljke.
+- `scene.hint.step`: Svaki cijeli krug vrati automat na svjetiljku 0. Koliko koraka ostane nakon cijelih krugova?
+- `scene.hint.move`: Podijeli broj koraka brojem svjetiljki. Ostatak je broj svjetiljke.
+- `scene.example.1`: Primjer: 4 svjetiljke i 10 koraka.
+- `scene.example.2`: 10 : 4 = 2 ost. 2
+- `scene.example.3`: Dva cijela kruga i još 2 koraka: svjetiljka 2.
+- `write.fade`: Zapiši dijeljenje s velikog kruga: 100 koraka i 7 svjetiljki. Koliki je ostatak?
+- `write.check`: I provjera, cijeli redak: djelitelj puta količnik, pa još ostatak.
+- `find.say`: Ključ otvara stari prolaz. Na zidu je Majstorova kreda: "Gore."
+- `find.title`: Dijeljenje s ostatkom.
+- `find.card.1`: Kad dijeliš, slažeš u jednake skupine. Ono što ne čini cijelu skupinu je ostatak.
+- `find.card.2`: Ostatak je uvijek manji od djelitelja. Da nije, od njega bi nastala još jedna skupina.
+- `find.card.3`: Broj cijelih skupina je nepotpuni količnik. Provjera: djelitelj puta nepotpuni količnik, pa još ostatak, daje djeljenik.
+
+## Dizalica (aritmetička sredina)
+
+- `title`: Dizalica
+- `lesson.found`: Stara vaga sad je greda dizalice. Ispod tereta je valjak.
+- `lesson.steps.1.1`: Stupci nisu jednaki, pa je greda nagnuta.
+- `lesson.steps.1.2`: S višega stupca nosimo sanduke na niži.
+- `lesson.steps.2.1`: Ukupno je i dalje 12 sanduka, a svaki stupac ima 6. To je aritmetička sredina.
+- `lesson.steps.2.2`: x̄ = (3 + 9) : 2 = 6
+- `lesson.steps.3.1`: Isti se broj računa svaki put kad se pojavi. Ovdje su četiri stupca.
+- `lesson.steps.3.2`: x̄ = (4 + 4 + 4 + 8) : 4 = 5
+- `lesson.steps.4.1`: Znaš li sredinu i broj stupaca, znaš i koliko je ukupno.
+- `lesson.steps.4.2`: 5 · 4 = 20
+- `tries.level`: Izravnaj stupce: dodirni visoki, pa niski.
+- `tries.line`: Koliko je sad u svakom stupcu? Napiši.
+- `tries.total`: Dizalica u prosjeku digne 15 sanduka na dan. Koliko je to u 4 dana?
+- `mistake.say`: Mali automat računa sredinu. Prvo su stupci 4 i 8, a onda 5, 5, 5 i 9. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Prebroji stupce u drugom računu.
+- `mistake.show`: Pokaži mu: izravnaj 5, 5, 5 i 9. Koliko je sad u svakom stupcu?
+- `mistake.write`: Sad napiši točan redak. Koliko je stupaca?
+- `mistake.thanks`: Mali automat kima. Sad broji svaki stupac, pa i one jednake.
+- `scene.intro`: Dizalica kreće tek kad je greda ravna. Prebacuj sanduke s višega stupca na niži.
+- `scene.level`: Greda je ravna. U svakom je stupcu jednako.
+- `scene.rounds.two`: Koliko je sad u svakom stupcu? Napiši.
+- `scene.rounds.three`: Sad su tri stupca. Koliko je u svakom?
+- `scene.rounds.four`: Četiri stupca, a tri su ista. Računa se svaki. Koliko je u svakom?
+- `scene.opened`: Greda je ravna, lanac se napne i dizalica kreće uzbrdo.
+- `scene.hint.step`: Uzmi sanduk s najvišeg stupca i stavi ga na najniži. Zbroj se ne mijenja.
+- `scene.hint.move`: Zbroji sve stupce i podijeli brojem stupaca. Toliko mora biti u svakom.
+- `scene.example.1`: Primjer s drugim brojevima:
+- `scene.example.2`: x̄ = (4 + 6 + 8) : 3 = 6
+- `scene.example.3`: Tri stupca, pa dijelimo s 3.
+- `write.fade`: Zapiši prvi teret. Što ide u kvadratić?
+- `write.whole`: Sad teret s tri stupca: 3, 5 i 10. Napiši cijeli redak.
+- `write.month`: U rujnu dizalica digne u prosjeku 38 sanduka na dan. Rujan ima 30 dana. Koliko je to ukupno?
+- `find.say`: Na vrhu je ulica u kojoj nitko ne stanuje. Ovdje trag završava.
+- `find.title`: Aritmetička sredina.
+- `find.card.1`: Aritmetička sredina je zbroj svih podataka podijeljen brojem podataka. Piše se x̄.
+- `find.card.2`: Zamisli da izravnavaš stupce: zbroj se ne mijenja, a svi postanu jednaki.
+- `find.card.3`: Podatak koji se ponavlja računa se svaki put. Sredina ne mora biti broj koji netko stvarno ima.
+- `find.card.4`: Sredina puta broj podataka daje zbroj.
+
+## Ulje za svjetiljke (čitanje podataka)
+
+- `title`: Ulje za svjetiljke
+- `lesson.found`: Hanaman prodaje ulje za svjetiljke i sve crta u dijagrame. Između limenki je valjak.
+- `lesson.steps.1.1`: Dijagram je tablica koju vidiš odjednom. Svaki stupac je jedan podatak.
+- `lesson.steps.1.2`: Prvo pogledaj os: koliko vrijedi jedan korak? Ovdje 2.
+- `lesson.steps.2.1`: Stupac može završiti između dva broja na osi.
+- `lesson.steps.2.2`: A završava na pola puta između 20 i 30, pa je A = 25.
+- `lesson.steps.3.1`: Što pročitaš, možeš oduzimati i zbrajati.
+- `lesson.steps.3.2`: 40 − 25 = 15
+- `lesson.steps.4.1`: Dijagram kaže koliko. Ne kaže zašto. O tome treba razmisliti.
+- `tries.step`: Na ovoj osi jedan korak vrijedi 5. Dodirni treći korak od nule.
+- `tries.rowA`: Prepiši dijagram u tablicu. Prvi redak: koliko je A?
+- `tries.rowB`: Drugi redak: koliko je B?
+- `mistake.say`: Mali automat čita dva stupca, oba do trećeg koraka na osi. Kod A korak vrijedi 1, a kod B vrijedi 10. Jedan njegov redak nije točan. Dodirni ga.
+- `mistake.nudge`: Taj je redak točan. Pogledaj koliko vrijedi jedan korak kod B.
+- `mistake.show`: Pokaži mu: kod B jedan korak vrijedi 10. Dodirni treći korak.
+- `mistake.write`: Sad napiši točan redak.
+- `mistake.thanks`: Mali automat kima. Sad prvo pogleda koliko vrijedi jedan korak.
+- `guard.rule`: SVE SE MOŽE PODIJELITI SA SVIME.
+- `guard.intro`: Pred Hanamanovim skladištem stoji stražar s trakom. Pokaži mu račun koji se ne može izračunati.
+- `guard.thanks.eight`: HVALA. 8 : 2 = 4. PRAVILO VRIJEDI.
+- `guard.thanks.zero`: HVALA. 0 : 7 = 0. I TO SE MOŽE. PRAVILO VRIJEDI.
+- `guard.thanks.one`: HVALA. 7 : 1 = 7. PRAVILO VRIJEDI.
+- `guard.thanks.same`: HVALA. 7 : 7 = 1. PRAVILO VRIJEDI.
+- `guard.thanks.thirty`: HVALA. 30 : 5 = 6. PRAVILO VRIJEDI.
+- `guard.write`: Dijeljenje traži broj koji puta 0 daje 7. Ali 0 puta bilo koji broj daje 0. Napiši to.
+- `guard.jammed`: Stražar počne dijeliti 7 s 0. Zavrti se i više ne staje. Vrtjet će se tu i kad se vratiš.
+- `guard.hint.step`: S kojim se brojem ne dijeli? Nađi ga među pločicama.
+- `guard.hint.move`: Izaberi 7 : 0.
+- `guard.example.1`: Primjer s drugim brojevima:
+- `guard.example.2`: Za 12 : 4 traži se broj koji puta 4 daje 12. To je 3.
+- `guard.example.3`: Za 5 : 0 takvog broja nema, jer 0 puta bilo koji broj daje 0.
+- `charts.trg`: Trg
+- `charts.most`: Most
+- `charts.mlin`: Mlin
+- `charts.pusta`: Pusta
+- `charts.trg1`: Trg 1
+- `charts.trg2`: Trg 2
+- `charts.most1`: Most 1
+- `charts.most2`: Most 2
+- `charts.pusta1`: Pusta 1
+- `charts.pusta2`: Pusta 2
+- `charts.days.mon`: pon
+- `charts.days.tue`: uto
+- `charts.days.wed`: sri
+- `charts.days.thu`: čet
+- `charts.days.fri`: pet
+- `streets.intro`: Hanaman skriva račune iza vrata skladišta. Ovo je ulje po ulicama, u litrama.
+- `streets.less`: Broj vrata, x, manji je od broja litara koje troši Trg.
+- `streets.difference`: Broj vrata je razlika: koliko Pusta ulica troši više od Mosta?
+- `streets.structureLess`: Stupac Trga završava između dva broja na osi. Koliko je to litara? Napiši x < i taj broj.
+- `streets.structureDifference`: Od većeg broja oduzmi manji.
+- `streets.opened`: Iza vrata je sljedeći dijagram. Hanaman kima: "Uredno čitaš."
+- `streets.grumpy.1`: Ovdje su samo prazne limenke.
+- `streets.grumpy.2`: Krivi broj. Ulje je na drugim vratima.
+- `streets.grumpy.3`: Ovdje spava skladištar. Ne budi ga.
+- `streets.hint.step`: Prvo pogledaj koliko vrijedi jedan korak na osi, pa pročitaj stupac Trga.
+- `streets.hint.move`: Napiši x < 45, pa izračunaj 60 − 35.
+- `streets.example.1`: Primjer s drugim brojevima:
+- `streets.example.2`: x < 40
+- `streets.example.3`: 50 − 15 = 35
+- `weeks.intro`: Dva tjedna, pa dva stupca uz svaku ulicu: 1 je prvi tjedan, a 2 drugi.
+- `weeks.more`: Broj vrata, x, veći je od broja litara koje je Trg potrošio u drugom tjednu.
+- `weeks.difference`: Broj vrata je razlika: koliko je Most u drugom tjednu potrošio više nego u prvom?
+- `weeks.structureMore`: Nađi stupac Trg 2. Napiši x > i taj broj litara.
+- `weeks.structureDifference`: Od stupca Most 2 oduzmi stupac Most 1.
+- `weeks.opened`: Iza vrata je popis dostava. Hanaman zapisuje svaku.
+- `weeks.grumpy.1`: Ovo su računi od prošle godine. Zatvori.
+- `weeks.grumpy.2`: Krivi broj. Hanaman to neće zapisati.
+- `weeks.grumpy.3`: Tu je samo mačka, a ona ne čita dijagrame.
+- `weeks.hint.step`: Uz svaku ulicu stoje dva stupca. Broj uz ime kaže koji je tjedan.
+- `weeks.hint.move`: Napiši x > 10, pa izračunaj 35 − 15.
+- `weeks.example.1`: Primjer s drugim brojevima:
+- `weeks.example.2`: x > 5
+- `weeks.example.3`: 25 − 15 = 10
+- `deliveries.intro`: Dostave ulja po danima, od ponedjeljka do petka. Jedan korak na osi je jedna dostava.
+- `deliveries.most`: Broj vrata, x, veći je od najvećeg broja dostava u jednom danu.
+- `deliveries.total`: Broj vrata je zbroj svih dostava u tjednu.
+- `deliveries.structureMost`: Nađi najviši stupac. Napiši x > i taj broj dostava.
+- `deliveries.structureTotal`: Zbroji sve stupce.
+- `deliveries.opened`: Iza vrata je zadnji Hanamanov dijagram. Na njemu je jedan stupac viši od svih.
+- `deliveries.grumpy.1`: Ovdje su samo fitilji. Nema računa.
+- `deliveries.grumpy.2`: Krivi broj. Dostave su negdje drugdje.
+- `deliveries.hint.step`: Koji je stupac najviši? Koliko dostava pokazuje?
+- `deliveries.hint.move`: Napiši x > 8, pa zbroji sve stupce.
+- `deliveries.example.1`: Primjer s drugim brojevima:
+- `deliveries.example.2`: x > 4
+- `deliveries.example.3`: 2 + 4 + 1 = 7
+- `night.intro`: Hanamanov zadnji dijagram: što gori noću. Jedan korak na osi znači 10 litara. U Pustoj ulici nitko ne stanuje, a ulje svejedno gori.
+- `night.more`: Broj vrata, x, veći je od broja litara koje noću troši Trg.
+- `night.difference`: Broj vrata u Pustoj ulici je razlika: koliko litara Pusta ulica troši više od Mosta?
+- `night.structureMore`: Jedan korak je 10 litara. Koliko je onda litara kod Trga? Napiši x > i taj broj.
+- `night.structureDifference`: Od većeg broja oduzmi manji.
+- `night.opened`: Na rubu dijagrama Hanaman je zapisao: "Ovo kaže koliko gori. Ne kaže tko pali."
+- `night.grumpy.1`: Nitko se ne javlja. Ovdje nitko ne stanuje.
+- `night.grumpy.2`: Samo prašina.
+- `night.grumpy.3`: Tišina. Javlja se samo vjetar.
+- `night.hint.step`: Jedan korak na osi je 10 litara. Koliko je koraka do vrha stupca Trga?
+- `night.hint.move`: Napiši x > 30, pa izračunaj 60 − 20.
+- `night.example.1`: Primjer s drugim brojevima:
+- `night.example.2`: 4 koraka po 10 litara je 40 litara.
+- `night.example.3`: x > 20
+- `night.example.4`: 70 − 40 = 30
+- `write.fade`: Zapiši račun s dijagrama za dva tjedna. Koliki je rezultat?
+- `write.whole`: Na prvom dijagramu Pusta troši 60 litara, a Most 35. Koliko više? Napiši cijeli redak.
+- `find.say`: Iza vrata 40 su stube. Odozgo miriše na toplo ulje.
+- `find.title`: Čitanje podataka. Tablica i stupčasti dijagram.
+- `find.card.1`: Tablica slaže podatke u retke i stupce. Stupčasti dijagram pokazuje iste podatke tako da ih vidiš odjednom.
+- `find.card.2`: Prvo pogledaj koliko vrijedi jedan korak na osi. Ne mora biti 1, a stupac može završiti i između dva broja.
+- `find.card.3`: Pročitane podatke možeš zbrajati i oduzimati. Dijagram kaže koliko, ali ne kaže zašto. O tome treba razmisliti.
+
+## Kraj dijela
+
+- `panels.1`: Soba iznad Puste ulice. Svjetiljka je još topla.
+- `panels.2`: Majstor Kristijan otišao je malo prije tebe. Nema kola, nema koraka na stubama.
+- `panels.3`: Poruka, prvi put za tebe: "{ime}, blizu si. Još ne smijem čekati. Valjak je za malog automata. Ostalo mu pokaži ti."
+- `panels.4`: Mali automat kucne po valjku, pa ga uzme.
+- `panels.5`: Na vratima je nova traka Prvog Automata. Nema "HVALA". Prvi put nešto pita: KAKO TO ČITAŠ.
+- `panels.6`: Zagorkine novine dosad su pisale "netko pametan". Jutros na naslovnici piše: {ime}.
+- `panels.7`: Zadnji trag: dva zupčanika. Okreću se zajedno samo ako se jedan broj zubaca može podijeliti drugim bez ostatka. Mali automat ispisuje: Zašto?
+
+## Vodiči za svaku vrstu scene
+
+- `knock.intro`: Tragovi su u bilježnici, pa ih ne moraš pamtiti. Svaki redak koji napišeš pali ili gasi vrata.
+- `knock.cross`: Jedan trag kaže na kojoj je strani ulice. Prijeđi cestu.
+- `knock.line`: Ovaj je redak već započet. Izračunaj, dopiši rezultat i pritisni tipku za potvrdu.
+- `knock.next`: Još jedan trag. Napiši i njega.
+- `knock.door`: Sad svijetle samo jedna vrata. Dodirni ih i mali će automat pokucati.
+- `sneak.intro`: Ovdje se ništa ne miče dok se ti ne pomakneš. Svaki tvoj korak, automat napravi svoj.
+- `sneak.line`: Stanica sa slovom nema broj. Izračunaj koliko vrijedi jedan korak, pa napiši koji je to broj.
+- `sneak.step`: Sad je stanica upaljena. Idi do nje, a pazi na automat. Možeš i čekati.
+- `unmask.intro`: Jedan od njih laže. Svako pitanje pokaže kako je tko računao.
+- `unmask.ask`: Dodirni pitanje u bilježnici. Treba ih barem dva.
+- `unmask.accuse`: Tko griješi svaki put na isti način? Dodirni njegovo ime.
+- `unmask.write`: Sad napiši njegov redak kako treba.
+- `alone.intro`: Ovuda može samo mali automat. Trag kaže kuda dalje.
+- `alone.pipe`: Znak kaže što se ovdje bira. Izaberi broj iz traga.
+- `guard.intro`: Automat izvršava pravilo s trake. Pravilo nije točno, a ti to možeš pokazati.
+- `guard.pick`: Izaberi pločicu za koju pravilo ne vrijedi.
+- `guard.write`: Sad napiši točan redak koji to pokazuje.
+- `carts.intro`: Sanduci su na zemlji, a svaki se tovar slaže po deset.
+- `carts.load`: Dodirni kola da ih natovariš. Kad je sve na kolima, pritisni Kreni.
+- `carts.write`: Sad to napiši u bilježnicu.
+- `level.intro`: Greda je nagnuta. Ravna je tek kad su svi stupci jednaki.
+- `level.move`: Dodirni visoki stupac, pa niski: sanduk prelazi s jednog na drugi.
+- `level.write`: Sad napiši račun.
+- `locks.intro`: Brava se otvara samo ako zagrade stoje na pravom mjestu.
+- `locks.tap`: Dodirni broj gdje zagrada počinje, pa broj gdje završava.
+- `windows.intro`: Prozori su numerirani redom, po katovima. Mali automat baca kuku.
+- `windows.throw`: Izračunaj koji je to prozor, pa ga dodirni.
+- `loop.intro`: Automat s ključem hoda u krug. Kad zazvoni zvono, zaspi gdje se zatekne.
+- `loop.write`: Nakon cijelih krugova ostane još nekoliko koraka. Napiši dijeljenje s ostatkom.
+
+## Crna nit (zapečaćen trag)
+
+- `intro`: Crna nit stigla je prije tebe. Automati čuvaju ulaz.
+- `caught.1`: OPAŽENO. VRAĆENO NA POČETAK. HVALA.
+- `caught.2`: OVO JE ZABILJEŽENO. POČNI ISPOČETKA. HVALA.
+- `found`: Put je slobodan.
+- `opened`: Automati nisu ništa primijetili. Trag je još tu.
+- `hint.step`: Čekaj da automat skrene iza ugla, pa kreni.
+- `hint.move`: Idi naprijed kad je mjesto ispred tebe prazno, a inače čekaj.
+
+## Karta traga
+
+- `title`: Trag
+- `heading`: Crna nit ide prema tragu s tamnim prstenom. Ako ga ti prvi počneš, skrenut će.
+- `reached`: Crna nit stigla je do tamne točke. Trag nije izgubljen, samo ga čuvaju automati.
+- `oldMap`: Stari grad
+- `leads.l01`: Dvije strane
+- `leads.l02`: Susjedi
+- `leads.l03`: Arhiv
+- `leads.l04`: Tramvajska linija
+- `leads.k1`: Prvi čvor
+- `leads.w1`: Gdje je mali automat?
+- `leads.l05`: Svjedoci
+- `leads.l06`: Novine
+- `leads.l07`: Knjige računa
+- `leads.l08`: Pročelje
+- `leads.k2`: Drugi čvor
+- `leads.l09`: Dvorište sanduka
+- `leads.l10`: Šesta kola
+- `leads.l11`: Pet osoba
+- `leads.k3`: Treći čvor
+- `leads.l12`: Brave
+- `leads.l13`: Dva svjedoka
+- `leads.l14`: Krug
+- `leads.l15`: Dizalica
+- `leads.l16`: Ulje za svjetiljke
+- `open`: Otvoreni trag
+- `done`: Riješeno
+
+## Natpisi na zaslonu
+
+- `cross`: Prijeđi cestu
+- `side.odd`: Neparna strana
+- `side.even`: Parna strana
+- `floor`: kat
+- `next`: Dalje
+- `skip`: Preskoči
+- `clues`: Tragovi
+- `yourLines`: Tvoji redci
+- `ok`: U redu
+- `shake`: Mali automat vrti glavom i pokazuje na trag. Ako neki tvoj redak ne valja, dodirni ga i on će se prekrižiti.
+- `offTask`: To je točno, ali nije ono što se traži. Pročitaj zadatak još jednom.
+- `bounce`: To nije točno. Pogledaj redak još jednom.
+- `refuse`: To se ne može pročitati. Pogledaj redak još jednom.
+- `working`: Sad računaj redak po redak. Svaki mora biti točan.
+- `marked`: Mali automat pokazuje: ovdje je pošlo krivo.
+- `example`: Pogledaj primjer s drugim brojevima.
+- `keys.more`: Još znakova
+- `keys.delete`: Obriši
+- `keys.enter`: Potvrdi
+- `add`: Još jedna
+- `remove`: Jedna manje
+- `pairs`: {1} · 2 = NaN
+- `parts`: +{1}
+- `how`: Kako to radi?
+- `thread`: Crvena nit stiže do mjesta.
+- `wait`: Čekaj
+- `moreRows`: Još jedan red
+- `fewerRows`: Jedan red manje
+- `moreColumns`: Još jedan stupac
+- `fewerColumns`: Jedan stupac manje
+- `rest`: ost.
+- `ground`: Na zemlji: {1}
+- `noCarts`: Nema kola
+- `go`: Kreni
+- `lockTarget`: Brava se otvara na:
+- `turn`: Okreni se
+- `loopSay`: Napiši dijeljenje. Ostatak kaže kod koje svjetiljke automat zaspi.
+- `me`: Ti
+- `patrol`: Automat
+- `askMore`: Prvo postavi barem {1} pitanja.
+- `aloneHelp`: Pogledaj što u tragu stoji uz: {1}.
+

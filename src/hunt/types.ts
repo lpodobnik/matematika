@@ -81,6 +81,8 @@ export interface HuntSave {
   /** Part 2's story lines he has seen, in order: the city's log. */
   told: string[];
   scene: SavedScene | null;
+  /** Leads he has left for another: each picks up where he left it. */
+  parked: Partial<Record<LeadId | KnotId, SavedScene>>;
 }
 
 /** The hunt before it begins. */
@@ -102,5 +104,6 @@ export function newHunt(): HuntSave {
     firstTries: {},
     told: [],
     scene: null,
+    parked: {},
   };
 }

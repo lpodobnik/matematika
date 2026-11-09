@@ -102,6 +102,8 @@ export interface KnockState {
   shown: { door: number; say: string } | null;
   /** The line the little one has marked, after the second wrong door. */
   marked: number | null;
+  /** He followed the forged note to its trap, and it's struck for him. */
+  forgedGone: boolean;
   /** He has struck a line, or a line has been struck: no first-try parts. */
   anyStruck: boolean;
   hintLevel: number;
@@ -126,6 +128,7 @@ export function newKnock(spec: KnockSpec, guided = false): KnockState {
     bounced: false,
     shown: null,
     marked: null,
+    forgedGone: false,
     anyStruck: false,
     hintLevel: 0,
     guide: guided ? 'intro' : null,
@@ -282,27 +285,35 @@ function usesNumbers(statement: Statement, numbers: readonly number[]): boolean 
   }
 }
 
+/** Whether a line says what this clue asks, in the form it asks. */
+function lineFits(clue: KnockClue, statement: Statement, tokens: readonly SToken[]): boolean {
+  if (clue.kind === 'side') return false;
+  if (clue.kind === 'limit') return usesNumbers(statement, clue.numbers);
+  if (clue.kind === 'member') return statement.k === 'member';
+  if (statement.k !== 'sum') return false;
+  if (statement.continues) return true;
+  const start = readLine(clue.start) ?? [];
+  return start.every((token, i) => token === tokens[i]);
+}
+
 /** Enter: his line goes in, and acts on the row. */
 export function knockEnter(spec: KnockSpec, state: KnockState): KnockState {
   if (state.opened || state.shown) return state;
-  const clue = spec.clues.find((candidate) => candidate.id === state.clue);
   const start = lineStart(spec, state);
   const tokens = fillLine(start, state.draft);
   if (state.draft.length === 0) return shake(state, spec);
   const statement = statementOf(tokens);
   if (!statement) return shake(state, spec);
-  const own = active(state.lines).filter((line) => line.clue === state.clue);
+  // A line goes with the clue it fits, whichever clue he happens to be on.
+  const clue = [
+    spec.clues.find((candidate) => candidate.id === state.clue),
+    ...cluesLeft(spec, state),
+    ...spec.clues,
+  ].find((candidate) => candidate && lineFits(candidate, statement, tokens));
+  if (!clue) return shake(state, spec);
+  const own = active(state.lines).filter((line) => line.clue === clue.id);
   const context = { ...spec.context, previous: previousOf(spec, own) };
   const keep = lineKeeps(statement);
-  const fits =
-    clue?.kind === 'limit'
-      ? usesNumbers(statement, clue.numbers)
-      : clue?.kind === 'member'
-        ? statement.k === 'member'
-        : clue?.kind === 'sum'
-          ? statement.k === 'sum'
-          : false;
-  if (!fits) return shake(state, spec);
   // Working on the way to a result has to be true, or it's nothing to go on from.
   if (keep === null && !isTrue(statement, context)) {
     return state.mode === 'working'
@@ -312,7 +323,7 @@ export function knockEnter(spec: KnockSpec, state: KnockState): KnockState {
   if (state.mode === 'working' && !isTrue(statement, context)) {
     return { ...state, bounced: true, shakes: state.shakes + 1 };
   }
-  const line: KnockLine = { tokens, clue: state.clue, struck: false };
+  const line: KnockLine = { tokens, clue: clue.id, struck: false };
   const lines = [...state.lines, line];
   // A line that leaves no door: the same shake, and it's struck through.
   if (keep !== null && litDoors(spec.row, state.side, lines).length === 0) {
@@ -323,7 +334,7 @@ export function knockEnter(spec: KnockSpec, state: KnockState): KnockState {
       anyStruck: true,
     };
   }
-  const nextClue = keep === null ? state.clue : (firstClue(spec, lines) ?? state.clue);
+  const nextClue = keep === null ? clue.id : (firstClue(spec, lines) ?? clue.id);
   return {
     ...state,
     lines,
@@ -413,6 +424,8 @@ export function knockDoor(spec: KnockSpec, state: KnockState, door: number): Kno
     help: Math.max(state.help, Math.min(3, wrongTries)),
     shown: { door, say },
     marked: wrongTries >= 2 ? (struckNow[0] ?? state.marked) : state.marked,
+    // The forged note's trap: the note is struck for him.
+    forgedGone: state.forgedGone || spec.wrongDoors.some((wrong) => wrong.door === door),
     anyStruck: true,
     clue: named[struckNow[0] ?? -1]?.clue ?? state.clue,
     draft: [],
@@ -491,6 +504,7 @@ export function knockFrom(spec: KnockSpec, value: unknown): KnockState | null {
     wrongTries: typeof saved.wrongTries === 'number' ? saved.wrongTries : 0,
     shown: null,
     marked: typeof saved.marked === 'number' ? saved.marked : null,
+    forgedGone: saved.forgedGone === true,
     anyStruck: saved.anyStruck === true,
     hintLevel: typeof saved.hintLevel === 'number' ? saved.hintLevel : 0,
     guide: saved.guide === 'intro' || saved.guide === 'on' ? saved.guide : null,

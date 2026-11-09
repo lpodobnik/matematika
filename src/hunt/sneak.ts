@@ -146,6 +146,15 @@ export function sneakDelete(state: SneakState): SneakState {
   return { ...state, draft: state.draft.slice(0, -1) };
 }
 
+/** The next stop to ask for: never the one he has just found empty. */
+function nextAsk(line: SneakLine, ask: number, emptyAt: number): number {
+  let next = ask + 1;
+  while (line.asks[next % line.asks.length]?.at === emptyAt && next < ask + line.asks.length) {
+    next += 1;
+  }
+  return next;
+}
+
 /** Arriving where he was heading: the right stop ends the board; a wrong one is empty. */
 function arrive(spec: SneakSpec, board: SneakBoard, state: SneakState): SneakState {
   const target = targetStop(board, state);
@@ -156,7 +165,7 @@ function arrive(spec: SneakSpec, board: SneakBoard, state: SneakState): SneakSta
       ...state,
       notice: spec.empty,
       lit: null,
-      ask: state.ask + 1,
+      ask: nextAsk(board.line, state.ask, target),
       wrongStops: state.wrongStops + 1,
       help: Math.max(state.help, Math.min(3, state.wrongStops + 1)),
     };

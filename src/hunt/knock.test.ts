@@ -124,6 +124,24 @@ describe('the doors', () => {
   });
 });
 
+describe('a line goes with the clue it fits', () => {
+  it('whichever clue he happens to be on', () => {
+    const start = newKnock(limits);
+    expect(start.clue).toBe('r');
+    const state = write(limits, start, 'x≠232');
+    expect(state.lines[0]?.clue).toBe('l');
+    expect(lit(limits, state)).not.toContain(232);
+    // The clue he was on is still left to use.
+    expect(cluesLeft(limits, state).map((clue) => clue.id)).toEqual(['r']);
+  });
+
+  it('a line that fits no clue still gets the shake', () => {
+    const state = write(limits, newKnock(limits), 'x≠999');
+    expect(state.shakes).toBe(1);
+    expect(state.lines).toEqual([]);
+  });
+});
+
 describe('what a line must be', () => {
   it('starts from the clue', () => {
     expect(lineStart(spec, newKnock(spec)).join('')).toBe('7·2+1=');

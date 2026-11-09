@@ -13,6 +13,7 @@ import {
   litDoors,
 } from '@/hunt/knock';
 import { type LeadAction, type LeadPlay, playedScene } from '@/hunt/lead';
+import type { ObjectState } from '@/hunt/objects';
 import type { CartsState, LevelState, LocksState, LoopState, WindowsState } from '@/hunt/one-offs';
 import type { GuardState } from '@/hunt/rule-guard';
 import { sceneGuide } from '@/hunt/scene';
@@ -226,6 +227,7 @@ function Draft({
 
 function TaskNote({ play }: { play: LeadPlay }) {
   if (play.bounced) return <p className="hunt__note">{huntUiText.bounce}</p>;
+  if (play.refused === 'off') return <p className="hunt__note">{huntUiText.offTask}</p>;
   if (play.refused) return <p className="hunt__note">{huntUiText.refuse}</p>;
   return null;
 }
@@ -241,7 +243,7 @@ function LineTaskPanel({ task, play, act }: { task: LineTask; play: LeadPlay; ac
         key={play.bounced || play.refused ? 'wiggle' : 'still'}
         start={readLine(task.start) ?? []}
         draft={play.draft}
-        wiggle={play.bounced || play.refused}
+        wiggle={play.bounced || Boolean(play.refused)}
       />
       <StatementPad signs={task.keys} onKey={onKey} />
     </>
@@ -300,9 +302,9 @@ function FixBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: Ac
   return (
     <main className="hunt">
       <section className="hunt__scene hunt__scene--object">
-        {play.object ? (
+        {(play.object ?? mistake.spot) ? (
           <ObjectView
-            object={play.object}
+            object={(play.object ?? mistake.spot) as ObjectState}
             onMove={play.fix === 'show' ? (move) => act({ kind: 'move', move }) : undefined}
           />
         ) : null}
@@ -349,9 +351,13 @@ function WriteBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: 
   return (
     <main className="hunt">
       <section className="hunt__scene hunt__scene--object">
-        <div className="hunt__little hunt__little--big">
-          <LittleOneArt />
-        </div>
+        {task.object ? (
+          <ObjectView object={task.object} />
+        ) : (
+          <div className="hunt__little hunt__little--big">
+            <LittleOneArt />
+          </div>
+        )}
       </section>
       <section className="hunt__notebook">
         <p className="hunt__task">{task.say}</p>
@@ -454,7 +460,11 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
     : null;
   return (
     <main className="hunt">
-      <section className="hunt__scene knock" data-kind={spec.row.kind}>
+      <section
+        className="hunt__scene knock"
+        data-kind={spec.row.kind}
+        data-picture={spec.picture !== undefined}
+      >
         <HintControl
           works={!state.opened}
           shown={state.hintLevel > 0}
@@ -544,6 +554,7 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
             {spec.clues.map((clue) => {
               // The forged clue is never needed, and nothing here gives that away.
               const used = clue.id !== spec.forged && !left.includes(clue);
+              const gone = clue.id === spec.forged && state.forgedGone;
               return (
                 <li key={clue.id}>
                   <button
@@ -551,6 +562,7 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
                     className="clue"
                     disabled={clue.kind === 'side'}
                     data-used={used}
+                    data-gone={gone}
                     data-current={clue.id === state.clue}
                     data-point={
                       clue.id === state.pointAt || (help >= 1 && clue === nextClue) || undefined
@@ -579,6 +591,9 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
           {state.mode === 'working' && <p className="hunt__note">{huntUiText.working}</p>}
           {state.marked !== null && <p className="hunt__note">{huntUiText.marked}</p>}
           {state.bounced && <p className="hunt__note">{huntUiText.bounce}</p>}
+          {state.pointAt !== null && !state.bounced && (
+            <p className="hunt__note">{huntUiText.shake}</p>
+          )}
           <ol className="hunt__ink">
             {state.lines.map((line, index) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: lines are only ever added, and he may write one twice

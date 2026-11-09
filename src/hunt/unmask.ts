@@ -3,8 +3,9 @@
 // isn't enough, and tapping everyone can't finish it: the scene ends when he writes the guilty
 // one's false line corrected, line by line, each judged true.
 
+import { flagsOf, judgeLine } from '@/hunt/line-judge';
 import { parseStatement } from '@/math/statement';
-import { fillLine, isSToken, readLine, readTokens, type SToken } from '@/math/statement-tokens';
+import { isSToken, readTokens, type SToken } from '@/math/statement-tokens';
 import { isTrue } from '@/math/truth';
 
 export interface UnmaskCard {
@@ -54,7 +55,7 @@ export interface UnmaskState {
   tooSoon: boolean;
   draft: SToken[];
   bounced: boolean;
-  refused: boolean;
+  refused: boolean | 'off';
   help: number;
   hintLevel: number;
   exactTaken: boolean;
@@ -121,20 +122,11 @@ export function unmaskDelete(state: UnmaskState): UnmaskState {
 /** His corrected line: what's asked ends the scene; false bounces; anything else, a wiggle. */
 export function unmaskEnter(spec: UnmaskSpec, state: UnmaskState): UnmaskState {
   if (state.phase !== 'write') return state;
-  const tokens = fillLine(readLine(spec.fix.start) ?? [], state.draft);
-  const same = spec.fix.accepts.some((line) => {
-    const accepted = readTokens(line);
-    return (
-      accepted !== null &&
-      accepted.length === tokens.length &&
-      accepted.every((token, i) => token === tokens[i])
-    );
-  });
-  if (same)
+  const { verdict } = judgeLine(spec.fix.start, spec.fix.accepts, state.draft);
+  if (verdict === 'right') {
     return { ...state, phase: 'done', opened: true, draft: [], bounced: false, guide: null };
-  const parsed = parseStatement(tokens);
-  const bounces = parsed.ok && !isTrue(parsed.statement);
-  return { ...state, bounced: bounces, refused: !bounces };
+  }
+  return { ...state, ...flagsOf(verdict) };
 }
 
 export function unmaskIdle(state: UnmaskState): UnmaskState {

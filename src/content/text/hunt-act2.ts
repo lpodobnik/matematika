@@ -16,7 +16,7 @@ export const act2Text = {
       found:
         'Svjedok ne otvara vrata. Mali automat ispod otirača nađe valjak Majstora Kristijana i pusti ga.',
       steps: [
-        ['Svaki broj ima dva susjeda: jedan je za 1 manji, a drugi za 1 veći.'],
+        ['Broj obično ima dva susjeda: jedan je za 1 manji, a drugi za 1 veći.'],
         ['Manji susjed je neposredni prethodnik.', 'Neposredni prethodnik broja 7 je 6.'],
         ['Veći susjed je neposredni sljedbenik.', 'Neposredni sljedbenik broja 7 je 8.'],
         ['Kad broj završava na 9, sljedbenik mijenja i druge znamenke.', '699 + 1 = 700'],
@@ -443,7 +443,7 @@ export const act2Text = {
       title: 'Bilješka s greškom.',
       card: [
         'Svaki trag možeš provjeriti računom. Kad se bilješka i račun ne slažu, vjeruj računu.',
-        'Broj koji završava na 5 zaokružujemo naviše: znamenka 5 ili veća uvijek ide naviše.',
+        'Kad je prva znamenka iza mjesta na koje zaokružujemo 5 ili veća, idemo naviše.',
       ],
     },
   },
