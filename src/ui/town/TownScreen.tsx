@@ -35,15 +35,17 @@ import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { Automaton } from '@/ui/fight/fight-art';
 import { LittleOneArt } from '@/ui/hunt/LittleOne';
 import { TrailMap } from '@/ui/hunt/TrailMap';
-import { logbookArt, outroArt } from '@/ui/opening/art';
+import { foundryArt, logbookArt, outroArt } from '@/ui/opening/art';
 import { OpeningPanels, StoryPanels } from '@/ui/opening/OpeningScreen';
 import { areaArt, areaChange, lookFacing, looks, personArt, personFacing } from '@/ui/town/art';
 import { bloomMask, pct, place, rectStyle, sameRect } from '@/ui/town/town-geometry';
 import { type Bubble, ExitSign, MapOverlay, PlaceButton, SpeechBubble } from '@/ui/town/town-parts';
 import {
+  readEndingSeen,
   readMet,
   readOutroSeen,
   readWhere,
+  writeEndingSeen,
   writeMet,
   writeOutroSeen,
   writeWhere,
@@ -67,6 +69,7 @@ export function TownScreen() {
   const look = useGame((s) => s.save.character.look);
   const dispatch = useGame((s) => s.dispatch);
   const hunt = useGame((s) => s.save.hunt);
+  const name = useGame((s) => s.save.character.name);
   const companion = useGame((s) => s.save.companion);
   const partTwo = useGame((s) => partTwoOn(s.ui.preview));
   const asleep = useMemo(() => asleepLairs(economy, Date.now()), [economy]);
@@ -113,9 +116,12 @@ export function TownScreen() {
         },
         partTwo,
       )}
+      name={name ?? ''}
       marks={
         partTwo
           ? [
+              ...hunt.beats,
+              ...hunt.guards,
               ...hunt.leadsDone,
               ...hunt.knotsDone,
               ...(hunt.gateOpened ? ['gate'] : []),
@@ -163,6 +169,8 @@ interface BoardProps {
   open?: readonly TrailId[];
   sealed?: readonly LeadId[];
   threadHeading?: LeadId | null;
+  /** His name, for where the story uses it. */
+  name?: string;
 }
 
 /** What happens when he reaches where he was walking to. */
@@ -216,6 +224,7 @@ export function TownBoard({
   open = [],
   sealed = [],
   threadHeading = null,
+  name = '',
 }: BoardProps) {
   // Rooms done and the hunt's marks: what ways and people wait on.
   const reached = useMemo<readonly string[]>(() => [...done, ...marks], [done, marks]);
@@ -237,7 +246,8 @@ export function TownBoard({
   const [bubble, setBubble] = useState<Bubble | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
-  const [slides, setSlides] = useState<'logbook' | 'outro' | null>(() => {
+  const [slides, setSlides] = useState<'logbook' | 'outro' | 'ending' | null>(() => {
+    if (partTwo && reached.includes('near-miss') && !readEndingSeen()) return 'ending';
     if (fresh === 'r07') return 'logbook';
     return done.includes('r13') && beaten('lair-60') && !readOutroSeen() ? 'outro' : null;
   });
@@ -726,6 +736,14 @@ export function TownBoard({
               <LittleOneArt />
             </button>
           )}
+          {area.spots && reached.includes('rule-4') && (
+            // The zero guard: it was shown 7 : 0, and it's still dividing.
+            <span className="town__zero-guard" style={pct({ x: 1000, y: 700 })} aria-hidden="true">
+              <svg viewBox="-12 -12 24 24" aria-hidden="true">
+                <path d="M-3 -11h6l1 4 4 -2 3 5 -4 2v4l4 2 -3 5 -4 -2 -1 4h-6l-1 -4 -4 2 -3 -5 4 -2v-4l-4 -2 3 -5 4 2z" />
+              </svg>
+            </span>
+          )}
           {lairOut && area.lair && area.lairSpot && (
             // The automaton the picture shows, standing still: a tap on it.
             <button
@@ -889,14 +907,17 @@ export function TownBoard({
         <div className="town__overlay">
           <StoryPanels
             panels={
-              // With part 2 on, the story goes on, so the last panel doesn't promise it.
-              slides === 'outro' && partTwo
-                ? [...hr.slides.outro.slice(0, -1), hr.hunt.gate.outroLast]
-                : hr.slides[slides]
+              slides === 'ending'
+                ? hr.hunt.ending.panels.map((panel) => panel.replaceAll('{ime}', name))
+                : // With part 2 on, the story goes on, so the last panel doesn't promise it.
+                  slides === 'outro' && partTwo
+                  ? [...hr.slides.outro.slice(0, -1), hr.hunt.gate.outroLast]
+                  : hr.slides[slides]
             }
-            art={slides === 'outro' ? outroArt : logbookArt}
+            art={slides === 'ending' ? foundryArt : slides === 'outro' ? outroArt : logbookArt}
             onDone={() => {
               if (slides === 'outro') writeOutroSeen();
+              if (slides === 'ending') writeEndingSeen();
               setSlides(null);
             }}
           />

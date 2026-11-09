@@ -1,6 +1,9 @@
 // Part 2's Croatian (GDD, Part 2: The Trail), reached through `hr.hunt`. All of it is a draft
 // for Luka: his wording wins, and every line waits for his review.
 
+import { act2Text } from '@/content/text/hunt-act2';
+import { act3Text } from '@/content/text/hunt-act3';
+import { act4Text } from '@/content/text/hunt-act4';
 import {
   huntUiText,
   knockGuideText,
@@ -14,7 +17,20 @@ import {
 } from '@/content/text/hunt-leads';
 
 export const huntText = {
-  leads: { l01: l01Text, l03: l03Text, l04: l04Text, l06: l06Text },
+  leads: {
+    l01: l01Text,
+    l03: l03Text,
+    l04: l04Text,
+    l06: l06Text,
+    ...act2Text,
+    ...act3Text,
+    l12: act4Text.l12,
+    l13: act4Text.l13,
+    l14: act4Text.l14,
+    l15: act4Text.l15,
+    l16: act4Text.l16,
+  },
+  ending: act4Text.ending,
   knockGuide: knockGuideText,
   guide: sceneGuideText,
   sealed: sealedText,

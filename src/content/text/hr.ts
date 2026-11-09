@@ -332,6 +332,11 @@ export const hr = {
     },
     exportLog: 'Preuzmi dnevnik (JSON)',
     /** Story 3.3: fights, by lair. */
+    leads: 'Trag',
+    leadName: 'Trag',
+    leadDone: 'Riješeno',
+    leadFirstTry: 'Iz prve',
+    leadWrongDoors: 'Kriva vrata',
     fights: 'Borbe',
     fightsNone: 'Još nijedna borba.',
     lair: 'Automat',

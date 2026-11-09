@@ -247,10 +247,8 @@ function inScene(spec: LeadSpec, play: LeadPlay, action: SceneAction): LeadResul
     const shown = (after as KnockState).shown;
     if (shown && !(before as KnockState).shown) {
       outcome.doorKnocked = { door: shown.door, right: false };
-      const named = (before as KnockState).lines.some(
-        (line) => !line.struck && line.clue === scene.forged,
-      );
-      if (scene.forged && named) outcome.forged = 'followed';
+      const trap = scene.wrongDoors.some((wrong) => wrong.door === shown.door);
+      if (scene.forged && trap) outcome.forged = 'followed';
     }
     if (after.opened && !before.opened && scene.forged) outcome.forged = 'struck';
     if (after.opened && !before.opened) outcome.doorKnocked = { door: scene.door, right: true };

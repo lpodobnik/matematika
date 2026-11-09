@@ -14,6 +14,23 @@ export function readMet(): PersonId[] {
 }
 
 /** The district's end is told once. */
+/** Whether he has read part 2's ending. */
+export function readEndingSeen(): boolean {
+  try {
+    return localStorage.getItem(`${playerKeys(activePlayer()).met}:ending`) !== null;
+  } catch {
+    return false;
+  }
+}
+
+export function writeEndingSeen() {
+  try {
+    localStorage.setItem(`${playerKeys(activePlayer()).met}:ending`, '1');
+  } catch {
+    // Without storage it shows again next time, which is harmless.
+  }
+}
+
 export function readOutroSeen(): boolean {
   try {
     return localStorage.getItem(`${playerKeys(activePlayer()).met}:outro`) !== null;

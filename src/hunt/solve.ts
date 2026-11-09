@@ -5,6 +5,7 @@ import { proveAlone } from '@/hunt/alone';
 import {
   canonicalLine,
   cluesLeft,
+  doorsOf,
   type KnockClue,
   type KnockLine,
   type KnockSpec,
@@ -61,7 +62,7 @@ export function proveKnock(spec: KnockSpec): KnockProblem[] {
   }
   if (cluesLeft(spec, { side, lines }).length > 0) say('a clue stays unused with every line in');
   if (spec.door < spec.row.from || spec.door > spec.row.to) say('the door is not in the row');
-  if (spec.row.to - spec.row.from + 1 > 70) say('more than 70 doors');
+  if (doorsOf(spec.row, side).length > 70) say('more than 70 doors');
   if (spec.grumpy.length === 0) say('no grumpy neighbour for a wrong door');
   if (spec.forged) {
     const forged = spec.clues.find((clue) => clue.id === spec.forged);

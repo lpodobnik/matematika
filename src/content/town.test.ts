@@ -22,7 +22,7 @@ describe('where leads start', () => {
   it('every lead has one place', () => {
     const leads = spots.map(([lead]) => lead);
     expect(new Set(leads).size).toBe(leads.length);
-    expect(leads).toEqual(allLeadSpecs.map((lead) => lead.id));
+    expect([...leads].sort()).toEqual(allLeadSpecs.map((lead) => lead.id).sort());
   });
 });
 

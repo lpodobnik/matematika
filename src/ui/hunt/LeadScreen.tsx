@@ -21,9 +21,11 @@ export function LeadScreen({ spec, play }: { spec: LeadSpec; play: LeadPlay }) {
       <LeadBoard spec={spec} play={play} act={act} />
       {play.step !== 'show' && play.step !== 'thread' && (
         <div className="lead__corner">
-          <button type="button" className="lead__why" onClick={() => setReplay(0)}>
-            {hr.hunt.littleOne.why}
-          </button>
+          {spec.lesson.steps.length > 0 && (
+            <button type="button" className="lead__why" onClick={() => setReplay(0)}>
+              {hr.hunt.littleOne.why}
+            </button>
+          )}
           <MapControl works={true} onOpen={() => dispatch({ type: 'hunt/leave' })} />
         </div>
       )}

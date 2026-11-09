@@ -280,6 +280,24 @@
   transform-origin: 0 0;
 }
 
+/* The zero guard, still dividing: it spins in its street for the rest of the game. */
+
+.town__zero-guard {
+  position: absolute;
+  width: 6%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+}
+
+.town__zero-guard svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--iron);
+  stroke: var(--ink);
+  animation: little-roll 0.7s linear infinite;
+}
+
 /* In the town it hops as it rolls, and it stands in front of what's behind it. */
 
 .town__figure.town__figure--little {

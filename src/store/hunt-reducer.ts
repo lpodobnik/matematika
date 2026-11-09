@@ -4,7 +4,7 @@
 import { castDraft, produce } from 'immer';
 import { cleanName } from '@/city/character';
 import { tuning } from '@/config/tuning';
-import { playedSpec } from '@/content/leads';
+import { leadSpecs, playedSpec } from '@/content/leads';
 import { earnParts } from '@/economy/parts';
 import {
   type GateScene,
@@ -16,10 +16,12 @@ import {
   newGateScene,
 } from '@/hunt/gate';
 import { inList, knotIds, type LeadId, leadIds } from '@/hunt/ids';
+import { huntAt } from '@/hunt/jump';
 import { type LeadAction, type LeadPlay, leadPlayFrom, leadStep, newLeadPlay } from '@/hunt/lead';
 import type { LeadSpec } from '@/hunt/spec';
 import { partTwoOn } from '@/hunt/switch';
 import { openTrail, type TrailId, threadAfterLead, threadTarget } from '@/hunt/trail';
+import { roomIds } from '@/room/types';
 import type { DomainEvent } from '@/store/events';
 import type { GameState, Reduce } from '@/store/types';
 
@@ -187,6 +189,36 @@ export function withHunt(inner: Reduce): Reduce {
         return changeGate(state, (scene) =>
           scene.phase === 'foundry' ? { ...scene, phase: 'name' } : scene,
         );
+      case 'dev/hunt-jump': {
+        if (!state.ui.preview) return same(state);
+        const { hunt, companion } = huntAt(state.save.hunt, state.save.companion, action.to, {
+          beatsOf: (id) => leadSpecs[id]?.beats ?? [],
+          guardOf: (id) => {
+            const guard = leadSpecs[id]?.scenes.find((scene) => scene.kind === 'guard');
+            return guard?.kind === 'guard' ? guard.id : null;
+          },
+        });
+        return {
+          state: produce(state, (draft) => {
+            const { progress, economy } = draft.save;
+            const rooms = [...roomIds];
+            progress.roomsDone = rooms;
+            progress.told = rooms;
+            progress.tools = ['balance', 'workshop', 'chain', 'drum'];
+            progress.onMap = true;
+            progress.introSeen = true;
+            economy.lairs['lair-60'] = economy.lairs['lair-60'] ?? {
+              rewindsAt: '2000-01-01T00:00:00.000Z',
+            };
+            if (!draft.save.character.name) draft.save.character = { name: 'Ana', look: 'look-1' };
+            draft.save.hunt = castDraft(hunt);
+            draft.save.companion = castDraft(companion);
+            draft.room = null;
+            draft.ui.screen = 'map';
+          }),
+          events: [{ type: 'SaveChanged' }],
+        };
+      }
       case 'hunt/lead-start': {
         const { hunt, companion } = state.save;
         const spec = playedSpec(action.lead, hunt.sealed);

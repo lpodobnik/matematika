@@ -34,6 +34,12 @@ export function soundOf(event: DomainEvent): SoundId | null {
       return event.won ? 'chime' : 'hiss';
     case 'UpgradeBought':
       return 'chime';
+    case 'GateOpened':
+      return 'restart';
+    case 'DoorKnocked':
+      return event.right ? 'latch' : 'thunk';
+    case 'LeadFinished':
+      return 'chime';
     default:
       return null;
   }

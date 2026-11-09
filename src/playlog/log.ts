@@ -19,6 +19,10 @@ export type PlayLogEvent = { at: string } /** The first event after 30 minutes o
    * recovered pile on a win, minus the parts dropped on a loss).
    */
   | { type: 'fight'; lairId: LairId; won: boolean; parts: number }
+  /** Part 2: a lead or knot begun or finished, and whether it went without a slip. */
+  | { type: 'lead'; lead: string; action: 'start' | 'done'; firstTry?: boolean }
+  /** Part 2: a door he knocked on. */
+  | { type: 'door'; lead: string; door: number; right: boolean }
 );
 
 /** The domain events the log reads, by what they carry (store/events.ts). */
@@ -29,7 +33,10 @@ export type LoggedEvent =
   | { type: 'WayUsed'; roomId: string; stage: number; way: WayId }
   | { type: 'PredictionMade'; roomId: string; stage: number; right: boolean }
   | { type: 'LineWrong'; roomId: string; stage: number; line: string }
-  | { type: 'FightEnded'; lairId: string; won: boolean; parts: number };
+  | { type: 'FightEnded'; lairId: string; won: boolean; parts: number }
+  | { type: 'LeadPicked'; lead: string }
+  | { type: 'LeadFinished'; lead: string; firstTry: boolean }
+  | { type: 'DoorKnocked'; lead: string; door: number; right: boolean };
 
 /** A gap this long starts a new session. */
 export const sessionGapMs = 30 * 60 * 1000;
@@ -67,6 +74,13 @@ function entryOf(event: LoggedEvent, at: string): PlayLogEvent | null {
   if (event.type === 'FightEnded') {
     if (!isLair(event.lairId)) return null;
     return { type: 'fight', lairId: event.lairId, won: event.won, parts: event.parts, at };
+  }
+  if (event.type === 'LeadPicked') return { type: 'lead', lead: event.lead, action: 'start', at };
+  if (event.type === 'LeadFinished') {
+    return { type: 'lead', lead: event.lead, action: 'done', firstTry: event.firstTry, at };
+  }
+  if (event.type === 'DoorKnocked') {
+    return { type: 'door', lead: event.lead, door: event.door, right: event.right, at };
   }
   if (!('roomId' in event) || !isAuthoredRoom(event.roomId)) return null;
   const { roomId } = event;
@@ -117,8 +131,20 @@ export interface FightSummary {
   partsLost: number;
 }
 
+/** A lead's line in Luka's view (part 2). */
+export interface LeadSummary {
+  lead: string;
+  started: string | null;
+  done: string | null;
+  /** Whether it went without a slip, once done. */
+  firstTry: boolean | null;
+  wrongDoors: number;
+}
+
 /** What Luka's view shows of the log. */
 export interface LogSummary {
+  /** Part 2's leads, in the order he began them. */
+  leads: LeadSummary[];
   /** Sessions per day, by local date (YYYY-MM-DD), in date order. */
   sessions: { day: string; count: number }[];
   rooms: RoomSummary[];
@@ -164,6 +190,7 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
   };
   const wrongLines: LogSummary['wrongLines'] = [];
   const fights = new Map<LairId, FightSummary>();
+  const leads = new Map<string, LeadSummary>();
   let losses = 0;
   let thenHard = 0;
   // A loss not yet followed by a hard fight.
@@ -199,6 +226,25 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
       }
       continue;
     }
+    if (event.type === 'lead' || event.type === 'door') {
+      const lead = leads.get(event.lead) ?? {
+        lead: event.lead,
+        started: null,
+        done: null,
+        firstTry: null,
+        wrongDoors: 0,
+      };
+      leads.set(event.lead, lead);
+      if (event.type === 'door') {
+        if (!event.right) lead.wrongDoors += 1;
+      } else if (event.action === 'start') {
+        lead.started ??= event.at;
+      } else {
+        lead.done ??= event.at;
+        lead.firstTry ??= event.firstTry ?? null;
+      }
+      continue;
+    }
     if (!isAuthoredRoom(String((event as { roomId?: unknown }).roomId))) continue;
     const summary = room(event.roomId);
     if (event.type === 'room') {
@@ -222,5 +268,6 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
     wrongLines: wrongLines.reverse().slice(0, latestLines),
     fights: lairIds.flatMap((id) => fights.get(id) ?? []),
     afterLoss: { losses, thenHard },
+    leads: [...leads.values()],
   };
 }

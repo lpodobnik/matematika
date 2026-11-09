@@ -1,6 +1,7 @@
 import '@/dev/dev-panel.css';
 import { useEffect, useMemo, useState } from 'react';
 import { rooms } from '@/content/rooms';
+import { town } from '@/content/town';
 import {
   type DevReadout,
   devReadout,
@@ -17,8 +18,10 @@ import {
   toggledBalance,
   toolsBefore,
 } from '@/dev/dev-view';
+import { type JumpPlace, jumpPlaces } from '@/hunt/jump';
 import { type Quality, qualities } from '@/store/quality';
 import { useGame } from '@/store/store';
+import { writeOutroSeen, writeWhere } from '@/ui/town/town-storage';
 
 /**
  * The dev panel (architecture, Debug Tools): opened with `?dev` in the address or the
@@ -52,6 +55,7 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
   const parts = useGame((s) => s.save.economy.parts);
   const seed = useGame((s) => s.ui.fightSeed);
   const dispatch = useGame((s) => s.dispatch);
+  const preview = useGame((s) => s.ui.preview);
   const loading = useGame((s) => s.ui.screen === 'loading');
   const readout = useMemo(() => (room ? devReadout(room, tools) : null), [room, tools]);
   const quality = useMemo(() => qualityReadout(qualityState), [qualityState]);
@@ -86,6 +90,18 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
         onSeed: (next) => dispatch({ type: 'dev/fight-seed', seed: next }),
         onWake: () => dispatch({ type: 'dev/wake-lairs' }),
       }}
+      onHuntJump={
+        preview
+          ? (to) => {
+              // The town reads where he stands when it opens, so it opens afresh.
+              if (to === 'gate') writeWhere('yard', { x: 700, y: 520 });
+              else writeWhere('u1', town.areas.u1.arrive);
+              writeOutroSeen();
+              dispatch({ type: 'dev/hunt-jump', to });
+              window.setTimeout(() => window.location.reload(), 500);
+            }
+          : undefined
+      }
       onClose={onClose}
     />
   );
@@ -109,6 +125,8 @@ export interface DevPanelViewProps {
   onNewGame(): void;
   /** Epic 3: his parts, the fights' seed, and waking the lairs (architecture, Debug Tools). */
   fights?: DevFights;
+  /** Part 2: go to any point on the trail. */
+  onHuntJump?(to: JumpPlace): void;
   onClose(): void;
 }
 
@@ -141,6 +159,7 @@ export function DevPanelView({
   onProfile,
   onNewGame,
   fights,
+  onHuntJump,
   onClose,
 }: DevPanelViewProps) {
   return (
@@ -197,6 +216,22 @@ export function DevPanelView({
           new game
         </button>
       </div>
+      {onHuntJump && (
+        <fieldset className="dev-panel__choices">
+          <legend>part 2: everything before it done</legend>
+          {jumpPlaces.map((place) => (
+            <button
+              key={place}
+              type="button"
+              className="dev-panel__button"
+              data-hunt-jump={place}
+              onClick={() => onHuntJump(place)}
+            >
+              {place}
+            </button>
+          ))}
+        </fieldset>
+      )}
       {fights && (
         <fieldset className="dev-panel__choices">
           <legend>

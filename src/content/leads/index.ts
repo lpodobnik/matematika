@@ -1,5 +1,8 @@
 // The leads as written so far (architecture, Pattern 6). A lead's id is stored in saves.
 
+import { act2Leads } from '@/content/leads/act2';
+import { act3Leads } from '@/content/leads/act3';
+import { act4Leads } from '@/content/leads/act4';
 import { l01 } from '@/content/leads/l01-two-sides';
 import { l03 } from '@/content/leads/l03-archive';
 import { l04 } from '@/content/leads/l04-tram-line';
@@ -8,7 +11,15 @@ import { sealedBoard } from '@/content/leads/sealed-board';
 import type { KnotId, LeadId } from '@/hunt/ids';
 import type { LeadSpec } from '@/hunt/spec';
 
-export const leadSpecs: Partial<Record<LeadId | KnotId, LeadSpec>> = { l01, l03, l04, l06 };
+export const leadSpecs: Partial<Record<LeadId | KnotId, LeadSpec>> = {
+  l01,
+  l03,
+  l04,
+  l06,
+  ...act2Leads,
+  ...act3Leads,
+  ...act4Leads,
+};
 
 export const allLeadSpecs: readonly LeadSpec[] = Object.values(leadSpecs);
 

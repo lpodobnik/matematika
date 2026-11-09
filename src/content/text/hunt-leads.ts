@@ -274,7 +274,7 @@ export const knockGuideText = {
 export const sealedText = {
   intro: 'Crna nit stigla je prije tebe. Automati čuvaju ulaz.',
   caught: ['OPAŽENO. VRAĆENO NA POČETAK. HVALA.', 'OVO JE ZABILJEŽENO. POČNI ISPOČETKA. HVALA.'],
-  found: 'Prošao si.',
+  found: 'Put je slobodan.',
   opened: 'Automati nisu ništa primijetili. Trag je još tu.',
   hint: {
     step: 'Čekaj da automat skrene iza ugla, pa kreni.',
@@ -374,7 +374,28 @@ export const huntUiText = {
 /** The trail map's labels. */
 export const trailText = {
   title: 'Trag',
-  leads: { l01: 'Dvije strane', l03: 'Arhiv', l04: 'Tramvajska linija', l06: 'Novine' },
+  leads: {
+    l01: 'Dvije strane',
+    l02: 'Susjedi',
+    l03: 'Arhiv',
+    l04: 'Tramvajska linija',
+    k1: 'Prvi čvor',
+    w1: 'Gdje je mali automat?',
+    l05: 'Svjedoci',
+    l06: 'Novine',
+    l07: 'Knjige računa',
+    l08: 'Pročelje',
+    k2: 'Drugi čvor',
+    l09: 'Dvorište sanduka',
+    l10: 'Šesta kola',
+    l11: 'Pet osoba',
+    k3: 'Treći čvor',
+    l12: 'Brave',
+    l13: 'Dva svjedoka',
+    l14: 'Krug',
+    l15: 'Dizalica',
+    l16: 'Ulje za svjetiljke',
+  },
   open: 'Otvoreni trag',
   done: 'Riješeno',
 } as const;

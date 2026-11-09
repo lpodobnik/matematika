@@ -5,6 +5,7 @@ import type { NodeId } from '@/city/types';
 import type { AreaId } from '@/content/town';
 import type { UpgradeId } from '@/economy/types';
 import type { FightAction, FightState } from '@/fight/types';
+import type { JumpPlace } from '@/hunt/jump';
 import type { LeadAction } from '@/hunt/lead';
 import type { TrailId } from '@/hunt/trail';
 import type { LinkOp } from '@/math/chain';
@@ -166,6 +167,8 @@ export type Action =
   | { type: 'hunt/lead-start'; lead: TrailId }
   /** A move in the lead in play (hunt/lead.ts). */
   | { type: 'hunt/lead'; action: LeadAction }
+  /** The dev panel: part 2 as it would be on arriving there (hunt/jump.ts). */
+  | { type: 'dev/hunt-jump'; to: JumpPlace }
   /** He leaves the scene for the town; it waits for him. */
   | { type: 'hunt/leave' }
   /** He names the little one. */

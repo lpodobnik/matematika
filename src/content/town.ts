@@ -853,6 +853,66 @@ const hill: TownArea = {
   lamps: [],
 };
 
+// The doors of Gornja ulica. Until the other streets are painted (epic 12), each act's leads start
+// here, one to a door. Only what's open shows, so they don't crowd.
+const upperDoors = {
+  terrace: {
+    stand: { x: 770, y: 505 },
+    area: { x: 620, y: 240, w: 180, h: 240 },
+    marker: { x: 700, y: 230 },
+    bloom: { x: 700, y: 400, r: 460 },
+  },
+  far: {
+    stand: { x: 1090, y: 360 },
+    area: { x: 1030, y: 110, w: 140, h: 190 },
+    marker: { x: 1080, y: 100 },
+    bloom: { x: 1100, y: 240, r: 340 },
+  },
+  tower: {
+    stand: { x: 1250, y: 460 },
+    area: { x: 1380, y: 100, w: 200, h: 640 },
+    marker: { x: 1440, y: 300 },
+    bloom: { x: 1450, y: 400, r: 360 },
+  },
+  near: {
+    stand: { x: 420, y: 700 },
+    area: { x: 280, y: 410, w: 130, h: 200 },
+    marker: { x: 330, y: 400 },
+    bloom: { x: 340, y: 520, r: 320 },
+  },
+  fountain: {
+    stand: { x: 590, y: 680 },
+    area: { x: 640, y: 560, w: 280, h: 200 },
+    marker: { x: 780, y: 540 },
+    bloom: { x: 780, y: 680, r: 340 },
+  },
+};
+
+const upperSpots: readonly TownSpot[] = (
+  [
+    ['l01', 'terrace'],
+    ['l02', 'near'],
+    ['l03', 'far'],
+    ['l04', 'tower'],
+    ['k1', 'fountain'],
+    ['w1', 'fountain'],
+    ['l05', 'terrace'],
+    ['l06', 'near'],
+    ['l07', 'far'],
+    ['l08', 'tower'],
+    ['k2', 'fountain'],
+    ['l09', 'terrace'],
+    ['l10', 'far'],
+    ['l11', 'fountain'],
+    ['k3', 'tower'],
+    ['l12', 'terrace'],
+    ['l13', 'far'],
+    ['l14', 'tower'],
+    ['l15', 'near'],
+    ['l16', 'fountain'],
+  ] as const
+).map(([lead, door]) => ({ lead, ...upperDoors[door] }));
+
 // The first street of the upper district, behind the foundry (part 2, story 7.5). The cobbles
 // lie below the terrace that crosses the picture; the fountain, the lift tower, the lamps and
 // the stone post stand on them.
@@ -882,38 +942,7 @@ const u1: TownArea = {
   ),
   arrive: { x: 200, y: 790 },
   places: [],
-  spots: [
-    {
-      lead: 'l01',
-      stand: { x: 770, y: 505 },
-      area: { x: 620, y: 240, w: 180, h: 240 },
-      marker: { x: 700, y: 230 },
-      bloom: { x: 700, y: 400, r: 460 },
-    },
-    // Until their own streets are painted (epic 12), all of Act 1's leads and the first of Act 2
-    // start here, each at its own door.
-    {
-      lead: 'l03',
-      stand: { x: 1090, y: 360 },
-      area: { x: 1030, y: 110, w: 140, h: 190 },
-      marker: { x: 1080, y: 100 },
-      bloom: { x: 1100, y: 240, r: 340 },
-    },
-    {
-      lead: 'l04',
-      stand: { x: 1250, y: 460 },
-      area: { x: 1380, y: 100, w: 200, h: 640 },
-      marker: { x: 1440, y: 300 },
-      bloom: { x: 1450, y: 400, r: 360 },
-    },
-    {
-      lead: 'l06',
-      stand: { x: 420, y: 700 },
-      area: { x: 280, y: 410, w: 130, h: 200 },
-      marker: { x: 330, y: 400 },
-      bloom: { x: 340, y: 520, r: 320 },
-    },
-  ],
+  spots: upperSpots,
   exits: [
     {
       // Back through the foundry, to the yard.

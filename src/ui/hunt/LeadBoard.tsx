@@ -502,13 +502,21 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
             </button>
           ))}
         </div>
-        <div
-          key={state.shakes}
-          className="hunt__little knock__little"
-          data-shake={state.shakes > 0}
-        >
-          <LittleOneArt />
-        </div>
+        {spec.lost ? (
+          state.shakes > 0 && (
+            <p className="hunt__note knock__grumble" role="status">
+              {spec.grumpy[(state.shakes - 1) % spec.grumpy.length]}
+            </p>
+          )
+        ) : (
+          <div
+            key={state.shakes}
+            className="hunt__little knock__little"
+            data-shake={state.shakes > 0}
+          >
+            <LittleOneArt />
+          </div>
+        )}
         {state.shown && (
           <div className="knock__bubble" role="status">
             <p>{state.shown.say}</p>
@@ -534,7 +542,8 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
         <div ref={page} className="hunt__page">
           <ol className="clues">
             {spec.clues.map((clue) => {
-              const used = !left.includes(clue);
+              // The forged clue is never needed, and nothing here gives that away.
+              const used = clue.id !== spec.forged && !left.includes(clue);
               return (
                 <li key={clue.id}>
                   <button

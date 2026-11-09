@@ -66,6 +66,8 @@ export interface KnockSpec {
   context?: TruthContext;
   /** What stands above the doors, such as a chart to read. */
   picture?: ObjectState;
+  /** The little one has wandered off: the neighbours grumble where it would shake (Act 2). */
+  lost?: boolean;
   /**
    * A clue that's a trap (Knot 2): it isn't needed, its line can be struck like any other, and
    * following it leads to the door that holds a polite notice.
@@ -391,6 +393,17 @@ export function knockDoor(spec: KnockSpec, state: KnockState, door: number): Kno
     const names = statement !== null && lineNames(statement);
     return !line.struck && names ? { ...line, struck: true } : line;
   });
+  // With only ranges, nothing names the door: the last line he wrote is what led here.
+  if (!named.some((line, i) => line.struck && !state.lines[i]?.struck)) {
+    for (let i = named.length - 1; i >= 0; i--) {
+      const line = named[i];
+      const statement = line && !line.struck ? statementOf(line.tokens) : null;
+      if (line && statement && lineKeeps(statement) !== null) {
+        named[i] = { ...line, struck: true };
+        break;
+      }
+    }
+  }
   const struckNow = named.flatMap((line, i) => (line.struck && !state.lines[i]?.struck ? [i] : []));
   return {
     ...state,
@@ -492,6 +505,13 @@ export function canonicalLine(clue: KnockClue): SToken[] | null {
   if (clue.kind === 'limit') return readTokens(clue.canonical);
   const start = readLine(clue.start);
   return start && fillLine(start, digitsOf(clue.answer));
+}
+
+/** What he types for a clue's canonical line: the clue has already started the rest. */
+export function lineValueOfClue(clue: KnockClue): SToken[] {
+  if (clue.kind === 'side') return [];
+  if (clue.kind === 'limit') return readTokens(clue.canonical) ?? [];
+  return digitsOf(clue.answer);
 }
 
 export function digitsOf(value: number): SToken[] {

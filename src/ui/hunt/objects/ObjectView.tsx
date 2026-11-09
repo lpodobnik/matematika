@@ -212,8 +212,8 @@ function Bundles({ bundles }: { bundles: BundlesState }) {
         ))}
       </div>
       <p className="pairs__sum">
-        {bundles.loose} + {bundles.bundles} · {bundles.size} ={' '}
-        {bundles.loose + bundles.bundles * bundles.size}
+        {bundles.loose > 0 ? `${bundles.loose} + ` : ''}
+        {bundles.bundles} · {bundles.size} = {bundles.loose + bundles.bundles * bundles.size}
       </p>
     </div>
   );

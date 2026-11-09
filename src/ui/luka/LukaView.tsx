@@ -113,6 +113,32 @@ export function LukaView({
         </table>
       </section>
 
+      {summary.leads.length > 0 && (
+        <section>
+          <h2>{hr.luka.leads}</h2>
+          <table className="luka__table">
+            <thead>
+              <tr>
+                <th>{hr.luka.leadName}</th>
+                <th>{hr.luka.leadDone}</th>
+                <th>{hr.luka.leadFirstTry}</th>
+                <th>{hr.luka.leadWrongDoors}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summary.leads.map((lead) => (
+                <tr key={lead.lead}>
+                  <td>{lead.lead}</td>
+                  <td>{lead.done ? '✓' : ''}</td>
+                  <td>{lead.firstTry ? '✓' : ''}</td>
+                  <td>{lead.wrongDoors}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
       <section>
         <h2>{hr.luka.fights}</h2>
         {summary.fights.length === 0 ? (

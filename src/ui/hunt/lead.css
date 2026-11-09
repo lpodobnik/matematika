@@ -665,6 +665,16 @@
   background: var(--ink-deep);
 }
 
+.knock__grumble {
+  position: absolute;
+  right: 8px;
+  bottom: 64px;
+  max-width: 60%;
+  padding: 6px 10px;
+  background: var(--sheet);
+  border-radius: 8px;
+}
+
 .knock__little {
   position: absolute;
   right: 8px;
@@ -948,6 +958,10 @@
 .suspect__name[data-accused="true"] {
   color: var(--ink-soft);
   border-style: dashed;
+}
+
+.suspect__working:empty {
+  display: none;
 }
 
 .suspect__working {
@@ -1278,7 +1292,8 @@
 }
 
 .locks__sign {
-  font-size: 30px;
+  font-size: 34px;
+  font-weight: 700;
 }
 
 .locks__number {
@@ -1318,13 +1333,14 @@
   gap: 4px;
   padding: 8px;
   margin-bottom: 56px;
+  overflow: auto;
   background: var(--stone);
   border: 3px solid var(--ink);
 }
 
 .facade__window {
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 48px;
+  min-height: 48px;
   padding: 0;
   font: inherit;
   font-size: 16px;
