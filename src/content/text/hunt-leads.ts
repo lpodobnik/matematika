@@ -97,8 +97,8 @@ export const l04Text = {
   mistake: {
     say: 'Mali automat broji crtice. Jedan njegov redak nije točan. Dodirni ga.',
     nudge: 'Taj je redak točan. Pogledaj koliko vrijedi jedan korak.',
-    show: 'Pokaži mu: dodirni stanicu koja je tri koraka od nule.',
-    write: 'Sad napiši točan redak.',
+    show: 'Pokaži mu koliko vrijedi jedan korak: dodirni prvu stanicu iza nule.',
+    write: 'Jedan korak vrijedi 5, a B je tri koraka od nule. Sad napiši točan redak.',
     thanks: 'Mali automat kima. Više neće brojati crtice.',
   },
   scene: {

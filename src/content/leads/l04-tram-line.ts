@@ -61,7 +61,11 @@ export const l04: LeadSpec = {
     context: { points: { A: 10, B: 15 } },
     spot: { ...fives, point: { at: 15, label: 'B' } },
     nudge: text.mistake.nudge,
-    show: { say: text.mistake.show, object: fives, goal: { kind: 'line-mark', at: 15 } },
+    show: {
+      say: text.mistake.show,
+      object: { ...fives, point: { at: 15, label: 'B' } },
+      goal: { kind: 'line-mark', at: 5 },
+    },
     write: {
       say: text.mistake.write,
       start: 'B =',

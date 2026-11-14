@@ -224,8 +224,8 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `tries.point`: Stanica B je između 10 i 20. Koliko je B? Napiši.
 - `mistake.say`: Mali automat broji crtice. Jedan njegov redak nije točan. Dodirni ga.
 - `mistake.nudge`: Taj je redak točan. Pogledaj koliko vrijedi jedan korak.
-- `mistake.show`: Pokaži mu: dodirni stanicu koja je tri koraka od nule.
-- `mistake.write`: Sad napiši točan redak.
+- `mistake.show`: Pokaži mu koliko vrijedi jedan korak: dodirni prvu stanicu iza nule.
+- `mistake.write`: Jedan korak vrijedi 5, a B je tri koraka od nule. Sad napiši točan redak.
 - `mistake.thanks`: Mali automat kima. Više neće brojati crtice.
 - `scene.intro`: Belušić pamti samo neke stanice. Automati patroliraju. Nađi stanicu gdje su kola ušla na liniju.
 - `scene.caught.1`: OPAŽENO. VRAĆENO NA POČETAK. HVALA.

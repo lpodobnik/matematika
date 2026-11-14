@@ -279,7 +279,25 @@
   list-style: none;
   border-bottom: 4px solid var(--ink);
   overflow-x: auto;
+  overflow-y: visible;
   max-width: 100%;
+  padding-bottom: 16px;
+}
+
+.number-line__item {
+  position: relative;
+}
+
+/* Every stop has its tick on the line, labelled or not, so that the steps can be counted. */
+.number-line__item::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  width: 3px;
+  height: 18px;
+  background: var(--ink);
+  transform: translateX(-50%);
 }
 
 .number-line__stop {
@@ -296,6 +314,11 @@
 .number-line__stop[data-lit="true"] {
   color: var(--ink-deep);
   background: var(--lamp-wash);
+}
+
+/* A stop with no label, that he can tap: dashed, so it's plainly there. */
+.number-line__stop[data-blank="true"]:not(:disabled) {
+  border: 2px dashed var(--ink-faint, var(--ink-soft));
 }
 
 .number-line__stop[data-marked="true"] {

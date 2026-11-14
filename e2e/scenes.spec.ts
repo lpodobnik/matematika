@@ -173,7 +173,7 @@ test('Sneak: the tram line, being caught and a wrong stop included', async ({ pa
 
   // Fix: it counted ticks.
   await page.locator('.hunt__wobbly-line').nth(1).click();
-  await page.locator('.number-line__stop').nth(3).click();
+  await page.locator('.number-line__stop').nth(1).click();
   await pad(page, ['1', '5', 'enter']);
   await next(page);
 

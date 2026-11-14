@@ -325,11 +325,14 @@ function NumberLine({ line, onMove }: { line: LineState; onMove?(move: ObjectMov
             disabled={!onMove}
             data-lit={line.lit.includes(n)}
             data-marked={line.marked === n}
+            data-blank={
+              Boolean(line.labelled) && !line.labelled?.includes(n) && line.point?.at !== n
+            }
             onClick={() => onMove?.({ kind: 'line-mark', at: n })}
           >
             {line.point?.at === n
               ? line.point.label
-              : !line.labelled || line.labelled.includes(n)
+              : !line.labelled || line.labelled.includes(n) || line.marked === n
                 ? formatNumber(n)
                 : ''}
           </button>
