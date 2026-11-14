@@ -9,7 +9,17 @@ import type { LairId } from '@/fight/types';
 import type { HuntMark, KnotId, LeadId } from '@/hunt/ids';
 import type { RoomId } from '@/room/types';
 
-export type PersonId = 'penkala' | 'nikola' | 'faust' | 'milka' | 'vucetic' | 'zagorka';
+export type PersonId =
+  | 'penkala'
+  | 'nikola'
+  | 'faust'
+  | 'milka'
+  | 'vucetic'
+  | 'zagorka'
+  | 'watchman'
+  | 'belusic'
+  | 'kotruljevic'
+  | 'hanaman';
 
 export type AreaId =
   | 'square'
@@ -22,7 +32,12 @@ export type AreaId =
   | 'market'
   | 'wheel'
   | 'hill'
-  | 'u1';
+  | 'u1'
+  | 'u2'
+  | 'u3'
+  | 'u4'
+  | 'u5'
+  | 'u6';
 
 /** A tap area over an illustration, in town units. */
 export interface Rect {
@@ -853,65 +868,216 @@ const hill: TownArea = {
   lamps: [],
 };
 
-// The doors of Gornja ulica. Until the other streets are painted (epic 12), each act's leads start
-// here, one to a door. Only what's open shows, so they don't crowd.
-const upperDoors = {
-  terrace: {
-    stand: { x: 770, y: 505 },
-    area: { x: 620, y: 240, w: 180, h: 240 },
-    marker: { x: 700, y: 230 },
-    bloom: { x: 700, y: 400, r: 460 },
-  },
-  far: {
-    stand: { x: 1090, y: 360 },
-    area: { x: 1030, y: 110, w: 140, h: 190 },
-    marker: { x: 1080, y: 100 },
-    bloom: { x: 1100, y: 240, r: 340 },
-  },
-  tower: {
-    stand: { x: 1250, y: 460 },
-    area: { x: 1380, y: 100, w: 200, h: 640 },
-    marker: { x: 1440, y: 300 },
-    bloom: { x: 1450, y: 400, r: 360 },
-  },
-  near: {
-    stand: { x: 420, y: 700 },
-    area: { x: 280, y: 410, w: 130, h: 200 },
-    marker: { x: 330, y: 400 },
-    bloom: { x: 340, y: 520, r: 320 },
-  },
-  fountain: {
-    stand: { x: 590, y: 680 },
-    area: { x: 640, y: 560, w: 280, h: 200 },
-    marker: { x: 780, y: 540 },
-    bloom: { x: 780, y: 680, r: 340 },
-  },
+// Where each lead starts: a street, and a door in its painting (part 2). Only what's open shows.
+type SpotPlace = Omit<TownSpot, 'lead'>;
+const door = (stand: Point, area: Rect, marker: Point, bloom: TownSpot['bloom']): SpotPlace => ({
+  stand,
+  area,
+  marker,
+  bloom,
+});
+
+const spotPlaces: Readonly<Record<LeadId | KnotId, readonly [AreaId, SpotPlace]>> = {
+  // Gornja ulica.
+  l01: [
+    'u1',
+    door(
+      { x: 770, y: 505 },
+      { x: 620, y: 240, w: 180, h: 240 },
+      { x: 700, y: 230 },
+      { x: 700, y: 400, r: 460 },
+    ),
+  ],
+  l02: [
+    'u1',
+    door(
+      { x: 420, y: 700 },
+      { x: 280, y: 410, w: 130, h: 200 },
+      { x: 330, y: 400 },
+      { x: 340, y: 520, r: 320 },
+    ),
+  ],
+  k1: [
+    'u1',
+    door(
+      { x: 590, y: 680 },
+      { x: 640, y: 560, w: 280, h: 200 },
+      { x: 780, y: 540 },
+      { x: 780, y: 680, r: 340 },
+    ),
+  ],
+  w1: [
+    'u1',
+    door(
+      { x: 1090, y: 360 },
+      { x: 1030, y: 110, w: 140, h: 190 },
+      { x: 1080, y: 100 },
+      { x: 1100, y: 240, r: 340 },
+    ),
+  ],
+  // Arhivska ulica.
+  l03: [
+    'u2',
+    door(
+      { x: 330, y: 700 },
+      { x: 80, y: 250, w: 420, h: 420 },
+      { x: 290, y: 240 },
+      { x: 300, y: 500, r: 420 },
+    ),
+  ],
+  l04: [
+    'u2',
+    door(
+      { x: 1080, y: 780 },
+      { x: 700, y: 220, w: 300, h: 470 },
+      { x: 850, y: 210 },
+      { x: 860, y: 520, r: 420 },
+    ),
+  ],
+  // Novinska ulica.
+  l05: [
+    'u3',
+    door(
+      { x: 1000, y: 860 },
+      { x: 1050, y: 410, w: 280, h: 260 },
+      { x: 1180, y: 400 },
+      { x: 1100, y: 640, r: 420 },
+    ),
+  ],
+  l06: [
+    'u3',
+    door(
+      { x: 480, y: 690 },
+      { x: 40, y: 60, w: 480, h: 600 },
+      { x: 260, y: 60 },
+      { x: 280, y: 420, r: 460 },
+    ),
+  ],
+  l07: [
+    'u3',
+    door(
+      { x: 650, y: 560 },
+      { x: 530, y: 200, w: 160, h: 320 },
+      { x: 600, y: 190 },
+      { x: 610, y: 420, r: 300 },
+    ),
+  ],
+  l08: [
+    'u3',
+    door(
+      { x: 1010, y: 470 },
+      { x: 740, y: 0, w: 620, h: 430 },
+      { x: 1040, y: 40 },
+      { x: 1050, y: 260, r: 520 },
+    ),
+  ],
+  k2: [
+    'u3',
+    door(
+      { x: 1440, y: 572 },
+      { x: 1310, y: 620, w: 260, h: 280 },
+      { x: 1440, y: 610 },
+      { x: 1440, y: 760, r: 300 },
+    ),
+  ],
+  // Dvorište.
+  l09: [
+    'u4',
+    door(
+      { x: 560, y: 562 },
+      { x: 380, y: 220, w: 490, h: 320 },
+      { x: 620, y: 210 },
+      { x: 620, y: 400, r: 420 },
+    ),
+  ],
+  l10: [
+    'u4',
+    door(
+      { x: 720, y: 765 },
+      { x: 400, y: 560, w: 560, h: 180 },
+      { x: 680, y: 550 },
+      { x: 680, y: 640, r: 380 },
+    ),
+  ],
+  l11: [
+    'u4',
+    door(
+      { x: 1120, y: 565 },
+      { x: 990, y: 170, w: 270, h: 340 },
+      { x: 1120, y: 160 },
+      { x: 1120, y: 360, r: 400 },
+    ),
+  ],
+  k3: [
+    'u4',
+    door(
+      { x: 280, y: 692 },
+      { x: 100, y: 390, w: 320, h: 260 },
+      { x: 260, y: 380 },
+      { x: 260, y: 520, r: 300 },
+    ),
+  ],
+  // Ulica brava.
+  l12: [
+    'u5',
+    door(
+      { x: 560, y: 505 },
+      { x: 330, y: 20, w: 370, h: 430 },
+      { x: 510, y: 20 },
+      { x: 510, y: 260, r: 420 },
+    ),
+  ],
+  l13: [
+    'u5',
+    door(
+      { x: 160, y: 705 },
+      { x: 50, y: 480, w: 100, h: 190 },
+      { x: 100, y: 470 },
+      { x: 100, y: 580, r: 260 },
+    ),
+  ],
+  l14: [
+    'u5',
+    door(
+      { x: 760, y: 760 },
+      { x: 600, y: 430, w: 300, h: 270 },
+      { x: 750, y: 420 },
+      { x: 750, y: 560, r: 360 },
+    ),
+  ],
+  l15: [
+    'u5',
+    door(
+      { x: 1180, y: 645 },
+      { x: 1090, y: 60, w: 500, h: 560 },
+      { x: 1330, y: 60 },
+      { x: 1330, y: 340, r: 460 },
+    ),
+  ],
+  // Pusta ulica.
+  l16: [
+    'u6',
+    door(
+      { x: 1150, y: 625 },
+      { x: 1180, y: 280, w: 420, h: 460 },
+      { x: 1390, y: 280 },
+      { x: 1390, y: 520, r: 460 },
+    ),
+  ],
 };
 
-const upperSpots: readonly TownSpot[] = (
-  [
-    ['l01', 'terrace'],
-    ['l02', 'near'],
-    ['l03', 'far'],
-    ['l04', 'tower'],
-    ['k1', 'fountain'],
-    ['w1', 'fountain'],
-    ['l05', 'terrace'],
-    ['l06', 'near'],
-    ['l07', 'far'],
-    ['l08', 'tower'],
-    ['k2', 'fountain'],
-    ['l09', 'terrace'],
-    ['l10', 'far'],
-    ['l11', 'fountain'],
-    ['k3', 'tower'],
-    ['l12', 'terrace'],
-    ['l13', 'far'],
-    ['l14', 'tower'],
-    ['l15', 'near'],
-    ['l16', 'fountain'],
-  ] as const
-).map(([lead, door]) => ({ lead, ...upperDoors[door] }));
+const upperSpots: readonly TownSpot[] = Object.entries(spotPlaces).map(([lead, [, place]]) => ({
+  lead: lead as LeadId | KnotId,
+  ...place,
+}));
+const spotStreet = Object.fromEntries(
+  Object.entries(spotPlaces).map(([lead, [street]]) => [lead, street]),
+) as Record<LeadId | KnotId, AreaId>;
+
+/** The street a lead or knot starts in. */
+export function streetOf(lead: LeadId | KnotId): AreaId {
+  return spotStreet[lead];
+}
 
 // The first street of the upper district, behind the foundry (part 2, story 7.5). The cobbles
 // lie below the terrace that crosses the picture; the fountain, the lift tower, the lamps and
@@ -942,7 +1108,7 @@ const u1: TownArea = {
   ),
   arrive: { x: 200, y: 790 },
   places: [],
-  spots: upperSpots,
+  spots: upperSpots.filter((spot) => spotStreet[spot.lead] === 'u1'),
   exits: [
     {
       // Back through the foundry, to the yard.
@@ -952,6 +1118,15 @@ const u1: TownArea = {
       area: { x: 0, y: 830, w: 170, h: 170 },
       arrive: { x: 700, y: 480 },
       marker: { x: 110, y: 830 },
+    },
+    {
+      // On to the archive and the tram stop.
+      to: 'u2',
+      opensWith: 'map',
+      stand: { x: 1520, y: 900 },
+      area: { x: 1450, y: 820, w: 150, h: 180 },
+      arrive: { x: 140, y: 880 },
+      marker: { x: 1500, y: 810 },
     },
   ],
   people: [
@@ -966,6 +1141,269 @@ const u1: TownArea = {
       until: 'l11',
       scene: 'u1Vucetic',
     },
+    // House 17's night watchman, once his door has opened: he saw the cart.
+    { id: 'watchman', at: { x: 290, y: 740 }, facing: 1, after: 'l02', changesWith: 'k1' },
+  ],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+// Arhivska ulica (Act 1): the archive with its little hatch, and the tram stop.
+const u2: TownArea = {
+  id: 'u2',
+  ground: ground(
+    [
+      { x: 0, y: 730 },
+      { x: 420, y: 610 },
+      { x: 900, y: 395 },
+      { x: 1150, y: 285 },
+      { x: 1190, y: 200 },
+      { x: 1290, y: 200 },
+      { x: 1265, y: 430 },
+      { x: 1600, y: 580 },
+      { x: 1600, y: 600 },
+      { x: 1380, y: 590 },
+      { x: 1360, y: 1000 },
+      { x: 0, y: 1000 },
+    ],
+    [{ x: 860, y: 610, rx: 230, ry: 115 }],
+  ),
+  arrive: { x: 130, y: 880 },
+  places: [],
+  spots: upperSpots.filter((spot) => spotStreet[spot.lead] === 'u2'),
+  exits: [
+    {
+      to: 'u1',
+      opensWith: 'map',
+      stand: { x: 90, y: 900 },
+      area: { x: 0, y: 820, w: 170, h: 180 },
+      arrive: { x: 1430, y: 900 },
+      marker: { x: 110, y: 810 },
+    },
+    {
+      to: 'u3',
+      opensWith: 'k1',
+      stand: { x: 1235, y: 300 },
+      area: { x: 1180, y: 190, w: 120, h: 130 },
+      arrive: { x: 1470, y: 220 },
+      marker: { x: 1240, y: 180 },
+    },
+  ],
+  people: [
+    // The tram driver, by his stop.
+    { id: 'belusic', at: { x: 1150, y: 700 }, facing: -1, after: null, changesWith: 'l04' },
+  ],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+// Novinska ulica (Act 2): the newspaper, the strongbox, the tall house of windows, the market.
+const u3: TownArea = {
+  id: 'u3',
+  ground: ground(
+    [
+      { x: 0, y: 790 },
+      { x: 540, y: 585 },
+      { x: 720, y: 475 },
+      { x: 1460, y: 115 },
+      { x: 1600, y: 115 },
+      { x: 1600, y: 1000 },
+      { x: 0, y: 1000 },
+    ],
+    [
+      { x: 150, y: 880, rx: 170, ry: 120 },
+      { x: 580, y: 815, rx: 140, ry: 110 },
+      { x: 905, y: 680, rx: 140, ry: 120 },
+      { x: 1185, y: 540, rx: 135, ry: 130 },
+      { x: 1440, y: 760, rx: 130, ry: 140 },
+      { x: 1195, y: 900, rx: 135, ry: 110 },
+      { x: 375, y: 895, rx: 50, ry: 95 },
+      { x: 790, y: 975, rx: 90, ry: 40 },
+    ],
+  ),
+  arrive: { x: 1500, y: 200 },
+  places: [],
+  spots: upperSpots.filter((spot) => spotStreet[spot.lead] === 'u3'),
+  exits: [
+    {
+      to: 'u2',
+      opensWith: 'k1',
+      stand: { x: 1520, y: 190 },
+      area: { x: 1470, y: 0, w: 130, h: 170 },
+      arrive: { x: 1220, y: 320 },
+      marker: { x: 1500, y: 20 },
+    },
+    {
+      to: 'u4',
+      opensWith: 'k2',
+      stand: { x: 965, y: 925 },
+      area: { x: 885, y: 880, w: 165, h: 120 },
+      arrive: { x: 130, y: 690 },
+      marker: { x: 965, y: 870 },
+    },
+  ],
+  people: [
+    // The bookkeeper, by the strongbox that holds his two books.
+    { id: 'kotruljevic', at: { x: 780, y: 560 }, facing: -1, after: null, changesWith: 'l07' },
+  ],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+// Dvorište (Act 3): crates, the carts, the depot shed and the meeting hall.
+const u4: TownArea = {
+  id: 'u4',
+  ground: ground(
+    [
+      { x: 0, y: 660 },
+      { x: 420, y: 660 },
+      { x: 430, y: 548 },
+      { x: 880, y: 548 },
+      { x: 900, y: 390 },
+      { x: 990, y: 390 },
+      { x: 990, y: 508 },
+      { x: 1290, y: 518 },
+      { x: 1500, y: 330 },
+      { x: 1600, y: 300 },
+      { x: 1600, y: 610 },
+      { x: 1340, y: 650 },
+      { x: 1080, y: 790 },
+      { x: 1060, y: 1000 },
+      { x: 650, y: 1000 },
+      { x: 640, y: 880 },
+      { x: 330, y: 870 },
+      { x: 330, y: 722 },
+      { x: 0, y: 722 },
+    ],
+    [
+      { x: 470, y: 670, rx: 70, ry: 45 },
+      { x: 640, y: 600, rx: 70, ry: 45 },
+      { x: 780, y: 660, rx: 70, ry: 45 },
+      { x: 900, y: 610, rx: 70, ry: 45 },
+      { x: 860, y: 465, rx: 70, ry: 40 },
+      { x: 1330, y: 545, rx: 25, ry: 15 },
+    ],
+  ),
+  arrive: { x: 130, y: 690 },
+  places: [],
+  spots: upperSpots.filter((spot) => spotStreet[spot.lead] === 'u4'),
+  exits: [
+    {
+      to: 'u3',
+      opensWith: 'k2',
+      stand: { x: 60, y: 690 },
+      area: { x: 0, y: 640, w: 110, h: 90 },
+      arrive: { x: 960, y: 870 },
+      marker: { x: 60, y: 630 },
+    },
+    {
+      to: 'u5',
+      opensWith: 'k3',
+      stand: { x: 1530, y: 450 },
+      area: { x: 1480, y: 300, w: 120, h: 300 },
+      arrive: { x: 140, y: 690 },
+      marker: { x: 1500, y: 300 },
+    },
+  ],
+  people: [],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+// Ulica brava (Act 4): the geared gate, a small door, the ring of lamps, the hoist.
+const u5: TownArea = {
+  id: 'u5',
+  ground: ground(
+    [
+      { x: 0, y: 700 },
+      { x: 230, y: 640 },
+      { x: 330, y: 600 },
+      { x: 420, y: 462 },
+      { x: 660, y: 418 },
+      { x: 760, y: 372 },
+      { x: 880, y: 282 },
+      { x: 1000, y: 238 },
+      { x: 1600, y: 522 },
+      { x: 1600, y: 1000 },
+      { x: 0, y: 1000 },
+    ],
+    [
+      { x: 750, y: 560, rx: 160, ry: 120 },
+      { x: 1068, y: 690, rx: 24, ry: 15 },
+      { x: 935, y: 755, rx: 24, ry: 15 },
+      { x: 1380, y: 590, rx: 150, ry: 45 },
+      { x: 1190, y: 372, rx: 110, ry: 45 },
+    ],
+  ),
+  arrive: { x: 140, y: 880 },
+  places: [],
+  spots: upperSpots.filter((spot) => spotStreet[spot.lead] === 'u5'),
+  exits: [
+    {
+      to: 'u4',
+      opensWith: 'k3',
+      stand: { x: 90, y: 900 },
+      area: { x: 0, y: 820, w: 170, h: 180 },
+      arrive: { x: 1500, y: 450 },
+      marker: { x: 110, y: 810 },
+    },
+    {
+      to: 'u6',
+      opensWith: 'l12',
+      stand: { x: 1520, y: 830 },
+      area: { x: 1450, y: 700, w: 150, h: 300 },
+      arrive: { x: 150, y: 880 },
+      marker: { x: 1500, y: 690 },
+    },
+  ],
+  people: [],
+  lair: null,
+  patrol: [],
+  lamps: [],
+};
+
+// Pusta ulica (the last lead): boarded houses, weeds, and the oil merchant's shop.
+const u6: TownArea = {
+  id: 'u6',
+  ground: ground(
+    [
+      { x: 0, y: 760 },
+      { x: 90, y: 712 },
+      { x: 300, y: 566 },
+      { x: 420, y: 472 },
+      { x: 960, y: 252 },
+      { x: 1180, y: 112 },
+      { x: 1180, y: 0 },
+      { x: 1270, y: 0 },
+      { x: 1260, y: 320 },
+      { x: 1170, y: 392 },
+      { x: 1240, y: 582 },
+      { x: 1420, y: 700 },
+      { x: 1420, y: 1000 },
+      { x: 0, y: 1000 },
+    ],
+    [{ x: 1275, y: 672, rx: 100, ry: 70 }],
+  ),
+  arrive: { x: 150, y: 880 },
+  places: [],
+  spots: upperSpots.filter((spot) => spotStreet[spot.lead] === 'u6'),
+  exits: [
+    {
+      to: 'u5',
+      opensWith: 'l12',
+      stand: { x: 100, y: 900 },
+      area: { x: 0, y: 820, w: 170, h: 180 },
+      arrive: { x: 1500, y: 820 },
+      marker: { x: 110, y: 810 },
+    },
+  ],
+  people: [
+    // The lamp-oil merchant, outside his shop.
+    { id: 'hanaman', at: { x: 1060, y: 700 }, facing: 1, after: null, changesWith: 'l16' },
   ],
   lair: null,
   patrol: [],
@@ -978,10 +1416,24 @@ export const town = {
   /** His height, in town units; people and the automaton scale from it. */
   figure: 175,
   start: 'square' as AreaId,
-  areas: { square, canal, mill, bridge, yard, tram, lift, market, wheel, hill, u1 } as Record<
-    AreaId,
-    TownArea
-  >,
+  areas: {
+    square,
+    canal,
+    mill,
+    bridge,
+    yard,
+    tram,
+    lift,
+    market,
+    wheel,
+    hill,
+    u1,
+    u2,
+    u3,
+    u4,
+    u5,
+    u6,
+  } as Record<AreaId, TownArea>,
 };
 
 /** The area that holds a room, so he comes out where he went in. */

@@ -14,6 +14,7 @@ import {
   type AreaId,
   areaOf,
   type PersonId,
+  streetOf,
   streetRestored,
   type TownExit,
   type TownPerson,
@@ -241,7 +242,7 @@ export function TownBoard({
     () =>
       areaOf(fresh) ??
       where?.area ??
-      (reached.includes('map') && open.length > 0 ? 'u1' : town.start),
+      (reached.includes('map') && open[0] ? streetOf(open[0]) : town.start),
   );
   const area = town.areas[areaId];
   useTownSound(areaId);
@@ -447,9 +448,7 @@ export function TownBoard({
   // A pin on the trail map: to the lead's street, and he walks up to it.
   const pickLead = (lead: TrailId) => {
     setShowMap(false);
-    const to = Object.values(town.areas).find((candidate) =>
-      candidate.spots?.some((spot) => spot.lead === lead),
-    );
+    const to = town.areas[streetOf(lead)];
     const spot = to?.spots?.find((candidate) => candidate.lead === lead);
     if (!to || !spot) return;
     if (to.id !== areaId) {
@@ -749,7 +748,7 @@ export function TownBoard({
               <LittleOneArt />
             </button>
           )}
-          {area.spots && reached.includes('rule-4') && (
+          {areaId === 'u6' && reached.includes('rule-4') && (
             // The zero guard: it was shown 7 : 0, and it's still dividing.
             <span className="town__zero-guard" style={pct({ x: 1000, y: 700 })} aria-hidden="true">
               <svg viewBox="-12 -12 24 24" aria-hidden="true">

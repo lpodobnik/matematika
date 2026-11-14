@@ -5,13 +5,16 @@ import type { LookId } from '@/city/character';
 import type { AreaId, PersonId } from '@/content/town';
 import type { RoomId } from '@/room/types';
 import automaton20 from '@/ui/town/art/automaton-20.webp';
+import belusic from '@/ui/town/art/belusic.webp';
 import bridge from '@/ui/town/art/bridge.webp';
 import bridgeDown from '@/ui/town/art/bridge-down.webp';
 import canal from '@/ui/town/art/canal.webp';
 import canalOpen from '@/ui/town/art/canal-open.webp';
 import faust from '@/ui/town/art/faust.webp';
+import hanaman from '@/ui/town/art/hanaman.webp';
 import hill from '@/ui/town/art/hill.webp';
 import hillRunning from '@/ui/town/art/hill-running.webp';
+import kotruljevic from '@/ui/town/art/kotruljevic.webp';
 import lift from '@/ui/town/art/lift.webp';
 import liftUp from '@/ui/town/art/lift-up.webp';
 import look1 from '@/ui/town/art/look-1.webp';
@@ -32,7 +35,13 @@ import squareGateOpen from '@/ui/town/art/square-gate-open.webp';
 import tram from '@/ui/town/art/tram.webp';
 import tramRunning from '@/ui/town/art/tram-running.webp';
 import u1 from '@/ui/town/art/u1.webp';
+import u2 from '@/ui/town/art/u2.webp';
+import u3 from '@/ui/town/art/u3.webp';
+import u4 from '@/ui/town/art/u4.webp';
+import u5 from '@/ui/town/art/u5.webp';
+import u6 from '@/ui/town/art/u6.webp';
 import vucetic from '@/ui/town/art/vucetic.webp';
+import watchman from '@/ui/town/art/watchman.webp';
 import wheel from '@/ui/town/art/wheel.webp';
 import wheelTurning from '@/ui/town/art/wheel-turning.webp';
 import yard from '@/ui/town/art/yard.webp';
@@ -69,6 +78,10 @@ export const personFacing: Record<PersonId, 1 | -1> = {
   milka: 1,
   vucetic: -1,
   zagorka: -1,
+  watchman: 1,
+  belusic: -1,
+  kotruljevic: -1,
+  hanaman: 1,
 };
 
 /** Each person's figure (t31 and t32). */
@@ -79,6 +92,10 @@ export const personArt: Record<PersonId, string> = {
   milka,
   vucetic,
   zagorka,
+  watchman,
+  belusic,
+  kotruljevic,
+  hanaman,
 };
 
 /**
@@ -98,6 +115,11 @@ const pictures: Record<AreaId, { base: string; running?: { room: RoomId; src: st
   wheel: { base: wheel, running: { room: 'r11', src: wheelTurning } },
   hill: { base: hill, running: { room: 'r13', src: hillRunning } },
   u1: { base: u1 },
+  u2: { base: u2 },
+  u3: { base: u3 },
+  u4: { base: u4 },
+  u5: { base: u5 },
+  u6: { base: u6 },
 };
 
 /** An area's picture as it stands now. */

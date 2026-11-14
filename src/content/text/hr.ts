@@ -479,6 +479,11 @@ export const hr = {
       wheel: 'Kotač',
       hill: 'Pod tornjem',
       u1: huntText.sign.u1,
+      u2: huntText.sign.u2,
+      u3: huntText.sign.u3,
+      u4: huntText.sign.u4,
+      u5: huntText.sign.u5,
+      u6: huntText.sign.u6,
     },
     close: 'Zatvori',
     /** For screen readers: the town as a whole, and a tap on the ground. */
@@ -532,6 +537,36 @@ export const hr = {
         who: 'novinarka',
         before: ['Pišem o strojevima koji stoje.', 'Pomogneš li?'],
         after: ['Ovo ide na prvu stranicu!', 'Hvala ti.'],
+      },
+      watchman: {
+        name: 'Noćni čuvar',
+        who: 'kuća 17',
+        before: ['Kola sam vidio u ponoć. Onda sam zaspao.', 'Noću čuvam ulicu, a danju spavam.'],
+        after: ['Opet ti? Ja bih to prespavao.', 'Ako opet vidim kola, javit ću ti.'],
+      },
+      belusic: {
+        name: 'Belušić',
+        who: 'vozač tramvaja',
+        before: ['Ja sve mjerim: put, brzinu i vrijeme.', 'A stanice? Pamtim samo neke.'],
+        after: ['Jedan korak vrijedi 5. Sad to i ti znaš.', 'Sve što izmjerim, zapišem.'],
+      },
+      kotruljevic: {
+        name: 'Kotruljević',
+        who: 'knjigovođa',
+        before: [
+          'Svaki račun vodim dvaput. Za svaki slučaj.',
+          'Dvije knjige, a u obje isto. Tako treba.',
+        ],
+        after: ['Jedna omaška! Sad svaki račun vodim triput.', 'Ti dobro brojiš.'],
+      },
+      hanaman: {
+        name: 'Hanaman',
+        who: 'trgovac uljem',
+        before: [
+          'Ulje za svjetiljke! Sve što prodam, nacrtam.',
+          'Pitaj me što god hoćeš. Imam dijagram.',
+        ],
+        after: ['Sad i ti čitaš dijagrame.', 'Tko pali svjetiljke u pustoj ulici? Ne znam.'],
       },
     },
     /** A person's lines in one street (content/town.ts, `scene`). */

@@ -1,7 +1,7 @@
 import '@/dev/dev-panel.css';
 import { useEffect, useMemo, useState } from 'react';
 import { rooms } from '@/content/rooms';
-import { town } from '@/content/town';
+import { streetOf, town } from '@/content/town';
 import {
   type DevReadout,
   devReadout,
@@ -95,7 +95,10 @@ function DevPanelLive({ onClose }: { onClose(): void }) {
           ? (to) => {
               // The town reads where he stands when it opens, so it opens afresh.
               if (to === 'gate') writeWhere('yard', { x: 700, y: 520 });
-              else writeWhere('u1', town.areas.u1.arrive);
+              else {
+                const street = to === 'street' ? 'u1' : streetOf(to);
+                writeWhere(street, town.areas[street].arrive);
+              }
               writeOutroSeen();
               dispatch({ type: 'dev/hunt-jump', to });
               window.setTimeout(() => window.location.reload(), 500);

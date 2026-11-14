@@ -46,7 +46,8 @@ const pins = (page: Page) =>
 test('a jump lands where it says, with what comes before it done', async ({ page }) => {
   test.setTimeout(90_000);
   await jump(page, 'l06');
-  await expect(page.locator('.town__board[data-area="u1"]')).toBeVisible({ timeout: 12_000 });
+  // l06 starts in Novinska ulica, and the jump lands there.
+  await expect(page.locator('.town__board[data-area="u3"]')).toBeVisible({ timeout: 12_000 });
   const save = (await state(page)).save;
   expect(save.hunt.knotsDone).toEqual(['k1', 'w1']);
   expect(save.hunt.leadsDone).toContain('l04');

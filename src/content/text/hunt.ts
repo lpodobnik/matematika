@@ -72,6 +72,13 @@ export const huntText = {
     before: ['Vrata su otvorena. Zapisano.', 'Evo karte. Što god nađeš, ja to zapišem.'],
     after: ['Zapisano.', 'Sve sam zapisao.'],
   },
-  sign: { u1: 'Gornja ulica' },
+  sign: {
+    u1: 'Gornja ulica',
+    u2: 'Arhivska ulica',
+    u3: 'Novinska ulica',
+    u4: 'Dvorište',
+    u5: 'Ulica brava',
+    u6: 'Pusta ulica',
+  },
   label: 'Trag',
 } as const;

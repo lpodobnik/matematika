@@ -26,6 +26,31 @@ describe('where leads start', () => {
   });
 });
 
+// The upper district's streets (part 2). The lower town's ways end at the picture's edge, off
+// the cobbles, and he has walked them since part 1.
+describe('the ways between the upper streets', () => {
+  const ways = areas
+    .filter((area) => area.id.startsWith('u'))
+    .flatMap((area) => area.exits.map((exit) => [area.id, exit.to, area, exit] as const));
+
+  it.each(ways)(
+    '%s to %s: he can walk to it, and he arrives on the ground',
+    (_from, to, area, exit) => {
+      expect(onGround(area.ground, exit.stand)).toBe(true);
+      expect(findPath(area.ground, area.arrive, exit.stand)).not.toBeNull();
+      expect(onGround(town.areas[to].ground, exit.arrive)).toBe(true);
+    },
+  );
+
+  it.each(ways.filter(([, to]) => to.startsWith('u')))(
+    '%s to %s has a way back, open as soon as it is',
+    (from, to, _area, exit) => {
+      const back = town.areas[to].exits.find((way) => way.to === from);
+      expect(back?.opensWith).toBe(exit.opensWith);
+    },
+  );
+});
+
 describe('the townspeople', () => {
   it.each(areas.flatMap((area) => area.people.map((person) => [area.id, person] as const)))(
     '%s: %o stands on the ground, and he can walk up to them',
