@@ -343,10 +343,12 @@ describe('act 3 words', () => {
 });
 
 describe('the crate yard', () => {
-  it('the moment before: on the wrong side his line leaves no door, and is struck', () => {
+  it('the moment before: on the wrong side his line stays, and he is told to cross', () => {
     const state = write(yard, newKnock(yard), '7000');
-    expect(state.lines[0]?.struck).toBe(true);
+    expect(state.lines[0]?.struck).toBe(false);
+    expect(state.across).toBe(true);
     expect(lit(yard, state)).not.toContain(7000);
+    expect(lit(yard, knockCross(yard, state))).toContain(7000);
   });
 
   it('a lot it gets wrong brings a neighbour, and then every line has to be true', () => {

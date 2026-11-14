@@ -96,6 +96,8 @@ export interface KnockState {
   shakes: number;
   /** The clue the little one points at. */
   pointAt: string | null;
+  /** His last line lit a door, but across the road: he's told to cross, and the line stays. */
+  across: boolean;
   /** A false working line: it stays in the draft, with a wobble. */
   bounced: boolean;
   /** What a wrong door shows, until he has read it. */
@@ -125,6 +127,7 @@ export function newKnock(spec: KnockSpec, guided = false): KnockState {
     help: 0,
     shakes: 0,
     pointAt: null,
+    across: false,
     bounced: false,
     shown: null,
     marked: null,
@@ -254,7 +257,7 @@ export function lineStart(spec: KnockSpec, state: KnockState): SLineToken[] {
 /** He's typing. */
 export function knockType(state: KnockState, token: SToken, maxTokens: number): KnockState {
   if (state.opened || state.shown || state.draft.length >= maxTokens) return state;
-  return { ...state, draft: [...state.draft, token], bounced: false, pointAt: null };
+  return { ...state, draft: [...state.draft, token], bounced: false, pointAt: null, across: false };
 }
 
 export function knockDelete(state: KnockState): KnockState {
@@ -266,6 +269,7 @@ const shake = (state: KnockState, spec: KnockSpec): KnockState => ({
   ...state,
   shakes: state.shakes + 1,
   bounced: false,
+  across: false,
   pointAt: cluesLeft(spec, state)[0]?.id ?? state.clue,
 });
 
@@ -283,6 +287,15 @@ function usesNumbers(statement: Statement, numbers: readonly number[]): boolean 
     default:
       return false;
   }
+}
+
+/**
+ * Which side a line is judged on: the side he stands on once it's the side a clue names, and both
+ * sides before that, so that a right answer isn't struck for being across the road.
+ */
+function sideToJudge(spec: KnockSpec, state: KnockState): Side | null {
+  const sideClue = spec.clues.find((clue) => clue.kind === 'side');
+  return sideClue?.kind === 'side' && state.side === sideClue.side ? state.side : null;
 }
 
 /** Whether a line says what this clue asks, in the form it asks. */
@@ -325,8 +338,10 @@ export function knockEnter(spec: KnockSpec, state: KnockState): KnockState {
   }
   const line: KnockLine = { tokens, clue: clue.id, struck: false };
   const lines = [...state.lines, line];
-  // A line that leaves no door: the same shake, and it's struck through.
-  if (keep !== null && litDoors(spec.row, state.side, lines).length === 0) {
+  // A line that leaves no door: the same shake, and it's struck through. Until he stands on the
+  // side a clue names, a door across the road is still a door: the line stays, and he's told to
+  // cross.
+  if (keep !== null && litDoors(spec.row, sideToJudge(spec, state), lines).length === 0) {
     return {
       ...shake(state, spec),
       lines: [...state.lines, { ...line, struck: true }],
@@ -335,8 +350,11 @@ export function knockEnter(spec: KnockSpec, state: KnockState): KnockState {
     };
   }
   const nextClue = keep === null ? clue.id : (firstClue(spec, lines) ?? clue.id);
+  const across =
+    keep !== null && state.side !== null && litDoors(spec.row, state.side, lines).length === 0;
   return {
     ...state,
+    across,
     lines,
     draft: [],
     clue: nextClue,
@@ -353,7 +371,7 @@ export function knockStrike(spec: KnockSpec, state: KnockState, index: number): 
   const lines = state.lines.map((other, i) =>
     i === index ? { ...other, struck: !other.struck } : other,
   );
-  if (line.struck && litDoors(spec.row, state.side, lines).length === 0) {
+  if (line.struck && litDoors(spec.row, sideToJudge(spec, state), lines).length === 0) {
     return shake(state, spec);
   }
   return {
@@ -364,6 +382,7 @@ export function knockStrike(spec: KnockSpec, state: KnockState, index: number): 
     clue: line.struck ? (firstClue(spec, lines) ?? state.clue) : (line.clue ?? state.clue),
     marked: state.marked === index ? null : state.marked,
     pointAt: null,
+    across: false,
   };
 }
 
@@ -371,7 +390,7 @@ export function knockStrike(spec: KnockSpec, state: KnockState, index: number): 
 export function knockPickClue(spec: KnockSpec, state: KnockState, id: string): KnockState {
   const clue = spec.clues.find((candidate) => candidate.id === id);
   if (!clue || clue.kind === 'side' || state.opened || state.shown) return state;
-  return { ...state, clue: id, draft: [], bounced: false, pointAt: null };
+  return { ...state, clue: id, draft: [], bounced: false, pointAt: null, across: false };
 }
 
 /** The control that crosses the road. */
@@ -379,7 +398,7 @@ export function knockCross(spec: KnockSpec, state: KnockState): KnockState {
   if (spec.row.kind !== 'street' || state.side === null || state.opened || state.shown) {
     return state;
   }
-  return { ...state, side: state.side === 'odd' ? 'even' : 'odd', pointAt: null };
+  return { ...state, side: state.side === 'odd' ? 'even' : 'odd', pointAt: null, across: false };
 }
 
 /**
@@ -390,7 +409,7 @@ export function knockDoor(spec: KnockSpec, state: KnockState, door: number): Kno
   if (state.opened || state.shown) return state;
   const lit = litDoors(spec.row, state.side, state.lines);
   if (lit.length !== 1 || lit[0] !== door || cluesLeft(spec, state).length > 0) {
-    return shake(state, spec);
+    return writeDoor(spec, state, door, lit) ?? shake(state, spec);
   }
   if (door === spec.door) {
     return { ...state, opened: true, pointAt: null, bounced: false, guide: null };
@@ -430,6 +449,26 @@ export function knockDoor(spec: KnockSpec, state: KnockState, door: number): Kno
     clue: named[struckNow[0] ?? -1]?.clue ?? state.clue,
     draft: [],
   };
+}
+
+/**
+ * A tap on a lit door before it's the only one: the clue's line is written with that door's number,
+ * as if he had typed it, so the notebook still holds what he claims. If that leaves just this door,
+ * and no clue unused, the little one knocks.
+ */
+function writeDoor(
+  spec: KnockSpec,
+  state: KnockState,
+  door: number,
+  lit: readonly number[],
+): KnockState | null {
+  const clue = spec.clues.find((candidate) => candidate.id === state.clue);
+  if (!lit.includes(door) || !clue || clue.kind === 'side' || clue.kind === 'limit') return null;
+  const written = knockEnter(spec, { ...state, draft: digitsOf(door), bounced: false });
+  if (written.lines.length === state.lines.length) return written;
+  const now = litDoors(spec.row, written.side, written.lines);
+  const alone = now.length === 1 && now[0] === door && cluesLeft(spec, written).length === 0;
+  return alone ? knockDoor(spec, written, door) : written;
 }
 
 /** Whether a line names one door. */

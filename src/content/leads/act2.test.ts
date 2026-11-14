@@ -303,12 +303,13 @@ describe('the neighbours', () => {
     expect(knockDoor(street, on, 1000).opened).toBe(true);
   });
 
-  it('the moment before: the right door with clues unused is a shake', () => {
+  it('the moment before: a tap with clues unused writes the next clue’s line, and doesn’t knock', () => {
     const one = write(street, newKnock(street), 'witness', '1000');
     expect(lit(street, one)).toEqual([1000]);
     const early = knockDoor(street, one, 1000);
     expect(early.opened).toBe(false);
-    expect(early.pointAt).toBe('above');
+    expect(early.lines).toHaveLength(2);
+    expect(early.lines[1]?.clue).toBe('above');
   });
 
   it('a line that disagrees with the one before is struck, and leaves the door', () => {

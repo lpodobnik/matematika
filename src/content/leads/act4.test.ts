@@ -607,9 +607,10 @@ describe('The lamp oil', () => {
       expect(state.lines).toHaveLength(1);
       expect(litDoors(knock.row, state.side, state.lines).length).toBeGreaterThan(1);
       expect(cluesLeft(knock, state).map((clue) => clue.id)).toEqual([sum.id]);
-      const early = knockDoor(knock, state, knock.door);
-      expect(early.opened).toBe(false);
-      expect(early.shakes).toBe(1);
+      // A tap on the right door writes the sum with its number, and then it's the only door.
+      const tapped = knockDoor(knock, state, knock.door);
+      expect(tapped.lines).toHaveLength(2);
+      expect(tapped.opened).toBe(true);
     });
 
     it('a wrong sum knocks at a grumpy door, and then has to be true', () => {

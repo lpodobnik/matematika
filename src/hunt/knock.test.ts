@@ -87,8 +87,31 @@ describe('the doors', () => {
     expect(state.lines[0]?.struck).toBe(false);
   });
 
-  it('a line that leaves no door shakes, and is struck through', () => {
+  it('once on the side the clue names, a door across the road doesn’t count', () => {
     const state = write(spec, knockCross(spec, newKnock(spec)), '16');
+    expect(state.lines[0]?.struck).toBe(true);
+    expect(state.across).toBe(false);
+    expect(state.shakes).toBe(1);
+  });
+
+  it('before that, a door across the road stays lit there, and crossing finds it', () => {
+    const state = write(spec, newKnock(spec), '17');
+    expect(state.across).toBe(true);
+    expect(lit(spec, state)).toEqual([]);
+    const crossed = knockCross(spec, state);
+    expect(crossed.across).toBe(false);
+    expect(lit(spec, crossed)).toEqual([17]);
+  });
+
+  it('the moment before: the right answer, written before crossing, isn’t struck', () => {
+    const state = write(spec, newKnock(spec), '15');
+    expect(state.side).toBe('even');
+    expect(state.lines[0]?.struck).toBe(false);
+    expect(state.across).toBe(true);
+  });
+
+  it('a line that leaves no door on either side shakes, and is struck through', () => {
+    const state = write(spec, knockCross(spec, newKnock(spec)), '41');
     expect(state.shakes).toBe(1);
     expect(state.lines[0]?.struck).toBe(true);
     expect(state.anyStruck).toBe(true);
@@ -194,19 +217,33 @@ describe('knocking', () => {
   const crossed = knockCross(spec, newKnock(spec));
   const ready = write(spec, write(spec, crossed, '15'), '15');
 
-  it('the moment before: tapping any door with clues left is a shake', () => {
+  it('a tap on a lit door writes the clue’s line with its number, as if he had typed it', () => {
+    const tapped = knockDoor(spec, crossed, 15);
+    expect(tapped.opened).toBe(false);
+    expect(tapped.lines.map((line) => line.tokens.join(''))).toEqual(['7·2+1=15']);
+    expect(lit(spec, tapped)).toEqual([15]);
+  });
+
+  it('and knocks, if that leaves only that door with every clue used', () => {
     const one = write(spec, crossed, '15');
     expect(cluesLeft(spec, one).map((c) => c.id)).toEqual(['b']);
     const tapped = knockDoor(spec, one, 15);
-    expect(tapped.opened).toBe(false);
-    expect(tapped.shakes).toBe(1);
-    expect(tapped.pointAt).toBe('b');
+    expect(tapped.lines).toHaveLength(2);
+    expect(tapped.opened).toBe(true);
   });
 
-  it('tapping a door with several lit is a shake', () => {
-    const tapped = knockDoor(spec, crossed, 15);
-    expect(tapped.opened).toBe(false);
-    expect(tapped.pointAt).toBe('a');
+  it('a tap after a wrong door writes a line that has to be true', () => {
+    const wrongReady = write(spec, write(spec, crossed, '17'), '17');
+    const after = knockDismiss(knockDoor(spec, wrongReady, 17));
+    const guess = knockDoor(spec, after, 19);
+    expect(guess.bounced).toBe(true);
+    expect(guess.opened).toBe(false);
+  });
+
+  it('a tap where the clue has nothing started is a shake', () => {
+    const tapped = knockDoor(limits, newKnock(limits), 234);
+    expect(tapped.shakes).toBe(1);
+    expect(tapped.lines).toEqual([]);
   });
 
   it('tapping a dark door is a shake', () => {

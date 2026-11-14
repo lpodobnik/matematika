@@ -196,7 +196,7 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `mistake.thanks`: Mali automat kima. Više neće ispuštati nule.
 - `scene.intro`: Ovuda može samo mali automat.
 - `scene.route`: 3 · 10⁴ + 4 · 10³ + 7 · 10 + 2
-- `scene.deadEnd`: Slijepa cijev. Na pločici piše što tvoj put dosad znači:
+- `scene.deadEnd`: Ovuda se ne može dalje, pa se mali automat vraća. Dosad je složio ovaj broj:
 - `scene.opened`: Mali automat vraća se ponosan i nosi list papira: otpremnicu iz ljevaonice.
 - `scene.hint.step`: Znak kaže koje se mjesto bira. Što u tragu stoji uz to mjesto?
 - `scene.hint.move`: Nađi u tragu broj uz to mjesto. Ako uz njega nema ničega, biraš 0.
@@ -1141,6 +1141,7 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `yourLines`: Tvoji redci
 - `ok`: U redu
 - `shake`: Mali automat vrti glavom i pokazuje na trag. Ako neki tvoj redak ne valja, dodirni ga i on će se prekrižiti.
+- `across`: Vrata koja tvoj redak pali su na drugoj strani ulice. Prijeđi cestu.
 - `offTask`: To je točno, ali nije ono što se traži. Pročitaj zadatak još jednom.
 - `bounce`: To nije točno. Pogledaj redak još jednom.
 - `refuse`: To se ne može pročitati. Pogledaj redak još jednom.

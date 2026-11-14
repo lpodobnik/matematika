@@ -481,7 +481,7 @@ export interface SceneGuide {
 
 const writing: readonly SceneAction['kind'][] = ['type', 'delete', 'enter'];
 /** In a Knock he can always take a line back: a typo mustn't force him to a false one. */
-const fixing: readonly SceneAction['kind'][] = [...writing, 'strike', 'pick-clue'];
+const fixing: readonly SceneAction['kind'][] = [...writing, 'strike', 'pick-clue', 'door'];
 
 /** The guide of the first time, derived from the scene's state, so it can't get out of step. */
 export function sceneGuide(spec: SceneSpec, state: SceneState): SceneGuide | null {

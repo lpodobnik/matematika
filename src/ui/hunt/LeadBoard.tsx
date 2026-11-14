@@ -478,7 +478,7 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
               <button
                 type="button"
                 className="knock__cross"
-                data-focus={guide?.kind === 'cross' || undefined}
+                data-focus={guide?.kind === 'cross' || state.across || undefined}
                 onClick={() => act({ kind: 'cross' })}
               >
                 {huntUiText.cross}
@@ -591,6 +591,7 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
           {state.mode === 'working' && <p className="hunt__note">{huntUiText.working}</p>}
           {state.marked !== null && <p className="hunt__note">{huntUiText.marked}</p>}
           {state.bounced && <p className="hunt__note">{huntUiText.bounce}</p>}
+          {state.across && <p className="hunt__note">{huntUiText.across}</p>}
           {state.pointAt !== null && !state.bounced && (
             <p className="hunt__note">{huntUiText.shake}</p>
           )}
