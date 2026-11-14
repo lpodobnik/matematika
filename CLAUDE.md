@@ -63,7 +63,7 @@ The son plays on a live save. Lair and room ids are stored in saves, so they sta
 Part 2 ("The Trail") is built and off for everyone: `tuning.part2.live` is false, pinned by `src/hunt/switch.test.ts`. `?dev` previews it, and the dev panel jumps to any lead. It writes the active player's real save, so use a second player (`#igraci`).
 
 - Rules are in `src/hunt/`, pure. Leads are data in `src/content/leads/`, with Croatian in `src/content/text/hunt*.ts`. `hunt/solve.ts` proves each lead, and `src/store/hunt-playthrough.test.ts` plays the whole chapter through the store.
-- All leads start in Gornja ulica (`u1`), until the other five streets are painted.
+- Each lead starts in its own street, u1 to u6, set in `spotPlaces` in `src/content/town.ts` (`streetOf`). A way opens with the find that leads there. To check a street's ground, doors and ways against its painting, draw them over it with `node art-src/tools/town-overlay.mjs <outDir> u1 u2 ...` while the dev server runs on 5290.
 - Luka's review page for part 2's text is `_bmad-output/tekst-drugi-dio-za-pregled.md`. Regenerate it after text changes with a temporary Vitest test that walks `huntText`.
 - Where it stands: `_bmad-output/implementation-artifacts/part-2-morning-report.md`.
 

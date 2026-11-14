@@ -503,6 +503,7 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
               type="button"
               className="door"
               data-door={door}
+              data-side={spec.row.kind === 'street' ? (door % 2 === 0 ? 'even' : 'odd') : undefined}
               data-lit={lit.includes(door)}
               data-open={state.opened && door === spec.door}
               onClick={() => act({ kind: 'door', door })}

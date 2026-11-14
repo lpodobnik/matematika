@@ -1727,6 +1727,7 @@ nothing. Each names its source and the exact command.
 - Date: 2026-11-14
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Part 2, the Knock row: a house door on the odd side of the street.
+- Review: Used: the odd side of the street in the Knock row, cropped to a strip around the door (the paper margin and the lit lamp left out) as src/ui/hunt/art/door-odd.webp.
 - Prompt:
 
   ```text
@@ -1743,6 +1744,7 @@ nothing. Each names its source and the exact command.
 - Date: 2026-11-14
 - Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
 - Notes: Part 2, the Knock row: a house door on the even side of the street.
+- Review: Used: the even side of the street in the Knock row, cropped the same way as src/ui/hunt/art/door-even.webp.
 - Prompt:
 
   ```text

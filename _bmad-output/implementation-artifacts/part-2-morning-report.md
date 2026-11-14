@@ -52,12 +52,17 @@ I can't tell without him. Writing a line and seeing the doors change looks clear
 - A new session left him in the square with no way to find the trail. He now starts in the street, and the trail map opens from anywhere.
 - Also: a false loop line, a wrong stop being asked for again, a saved knot that could dead-end, an unexplained black thread, the little one following him while "missing", Vučetić still standing there after the coat, the bar looking level when it wasn't, and two false lesson lines.
 
+## Added on 2026-11-14
+
+- **Five more streets,** painted and mapped: Arhivska ulica, Novinska ulica, Dvorište, Ulica brava and Pusta ulica. Each lead starts in its own; a session starts in the street of the first open lead.
+- **Four townspeople** by their leads, with two lines each before and after (yours to check: `hr.town.people` in `src/content/text/hr.ts`).
+- **House fronts in the Knock row:** the odd and the even side of a street look different, a lit door comes back in colour with its lamp, and an open door is a dark doorway.
+
 ## What's not there
 
-- **All leads start in Gornja ulica,** at five doors, until the other five streets are painted. Only what's open shows, so it doesn't crowd.
-- **Corrected streets** ("THIS HAS BEEN CORRECTED") need those streets, so they aren't built.
+- **Corrected streets** ("THIS HAS BEEN CORRECTED") aren't built yet. The streets they need are painted now.
 - **The forged note's trap** gives the notice and strikes the note, but has no Sneak board.
-- **People don't return** to a solved place, only colour does. They need art.
+- **People don't return** to a solved place, only colour does. Four now stand in the new streets (the night watchman, Belušić, Kotruljević, Hanaman); the rest of the cast has no figure yet.
 - **The real Vučetić's tool room** is told, not a place he walks to.
 - **Number trees and part 1's equations on the bracket locks,** and more than one try task for the clerk's register.
 - **Sound** is only a few effects: the gate, doors, and a finished lead.
