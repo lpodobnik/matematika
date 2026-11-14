@@ -107,7 +107,7 @@ export const l02: LeadSpec = {
         {
           id: 'witness',
           kind: 'sum',
-          start: 'n + 1 =',
+          start: '999 + 1 =',
           answer: 1000,
           say: neighbours.street.witness,
           structure: neighbours.street.structureWitness,
@@ -149,8 +149,8 @@ export const l02: LeadSpec = {
       clues: [
         {
           id: 'riddle',
-          kind: 'member',
-          start: '☐ ∈ N',
+          kind: 'sum',
+          start: '18 − 1 =',
           answer: 17,
           say: neighbours.riddle.clue,
           structure: neighbours.riddle.structure,
@@ -175,6 +175,15 @@ export const l02: LeadSpec = {
       accepts: ['n + 1 = 1 000'],
       keys: [],
       context: { vars: { n: nine } },
+      // The houses either side of the witness's: 998, n and 1 000.
+      object: {
+        kind: 'line',
+        from: 997,
+        to: 1001,
+        lit: [998, 1000],
+        marked: null,
+        point: { at: 999, label: 'n' },
+      },
     },
     {
       say: neighbours.write.down,
@@ -182,6 +191,15 @@ export const l02: LeadSpec = {
       accepts: ['n − 1 = 998'],
       keys: ['n', '−', '='],
       context: { vars: { n: nine } },
+      // The houses either side of the witness's: 998, n and 1 000.
+      object: {
+        kind: 'line',
+        from: 997,
+        to: 1001,
+        lit: [998, 1000],
+        marked: null,
+        point: { at: 999, label: 'n' },
+      },
     },
   ],
   find: { say: neighbours.find.say, title: neighbours.find.title, card: neighbours.find.card },

@@ -37,18 +37,20 @@ export const act2Text = {
     },
     street: {
       intro:
-        'U ovoj su ulici kuće samo s jedne strane, pa brojevi idu redom. Svjedok iz kuće 999 šuti.',
-      witness: 'Svjedok kroz vrata: "Ja sam n = 999. Pitaj susjeda. Živi do mene, na n + 1."',
-      above: 'Stanar kuće 1 001: "Onaj koji priča je moj neposredni prethodnik."',
-      postman: 'Poštar: "Od kuće 998 idi jednu kuću dalje, pa još jednu."',
-      structureWitness: 'n je 999. Dodaj 1.',
+        'Svjedok iz kuće 999 vidio je kola, ali se boji automata i ne otvara vrata. Nađi njegova susjeda. U ovoj ulici kuće su samo s jedne strane, pa brojevi idu redom.',
+      witness: 'Svjedok kroz vrata: "Ne otvaram. Pitaj susjeda koji mi je neposredni sljedbenik."',
+      above:
+        'Stanar kuće 1 001: "Taj susjed stanuje odmah prije mene. On je moj neposredni prethodnik."',
+      postman: 'Poštar: "Od kuće 998 idi dvije kuće dalje."',
+      structureWitness: 'Neposredni sljedbenik je za 1 veći. Dodaj 1.',
       structureAbove: 'Neposredni prethodnik je za 1 manji. Oduzmi 1.',
       structurePostman: 'Dodaj 1, pa još 1.',
-      wrongBelow: 'Stanar kuće 998: "Ja sam mu prethodnik, a ti tražiš sljedbenika. Zbogom."',
+      wrongBelow:
+        'Stanar kuće 998: "Ja sam mu neposredni prethodnik. Ti tražiš sljedbenika. Zbogom."',
       wrongWitness: 'Svjedok ne otvara. Kroz vrata: "Rekao sam: pitaj susjeda."',
       grumpy: neighboursAct1,
       opened:
-        'Vrata se otvaraju. Susjed odmahne rukom prema svjedoku: "On nikad ne govori. Ja govorim, ali nisam ništa vidio. Znam tko je vidio."',
+        'Vrata otvara susjed iz kuće 1 000: "Svjedok se boji, zato šuti. Ali meni je rekao da je kola vidio i noćni čuvar."',
       hint: {
         step: 'Neposredni sljedbenik je za 1 veći, a neposredni prethodnik za 1 manji.',
         move: 'Izračunaj 999 + 1, pa 1 001 − 1, pa 998 + 1 + 1.',
@@ -56,25 +58,22 @@ export const act2Text = {
       example: ['Primjer s drugim brojevima:', '699 + 1 = 700', '701 − 1 = 700'],
     },
     riddle: {
-      intro: 'Susjed zna tko je vidio kola. Ali voli zagonetke.',
-      clue: 'Susjed: "Broj te kuće je neposredni prethodnik onog broja čiji je neposredni prethodnik 17."',
-      structure:
-        'Prvo nađi broj čiji je neposredni prethodnik 17. Zatim nađi njegova prethodnika. Upiši ga umjesto kvadratića.',
-      wrongEighteen:
-        'Stanar kuće 18: "Moj je prethodnik 17, to je točno. Ali ti tražiš njega, a ne mene."',
-      wrongSixteen: 'Stanar kuće 16: "Jedan korak previše. Laku noć."',
+      intro: 'Noćni čuvar danju spava. Susjed zna gdje stanuje, ali voli zagonetke.',
+      clue: 'Susjed: "Čuvarova kuća je neposredni prethodnik kuće 18."',
+      structure: 'Neposredni prethodnik je za 1 manji. Oduzmi 1 od 18.',
+      wrongEighteen: 'Stanar kuće 18: "Ja sam 18. Čuvar stanuje u kući prije moje."',
+      wrongSixteen: 'Stanar kuće 16: "Čuvar? Jednu kuću dalje. Laku noć."',
       grumpy: neighboursAct1,
-      opened:
-        'Vrata kuće 17 otvara noćni čuvar. Susjed se smije preko ograde: "Mogao sam reći samo 17. Ali ovako je zabavnije."',
+      opened: 'Vrata kuće 17 otvara pospani noćni čuvar. "Kola? Da, sve sam vidio."',
       hint: {
-        step: 'Zagonetka ima dva koraka. Prvo nađi broj čiji je neposredni prethodnik 17.',
-        move: 'Taj je broj 18. Njegov je neposredni prethodnik 17. Upiši 17.',
+        step: 'Neposredni prethodnik je za 1 manji.',
+        move: 'Izračunaj 18 − 1.',
       },
-      example: ['Primjer s drugim brojem:', 'Broj čiji je prethodnik 40 je 41.', '41 − 1 = 40'],
+      example: ['Primjer s drugim brojem:', 'Neposredni prethodnik broja 41 je 40.', '41 − 1 = 40'],
     },
     write: {
-      fade: 'Zapiši u bilježnicu kako se to piše u školi. Svjedok je n = 999. Što ide u kvadratić?',
-      down: 'A njegov neposredni prethodnik? Napiši cijeli redak, sa slovom n.',
+      fade: 'Zapiši kako se to piše u školi. Broj svjedokove kuće zovemo n, pa je n = 999. Njegov susjed je n + 1. Što ide u kvadratić?',
+      down: 'S druge strane svjedoka je kuća 998. To je neposredni prethodnik broja n. Napiši to kao redak iznad, ali s minusom.',
     },
     find: {
       say: 'Noćni čuvar iz kuće 17 sve je vidio: kola je vozio automat, a Majstor Kristijan sjedio je straga.',

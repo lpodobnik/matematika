@@ -124,40 +124,40 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `mistake.show`: Pokaži mu: dodirni broj koji stoji odmah iza 299.
 - `mistake.write`: Sad napiši točan redak.
 - `mistake.thanks`: Mali automat kima. Više neće pisati 10 na kraj broja.
-- `street.intro`: U ovoj su ulici kuće samo s jedne strane, pa brojevi idu redom. Svjedok iz kuće 999 šuti.
-- `street.witness`: Svjedok kroz vrata: "Ja sam n = 999. Pitaj susjeda. Živi do mene, na n + 1."
-- `street.above`: Stanar kuće 1 001: "Onaj koji priča je moj neposredni prethodnik."
-- `street.postman`: Poštar: "Od kuće 998 idi jednu kuću dalje, pa još jednu."
-- `street.structureWitness`: n je 999. Dodaj 1.
+- `street.intro`: Svjedok iz kuće 999 vidio je kola, ali se boji automata i ne otvara vrata. Nađi njegova susjeda. U ovoj ulici kuće su samo s jedne strane, pa brojevi idu redom.
+- `street.witness`: Svjedok kroz vrata: "Ne otvaram. Pitaj susjeda koji mi je neposredni sljedbenik."
+- `street.above`: Stanar kuće 1 001: "Taj susjed stanuje odmah prije mene. On je moj neposredni prethodnik."
+- `street.postman`: Poštar: "Od kuće 998 idi dvije kuće dalje."
+- `street.structureWitness`: Neposredni sljedbenik je za 1 veći. Dodaj 1.
 - `street.structureAbove`: Neposredni prethodnik je za 1 manji. Oduzmi 1.
 - `street.structurePostman`: Dodaj 1, pa još 1.
-- `street.wrongBelow`: Stanar kuće 998: "Ja sam mu prethodnik, a ti tražiš sljedbenika. Zbogom."
+- `street.wrongBelow`: Stanar kuće 998: "Ja sam mu neposredni prethodnik. Ti tražiš sljedbenika. Zbogom."
 - `street.wrongWitness`: Svjedok ne otvara. Kroz vrata: "Rekao sam: pitaj susjeda."
 - `street.grumpy.1`: Ja ništa ne znam. Pitaj nekog drugog.
 - `street.grumpy.2`: Krivi susjed. Pravi je malo dalje.
 - `street.grumpy.3`: Ovdje živimo samo ja i moj kašalj. Zbogom.
-- `street.opened`: Vrata se otvaraju. Susjed odmahne rukom prema svjedoku: "On nikad ne govori. Ja govorim, ali nisam ništa vidio. Znam tko je vidio."
+- `street.opened`: Vrata otvara susjed iz kuće 1 000: "Svjedok se boji, zato šuti. Ali meni je rekao da je kola vidio i noćni čuvar."
 - `street.hint.step`: Neposredni sljedbenik je za 1 veći, a neposredni prethodnik za 1 manji.
 - `street.hint.move`: Izračunaj 999 + 1, pa 1 001 − 1, pa 998 + 1 + 1.
 - `street.example.1`: Primjer s drugim brojevima:
 - `street.example.2`: 699 + 1 = 700
 - `street.example.3`: 701 − 1 = 700
-- `riddle.intro`: Susjed zna tko je vidio kola. Ali voli zagonetke.
-- `riddle.clue`: Susjed: "Broj te kuće je neposredni prethodnik onog broja čiji je neposredni prethodnik 17."
-- `riddle.structure`: Prvo nađi broj čiji je neposredni prethodnik 17. Zatim nađi njegova prethodnika. Upiši ga umjesto kvadratića.
-- `riddle.wrongEighteen`: Stanar kuće 18: "Moj je prethodnik 17, to je točno. Ali ti tražiš njega, a ne mene."
-- `riddle.wrongSixteen`: Stanar kuće 16: "Jedan korak previše. Laku noć."
+- `riddle.intro`: Noćni čuvar danju spava. Susjed zna gdje stanuje, ali voli zagonetke.
+- `riddle.clue`: Susjed: "Čuvarova kuća je neposredni prethodnik kuće 18."
+- `riddle.structure`: Neposredni prethodnik je za 1 manji. Oduzmi 1 od 18.
+- `riddle.wrongEighteen`: Stanar kuće 18: "Ja sam 18. Čuvar stanuje u kući prije moje."
+- `riddle.wrongSixteen`: Stanar kuće 16: "Čuvar? Jednu kuću dalje. Laku noć."
 - `riddle.grumpy.1`: Ja ništa ne znam. Pitaj nekog drugog.
 - `riddle.grumpy.2`: Krivi susjed. Pravi je malo dalje.
 - `riddle.grumpy.3`: Ovdje živimo samo ja i moj kašalj. Zbogom.
-- `riddle.opened`: Vrata kuće 17 otvara noćni čuvar. Susjed se smije preko ograde: "Mogao sam reći samo 17. Ali ovako je zabavnije."
-- `riddle.hint.step`: Zagonetka ima dva koraka. Prvo nađi broj čiji je neposredni prethodnik 17.
-- `riddle.hint.move`: Taj je broj 18. Njegov je neposredni prethodnik 17. Upiši 17.
+- `riddle.opened`: Vrata kuće 17 otvara pospani noćni čuvar. "Kola? Da, sve sam vidio."
+- `riddle.hint.step`: Neposredni prethodnik je za 1 manji.
+- `riddle.hint.move`: Izračunaj 18 − 1.
 - `riddle.example.1`: Primjer s drugim brojem:
-- `riddle.example.2`: Broj čiji je prethodnik 40 je 41.
+- `riddle.example.2`: Neposredni prethodnik broja 41 je 40.
 - `riddle.example.3`: 41 − 1 = 40
-- `write.fade`: Zapiši u bilježnicu kako se to piše u školi. Svjedok je n = 999. Što ide u kvadratić?
-- `write.down`: A njegov neposredni prethodnik? Napiši cijeli redak, sa slovom n.
+- `write.fade`: Zapiši kako se to piše u školi. Broj svjedokove kuće zovemo n, pa je n = 999. Njegov susjed je n + 1. Što ide u kvadratić?
+- `write.down`: S druge strane svjedoka je kuća 998. To je neposredni prethodnik broja n. Napiši to kao redak iznad, ali s minusom.
 - `find.say`: Noćni čuvar iz kuće 17 sve je vidio: kola je vozio automat, a Majstor Kristijan sjedio je straga.
 - `find.title`: Neposredni prethodnik i neposredni sljedbenik.
 - `find.card.1`: Neposredni sljedbenik broja n je za 1 veći: n + 1. Neposredni prethodnik je za 1 manji: n − 1.
