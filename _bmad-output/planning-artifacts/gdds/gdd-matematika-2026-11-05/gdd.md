@@ -689,9 +689,9 @@ Kristijan's chalk marks point to gaps and secrets. Punched-tape notices appear a
 
 Fights keep mental multiplying and adding going, and clues carry the ideas.
 
-- **Three new lairs** in the new district: armour 80, 100 and 120, base parts 7, 8 and 9. Starting values, to be set by simulation like the first lairs. They stand apart and hold no lead, so fights never block the way.
+- **Three new lairs** in the new district: armour 70, 120 and 140, base parts 7, 8 and 9. The starting 80, 100 and 120 were set by simulation (`fight/balance.test.ts`, 2026-11-16). Brackets roughly double a strike, so the 70 stands before the coat, with part 1's upgrades only, and the 120 and 140 after it. They stand apart and hold no lead, so fights never block the way.
 - **New upgrade, brackets, 30 parts,** on sale after the coat: the strike can be `a · x + b` or `a · (x + b)`, chosen each strike. Brackets hit harder, but a clean cut may need the plain form. "Udari" still asks how big the strike will be.
-- **Targets:** with all upgrades, a reasoning player wins about 90%, 80% and 60%, and a random player at most 40%, 20% and 10%.
+- **Targets:** with all upgrades, a reasoning player wins about 90%, 80% and 60%, and a random player at most 40%, 20% and 10%. As built: 92%, 84% and 64%, and 15%, 3% and under 1%.
 
 ### Economy in part 2
 

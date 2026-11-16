@@ -83,7 +83,7 @@ All new Croatian is mine and is on your review page.
 - **Three new automatons,** set by simulation against the GDD's targets.
   - Brackets roughly double what a strike can do, so the GDD's starting 80, 100 and 120 were far too easy.
   - **Automat 70** in Arhivska ulica, before the coat: a reasoning player wins 92% with part 1's three upgrades, a random one 15%.
-  - **Automat 120** in Ulica brava and **Automat 140** in Pusta ulica, after the coat: with brackets, 84% and 64% for a reasoning player, under 3% for a random one.
+  - **Automat 120** in Ulica brava and **Automat 140** in Pusta ulica, after the coat: with brackets, 84% and 64% for a reasoning player, about 3% and under 1% for a random one.
   - Without brackets, a reasoning player beats the 120 less than 5% of the time.
 - **Brackets** (30 parts) go on sale once the coat is done.
   - He picks the strike's form each time: `a · x + b` or `a · (x + b)`.
