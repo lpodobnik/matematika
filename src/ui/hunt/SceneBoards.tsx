@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { tuning } from '@/config/tuning';
 import { huntUiText, sceneGuideText } from '@/content/text/hunt-leads';
+import type { PersonId } from '@/content/town';
 import type { AloneSpec, AloneState } from '@/hunt/alone';
 import type { LeadAction } from '@/hunt/lead';
 import type { SceneGuide, SceneKind } from '@/hunt/scene';
@@ -17,10 +18,12 @@ import type { UnmaskSpec, UnmaskState } from '@/hunt/unmask';
 import { formatNumber, formatStatementLine } from '@/math/format';
 import { readLine, type SLineToken, type SToken } from '@/math/statement-tokens';
 import { HintControl } from '@/ui/common/HintButton';
+import vuceticGears from '@/ui/hunt/art/vucetic-gears.webp';
 import { LittleOneArt } from '@/ui/hunt/LittleOne';
 import { type HuntKey, StatementPad } from '@/ui/hunt/StatementPad';
 import { useHuntKeys } from '@/ui/hunt/use-hunt-keys';
 import { LineView } from '@/ui/notebook/LineView';
+import { personArt } from '@/ui/town/art';
 
 type Act = (action: LeadAction) => void;
 
@@ -234,6 +237,15 @@ export function SneakBoardView({
   );
 }
 
+/**
+ * A suspect's figure, when the town has one. The automaton in Vucetic's coat loses its cap once
+ * he has found it (art t102).
+ */
+function suspectFigure(id: string, unmasked: boolean): string | null {
+  if (unmasked && id === 'vucetic') return vuceticGears;
+  return Object.hasOwn(personArt, id) ? personArt[id as PersonId] : null;
+}
+
 /** Unmask: their working, side by side, on the cards he has asked. */
 export function UnmaskBoardView({
   spec,
@@ -251,6 +263,9 @@ export function UnmaskBoardView({
   useIdle(act, `${state.asked.length},${state.accused.length},${state.help}`, state.opened);
   const asked = spec.cards.filter((card) => state.asked.includes(card.id));
   const nextCard = spec.cards.find((card) => !state.asked.includes(card.id));
+  // People stand in the scene only when all of them have a figure, so the names stay in a row.
+  const figures = spec.suspects.every((suspect) => suspectFigure(suspect.id, false));
+  const unmasked = state.phase !== 'ask' ? spec.guilty : null;
   return (
     <main className="hunt">
       <section className="hunt__scene unmask">
@@ -267,10 +282,19 @@ export function UnmaskBoardView({
                 type="button"
                 className="suspect__name"
                 data-accused={state.accused.includes(suspect.id)}
+                data-unmasked={suspect.id === unmasked || undefined}
                 disabled={state.phase !== 'ask'}
                 onClick={() => act({ kind: 'accuse', suspect: suspect.id })}
               >
-                {suspect.name}
+                {figures && (
+                  <img
+                    className="suspect__figure"
+                    src={suspectFigure(suspect.id, suspect.id === unmasked) ?? undefined}
+                    alt=""
+                    draggable={false}
+                  />
+                )}
+                <span>{suspect.name}</span>
               </button>
               <ol className="suspect__working">
                 {asked.map((card) => (

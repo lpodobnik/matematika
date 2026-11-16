@@ -57,6 +57,7 @@ I can't tell without him. Writing a line and seeing the doors change looks clear
 - **Five more streets,** painted and mapped: Arhivska ulica, Novinska ulica, Dvorište, Ulica brava and Pusta ulica. Each lead starts in its own; a session starts in the street of the first open lead.
 - **Four townspeople** by their leads, with two lines each before and after (yours to check: `hr.town.people` in `src/content/text/hr.ts`).
 - **House fronts in the Knock row:** the odd and the even side of a street look different, a lit door comes back in colour with its lamp, and an open door is a dark doorway.
+- **The coat's five people stand in its Unmask board** (2026-11-16): Milka, Nikola, Belušić, Zagorka and Vučetić, with their town figures; he taps a person to point at them. Once he has found the automaton, its cap jumps off and a lens on its card shows the gears. Scenes where someone has no figure yet (the newspaper, the last lead) keep their names.
 
 ## What's not there
 

@@ -1078,6 +1078,72 @@
   border-style: dashed;
 }
 
+/* The people themselves, when the town has all their figures: tap a person to point at them. */
+.suspect__name:has(.suspect__figure) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 6px;
+}
+
+.suspect__figure {
+  height: clamp(90px, 32dvh, 260px);
+  max-width: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.suspect__name[data-accused="true"] .suspect__figure {
+  opacity: 0.45;
+}
+
+.suspect__name[data-unmasked] {
+  position: relative;
+  color: var(--ink);
+  border-color: var(--brass);
+  opacity: 1;
+}
+
+/*
+ * At the board's size the automaton's gears are a brown band, so its head is shown again under a
+ * lens: the same picture, two and a half times as big, from the cap to the eyes.
+ */
+.suspect[data-suspect="vucetic"] .suspect__name[data-unmasked]::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: clamp(56px, 12dvh, 96px);
+  aspect-ratio: 1;
+  border: 3px solid var(--brass);
+  border-radius: 50%;
+  background: url("./art/vucetic-gears.webp") no-repeat var(--sheet);
+  background-size: 260% auto;
+  background-position: 47% 0%;
+}
+
+/* The cap jumps off. */
+.suspect__name[data-unmasked] .suspect__figure {
+  transform-origin: bottom center;
+  animation: suspect-unmask 0.7s ease-out;
+}
+
+@keyframes suspect-unmask {
+  30% {
+    transform: translateY(-14px) scale(1.06);
+  }
+  60% {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .suspect__name[data-unmasked] .suspect__figure {
+    animation: none;
+  }
+}
+
 .suspect__working:empty {
   display: none;
 }
@@ -1816,6 +1882,10 @@
   .suspect__name {
     min-height: 48px;
     font-size: 13px;
+  }
+
+  .suspect__figure {
+    height: 84px;
   }
 
   .suspect__working {
