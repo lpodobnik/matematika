@@ -576,12 +576,18 @@ export const hr = {
           'Prije sam svaki broj zaokružio naviše. Sad gledam znamenku.',
           'Slova slažem naopako, a brojeve sad slažem točno.',
         ],
-        after: ['Zagorka kaže da su mi brojevi sad točni.', 'Svaku stranicu slažem slovo po slovo.'],
+        after: [
+          'Zagorka kaže da su mi brojevi sad točni.',
+          'Svaku stranicu slažem slovo po slovo.',
+        ],
       },
       raznosac: {
         name: 'Raznosač',
         who: 'raznosi novine',
-        before: ['Novine! Novine! Kola viđena kod kuće oko 330!', 'Jednom sam se zabunio. Samo jednom!'],
+        before: [
+          'Novine! Novine! Kola viđena kod kuće oko 330!',
+          'Jednom sam se zabunio. Samo jednom!',
+        ],
         after: [
           'Novine! Mali automat opet viđen s tobom!',
           'Danas nosim dvjesto novina. Brojao sam dvaput.',

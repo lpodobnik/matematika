@@ -24,8 +24,8 @@ import {
 } from '@/content/town';
 import { asleepLairs } from '@/fight/settle';
 import type { LairId } from '@/fight/types';
-import { type GateState, gateState } from '@/hunt/gate';
 import { openCorrections } from '@/hunt/corrected';
+import { type GateState, gateState } from '@/hunt/gate';
 import type { CorrectionId, HuntStreetId, LeadId, PlayId } from '@/hunt/ids';
 import { partTwoOn } from '@/hunt/switch';
 import { openTrail, type TrailId, threadTarget } from '@/hunt/trail';

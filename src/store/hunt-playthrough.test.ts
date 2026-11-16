@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { leadSpecs, playedSpec } from '@/content/leads';
 import type { AloneSpec } from '@/hunt/alone';
+import type { PlayId } from '@/hunt/ids';
 import { lineValueOfClue } from '@/hunt/knock';
 import type { LeadAction, LeadPlay } from '@/hunt/lead';
 import { type ObjectGoal, type ObjectMove, type ObjectState, pairsOf } from '@/hunt/objects';
@@ -18,7 +19,6 @@ import {
   type WindowsSpec,
   withBrackets,
 } from '@/hunt/one-offs';
-import type { PlayId } from '@/hunt/ids';
 import type { GuardSpec } from '@/hunt/rule-guard';
 import type { SceneSpec } from '@/hunt/scene';
 import { lineStartOf, routeTo, type SneakSpec, standing, targetStop } from '@/hunt/sneak';

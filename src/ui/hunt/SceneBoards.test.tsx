@@ -7,7 +7,7 @@ import { UnmaskBoardView } from '@/ui/hunt/SceneBoards';
 function unmaskOf(lead: string): UnmaskSpec {
   const spec = allLeadSpecs.find((candidate) => candidate.id === lead);
   const scene = spec?.scenes.find((candidate) => candidate.kind === 'unmask');
-  if (!scene || scene.kind !== 'unmask') throw new Error(`${lead} has no Unmask scene`);
+  if (scene?.kind !== 'unmask') throw new Error(`${lead} has no Unmask scene`);
   return scene;
 }
 

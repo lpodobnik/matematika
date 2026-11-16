@@ -429,7 +429,8 @@ export const act2Text = {
       structureNote: 'Bilješka kaže jedno, a račun možda drugo. Izračunaj i provjeri.',
       notice: 'Iza vrata je samo traka: OVO JE ISPRAVLJENO. HVALA.',
       trap: {
-        intro: 'Bilješka je bila zamka! Automati već dolaze ulicom. Prođi pokraj njih tako da te ne vide.',
+        intro:
+          'Bilješka je bila zamka! Automati već dolaze ulicom. Prođi pokraj njih tako da te ne vide.',
         found: 'Put je slobodan.',
         opened: 'Automati te nisu vidjeli. Bilješka je precrtana, a vrata su opet pred tobom.',
       },
