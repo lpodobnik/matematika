@@ -1465,6 +1465,56 @@
   text-align: center;
 }
 
+/* A number tree in place of the number: the numbers at the bottom, what they make above. */
+.locks__tree {
+  display: block;
+  width: min(100%, 420px);
+  max-height: 38dvh;
+  margin: 0 auto;
+}
+
+.locks__tree-edge {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.locks__tree-leaf rect {
+  fill: var(--brass-light);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.locks__tree-node rect {
+  fill: var(--sheet);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.locks__tree text {
+  fill: var(--ink-deep);
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.locks__tree text.locks__tree-sign {
+  font-size: 24px;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 8px;
+}
+
+.locks__tree-read {
+  margin: 0;
+  font-size: 16px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.locks__equation {
+  white-space: nowrap;
+  font-weight: 700;
+}
+
 .locks__strip {
   flex: 1 1 auto;
   display: flex;
@@ -1651,7 +1701,7 @@
   }
 }
 
-/* A phone: everything a little tighter, and keys stay at 48 px. */
+/* A phone: everything a little tighter, and keys and clues stay at 48 px. The page scrolls. */
 
 @media (max-height: 460px) {
   .hunt__note {
@@ -1659,8 +1709,8 @@
   }
 
   .clue {
-    min-height: 32px;
-    font-size: 12px;
+    min-height: 48px;
+    font-size: 13px;
   }
 
   .hunt__draft .line {

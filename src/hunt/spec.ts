@@ -1,7 +1,7 @@
 // A lead as data (architecture, Pattern 6): rule 10 extends, with content tests and no per-lead
 // code. A new scene type joins `SceneSpec` as a new kind.
 
-import type { BeatId, GearId, KnotId, LeadId } from '@/hunt/ids';
+import type { BeatId, GearId, PlayId } from '@/hunt/ids';
 import type { ObjectGoal, ObjectState } from '@/hunt/objects';
 import type { SceneSpec } from '@/hunt/scene';
 import type { SToken } from '@/math/statement-tokens';
@@ -59,8 +59,8 @@ export interface MistakeSpec {
 }
 
 export interface LeadSpec {
-  /** A lead, or a knot: a knot is a lead with no showing of its own. */
-  id: LeadId | KnotId;
+  /** A lead, a knot or a corrected street: a knot is a lead with no showing of its own. */
+  id: PlayId;
   act: 1 | 2 | 3 | 4 | 'last';
   street: string;
   title: string;

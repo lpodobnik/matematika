@@ -6,6 +6,7 @@ import { cleanName } from '@/city/character';
 import { tuning } from '@/config/tuning';
 import { leadSpecs, playedSpec } from '@/content/leads';
 import { earnParts } from '@/economy/parts';
+import { correctedBy, corrections, openCorrections } from '@/hunt/corrected';
 import {
   type GateScene,
   gateDelete,
@@ -15,7 +16,7 @@ import {
   gateType,
   newGateScene,
 } from '@/hunt/gate';
-import { inList, knotIds, type LeadId, leadIds } from '@/hunt/ids';
+import { correctionIds, inList, knotIds, type LeadId, leadIds, type PlayId } from '@/hunt/ids';
 import { huntAt } from '@/hunt/jump';
 import {
   type LeadAction,
@@ -24,6 +25,7 @@ import {
   leadPlayFrom,
   leadStep,
   newLeadPlay,
+  playedScene,
 } from '@/hunt/lead';
 import { guideTold } from '@/hunt/scene';
 import type { LeadSpec } from '@/hunt/spec';
@@ -79,14 +81,34 @@ function changeGate(state: GameState, change: (scene: GateScene) => GateScene): 
 const isLead = inList(leadIds);
 const isKnot = inList(knotIds);
 const isTrail = (id: string): id is TrailId => isLead(id) || isKnot(id);
+const isCorrection = inList(correctionIds);
+const isPlayable = (id: string): id is PlayId => isTrail(id) || isCorrection(id);
 
 /** The lead in play, with its spec, or null. */
-function leadInPlay(state: GameState): { lead: TrailId; spec: LeadSpec; play: LeadPlay } | null {
+function leadInPlay(state: GameState): { lead: PlayId; spec: LeadSpec; play: LeadPlay } | null {
   const { hunt } = state.save;
   const scene = hunt.scene;
-  if (!scene || scene.of === 'gate' || !isTrail(scene.of)) return null;
+  if (!scene || scene.of === 'gate' || !isPlayable(scene.of)) return null;
   const spec = playedSpec(scene.of, hunt.sealed);
   return spec ? { lead: scene.of, spec, play: scene.state as LeadPlay } : null;
+}
+
+/** What a move did that only sounds (store/effects/audio.ts). */
+function soundsOf(lead: PlayId, play: LeadPlay, next: LeadPlay, door: boolean): DomainEvent[] {
+  const events: DomainEvent[] = [];
+  const lines = (p: LeadPlay) => p.written.length + (p.knock?.lines.length ?? 0);
+  if (lines(next) > lines(play)) events.push({ type: 'LineInked', lead });
+  const before = playedScene(play);
+  const after = playedScene(next);
+  // A right door has its own latch.
+  if (after?.opened && !before?.opened && !door) events.push({ type: 'SceneOpened', lead });
+  if (play.unmask?.phase === 'ask' && next.unmask?.phase === 'write') {
+    events.push({ type: 'Unmasked', lead });
+  }
+  if (next.trap && !play.trap) events.push({ type: 'TrapSprung', lead });
+  const caught = (p: LeadPlay) => (p.sneak?.timesCaught ?? 0) + (p.trap?.timesCaught ?? 0);
+  if (caught(next) > caught(play)) events.push({ type: 'Caught', lead });
+  return events;
 }
 
 /** A move in the lead: the rules are in `hunt/lead.ts`, and what they change outside it, here. */
@@ -108,6 +130,7 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
   if (outcome.finished) {
     events.push({ type: 'LeadFinished', lead, firstTry: outcome.finished.firstTry });
   }
+  events.push(...soundsOf(lead, play, next, outcome.doorKnocked?.right === true));
   events.push({ type: 'SaveChanged' });
   return {
     state: produce(state, (draft) => {
@@ -132,7 +155,14 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
         saved.told.push(`lesson:${lead}`);
       }
       if (outcome.told && !saved.told.includes(outcome.told)) saved.told.push(outcome.told);
-      if (outcome.finished) {
+      if (outcome.finished && isCorrection(lead)) {
+        // The street he has won back is in colour again. Nothing else waits on it.
+        const won = corrections[lead].street;
+        saved.corrected = saved.corrected.filter((street) => street !== won);
+        delete saved.parked[lead];
+        saved.scene = null;
+        draft.ui.screen = 'map';
+      } else if (outcome.finished && !isCorrection(lead)) {
         saved.pages[lead] = outcome.finished.lines.map((text) => ({
           text,
           kind: 'his',
@@ -140,7 +170,12 @@ function moveInLead(state: GameState, action: LeadAction, now: number): Step {
         }));
         saved.firstTries[lead] = outcome.finished.firstTry;
         if (isLead(lead) && !saved.leadsDone.includes(lead)) saved.leadsDone.push(lead);
-        if (isKnot(lead) && !saved.knotsDone.includes(lead)) saved.knotsDone.push(lead);
+        if (isKnot(lead) && !saved.knotsDone.includes(lead)) {
+          saved.knotsDone.push(lead);
+          // The First Automaton corrects a street he has finished (GDD, Exploration).
+          const street = correctedBy(lead);
+          if (street && !saved.corrected.includes(street)) saved.corrected.push(street);
+        }
         for (const beat of spec.beats ?? []) {
           if (!saved.beats.includes(beat)) saved.beats.push(beat);
         }
@@ -166,7 +201,7 @@ function resumedScene(
   sealed: readonly LeadId[],
   facts: LeadFacts,
 ): typeof scene {
-  if (scene.of === 'gate' || !isTrail(scene.of)) return scene;
+  if (scene.of === 'gate' || !isPlayable(scene.of)) return scene;
   const spec = playedSpec(scene.of, sealed);
   if (!spec) return scene;
   return { ...scene, state: leadPlayFrom(spec, scene.state) ?? newLeadPlay(spec, facts) };
@@ -237,7 +272,9 @@ export function withHunt(inner: Reduce): Reduce {
           partTwoOn(state.ui.preview) &&
           companion !== null &&
           spec !== undefined &&
-          openTrail(hunt).includes(action.lead);
+          (isCorrection(action.lead)
+            ? openCorrections(hunt.corrected).includes(action.lead)
+            : openTrail(hunt).includes(action.lead));
         if (!allowed) return same(state);
         const waiting = hunt.scene?.of === action.lead;
         const parked = hunt.parked[action.lead];

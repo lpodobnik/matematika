@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { allLeadSpecs } from '@/content/leads';
+import { correctionSpecs } from '@/content/leads/corrections';
 import { l01 } from '@/content/leads/l01-two-sides';
 import { knotIds, leadIds } from '@/hunt/ids';
 import { type KnockState, litDoors, newKnock } from '@/hunt/knock';
@@ -7,6 +8,11 @@ import { proveLead } from '@/hunt/solve';
 import { readLine } from '@/math/statement-tokens';
 
 describe('every lead can be played', () => {
+  it.each(Object.entries(correctionSpecs))('corrected street %s can be won back', (id, spec) => {
+    expect(proveLead(spec)).toEqual([]);
+    expect(spec.id).toBe(id);
+  });
+
   it.each(allLeadSpecs.map((lead) => [lead.id, lead] as const))('%s proves out', (_id, lead) => {
     expect(proveLead(lead)).toEqual([]);
     expect([...leadIds, ...knotIds]).toContain(lead.id);

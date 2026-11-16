@@ -24,9 +24,18 @@ describe('the people in an Unmask scene', () => {
     expect(html).not.toContain('data-unmasked');
   });
 
-  it('stay names where one of them has no figure, so the row stays even', () => {
+  it('stand in the newspaper and with the two witnesses too, now that they are painted', () => {
+    for (const lead of ['l06', 'l13']) {
+      const html = renderToString(
+        <UnmaskBoardView spec={unmaskOf(lead)} state={newUnmask()} guide={null} act={() => {}} />,
+      );
+      expect(figures(html)).toBe(3);
+    }
+  });
+
+  it('stay names where they are not people, such as the ledgers', () => {
     const html = renderToString(
-      <UnmaskBoardView spec={unmaskOf('l06')} state={newUnmask()} guide={null} act={() => {}} />,
+      <UnmaskBoardView spec={unmaskOf('l07')} state={newUnmask()} guide={null} act={() => {}} />,
     );
     expect(figures(html)).toBe(0);
   });

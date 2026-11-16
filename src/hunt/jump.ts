@@ -1,6 +1,7 @@
 // The dev panel's jumps into part 2 (architecture, The gate and the switch): a save as it would be
 // had he played up to there, for Luka to look at any lead without playing the ones before it.
 
+import { correctedBy } from '@/hunt/corrected';
 import type { BeatId, KnotId, LeadId, RuleGuardId } from '@/hunt/ids';
 import { acts, type TrailId } from '@/hunt/trail';
 import type { CompanionSave, HuntSave } from '@/hunt/types';
@@ -48,6 +49,8 @@ export function huntAt(
       knotsDone,
       sealed: [],
       thread: { target: null, finishedSince: 0 },
+      // What the First Automaton has corrected by then, as on the real path.
+      corrected: knotsDone.flatMap((knot) => correctedBy(knot) ?? []),
       guards: before.flatMap((id) => {
         const guard = facts.guardOf(id);
         return guard ? [guard] : [];

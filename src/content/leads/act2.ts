@@ -3,7 +3,9 @@
 // id is stored in saves. Worked examples use other numbers than the scenes do.
 
 import { act2Text } from '@/content/text/hunt-act2';
+import { sealedText } from '@/content/text/hunt-leads';
 import type { LineState } from '@/hunt/objects';
+import type { SneakSpec } from '@/hunt/sneak';
 import type { LeadSpec } from '@/hunt/spec';
 import type { SToken } from '@/math/statement-tokens';
 
@@ -703,6 +705,27 @@ export const l08: LeadSpec = {
 
 const knotTwo = act2Text.k2;
 
+// The forged note's trap: the automatons come to the door it pointed at, and he slips past them.
+const forgedTrap: SneakSpec = {
+  kind: 'sneak',
+  intro: knotTwo.knock.trap.intro,
+  boards: [
+    {
+      stops: 9,
+      start: 0,
+      exit: 8,
+      patrols: [{ route: [2, 3, -1, -1] }, { route: [6, 5, -1, -1, 5] }],
+      line: null,
+    },
+  ],
+  caught: sealedText.caught,
+  empty: '',
+  found: knotTwo.knock.trap.found,
+  opened: knotTwo.knock.trap.opened,
+  example: [],
+  hint: sealedText.hint,
+};
+
 export const k2: LeadSpec = {
   id: 'k2',
   act: 2,
@@ -780,6 +803,7 @@ export const k2: LeadSpec = {
       hint: knotTwo.knock.hint,
       context: { vars: { x: 332 } },
       forged: 'note',
+      trap: forgedTrap,
     },
   ],
   writeUp: [],

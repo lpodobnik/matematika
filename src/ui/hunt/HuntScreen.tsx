@@ -6,7 +6,6 @@ import { hr } from '@/content/text/hr';
 import { town } from '@/content/town';
 import { type GateScene, gateEquation, gateScene } from '@/hunt/gate';
 import type { LeadPlay } from '@/hunt/lead';
-import type { TrailId } from '@/hunt/trail';
 import { formatTokens } from '@/math/format';
 import { type Token, tokenFromChar } from '@/math/tokens';
 import { useGame } from '@/store/store';
@@ -45,7 +44,7 @@ export function HuntScreen() {
       );
     }
   }
-  const spec = scene && scene.of !== 'gate' ? playedSpec(scene.of as TrailId, sealed) : undefined;
+  const spec = scene && scene.of !== 'gate' ? playedSpec(scene.of, sealed) : undefined;
   if (scene && spec) return <LeadScreen spec={spec} play={scene.state as LeadPlay} />;
   return null;
 }

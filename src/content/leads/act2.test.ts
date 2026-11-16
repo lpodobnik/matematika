@@ -16,7 +16,13 @@ import {
   litDoors,
   newKnock,
 } from '@/hunt/knock';
-import { type LeadAction, type LeadOutcome, leadStep, newLeadPlay } from '@/hunt/lead';
+import {
+  type LeadAction,
+  type LeadOutcome,
+  leadPlayFrom,
+  leadStep,
+  newLeadPlay,
+} from '@/hunt/lead';
 import type { ObjectGoal } from '@/hunt/objects';
 import {
   newWindows,
@@ -36,6 +42,7 @@ import {
   newGuard,
 } from '@/hunt/rule-guard';
 import { allGuidesTold, type SceneSpec } from '@/hunt/scene';
+import { nextSafeMove, type SneakBoard, type SneakSpec, type SneakState } from '@/hunt/sneak';
 import { proveLead } from '@/hunt/solve';
 import type { LeadSpec } from '@/hunt/spec';
 import {
@@ -689,6 +696,19 @@ describe('Knot 2', () => {
     say('books', '334');
     expect(act({ kind: 'door', door: 334 }).forged).toBe('followed');
     act({ kind: 'dismiss' });
+    // The automatons come, and he slips past them before he's back at the doors.
+    const trap = knock.trap as SneakSpec;
+    expect(play.trap).not.toBeNull();
+    // A reload in the middle of it keeps him there.
+    expect(leadPlayFrom(k2, JSON.parse(JSON.stringify(play)))?.trap).toEqual(play.trap);
+    for (let i = 0; i < 60 && play.trap && !play.trap.opened; i++) {
+      const state: SneakState = play.trap;
+      const by = nextSafeMove(trap.boards[state.board] as SneakBoard, state) ?? 0;
+      act(state.notice ? { kind: 'dismiss' } : { kind: 'step', by });
+    }
+    expect(play.trap?.opened).toBe(true);
+    act({ kind: 'next' });
+    expect(play.trap).toBeNull();
     say('books', '332');
     expect(act({ kind: 'door', door: 332 }).forged).toBe('struck');
   });

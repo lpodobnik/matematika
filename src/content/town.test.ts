@@ -5,6 +5,7 @@ import { allLeadSpecs } from '@/content/leads';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
 import { town } from '@/content/town';
+import { correctionIds } from '@/hunt/ids';
 import { isRoomId } from '@/room/resume';
 
 const areas = Object.values(town.areas);
@@ -19,10 +20,11 @@ describe('where leads start', () => {
     expect(findPath(area.ground, area.arrive, spot.stand)).not.toBeNull();
   });
 
-  it('every lead has one place', () => {
+  it('every lead, and every corrected street’s notice, has one place', () => {
     const leads = spots.map(([lead]) => lead);
     expect(new Set(leads).size).toBe(leads.length);
-    expect([...leads].sort()).toEqual(allLeadSpecs.map((lead) => lead.id).sort());
+    const ids = [...allLeadSpecs.map((lead) => lead.id), ...correctionIds];
+    expect([...leads].sort()).toEqual(ids.sort());
   });
 });
 

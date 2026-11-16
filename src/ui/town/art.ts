@@ -10,6 +10,7 @@ import bridge from '@/ui/town/art/bridge.webp';
 import bridgeDown from '@/ui/town/art/bridge-down.webp';
 import canal from '@/ui/town/art/canal.webp';
 import canalOpen from '@/ui/town/art/canal-open.webp';
+import dimnjacar from '@/ui/town/art/dimnjacar.webp';
 import faust from '@/ui/town/art/faust.webp';
 import hanaman from '@/ui/town/art/hanaman.webp';
 import hill from '@/ui/town/art/hill.webp';
@@ -28,10 +29,14 @@ import marketLevel from '@/ui/town/art/market-level.webp';
 import milka from '@/ui/town/art/milka.webp';
 import mill from '@/ui/town/art/mill.webp';
 import millRunning from '@/ui/town/art/mill-running.webp';
+import mlinar from '@/ui/town/art/mlinar.webp';
 import nikola from '@/ui/town/art/nikola.webp';
 import penkala from '@/ui/town/art/penkala.webp';
+import raznosac from '@/ui/town/art/raznosac.webp';
+import slagar from '@/ui/town/art/slagar.webp';
 import square from '@/ui/town/art/square.webp';
 import squareGateOpen from '@/ui/town/art/square-gate-open.webp';
+import toolroom from '@/ui/town/art/toolroom.webp';
 import tram from '@/ui/town/art/tram.webp';
 import tramRunning from '@/ui/town/art/tram-running.webp';
 import u1 from '@/ui/town/art/u1.webp';
@@ -47,6 +52,7 @@ import wheelTurning from '@/ui/town/art/wheel-turning.webp';
 import yard from '@/ui/town/art/yard.webp';
 import yardLevel from '@/ui/town/art/yard-level.webp';
 import zagorka from '@/ui/town/art/zagorka.webp';
+import zvonar from '@/ui/town/art/zvonar.webp';
 
 export { automaton20 };
 
@@ -82,6 +88,12 @@ export const personFacing: Record<PersonId, 1 | -1> = {
   belusic: -1,
   kotruljevic: -1,
   hanaman: 1,
+  slagar: 1,
+  raznosac: 1,
+  zvonar: 1,
+  mlinar: -1,
+  dimnjacar: 1,
+  realVucetic: -1,
 };
 
 /** Each person's figure (t31 and t32). */
@@ -96,6 +108,13 @@ export const personArt: Record<PersonId, string> = {
   belusic,
   kotruljevic,
   hanaman,
+  slagar,
+  raznosac,
+  zvonar,
+  mlinar,
+  dimnjacar,
+  // The real one looks just as the automaton did: that was the trick.
+  realVucetic: vucetic,
 };
 
 /**
@@ -120,6 +139,7 @@ const pictures: Record<AreaId, { base: string; running?: { room: RoomId; src: st
   u4: { base: u4 },
   u5: { base: u5 },
   u6: { base: u6 },
+  toolroom: { base: toolroom },
 };
 
 /** An area's picture as it stands now. */

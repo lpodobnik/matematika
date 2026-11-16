@@ -40,6 +40,18 @@ export function soundOf(event: DomainEvent): SoundId | null {
       return event.right ? 'latch' : 'thunk';
     case 'LeadFinished':
       return 'chime';
+    // Part 2's quieter moments: the pen, a latch, the cap, steam, the little one learning.
+    case 'LineInked':
+      return 'tick';
+    case 'SceneOpened':
+      return 'latch';
+    case 'Unmasked':
+      return 'clank';
+    case 'TrapSprung':
+    case 'Caught':
+      return 'hiss';
+    case 'FixMade':
+      return 'chime';
     default:
       return null;
   }

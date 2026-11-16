@@ -6,7 +6,7 @@
 import type { NodeId } from '@/city/types';
 import type { Ground, Point } from '@/city/walk';
 import type { LairId } from '@/fight/types';
-import type { HuntMark, KnotId, LeadId } from '@/hunt/ids';
+import type { CorrectionId, HuntMark, KnotId, LeadId, PlayId } from '@/hunt/ids';
 import type { RoomId } from '@/room/types';
 
 export type PersonId =
@@ -19,7 +19,13 @@ export type PersonId =
   | 'watchman'
   | 'belusic'
   | 'kotruljevic'
-  | 'hanaman';
+  | 'hanaman'
+  | 'slagar'
+  | 'raznosac'
+  | 'zvonar'
+  | 'mlinar'
+  | 'dimnjacar'
+  | 'realVucetic';
 
 export type AreaId =
   | 'square'
@@ -37,7 +43,8 @@ export type AreaId =
   | 'u3'
   | 'u4'
   | 'u5'
-  | 'u6';
+  | 'u6'
+  | 'toolroom';
 
 /** A tap area over an illustration, in town units. */
 export interface Rect {
@@ -99,11 +106,15 @@ export type SceneId =
   | 'bridgeVucetic'
   | 'liftZagorka'
   | 'wheelZagorka'
-  | 'u1Vucetic';
+  | 'u1Vucetic'
+  | 'u4Milka'
+  | 'u4Nikola'
+  | 'u4Zagorka';
 
 /** Where a lead starts in a street (part 2): a tap area, and where he stands for it. */
 export interface TownSpot {
-  lead: LeadId | KnotId;
+  /** What the spot starts: a lead, a knot, or winning back a corrected street. */
+  lead: PlayId;
   stand: Point;
   area: Rect;
   marker: Point;
@@ -133,6 +144,8 @@ export interface TownArea {
   lairSpot?: { area: Rect; stand: Point };
   /** Lamp heads that glow once room 2 restarts. */
   lamps: readonly Point[];
+  /** Always in colour: a place he only reaches once what it holds is solved. */
+  inColour?: boolean;
 }
 
 const ground = (outline: Point[], holes: Ground['holes'] = []): Ground => ({
@@ -382,6 +395,8 @@ const mill: TownArea = {
       facing: 1,
       after: 'r03',
       changesWith: 'r04',
+      // Part 2: after the coat she's in the yard, with the others.
+      until: 'l11',
       scene: 'millMilka',
     },
     {
@@ -432,6 +447,15 @@ const bridge: TownArea = {
       area: { x: 0, y: 820, w: 300, h: 180 },
       arrive: { x: 1500, y: 625 },
       marker: { x: 120, y: 800 },
+    },
+    {
+      // Into the tool room in the pier, once Knot 3 has opened it.
+      to: 'toolroom',
+      opensWith: 'k3',
+      stand: { x: 230, y: 700 },
+      area: { x: 80, y: 480, w: 110, h: 180 },
+      arrive: { x: 330, y: 770 },
+      marker: { x: 130, y: 470 },
     },
   ],
   people: [
@@ -796,6 +820,7 @@ const wheel: TownArea = {
       facing: 1,
       after: 'r10',
       changesWith: 'r11',
+      until: 'l11',
       scene: 'wheelZagorka',
     },
   ],
@@ -855,6 +880,7 @@ const hill: TownArea = {
       facing: -1,
       after: 'r12',
       changesWith: 'r13',
+      until: 'l11',
       scene: 'hillNikola',
     },
   ],
@@ -1008,13 +1034,14 @@ const spotPlaces: Readonly<Record<LeadId | KnotId, readonly [AreaId, SpotPlace]>
       { x: 1120, y: 360, r: 400 },
     ),
   ],
+  // The tool room's door, in the bridge's pier, back in the old district (narrative, Part 2).
   k3: [
-    'u4',
+    'bridge',
     door(
-      { x: 280, y: 692 },
-      { x: 100, y: 390, w: 320, h: 260 },
-      { x: 260, y: 380 },
-      { x: 260, y: 520, r: 300 },
+      { x: 230, y: 700 },
+      { x: 80, y: 480, w: 110, h: 180 },
+      { x: 130, y: 470 },
+      { x: 150, y: 560, r: 300 },
     ),
   ],
   // Ulica brava.
@@ -1066,16 +1093,39 @@ const spotPlaces: Readonly<Record<LeadId | KnotId, readonly [AreaId, SpotPlace]>
   ],
 };
 
-const upperSpots: readonly TownSpot[] = Object.entries(spotPlaces).map(([lead, [, place]]) => ({
-  lead: lead as LeadId | KnotId,
+// Where a corrected street's notice hangs, by the way in, where he sees it (GDD, Exploration).
+const correctionPlaces: Readonly<Record<CorrectionId, readonly [AreaId, SpotPlace]>> = {
+  'fix-u1': [
+    'u1',
+    door(
+      { x: 420, y: 800 },
+      { x: 360, y: 650, w: 140, h: 150 },
+      { x: 430, y: 640 },
+      { x: 430, y: 720, r: 1 },
+    ),
+  ],
+  'fix-u2': [
+    'u2',
+    door(
+      { x: 360, y: 860 },
+      { x: 300, y: 705, w: 140, h: 150 },
+      { x: 370, y: 695 },
+      { x: 370, y: 780, r: 1 },
+    ),
+  ],
+};
+
+const allPlaces = { ...spotPlaces, ...correctionPlaces };
+const upperSpots: readonly TownSpot[] = Object.entries(allPlaces).map(([lead, [, place]]) => ({
+  lead: lead as PlayId,
   ...place,
 }));
 const spotStreet = Object.fromEntries(
-  Object.entries(spotPlaces).map(([lead, [street]]) => [lead, street]),
-) as Record<LeadId | KnotId, AreaId>;
+  Object.entries(allPlaces).map(([lead, [street]]) => [lead, street]),
+) as Record<PlayId, AreaId>;
 
-/** The street a lead or knot starts in. */
-export function streetOf(lead: LeadId | KnotId): AreaId {
+/** The street a lead, a knot or a corrected street's notice is in. */
+export function streetOf(lead: PlayId): AreaId {
   return spotStreet[lead];
 }
 
@@ -1247,6 +1297,9 @@ const u3: TownArea = {
   people: [
     // The bookkeeper, by the strongbox that holds his two books.
     { id: 'kotruljevic', at: { x: 780, y: 560 }, facing: -1, after: null, changesWith: 'l07' },
+    // Back at the paper once the notes are sorted.
+    { id: 'slagar', at: { x: 300, y: 760 }, facing: 1, after: 'l06', changesWith: 'k2' },
+    { id: 'raznosac', at: { x: 640, y: 640 }, facing: -1, after: 'l06', changesWith: 'k2' },
   ],
   lair: null,
   patrol: [],
@@ -1308,7 +1361,33 @@ const u4: TownArea = {
       marker: { x: 1500, y: 300 },
     },
   ],
-  people: [],
+  people: [
+    // The coat's people, back in the yard once it's over.
+    {
+      id: 'milka',
+      at: { x: 1180, y: 600 },
+      facing: -1,
+      after: 'l11',
+      changesWith: 'k3',
+      scene: 'u4Milka',
+    },
+    {
+      id: 'nikola',
+      at: { x: 1020, y: 640 },
+      facing: 1,
+      after: 'l11',
+      changesWith: 'k3',
+      scene: 'u4Nikola',
+    },
+    {
+      id: 'zagorka',
+      at: { x: 850, y: 720 },
+      facing: 1,
+      after: 'l11',
+      changesWith: 'k3',
+      scene: 'u4Zagorka',
+    },
+  ],
   lair: null,
   patrol: [],
   lamps: [],
@@ -1360,7 +1439,12 @@ const u5: TownArea = {
       marker: { x: 1500, y: 690 },
     },
   ],
-  people: [],
+  people: [
+    // The two witnesses and the sweep, once the locks' street is solved.
+    { id: 'zvonar', at: { x: 330, y: 740 }, facing: 1, after: 'l13', changesWith: 'l16' },
+    { id: 'mlinar', at: { x: 480, y: 800 }, facing: -1, after: 'l13', changesWith: 'l16' },
+    { id: 'dimnjacar', at: { x: 620, y: 760 }, facing: -1, after: 'l13', changesWith: 'l16' },
+  ],
   lair: null,
   patrol: [],
   lamps: [],
@@ -1410,6 +1494,46 @@ const u6: TownArea = {
   lamps: [],
 };
 
+// The real Vučetić's tool room, under his bridge (narrative, Part 2): walls of blank sheets, a cot,
+// a plate of kifle. He comes here once Knot 3 has opened the door.
+const toolroom: TownArea = {
+  id: 'toolroom',
+  ground: ground([
+    { x: 150, y: 740 },
+    { x: 330, y: 655 },
+    { x: 450, y: 595 },
+    { x: 650, y: 560 },
+    { x: 840, y: 520 },
+    { x: 1080, y: 610 },
+    { x: 1120, y: 700 },
+    { x: 1480, y: 715 },
+    { x: 1600, y: 780 },
+    { x: 1600, y: 1000 },
+    { x: 600, y: 1000 },
+    { x: 60, y: 790 },
+  ]),
+  arrive: { x: 330, y: 770 },
+  places: [],
+  exits: [
+    {
+      to: 'bridge',
+      opensWith: 'k3',
+      stand: { x: 220, y: 770 },
+      area: { x: 50, y: 260, w: 220, h: 480 },
+      arrive: { x: 230, y: 700 },
+      marker: { x: 160, y: 250 },
+    },
+  ],
+  people: [
+    // Furious, in order, by date, and eating a kifla.
+    { id: 'realVucetic', at: { x: 1150, y: 800 }, facing: -1, after: 'k3', changesWith: 'l16' },
+  ],
+  lair: null,
+  patrol: [],
+  lamps: [],
+  inColour: true,
+};
+
 export const town = {
   width: 1600,
   height: 1000,
@@ -1420,7 +1544,8 @@ export const town = {
     square,
     canal,
     mill,
-    bridge,
+    // Knot 3's door is in the bridge's pier, and the lead spots are only written further down.
+    bridge: { ...bridge, spots: upperSpots.filter((spot) => spotStreet[spot.lead] === 'bridge') },
     yard,
     tram,
     lift,
@@ -1433,6 +1558,7 @@ export const town = {
     u4,
     u5,
     u6,
+    toolroom,
   } as Record<AreaId, TownArea>,
 };
 

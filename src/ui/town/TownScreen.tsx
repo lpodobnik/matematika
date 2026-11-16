@@ -25,7 +25,8 @@ import {
 import { asleepLairs } from '@/fight/settle';
 import type { LairId } from '@/fight/types';
 import { type GateState, gateState } from '@/hunt/gate';
-import type { LeadId } from '@/hunt/ids';
+import { openCorrections } from '@/hunt/corrected';
+import type { CorrectionId, HuntStreetId, LeadId, PlayId } from '@/hunt/ids';
 import { partTwoOn } from '@/hunt/switch';
 import { openTrail, type TrailId, threadTarget } from '@/hunt/trail';
 import { playersHash } from '@/lib/player';
@@ -138,6 +139,7 @@ export function TownScreen() {
       onLead={(lead) => dispatch({ type: 'hunt/lead-start', lead })}
       leadsDone={partTwo ? [...hunt.leadsDone, ...hunt.knotsDone] : []}
       open={partTwo ? openTrail(hunt) : []}
+      corrected={partTwo ? hunt.corrected : []}
       sealed={hunt.sealed}
       threadHeading={partTwo ? threadTarget(hunt) : null}
     />
@@ -167,10 +169,12 @@ interface BoardProps {
   littleName?: string;
   onGate?(): void;
   onMapGiven?(): void;
-  onLead?(lead: TrailId): void;
+  onLead?(lead: PlayId): void;
   /** What's done in the hunt, and what's open. */
   leadsDone?: readonly TrailId[];
   open?: readonly TrailId[];
+  /** Streets the First Automaton has corrected: grey, with its notice to win them back. */
+  corrected?: readonly HuntStreetId[];
   sealed?: readonly LeadId[];
   threadHeading?: LeadId | null;
   /** His name, for where the story uses it. */
@@ -227,6 +231,7 @@ export function TownBoard({
   onLead,
   leadsDone = [],
   open = [],
+  corrected = [],
   sealed = [],
   threadHeading = null,
   name = '',
@@ -497,13 +502,23 @@ export function TownBoard({
 
   const restored = area.places.filter((place) => nodes.get(place.node)?.state === 'restored');
   // All its machines running, the whole street is in colour, as the room's backdrop shows it.
-  const solvedSpots = (area.spots ?? []).filter((spot) => leadsDone.includes(spot.lead));
-  const openSpots = (area.spots ?? []).filter(
-    (spot) => partTwo && reached.includes('map') && open.includes(spot.lead),
+  const solvedSpots = (area.spots ?? []).filter((spot) =>
+    (leadsDone as readonly string[]).includes(spot.lead),
   );
-  const colourMask = streetRestored(areaId, done)
-    ? 'linear-gradient(#000, #000)'
-    : bloomMask([...restored, ...solvedSpots], fresh);
+  const fixes: readonly CorrectionId[] = openCorrections(corrected);
+  const openSpots = (area.spots ?? []).filter(
+    (spot) =>
+      partTwo &&
+      reached.includes('map') &&
+      ([...open, ...fixes] as readonly string[]).includes(spot.lead),
+  );
+  // A corrected street is grey again, whatever was solved in it.
+  const greyAgain = (corrected as readonly string[]).includes(areaId);
+  const colourMask = greyAgain
+    ? 'linear-gradient(transparent, transparent)'
+    : area.inColour || streetRestored(areaId, done)
+      ? 'linear-gradient(#000, #000)'
+      : bloomMask([...restored, ...solvedSpots], fresh);
   const lampsLit = done.includes('r02');
   const art = areaArt(areaId, done);
   const change = areaChange(areaId);
@@ -642,6 +657,7 @@ export function TownBoard({
                 type="button"
                 className="town__sign"
                 data-sign={spot.lead}
+                data-notice={spot.lead.startsWith('fix') || undefined}
                 data-open="true"
                 data-edge="mid"
                 style={pct(spot.marker)}

@@ -18,6 +18,7 @@ import {
   type WindowsSpec,
   withBrackets,
 } from '@/hunt/one-offs';
+import type { PlayId } from '@/hunt/ids';
 import type { GuardSpec } from '@/hunt/rule-guard';
 import type { SceneSpec } from '@/hunt/scene';
 import { lineStartOf, routeTo, type SneakSpec, standing, targetStop } from '@/hunt/sneak';
@@ -269,7 +270,7 @@ function reload(store: Store): Store {
 }
 
 /** Plays a lead from wherever it's picked to its end, with a reload in its scenes. */
-function playLead(first: Store, id: TrailId): Store {
+function playLead(first: Store, id: PlayId): Store {
   let store = first;
   const sealed = store.getState().save.hunt.sealed;
   const spec = playedSpec(id, sealed);
@@ -349,7 +350,13 @@ describe('the whole chapter', () => {
       // Everything open has been written.
       for (const id of open) expect(leadSpecs[id], `${id} isn't written`).toBeDefined();
       order.push(next);
+      const corrected = store.getState().save.hunt.corrected;
       store = playLead(store, next);
+      // The wandering-off's end corrects Arhivska ulica, and not a moment before.
+      if (next === 'w1') {
+        expect(corrected).toEqual([]);
+        expect(store.getState().save.hunt.corrected).toEqual(['u2']);
+      }
     }
 
     const { hunt, companion, economy } = store.getState().save;
@@ -388,6 +395,13 @@ describe('the whole chapter', () => {
     // Paid: each door once, each guard once.
     expect(economy.parts).toBeGreaterThan(40);
     expect(new Set(hunt.paid).size).toBe(hunt.paid.length);
+
+    // Two streets were corrected on the way, and each can be won back, in either order.
+    expect(hunt.corrected).toEqual(['u2', 'u1']);
+    store = playLead(store, 'fix-u1');
+    expect(store.getState().save.hunt.corrected).toEqual(['u2']);
+    store = playLead(store, 'fix-u2');
+    expect(store.getState().save.hunt.corrected).toEqual([]);
   });
 
   it('each act holds what the order needs', () => {

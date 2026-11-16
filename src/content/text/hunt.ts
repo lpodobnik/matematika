@@ -5,6 +5,7 @@ import { act2Text } from '@/content/text/hunt-act2';
 import { act3Text } from '@/content/text/hunt-act3';
 import { act4Text } from '@/content/text/hunt-act4';
 import {
+  correctionText,
   huntUiText,
   knockGuideText,
   l01Text,
@@ -34,6 +35,7 @@ export const huntText = {
   knockGuide: knockGuideText,
   guide: sceneGuideText,
   sealed: sealedText,
+  correction: correctionText,
   ui: huntUiText,
   trail: trailText,
   gate: {

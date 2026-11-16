@@ -428,6 +428,11 @@ export const act2Text = {
       structureBooks: 'Od 423 oduzmi zbroj 37 + 54.',
       structureNote: 'Bilješka kaže jedno, a račun možda drugo. Izračunaj i provjeri.',
       notice: 'Iza vrata je samo traka: OVO JE ISPRAVLJENO. HVALA.',
+      trap: {
+        intro: 'Bilješka je bila zamka! Automati već dolaze ulicom. Prođi pokraj njih tako da te ne vide.',
+        found: 'Put je slobodan.',
+        opened: 'Automati te nisu vidjeli. Bilješka je precrtana, a vrata su opet pred tobom.',
+      },
       grumpy: ['Opet netko kuca. Ovdje nema ničega.', 'Ako je to račun, nije moj. Laku noć.'],
       opened:
         'Vrata se otvaraju. Soba je prazna, ali na stolu je Kristijanova kreda. Račun u bilješci nije točan, a Majstor Kristijan u računu ne griješi.',

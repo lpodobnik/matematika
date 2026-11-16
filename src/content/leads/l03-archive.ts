@@ -45,6 +45,22 @@ export const l03: LeadSpec = {
       keys: [],
       context: { vars: { x: 30_015 } },
     },
+    // The clerk's register, both ways, up to bilijun (GDD, Act 1).
+    {
+      kind: 'line',
+      say: text.tries.millions,
+      start: 'x =',
+      accepts: ['x = 2 300 000'],
+      keys: [],
+      context: { vars: { x: 2_300_000 } },
+    },
+    {
+      kind: 'line',
+      say: text.tries.trillion,
+      start: '10¹² =',
+      accepts: ['10¹² = 1 000 000 000 000'],
+      keys: [],
+    },
   ],
   mistake: {
     id: 'l03-drops-zero',

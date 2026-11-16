@@ -59,6 +59,8 @@ export interface LeadPlay {
   locks: LocksState | null;
   windows: WindowsState | null;
   loop: LoopState | null;
+  /** The forged note's trap, played over its Knock until he's slipped past (Knot 2). */
+  trap: SneakState | null;
   /** Whether every door so far went without a struck line or an exact move. */
   clean: boolean;
 }
@@ -122,6 +124,7 @@ const blank = {
   locks: null,
   windows: null,
   loop: null,
+  trap: null,
   clean: true,
 };
 
@@ -213,15 +216,26 @@ function inScene(spec: LeadSpec, play: LeadPlay, action: SceneAction): LeadResul
   const scene = spec.scenes[play.at];
   const before = playedScene(play);
   if (play.step !== 'play' || !before || !scene) return { play, outcome: {} };
+  // While the trap is on, every move is the trap's.
+  if (play.trap && scene.kind === 'knock' && scene.trap) {
+    const trap = sceneAct(scene.trap, play.trap, action) as SneakState;
+    return { play: trap === play.trap ? play : { ...play, trap }, outcome: {} };
+  }
   const after = sceneAct(scene, before, action);
   if (after === before) return { play, outcome: {} };
   const outcome: LeadOutcome = {};
+  let trap: SneakState | null = null;
   if (scene.kind === 'knock') {
     const shown = (after as KnockState).shown;
-    if (shown && !(before as KnockState).shown) {
+    const wasShown = (before as KnockState).shown;
+    const isTrap = (door: number) => scene.wrongDoors.some((wrong) => wrong.door === door);
+    if (shown && !wasShown) {
       outcome.doorKnocked = { door: shown.door, right: false };
-      const trap = scene.wrongDoors.some((wrong) => wrong.door === shown.door);
-      if (scene.forged && trap) outcome.forged = 'followed';
+      if (scene.forged && isTrap(shown.door)) outcome.forged = 'followed';
+    }
+    // He has read the notice behind the trap's door: now the automatons come.
+    if (scene.forged && scene.trap && wasShown && !shown && isTrap(wasShown.door)) {
+      trap = freshScene(scene.trap, false) as SneakState;
     }
     if (after.opened && !before.opened && scene.forged) outcome.forged = 'struck';
     if (after.opened && !before.opened) outcome.doorKnocked = { door: scene.door, right: true };
@@ -234,7 +248,7 @@ function inScene(spec: LeadSpec, play: LeadPlay, action: SceneAction): LeadResul
     if (scene.kind === 'guard') outcome.guardBeaten = scene.id;
   }
   const clean = play.clean && !(after.opened && !earns);
-  return { play: { ...withScene(play, scene, after), clean }, outcome };
+  return { play: { ...withScene(play, scene, after), clean, trap }, outcome };
 }
 
 /** The "Dalje" of whatever step he's on. */
@@ -259,6 +273,11 @@ function next(spec: LeadSpec, play: LeadPlay, facts: LeadFacts): LeadResult {
       const state = playedScene(play);
       const scene = spec.scenes[play.at];
       if (!state || !scene) return { play, outcome: {} };
+      if (play.trap) {
+        // Past the automatons: back to the doors, where the note is struck.
+        if (!play.trap.opened) return { play, outcome: {} };
+        return { play: { ...play, trap: null }, outcome: {} };
+      }
       if (state.guide === 'intro') {
         return { play: withScene(play, scene, { ...state, guide: 'on' }), outcome: {} };
       }
@@ -433,6 +452,10 @@ export function leadPlayFrom(spec: LeadSpec, value: unknown): LeadPlay | null {
     locks: null,
     windows: null,
     loop: null,
+    trap:
+      scene?.kind === 'knock' && scene.trap && saved.trap
+        ? (sceneFrom(scene.trap, saved.trap) as SneakState | null)
+        : null,
     clean: saved.clean !== false,
   };
   return scene && state ? withScene(base, scene, state) : base;

@@ -100,6 +100,9 @@ export function proveScene(scene: SceneSpec): string[] {
   switch (scene.kind) {
     case 'knock': {
       const problems = proveKnock(scene).map(({ problem }) => problem);
+      if (scene.trap) {
+        problems.push(...proveSneak(scene.trap).map((problem) => `trap: ${problem}`));
+      }
       for (const line of scene.example) {
         const tokens = lineOf(line);
         const parsed = tokens && parseStatement(tokens);

@@ -3,6 +3,7 @@
 
 import {
   beatIds,
+  correctionIds,
   gearIds,
   huntStreetIds,
   inList,
@@ -39,6 +40,7 @@ const isLead = inList(leadIds);
 const isKnot = inList(knotIds);
 const isLeadOrKnot = (id: string): id is (typeof leadIds)[number] | (typeof knotIds)[number] =>
   isLead(id) || isKnot(id);
+const isCorrection = inList(correctionIds);
 
 function decodePages(value: unknown): HuntSave['pages'] {
   if (!isObject(value)) return {};
@@ -66,7 +68,7 @@ function decodeFirstTries(value: unknown): HuntSave['firstTries'] {
 function decodeScene(value: unknown): SavedScene | null {
   if (!isObject(value) || typeof value.of !== 'string') return null;
   const { of } = value;
-  if (of !== 'gate' && !isLeadOrKnot(of)) return null;
+  if (of !== 'gate' && !isLeadOrKnot(of) && !isCorrection(of)) return null;
   const index = typeof value.index === 'number' && value.index >= 0 ? value.index : 0;
   return { of, index, state: value.state ?? null };
 }

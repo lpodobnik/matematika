@@ -10,6 +10,7 @@ import type {
   KnotId,
   LeadId,
   LookPieceId,
+  PlayId,
   RuleGuardId,
   SecretId,
 } from '@/hunt/ids';
@@ -52,8 +53,8 @@ export interface ThreadState {
 
 /** The scene in play, kept in the save so that resuming needs no replay. */
 export interface SavedScene {
-  /** The lead or knot it belongs to, or `gate`. */
-  of: LeadId | KnotId | 'gate';
+  /** The lead, knot or corrected street it belongs to, or `gate`. */
+  of: PlayId | 'gate';
   /** Which of its scenes. */
   index: number;
   /** The scene's own state. Checked against its spec on load (hunt/lead.ts). */
@@ -82,7 +83,7 @@ export interface HuntSave {
   told: string[];
   scene: SavedScene | null;
   /** Leads he has left for another: each picks up where he left it. */
-  parked: Partial<Record<LeadId | KnotId, SavedScene>>;
+  parked: Partial<Record<PlayId, SavedScene>>;
 }
 
 /** The hunt before it begins. */

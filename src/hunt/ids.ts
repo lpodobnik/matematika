@@ -31,6 +31,13 @@ export type RuleGuardId = (typeof ruleGuardIds)[number];
 export const huntStreetIds = ['u1', 'u2', 'u3', 'u4', 'u5', 'u6'] as const;
 export type HuntStreetId = (typeof huntStreetIds)[number];
 
+/** The corrected streets he can win back (GDD, Exploration), each played the way a knot is. */
+export const correctionIds = ['fix-u1', 'fix-u2'] as const;
+export type CorrectionId = (typeof correctionIds)[number];
+
+/** What plays as a lead does: a lead, a knot, or a corrected street. */
+export type PlayId = LeadId | KnotId | CorrectionId;
+
 export const gearIds = ['hook', 'lamp', 'magnet', 'long-hook'] as const;
 export type GearId = (typeof gearIds)[number];
 

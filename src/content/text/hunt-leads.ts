@@ -227,6 +227,8 @@ export const l03Text = {
     places: 'Složi 354: 3 stotice, 5 desetica, 4 jedinice.',
     power: 'Koliko je 10³? Napiši.',
     words: 'Trideset tisuća petnaest. Napiši taj broj znamenkama.',
+    millions: 'U registru piše: dva milijuna tristo tisuća. Napiši taj broj znamenkama.',
+    trillion: 'Bilijun je milijun milijuna: jedinica i dvanaest nula. Koliko je 10¹²? Napiši.',
   },
   mistake: {
     say: 'Mali automat rastavlja brojeve. Jedan njegov redak nije točan. Dodirni ga.',
@@ -367,6 +369,9 @@ export const huntUiText = {
   noCarts: 'Nema kola',
   go: 'Kreni',
   lockTarget: 'Brava se otvara na:',
+  lockEquation: 'Brava se otvara na broj x:',
+  lockTree: 'Brava se otvara kad zagrade slože ovo stablo.',
+  treeRead: 'Stablo se čita odozdo: što je niže, računa se prije.',
   turn: 'Okreni se',
   loopSay: 'Napiši dijeljenje. Ostatak kaže kod koje svjetiljke automat zaspi.',
   me: 'Ti',
@@ -376,6 +381,55 @@ export const huntUiText = {
 } as const;
 
 /** The trail map's labels. */
+/** A corrected street, and winning it back (GDD, Exploration and the trail map). */
+export const correctionText = {
+  title: 'Ispravljena ulica',
+  intro:
+    'Na stupu visi traka: OVA ULICA JE ISPRAVLJENA. HVALA. Boja se vraća kad nađeš prava vrata.',
+  grumpy: ['Krivi broj. Laku noć.', 'Ovdje nema ničega. Probaj drugdje.'],
+  opened: 'Iza vrata je stari stanar. Traka se odmota natrag i ulica je opet u boji.',
+  u2: {
+    side: 'Stari stanar s prozora: "Moja su vrata na parnoj strani."',
+    place: 'Kredom na zidu arhiva: 1 stotica, 1 desetica i 6 jedinica.',
+    next: 'Arhivar: "Moj je broj neposredni sljedbenik broja 115."',
+    structurePlace: 'Stotice puta 100, desetice puta 10, pa dodaj jedinice.',
+    structureNext: 'Neposredni sljedbenik veći je za 1.',
+    hint: {
+      step: 'Prijeđi na parnu stranu, pa izračunaj oba traga.',
+      move: 'Napiši 1 · 100 + 1 · 10 + 6 = 116 i 115 + 1 = 116.',
+    },
+    example: ['Primjer s drugim brojevima:', '2 · 100 + 3 · 10 + 4 = 234', '233 + 1 = 234'],
+    card: [
+      'Broj rastavljamo na stotice, desetice i jedinice: 116 = 1 · 100 + 1 · 10 + 6.',
+      'Neposredni sljedbenik nekog broja veći je od njega za 1.',
+    ],
+  },
+  u1: {
+    side: 'Kreda na pločniku: neparna strana.',
+    round: 'Poštar: "Zaokružen na desetice, broj te kuće je 60."',
+    less: 'Susjed: "Broj kuće manji je od 57."',
+    structureRound: 'Koji se brojevi zaokružuju na 60? Napiši od kojeg do kojeg.',
+    structureLess: 'Napiši: x je manji od 57.',
+    hint: {
+      step: 'Na 60 zaokružujemo brojeve od 55 do 64.',
+      move: 'Prijeđi na neparnu stranu. Napiši 55 ≤ x ≤ 64 i x < 57.',
+    },
+    example: [
+      'Primjer s drugim brojevima:',
+      'Na 30 zaokružujemo brojeve od 25 do 34.',
+      '25 ≤ x ≤ 34',
+    ],
+    card: [
+      'Na desetice se na 60 zaokružuju svi brojevi od 55 do 64.',
+      'Dva traga zajedno ostave manje vrata nego svaki sam.',
+    ],
+  },
+  find: {
+    say: 'Traka je odmotana natrag. Ulica je opet onakva kakva je bila.',
+    title: 'Ispravljeno natrag.',
+  },
+} as const;
+
 export const trailText = {
   title: 'Trag',
   heading: 'Crna nit ide prema tragu s tamnim prstenom. Ako ga ti prvi počneš, skrenut će.',
@@ -402,6 +456,8 @@ export const trailText = {
     l14: 'Krug',
     l15: 'Dizalica',
     l16: 'Ulje za svjetiljke',
+    'fix-u1': 'Ispravljeno',
+    'fix-u2': 'Ispravljeno',
   },
   open: 'Otvoreni trag',
   done: 'Riješeno',

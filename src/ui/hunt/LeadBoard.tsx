@@ -71,6 +71,12 @@ export function LeadBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay;
       const scene = spec.scenes[play.at];
       const state = playedScene(play);
       if (!scene || !state) return null;
+      // The forged note's trap, over its Knock until he has slipped past the automatons.
+      if (play.trap && scene.kind === 'knock' && scene.trap) {
+        return (
+          <SneakBoardView key="trap" spec={scene.trap} state={play.trap} guide={null} act={act} />
+        );
+      }
       const guide = sceneGuide(scene, state);
       switch (scene.kind) {
         case 'knock':

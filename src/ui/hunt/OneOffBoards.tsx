@@ -13,12 +13,16 @@ import {
   type LoopSpec,
   type LoopState,
   levelTilt,
+  lockBrackets,
   loopStart,
+  type NumberTree,
+  numberTree,
   type RoundLine,
   stripNumbers,
   type WindowsSpec,
   type WindowsState,
   windowNumber,
+  withBrackets,
 } from '@/hunt/one-offs';
 import type { GuardSpec, GuardState } from '@/hunt/rule-guard';
 import type { SceneGuide, SceneKind } from '@/hunt/scene';
@@ -361,6 +365,29 @@ export function LocksBoardView({
   const parts = lock.strip.split(' ');
   const count = stripNumbers(lock.strip).length;
   let at = -1;
+  // What the lock opens on: a number, part 1's equation, or a number tree to read.
+  const brackets = lock.tree ? lockBrackets(lock) : null;
+  const tree = brackets ? numberTree(withBrackets(lock.strip, brackets.from, brackets.to)) : null;
+  let opensOn: ReactNode = (
+    <p className="locks__target">
+      {huntUiText.lockTarget} {formatNumber(lock.target)}
+    </p>
+  );
+  if (tree) {
+    opensOn = (
+      <>
+        <p className="locks__target">{huntUiText.lockTree}</p>
+        <NumberTreeView tree={tree} />
+        <p className="locks__tree-read">{huntUiText.treeRead}</p>
+      </>
+    );
+  } else if (lock.equation) {
+    opensOn = (
+      <p className="locks__target">
+        {huntUiText.lockEquation} <span className="locks__equation">{lock.equation}</span>
+      </p>
+    );
+  }
   return (
     <OneOffShell
       state={state}
@@ -373,9 +400,7 @@ export function LocksBoardView({
       className="locks"
       scene={
         <>
-          <p className="locks__target">
-            {huntUiText.lockTarget} {formatNumber(lock.target)}
-          </p>
+          {opensOn}
           <p className="locks__strip" data-count={count}>
             {parts.map((part, i) => {
               if (!/^\d+$/.test(part)) {
@@ -408,6 +433,85 @@ export function LocksBoardView({
         </>
       }
     />
+  );
+}
+
+interface PlacedNode {
+  /** Across, in leaves: a sign sits over the middle of the two it joins. */
+  x: number;
+  /** Up from the numbers at the bottom. */
+  row: number;
+  value: string;
+  sign?: string;
+  children: PlacedNode[];
+}
+
+/**
+ * A number tree (GDD, Bracket locks): the strip's numbers along the bottom, and above each pair
+ * its sign and what it comes to. Read from the bottom up: what's lower is worked out first.
+ */
+function NumberTreeView({ tree }: { tree: NumberTree }) {
+  let leaves = 0;
+  const place = (node: NumberTree): PlacedNode => {
+    if (node.kind === 'leaf') {
+      leaves += 1;
+      return { x: leaves - 1, row: 0, value: node.value, children: [] };
+    }
+    const left = place(node.left);
+    const right = place(node.right);
+    const row = Math.max(left.row, right.row) + 1;
+    return {
+      x: (left.x + right.x) / 2,
+      row,
+      value: node.value,
+      sign: node.sign,
+      children: [left, right],
+    };
+  };
+  const top = place(tree);
+  const all: PlacedNode[] = [];
+  const walk = (node: PlacedNode) => {
+    all.push(node);
+    for (const child of node.children) walk(child);
+  };
+  walk(top);
+  const column = 92;
+  const rowHeight = 84;
+  const width = leaves * column;
+  const height = (top.row + 1) * rowHeight;
+  const cx = (node: PlacedNode) => node.x * column + column / 2;
+  const cy = (node: PlacedNode) => height - node.row * rowHeight - rowHeight / 2;
+  return (
+    <svg className="locks__tree" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+      {all.flatMap((node) =>
+        node.children.map((child) => (
+          <line
+            key={`${node.x}:${node.row}-${child.x}:${child.row}`}
+            className="locks__tree-edge"
+            x1={cx(node)}
+            y1={cy(node)}
+            x2={cx(child)}
+            y2={cy(child)}
+          />
+        )),
+      )}
+      {all.map((node) => (
+        <g
+          key={`${node.x}:${node.row}`}
+          className={node.sign ? 'locks__tree-node' : 'locks__tree-leaf'}
+        >
+          <rect x={cx(node) - 36} y={cy(node) - 22} width={72} height={44} rx={10} />
+          <text x={cx(node)} y={cy(node)} textAnchor="middle" dominantBaseline="central">
+            {formatNumber(Number(node.value))}
+          </text>
+          {node.sign && (
+            <text className="locks__tree-sign" x={cx(node)} y={cy(node) + 36} textAnchor="middle">
+              {node.sign}
+            </text>
+          )}
+        </g>
+      ))}
+    </svg>
   );
 }
 

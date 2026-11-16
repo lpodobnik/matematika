@@ -189,6 +189,8 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `tries.places`: Složi 354: 3 stotice, 5 desetica, 4 jedinice.
 - `tries.power`: Koliko je 10³? Napiši.
 - `tries.words`: Trideset tisuća petnaest. Napiši taj broj znamenkama.
+- `tries.millions`: U registru piše: dva milijuna tristo tisuća. Napiši taj broj znamenkama.
+- `tries.trillion`: Bilijun je milijun milijuna: jedinica i dvanaest nula. Koliko je 10¹²? Napiši.
 - `mistake.say`: Mali automat rastavlja brojeve. Jedan njegov redak nije točan. Dodirni ga.
 - `mistake.nudge`: Taj je redak točan. Izračunaj oba dijela pa zbroji.
 - `mistake.show`: Pokaži mu: složi 507. Koliko je desetica?
@@ -525,6 +527,9 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `knock.structureBooks`: Od 423 oduzmi zbroj 37 + 54.
 - `knock.structureNote`: Bilješka kaže jedno, a račun možda drugo. Izračunaj i provjeri.
 - `knock.notice`: Iza vrata je samo traka: OVO JE ISPRAVLJENO. HVALA.
+- `knock.trap.intro`: Bilješka je bila zamka! Automati već dolaze ulicom. Prođi pokraj njih tako da te ne vide.
+- `knock.trap.found`: Put je slobodan.
+- `knock.trap.opened`: Automati te nisu vidjeli. Bilješka je precrtana, a vrata su opet pred tobom.
 - `knock.grumpy.1`: Opet netko kuca. Ovdje nema ničega.
 - `knock.grumpy.2`: Ako je to račun, nije moj. Laku noć.
 - `knock.opened`: Vrata se otvaraju. Soba je prazna, ali na stolu je Kristijanova kreda. Račun u bilješci nije točan, a Majstor Kristijan u računu ne griješi.
@@ -1100,6 +1105,40 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `hint.step`: Čekaj da automat skrene iza ugla, pa kreni.
 - `hint.move`: Idi naprijed kad je mjesto ispred tebe prazno, a inače čekaj.
 
+## Ispravljene ulice (osvoji ih natrag)
+
+- `title`: Ispravljena ulica
+- `intro`: Na stupu visi traka: OVA ULICA JE ISPRAVLJENA. HVALA. Boja se vraća kad nađeš prava vrata.
+- `grumpy.1`: Krivi broj. Laku noć.
+- `grumpy.2`: Ovdje nema ničega. Probaj drugdje.
+- `opened`: Iza vrata je stari stanar. Traka se odmota natrag i ulica je opet u boji.
+- `u2.side`: Stari stanar s prozora: "Moja su vrata na parnoj strani."
+- `u2.place`: Kredom na zidu arhiva: 1 stotica, 1 desetica i 6 jedinica.
+- `u2.next`: Arhivar: "Moj je broj neposredni sljedbenik broja 115."
+- `u2.structurePlace`: Stotice puta 100, desetice puta 10, pa dodaj jedinice.
+- `u2.structureNext`: Neposredni sljedbenik veći je za 1.
+- `u2.hint.step`: Prijeđi na parnu stranu, pa izračunaj oba traga.
+- `u2.hint.move`: Napiši 1 · 100 + 1 · 10 + 6 = 116 i 115 + 1 = 116.
+- `u2.example.1`: Primjer s drugim brojevima:
+- `u2.example.2`: 2 · 100 + 3 · 10 + 4 = 234
+- `u2.example.3`: 233 + 1 = 234
+- `u2.card.1`: Broj rastavljamo na stotice, desetice i jedinice: 116 = 1 · 100 + 1 · 10 + 6.
+- `u2.card.2`: Neposredni sljedbenik nekog broja veći je od njega za 1.
+- `u1.side`: Kreda na pločniku: neparna strana.
+- `u1.round`: Poštar: "Zaokružen na desetice, broj te kuće je 60."
+- `u1.less`: Susjed: "Broj kuće manji je od 57."
+- `u1.structureRound`: Koji se brojevi zaokružuju na 60? Napiši od kojeg do kojeg.
+- `u1.structureLess`: Napiši: x je manji od 57.
+- `u1.hint.step`: Na 60 zaokružujemo brojeve od 55 do 64.
+- `u1.hint.move`: Prijeđi na neparnu stranu. Napiši 55 ≤ x ≤ 64 i x < 57.
+- `u1.example.1`: Primjer s drugim brojevima:
+- `u1.example.2`: Na 30 zaokružujemo brojeve od 25 do 34.
+- `u1.example.3`: 25 ≤ x ≤ 34
+- `u1.card.1`: Na desetice se na 60 zaokružuju svi brojevi od 55 do 64.
+- `u1.card.2`: Dva traga zajedno ostave manje vrata nego svaki sam.
+- `find.say`: Traka je odmotana natrag. Ulica je opet onakva kakva je bila.
+- `find.title`: Ispravljeno natrag.
+
 ## Karta traga
 
 - `title`: Trag
@@ -1126,6 +1165,8 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `leads.l14`: Krug
 - `leads.l15`: Dizalica
 - `leads.l16`: Ulje za svjetiljke
+- `leads.fix-u1`: Ispravljeno
+- `leads.fix-u2`: Ispravljeno
 - `open`: Otvoreni trag
 - `done`: Riješeno
 
@@ -1167,10 +1208,105 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `noCarts`: Nema kola
 - `go`: Kreni
 - `lockTarget`: Brava se otvara na:
+- `lockEquation`: Brava se otvara na broj x:
+- `lockTree`: Brava se otvara kad zagrade slože ovo stablo.
+- `treeRead`: Stablo se čita odozdo: što je niže, računa se prije.
 - `turn`: Okreni se
 - `loopSay`: Napiši dijeljenje. Ostatak kaže kod koje svjetiljke automat zaspi.
 - `me`: Ti
 - `patrol`: Automat
 - `askMore`: Prvo postavi barem {1} pitanja.
 - `aloneHelp`: Pogledaj što u tragu stoji uz: {1}.
+
+## Ljudi u ulicama drugog dijela
+
+- `watchman.name`: Noćni čuvar
+- `watchman.who`: kuća 17
+- `watchman.before.1`: Kola sam vidio u ponoć. Onda sam zaspao.
+- `watchman.before.2`: Noću čuvam ulicu, a danju spavam.
+- `watchman.after.1`: Opet ti? Ja bih to prespavao.
+- `watchman.after.2`: Ako opet vidim kola, javit ću ti.
+- `belusic.name`: Belušić
+- `belusic.who`: vozač tramvaja
+- `belusic.before.1`: Ja sve mjerim: put, brzinu i vrijeme.
+- `belusic.before.2`: A stanice? Pamtim samo neke.
+- `belusic.after.1`: Jedan korak vrijedi 5. Sad to i ti znaš.
+- `belusic.after.2`: Sve što izmjerim, zapišem.
+- `kotruljevic.name`: Kotruljević
+- `kotruljevic.who`: knjigovođa
+- `kotruljevic.before.1`: Svaki račun vodim dvaput. Za svaki slučaj.
+- `kotruljevic.before.2`: Dvije knjige, a u obje isto. Tako treba.
+- `kotruljevic.after.1`: Jedna omaška! Sad svaki račun vodim triput.
+- `kotruljevic.after.2`: Ti dobro brojiš.
+- `hanaman.name`: Hanaman
+- `hanaman.who`: trgovac uljem
+- `hanaman.before.1`: Ulje za svjetiljke! Sve što prodam, nacrtam.
+- `hanaman.before.2`: Pitaj me što god hoćeš. Imam dijagram.
+- `hanaman.after.1`: Sad i ti čitaš dijagrame.
+- `hanaman.after.2`: Tko pali svjetiljke u pustoj ulici? Ne znam.
+- `slagar.name`: Slagar
+- `slagar.who`: slaže novine
+- `slagar.before.1`: Prije sam svaki broj zaokružio naviše. Sad gledam znamenku.
+- `slagar.before.2`: Slova slažem naopako, a brojeve sad slažem točno.
+- `slagar.after.1`: Zagorka kaže da su mi brojevi sad točni.
+- `slagar.after.2`: Svaku stranicu slažem slovo po slovo.
+- `raznosac.name`: Raznosač
+- `raznosac.who`: raznosi novine
+- `raznosac.before.1`: Novine! Novine! Kola viđena kod kuće oko 330!
+- `raznosac.before.2`: Jednom sam se zabunio. Samo jednom!
+- `raznosac.after.1`: Novine! Mali automat opet viđen s tobom!
+- `raznosac.after.2`: Danas nosim dvjesto novina. Brojao sam dvaput.
+- `zvonar.name`: Zvonar
+- `zvonar.who`: zvoni na tornju
+- `zvonar.before.1`: Zvonim točno i brojim točno.
+- `zvonar.before.2`: Nisam ja krivo računao. Pitaj dimnjačara!
+- `zvonar.after.1`: Zvonit ću kad se Majstor Kristijan vrati.
+- `zvonar.after.2`: Zvonim točno i brojim točno.
+- `mlinar.name`: Mlinar
+- `mlinar.who`: melje brašno
+- `mlinar.before.1`: Jedanput sam se zabunio, i to sam ispravio.
+- `mlinar.before.2`: Brašno nosim u vrećama, a vreće brojim točno.
+- `mlinar.after.1`: Milka kaže da su moje vreće najteže u gradu.
+- `mlinar.after.2`: Brašno nosim u vrećama, a vreće brojim točno.
+- `dimnjacar.name`: Dimnjačar
+- `dimnjacar.who`: čisti dimnjake
+- `dimnjacar.before.1`: Krivo sam računao, priznajem. Sad svaki račun provjerim dvaput.
+- `dimnjacar.before.2`: Dimnjačar donosi sreću. Ali ne u računu!
+- `dimnjacar.after.1`: Dimnjačar donosi sreću. Danas tebi.
+- `dimnjacar.after.2`: Sad svaki račun provjerim dvaput.
+- `realVucetic.name`: Vučetić
+- `realVucetic.who`: pravi stražar mosta
+- `realVucetic.before.1`: Dan 41.: Netko pametan je tu. Malo sam manje ljut.
+- `realVucetic.before.2`: Milkine kifle bile su jedino dobro u ovoj alatnici. Zapisano.
+- `realVucetic.after.1`: Dan 50.: Cijeli grad priča o tebi. I to sam zapisao.
+- `realVucetic.after.2`: Uzmi kiflu. Zapisano: dao sam ti kiflu.
+
+## Stari poznanici u Dvorištu, nakon kaputa
+
+- `u1Vucetic.before.1`: Vrata su otvorena. Zapisano.
+- `u1Vucetic.before.2`: Evo karte. Što god nađeš, ja to zapišem.
+- `u1Vucetic.after.1`: Zapisano.
+- `u1Vucetic.after.2`: Sve sam zapisao.
+- `u4Milka.before.1`: Vučetić je bio automat? Zato nikad nije jeo moje kifle!
+- `u4Milka.before.2`: Ja pečem kifle, a ne račune. Ali i račune znam.
+- `u4Milka.after.1`: Pravi Vučetić pojeo je sve kifle. Svih dvanaest.
+- `u4Milka.after.2`: Sutra mu nosim duplo.
+- `u4Nikola.before.1`: Ja sam se zabunio samo jednom. Automat svaki put isto.
+- `u4Nikola.before.2`: Prvo množenje i dijeljenje. To sad i ja znam.
+- `u4Nikola.after.1`: Ja samo pitam: kako je automat nosio kaput?
+- `u4Nikola.after.2`: Prvo množenje i dijeljenje. To sad i ja znam.
+- `u4Zagorka.before.1`: Naslov: "AUTOMAT U KAPUTU!" Ovaj put ništa ne zaokružujem.
+- `u4Zagorka.before.2`: Zapisala sam svaki tvoj račun.
+- `u4Zagorka.after.1`: Naslov: "PRAVI VUČETIĆ LJUT, PO REDU."
+- `u4Zagorka.after.2`: Zapisala sam svaki tvoj račun.
+
+## Natpisi ulica
+
+- `u1`: Gornja ulica
+- `u2`: Arhivska ulica
+- `u3`: Novinska ulica
+- `u4`: Dvorište
+- `u5`: Ulica brava
+- `u6`: Pusta ulica
+- `toolroom`: Alatnica
 

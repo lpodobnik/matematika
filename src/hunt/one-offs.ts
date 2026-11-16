@@ -328,6 +328,73 @@ export interface LockSpec {
   /** A sum with no brackets: `3 + 4 · 3 + 3`. */
   strip: string;
   target: number;
+  /** The target as an equation from part 1, to solve first: `5 · x = 250`. */
+  equation?: string;
+  /** The lock shows the number tree of its brackets in place of its target. */
+  tree?: boolean;
+}
+
+/** A number tree: a number at the bottom, or a sign over the two it joins and what it comes to. */
+export type NumberTree =
+  | { kind: 'leaf'; value: string }
+  | { kind: 'node'; sign: string; value: string; left: NumberTree; right: NumberTree };
+
+/** The number tree of a line of numbers, signs and round brackets, or null if it doesn't read. */
+export function numberTree(line: string): NumberTree | null {
+  const parts = line.replaceAll('(', ' ( ').replaceAll(')', ' ) ').split(' ').filter(Boolean);
+  let i = 0;
+  const factor = (): NumberTree | null => {
+    const part = parts[i];
+    if (part === '(') {
+      i += 1;
+      const inner = sum();
+      if (parts[i] !== ')') return null;
+      i += 1;
+      return inner;
+    }
+    if (part && /^\d+$/.test(part)) {
+      i += 1;
+      return { kind: 'leaf', value: part };
+    }
+    return null;
+  };
+  const chain = (next: () => NumberTree | null, signs: readonly string[]): NumberTree | null => {
+    let left = next();
+    while (left && signs.includes(parts[i] ?? '')) {
+      const sign = parts[i] as string;
+      i += 1;
+      const right = next();
+      const value = right && sumResult(`${left.value} ${sign} ${right.value}`);
+      if (!right || !value) return null;
+      left = { kind: 'node', sign, value, left, right };
+    }
+    return left;
+  };
+  const term = () => chain(factor, ['·', ':']);
+  const sum = () => chain(term, ['+', '−']);
+  const tree = sum();
+  return tree && i === parts.length ? tree : null;
+}
+
+/** The first brackets that open a lock, from one number through another, or null. */
+export function lockBrackets(lock: LockSpec): { from: number; to: number } | null {
+  const count = stripNumbers(lock.strip).length;
+  for (let from = 0; from < count; from++) {
+    for (let to = from + 1; to < count; to++) {
+      const opens = sumResult(withBrackets(lock.strip, from, to)) === String(lock.target);
+      if (opens) return { from, to };
+    }
+  }
+  return null;
+}
+
+/** Whether x in a lock's equation is its target, and nothing else near it. */
+function equationGives(equation: string, target: number): boolean {
+  const tokens = readTokens(equation);
+  const parsed = tokens && parseStatement(tokens);
+  if (!parsed?.ok) return false;
+  const holds = (x: number) => isTrue(parsed.statement, { vars: { x } });
+  return holds(target) && !holds(target + 1) && !holds(target - 1);
 }
 
 export interface LocksSpec {
@@ -425,6 +492,15 @@ export function proveLocks(spec: LocksSpec): string[] {
       }
     }
     if (!found) problems.push(`"${lock.strip}" can't reach ${lock.target}`);
+    if (lock.equation && !equationGives(lock.equation, lock.target)) {
+      problems.push(`"${lock.equation}" doesn't give ${lock.target}`);
+    }
+    const brackets = lockBrackets(lock);
+    if (lock.tree && brackets) {
+      if (!numberTree(withBrackets(lock.strip, brackets.from, brackets.to))) {
+        problems.push(`"${lock.strip}" has no number tree`);
+      }
+    }
     if (sumResult(lock.strip) === String(lock.target)) {
       problems.push(`"${lock.strip}" needs no brackets`);
     }

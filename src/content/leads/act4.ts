@@ -89,9 +89,11 @@ export const l12: LeadSpec = {
       intro: t12.scene.intro,
       locks: [
         { strip: '2 + 5 · 4', target: 28 },
-        { strip: '3 + 4 · 3 + 3', target: 24 },
+        // The number tree in place of the target: he reads it from the bottom up.
+        { strip: '3 + 4 · 3 + 3', target: 24, tree: true },
         { strip: '258 − 34 + 41', target: 183 },
-        { strip: '150 − 20 · 3 + 2', target: 50 },
+        // Part 1's equation comes back: the lock opens on x.
+        { strip: '150 − 20 · 3 + 2', target: 50, equation: '5 · x = 250' },
       ],
       shut: t12.scene.shut,
       opened: t12.scene.opened,

@@ -5,6 +5,7 @@
 // him changing the answer until a door opens.
 
 import type { ObjectState } from '@/hunt/objects';
+import type { SneakSpec } from '@/hunt/sneak';
 import type { Rational } from '@/math/rational';
 import { parseStatement, resultOf, type Statement } from '@/math/statement';
 import {
@@ -73,6 +74,8 @@ export interface KnockSpec {
    * following it leads to the door that holds a polite notice.
    */
   forged?: string;
+  /** What following the trap brings: a plain Sneak board, after which he's back at the doors. */
+  trap?: SneakSpec;
 }
 
 export interface KnockLine {

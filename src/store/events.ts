@@ -5,8 +5,7 @@
 import type { AreaId } from '@/content/town';
 import type { UpgradeEvent } from '@/economy/upgrades';
 import type { FightEvent } from '@/fight/types';
-import type { LeadId } from '@/hunt/ids';
-import type { TrailId } from '@/hunt/trail';
+import type { LeadId, PlayId } from '@/hunt/ids';
 import type { RoomEvent } from '@/room/events';
 import type { RoomSpec } from '@/room/types';
 
@@ -25,9 +24,15 @@ export type StoreEvent =
   | { type: 'LeadPicked'; lead: LeadId }
   | { type: 'LessonSeen'; lead: LeadId }
   | { type: 'FixMade'; lead: LeadId }
-  | { type: 'LineWritten'; lead: TrailId; line: string }
-  | { type: 'DoorKnocked'; lead: TrailId; door: number; right: boolean }
-  | { type: 'LeadFinished'; lead: TrailId; firstTry: boolean };
+  | { type: 'LineWritten'; lead: PlayId; line: string }
+  | { type: 'DoorKnocked'; lead: PlayId; door: number; right: boolean }
+  | { type: 'LeadFinished'; lead: PlayId; firstTry: boolean }
+  /** Part 2's moments that only sound: a line in ink, a scene open, the cap off, a trap, caught. */
+  | { type: 'LineInked'; lead: PlayId }
+  | { type: 'SceneOpened'; lead: PlayId }
+  | { type: 'Unmasked'; lead: PlayId }
+  | { type: 'TrapSprung'; lead: PlayId }
+  | { type: 'Caught'; lead: PlayId };
 
 export type DomainEvent = RoomEvent | StoreEvent | FightEvent | UpgradeEvent;
 export type DomainEventType = DomainEvent['type'];
@@ -45,6 +50,11 @@ const notRoom: ReadonlySet<DomainEventType> = new Set<DomainEventType>([
   'LineWritten',
   'DoorKnocked',
   'LeadFinished',
+  'LineInked',
+  'SceneOpened',
+  'Unmasked',
+  'TrapSprung',
+  'Caught',
   'FightStarted',
   'FightLeft',
   'DiceRolled',

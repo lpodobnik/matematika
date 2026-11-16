@@ -484,6 +484,7 @@ export const hr = {
       u4: huntText.sign.u4,
       u5: huntText.sign.u5,
       u6: huntText.sign.u6,
+      toolroom: 'Alatnica',
     },
     close: 'Zatvori',
     /** For screen readers: the town as a whole, and a tap on the ground. */
@@ -568,9 +569,90 @@ export const hr = {
         ],
         after: ['Sad i ti čitaš dijagrame.', 'Tko pali svjetiljke u pustoj ulici? Ne znam.'],
       },
+      slagar: {
+        name: 'Slagar',
+        who: 'slaže novine',
+        before: [
+          'Prije sam svaki broj zaokružio naviše. Sad gledam znamenku.',
+          'Slova slažem naopako, a brojeve sad slažem točno.',
+        ],
+        after: ['Zagorka kaže da su mi brojevi sad točni.', 'Svaku stranicu slažem slovo po slovo.'],
+      },
+      raznosac: {
+        name: 'Raznosač',
+        who: 'raznosi novine',
+        before: ['Novine! Novine! Kola viđena kod kuće oko 330!', 'Jednom sam se zabunio. Samo jednom!'],
+        after: [
+          'Novine! Mali automat opet viđen s tobom!',
+          'Danas nosim dvjesto novina. Brojao sam dvaput.',
+        ],
+      },
+      zvonar: {
+        name: 'Zvonar',
+        who: 'zvoni na tornju',
+        before: ['Zvonim točno i brojim točno.', 'Nisam ja krivo računao. Pitaj dimnjačara!'],
+        after: ['Zvonit ću kad se Majstor Kristijan vrati.', 'Zvonim točno i brojim točno.'],
+      },
+      mlinar: {
+        name: 'Mlinar',
+        who: 'melje brašno',
+        before: [
+          'Jedanput sam se zabunio, i to sam ispravio.',
+          'Brašno nosim u vrećama, a vreće brojim točno.',
+        ],
+        after: [
+          'Milka kaže da su moje vreće najteže u gradu.',
+          'Brašno nosim u vrećama, a vreće brojim točno.',
+        ],
+      },
+      dimnjacar: {
+        name: 'Dimnjačar',
+        who: 'čisti dimnjake',
+        before: [
+          'Krivo sam računao, priznajem. Sad svaki račun provjerim dvaput.',
+          'Dimnjačar donosi sreću. Ali ne u računu!',
+        ],
+        after: ['Dimnjačar donosi sreću. Danas tebi.', 'Sad svaki račun provjerim dvaput.'],
+      },
+      realVucetic: {
+        name: 'Vučetić',
+        who: 'pravi stražar mosta',
+        before: [
+          'Dan 41.: Netko pametan je tu. Malo sam manje ljut.',
+          'Milkine kifle bile su jedino dobro u ovoj alatnici. Zapisano.',
+        ],
+        after: [
+          'Dan 50.: Cijeli grad priča o tebi. I to sam zapisao.',
+          'Uzmi kiflu. Zapisano: dao sam ti kiflu.',
+        ],
+      },
     },
     /** A person's lines in one street (content/town.ts, `scene`). */
     scenes: {
+      u4Milka: {
+        before: [
+          'Vučetić je bio automat? Zato nikad nije jeo moje kifle!',
+          'Ja pečem kifle, a ne račune. Ali i račune znam.',
+        ],
+        after: ['Pravi Vučetić pojeo je sve kifle. Svih dvanaest.', 'Sutra mu nosim duplo.'],
+      },
+      u4Nikola: {
+        before: [
+          'Ja sam se zabunio samo jednom. Automat svaki put isto.',
+          'Prvo množenje i dijeljenje. To sad i ja znam.',
+        ],
+        after: [
+          'Ja samo pitam: kako je automat nosio kaput?',
+          'Prvo množenje i dijeljenje. To sad i ja znam.',
+        ],
+      },
+      u4Zagorka: {
+        before: [
+          'Naslov: "AUTOMAT U KAPUTU!" Ovaj put ništa ne zaokružujem.',
+          'Zapisala sam svaki tvoj račun.',
+        ],
+        after: ['Naslov: "PRAVI VUČETIĆ LJUT, PO REDU."', 'Zapisala sam svaki tvoj račun.'],
+      },
       canalMilka: {
         before: [
           'Ustava je zapela, a bez vode mi mlin stoji.',

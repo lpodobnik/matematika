@@ -291,6 +291,11 @@ test('Little one alone: the archive, the missing zero and a dead end included', 
   await next(page);
   await pad(page, ['3', '0', '0', '1', '5', 'enter']);
   await next(page);
+  // The clerk's register, both ways: millions in words, and a bilijun as 10¹².
+  await pad(page, [...'2300000'.split(''), 'enter']);
+  await next(page);
+  await pad(page, [...'1000000000000'.split(''), 'enter']);
+  await next(page);
 
   // Fix: it dropped the zero.
   await page.locator('.hunt__wobbly-line').nth(1).click();

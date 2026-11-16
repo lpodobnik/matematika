@@ -57,17 +57,24 @@ I can't tell without him. Writing a line and seeing the doors change looks clear
 - **Five more streets,** painted and mapped: Arhivska ulica, Novinska ulica, Dvorište, Ulica brava and Pusta ulica. Each lead starts in its own; a session starts in the street of the first open lead.
 - **Four townspeople** by their leads, with two lines each before and after (yours to check: `hr.town.people` in `src/content/text/hr.ts`).
 - **House fronts in the Knock row:** the odd and the even side of a street look different, a lit door comes back in colour with its lamp, and an open door is a dark doorway.
-- **The coat's five people stand in its Unmask board** (2026-11-16): Milka, Nikola, Belušić, Zagorka and Vučetić, with their town figures; he taps a person to point at them. Once he has found the automaton, its cap jumps off and a lens on its card shows the gears. Scenes where someone has no figure yet (the newspaper, the last lead) keep their names.
+- **The coat's five people stand in its Unmask board** (2026-11-16): Milka, Nikola, Belušić, Zagorka and Vučetić, with their town figures; he taps a person to point at them. Once he has found the automaton, its cap jumps off and a lens on its card shows the gears. The ledgers, which are documents and not people, keep their names.
+
+## Gaps closed on 2026-11-16
+
+- **Corrected streets:** after the wandering-off, Arhivska ulica turns grey again under a tape notice ("OVA ULICA JE ISPRAVLJENA. HVALA."); after Knot 2, Gornja ulica does. A two-clue Knock at the notice wins each back, with ideas from that street (place value and neighbours; rounding and ranges). Nothing waits on them.
+- **The forged note's trap:** following the note brings the automatons, and a short Sneak board plays before he's back at the doors, with the note struck.
+- **People return:** the typesetter and the newspaper boy in Novinska ulica after the newspaper; Milka, Nikola and Zagorka in Dvorište after the coat; the bell-ringer, the miller and the chimney sweep in Ulica brava after the two witnesses. The newspaper's and the two witnesses' Unmask boards now show their people too.
+- **The real Vučetić's tool room** is a place: Knot 3 starts at the door in the bridge's pier, back in the old district, and once it's done the door leads into the tool room, where he stands among his walls.
+- **Bracket locks:** one lock shows a number tree in place of its number (read from the bottom up), and one opens on x from part 1's `5 · x = 250`. The archive has two more register tasks: millions in words to digits, and a bilijun as 10¹².
+- **Sound:** a pen tick for a line in ink, a latch when a scene opens, a clank when the cap jumps off, steam for the trap and for being caught, a chime when the little one learns.
+- **On a phone** clue lines are 48 px, and the notebook page scrolls.
+
+All new Croatian is mine and is on your review page.
 
 ## What's not there
 
-- **Corrected streets** ("THIS HAS BEEN CORRECTED") aren't built yet. The streets they need are painted now.
-- **The forged note's trap** gives the notice and strikes the note, but has no Sneak board.
-- **People don't return** to a solved place, only colour does. Four now stand in the new streets (the night watchman, Belušić, Kotruljević, Hanaman); the rest of the cast has no figure yet.
-- **The real Vučetić's tool room** is told, not a place he walks to.
-- **Number trees and part 1's equations on the bracket locks,** and more than one try task for the clerk's register.
-- **Sound** is only a few effects: the gate, doors, and a finished lead.
-- **On a phone** the notebook is tight, and clue lines are 32 px rather than 48. His tablet doesn't have this.
+- **Epics 11 and 12** (gear, secrets, new lairs, Nikola's automaton; then your text review, a paper test and switching it on).
+- **The finale** at the end of 5th grade.
 
 ## Calls I made
 

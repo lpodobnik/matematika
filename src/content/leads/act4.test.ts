@@ -35,6 +35,7 @@ import {
   levelDismiss,
   levelEnter,
   levelTap,
+  lockBrackets,
   locksDismiss,
   locksTap,
   loopDismiss,
@@ -43,6 +44,7 @@ import {
   newLevel,
   newLocks,
   newLoop,
+  numberTree,
   oneOffEarns,
   oneOffType,
   stripNumbers,
@@ -295,6 +297,23 @@ describe('The locks', () => {
   const spec = scene(l12, 'locks');
   const tap = (state: ReturnType<typeof newLocks>, from: number, to: number) =>
     locksTap(spec, locksTap(spec, state, from), to);
+
+  it('shows one lock as a number tree, whose top is the number it opens on', () => {
+    const lock = spec.locks.find((each) => each.tree);
+    const at = lock && lockBrackets(lock);
+    const tree = lock && at && numberTree(withBrackets(lock.strip, at.from, at.to));
+    expect(tree).toMatchObject({
+      sign: '+',
+      value: '24',
+      left: { sign: '·', value: '21', left: { sign: '+', value: '7' } },
+    });
+  });
+
+  it('gives one lock its number as an equation from part 1', () => {
+    const lock = spec.locks.find((each) => each.equation);
+    expect(lock?.equation).toBe('5 · x = 250');
+    expect(lock?.target).toBe(50);
+  });
 
   it('have a line of each kind of bracket in the write-up', () => {
     const written = l12.writeUp.flatMap((task) => task.accepts).join(' ');

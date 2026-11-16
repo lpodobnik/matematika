@@ -359,6 +359,15 @@
   pointer-events: none;
 }
 
+/* A corrected street's notice: the First Automaton's punched tape, square and pale. */
+.town__sign[data-notice="true"] {
+  border-radius: 2px;
+  border-style: dashed;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .town__sign[data-edge="start"] {
   transform: translate(0, 25%);
 }

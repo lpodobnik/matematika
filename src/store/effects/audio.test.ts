@@ -47,6 +47,14 @@ describe('the sound of each event (story 6.2)', () => {
     [{ type: 'LineAccepted', roomId: 'r01', stage: 0, source: 'typed', progress: true }, null],
     [{ type: 'SaveChanged' }, null],
     [{ type: 'TownAreaShown', area: 'square' }, null],
+    // Part 2.
+    [{ type: 'DoorKnocked', lead: 'l01', door: 7, right: true }, 'latch'],
+    [{ type: 'LineInked', lead: 'l01' }, 'tick'],
+    [{ type: 'SceneOpened', lead: 'l03' }, 'latch'],
+    [{ type: 'Unmasked', lead: 'l11' }, 'clank'],
+    [{ type: 'TrapSprung', lead: 'k2' }, 'hiss'],
+    [{ type: 'Caught', lead: 'l04' }, 'hiss'],
+    [{ type: 'FixMade', lead: 'l01' }, 'chime'],
   ])('%o plays %s', (event, sound) => {
     expect(soundOf(event)).toBe(sound);
   });
