@@ -27,6 +27,9 @@ node scripts/ci-status.mjs
 
 - `scripts/ci-status.mjs` waits for CI and Deploy of `HEAD` and prints any failures from their logs.
 - CI fails on formatting, so check before pushing: `npx biome ci . >/dev/null 2>&1; echo $?` must print 0. The one known warning (specificity in `notebook.css`) doesn't fail it. Formatting broke CI after a `sed` edit; Luka gets an email when that happens.
+- Windows Application Control now blocks `biome.exe` here. Use Biome's WebAssembly build instead.
+  - Format: `node C:/Users/lpodobnik/biome-wasm/fmt.mjs <repo> [--write] <files>`. Ignore its "suppressions/unused" warnings: they are false.
+  - Import order: `node C:/Users/lpodobnik/biome-wasm/imports.mjs <repo> <files>`.
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - When he says "pošalji live, onda vrti testove", ship first, then run the browser suite.
 - Keep `.claude/` and `_bmad/` untracked. Never print or commit `FAL_KEY`, or the token from `git credential fill`.
@@ -65,6 +68,7 @@ Part 2 ("The Trail") is built and off for everyone: `tuning.part2.live` is false
 - Rules are in `src/hunt/`, pure. Leads are data in `src/content/leads/`, with Croatian in `src/content/text/hunt*.ts`. `hunt/solve.ts` proves each lead, and `src/store/hunt-playthrough.test.ts` plays the whole chapter through the store.
 - Each lead starts in its own street, u1 to u6, set in `spotPlaces` in `src/content/town.ts` (`streetOf`). Knot 3 starts at the tool room's door in the bridge's pier, and the tool room (`toolroom`) opens after it. Corrected streets (`hunt/corrected.ts`) grey u2 after w1 and u1 after k2, each won back with a Knock in `content/leads/corrections.ts`. A way opens with the find that leads there. To check a street's ground, doors and ways against its painting, draw them over it with `node art-src/tools/town-overlay.mjs <outDir> u1 u2 ...` while the dev server runs on 5290.
 - Luka's review page for part 2's text is `_bmad-output/tekst-drugi-dio-za-pregled.md`. Regenerate it after text changes with a temporary Vitest test that walks `huntText`.
+- Epics 11 and 12 are built: gear and looks at Faust's (`hunt/gear.ts`), Kristijan's caches (`content/secrets.ts`), `lair-70`, `lair-120` and `lair-140` (`content/lairs.ts`, set by `fight/balance.test.ts`), brackets as a per-strike `form`, Nikola's automaton in u1, a music layer per act, and the paper test (`_bmad-output/paper-test-drugi-dio.md`). Switching it on waits for Luka's text review.
 - Where it stands: `_bmad-output/implementation-artifacts/part-2-morning-report.md`.
 
 ## Where things stand (2026-11-08)

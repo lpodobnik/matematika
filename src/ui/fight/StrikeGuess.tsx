@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { hr } from '@/content/text/hr';
 import { strikeDamage } from '@/fight/fight';
+import type { StrikeForm } from '@/fight/types';
 
 const MAX_DIGITS = 3;
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
@@ -17,6 +18,7 @@ export function StrikeGuess({
   blade,
   blows,
   charge,
+  form = 'plain',
   armour,
   onStrike,
   onBack,
@@ -24,11 +26,13 @@ export function StrikeGuess({
   blade: number;
   blows: number;
   charge: number;
+  /** With part 2's brackets, `a · (x + b)`. */
+  form?: StrikeForm;
   armour: number;
   onStrike(): void;
   onBack(): void;
 }) {
-  const damage = strikeDamage(blade, blows, charge);
+  const damage = strikeDamage(blade, blows, charge, form);
   const [typed, setTyped] = useState('');
   const [stage, setStage] = useState<Stage>('asking');
 
@@ -52,7 +56,15 @@ export function StrikeGuess({
       >
         <p className="fight__guess-ask">{hr.fight.guess.ask}</p>
         <p className="fight__formula" data-testid="guess-formula">
-          <b>{blade}</b> · <b>{blows}</b> + <b>{charge}</b> ={' '}
+          {form === 'brackets' ? (
+            <>
+              <b>{blade}</b> · (<b>{blows}</b> + <b>{charge}</b>) ={' '}
+            </>
+          ) : (
+            <>
+              <b>{blade}</b> · <b>{blows}</b> + <b>{charge}</b> ={' '}
+            </>
+          )}
           <output className="fight__guess-answer">{typed === '' ? '?' : typed}</output>
         </p>
         {stage === 'right' ? (
@@ -73,7 +85,7 @@ export function StrikeGuess({
           <>
             {stage === 'wrong' && (
               <p className="fight__guess-note" role="status">
-                {hr.fight.guess.wrong}
+                {form === 'brackets' ? hr.fight.guess.wrongBrackets : hr.fight.guess.wrong}
               </p>
             )}
             <div className="fight__guess-pad">

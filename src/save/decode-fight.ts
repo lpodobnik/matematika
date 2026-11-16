@@ -6,8 +6,8 @@
 // Nothing here throws.
 
 import { LAIR_ORDER } from '@/content/lairs';
-import { blowsAffordable, SLOTS } from '@/fight/fight';
-import type { FightPhase, FightState, LairId, Slot, StrikeRecord } from '@/fight/types';
+import { blowsAffordable, SLOTS, strikeDamage } from '@/fight/fight';
+import type { FightPhase, FightState, LairId, Slot, StrikeForm, StrikeRecord } from '@/fight/types';
 
 type Json = Record<string, unknown>;
 
@@ -19,7 +19,7 @@ function whole(value: unknown, min: number, max: number): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
 }
 
-/** Far past anything a fight reaches: 4 dice, 13 steam, 4 hull, armour 60. */
+/** Far past anything a fight reaches: 4 dice, 13 steam, 4 hull, armour 120. */
 const limitCap = 99;
 const armourCap = 999;
 const roundCap = 999;
@@ -27,11 +27,20 @@ const roundCap = 999;
 /** Phases a fight can be saved in: a finished fight is settled and never saved (ADR-8). */
 const savedPhases: readonly FightPhase[] = ['roll', 'place', 'set', 'strike'];
 
+/** A strike's form: a save from before brackets has none, and was plain. */
+function decodeForm(value: unknown): StrikeForm | null {
+  if (value === undefined || value === 'plain') return 'plain';
+  return value === 'brackets' ? 'brackets' : null;
+}
+
 function decodeStrike(value: unknown): StrikeRecord | null {
   if (!isObject(value)) return null;
   const { round, blade, charge, blows, damage, armourBefore, armourAfter, clean, dented } = value;
+  const form = decodeForm(value.form);
   if (!whole(round, 1, roundCap) || !whole(blade, 1, 6) || !whole(charge, 1, 6)) return null;
-  if (!whole(blows, 1, 6) || damage !== blade * blows + charge) return null;
+  if (!form || !whole(blows, 1, 6) || damage !== strikeDamage(blade, blows, charge, form)) {
+    return null;
+  }
   if (!whole(armourBefore, 1, armourCap) || armourAfter !== Math.max(0, armourBefore - damage)) {
     return null;
   }
@@ -41,6 +50,7 @@ function decodeStrike(value: unknown): StrikeRecord | null {
     blade,
     charge,
     blows,
+    form,
     damage,
     armourBefore,
     armourAfter,
@@ -105,6 +115,9 @@ export function decodeFight(value: unknown): FightState | null {
   } else {
     blows = value.blows;
   }
+  // Without the brackets upgrade there is no form; a save from before it has none either.
+  const form = value.form === undefined || value.form === null ? null : decodeForm(value.form);
+  if (value.form !== undefined && value.form !== null && form === null) return null;
   return {
     lairId: lairId as LairId,
     baseParts,
@@ -118,6 +131,7 @@ export function decodeFight(value: unknown): FightState | null {
     dice: [...dice],
     slots,
     blows,
+    form,
     strikes,
     lastStrike,
     outcome: null,

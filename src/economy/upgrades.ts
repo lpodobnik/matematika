@@ -2,7 +2,10 @@ import { tuning } from '@/config/tuning';
 import { spendParts } from './parts';
 import type { Economy, UpgradeId } from './types';
 
-export const UPGRADE_IDS: readonly UpgradeId[] = ['fourth-die', 'steam', 'hull'];
+export const UPGRADE_IDS: readonly UpgradeId[] = ['fourth-die', 'steam', 'hull', 'brackets'];
+
+/** Part 1's upgrades, on sale from the start; brackets come with part 2's coat. */
+export const PART_ONE_UPGRADES: readonly UpgradeId[] = ['fourth-die', 'steam', 'hull'];
 
 export function upgradeCost(id: UpgradeId): number {
   return tuning.upgrades[id].cost;

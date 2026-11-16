@@ -1,7 +1,20 @@
 // Types for automaton fights (GDD, Automaton fights; architecture, State Transitions).
 
-/** Lair ids follow the architecture's naming: the armour of the automaton that lives there. */
-export type LairId = 'lair-20' | 'lair-30' | 'lair-45' | 'lair-60';
+/**
+ * Lair ids follow the architecture's naming: the armour of the automaton that lives there.
+ * Part 2's three stand in the upper district (GDD, Fights in part 2).
+ */
+export type LairId =
+  | 'lair-20'
+  | 'lair-30'
+  | 'lair-45'
+  | 'lair-60'
+  | 'lair-70'
+  | 'lair-120'
+  | 'lair-140';
+
+/** How a strike adds up: `a · x + b`, or with brackets `a · (x + b)` (part 2's upgrade). */
+export type StrikeForm = 'plain' | 'brackets';
 
 /** The three torn logbook pages, in story order (narrative design, Found Documents). */
 export type PageId = 'page-1' | 'page-2' | 'page-3';
@@ -40,7 +53,9 @@ export interface StrikeRecord {
   charge: number;
   /** Blows `x`. */
   blows: number;
-  /** `a · x + b`. */
+  /** `a · x + b`, or `a · (x + b)`. */
+  form: StrikeForm;
+  /** What the form came to. */
   damage: number;
   armourBefore: number;
   /** Never below 0. */
@@ -84,6 +99,8 @@ export interface FightState {
   slots: Record<Slot, number | null>;
   /** Blows set on the dial, `x`. */
   blows: number;
+  /** The strike's form, chosen each strike; null without the brackets upgrade. */
+  form: StrikeForm | null;
   /** Strikes made so far. Leaving is free only while this is 0. */
   strikes: number;
   lastStrike: StrikeRecord | null;
@@ -96,6 +113,8 @@ export type FightAction =
   | { type: 'fight/place'; die: number; slot: Slot }
   | { type: 'fight/unplace'; slot: Slot }
   | { type: 'fight/blows'; x: number }
+  /** With brackets bought: the next strike's form. */
+  | { type: 'fight/form'; form: StrikeForm }
   | { type: 'fight/strike' }
   | { type: 'fight/leave' };
 

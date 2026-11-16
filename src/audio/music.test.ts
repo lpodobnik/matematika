@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loopLevels, sameLevels } from '@/audio/ambience';
-import { loops, noteAt, type Voice } from '@/audio/loops';
+import { actLayerIds, actLayers, loops, noteAt, type Voice } from '@/audio/loops';
 import {
   BPM,
   barSeconds,
@@ -123,5 +123,33 @@ describe('which loops play (story 6.2)', () => {
     expect(sameLevels({}, { r01: 0 })).toBe(true);
     expect(sameLevels({ r01: 1 }, { r01: 1 })).toBe(true);
     expect(sameLevels({ r01: 1 }, { r01: 0.22 })).toBe(false);
+  });
+});
+
+describe("part 2's music: a layer per act (GDD, Art and audio)", () => {
+  it('gives each of the four acts a layer of 16-step voices, each its own', () => {
+    expect(Object.keys(actLayers)).toEqual([...actLayerIds]);
+    const prints = actLayerIds.map((id) =>
+      actLayers[id].voices.map((v) => `${v.kind}:${v.steps}:${v.notes.join(',')}`).join('|'),
+    );
+    expect(new Set(prints).size).toBe(4);
+    for (const id of actLayerIds) {
+      for (const v of actLayers[id].voices) expect(v.steps, id).toMatch(/^[x.]{16}$/);
+    }
+  });
+
+  it('plays the acts he has reached in the upper district, and none in the old one', () => {
+    const upper = loopLevels({ done: [...roomIds], area: 'u3', focus: null, acts: 2 });
+    expect(upper['act-1']).toBeGreaterThan(0);
+    expect(upper['act-2']).toBeGreaterThan(0);
+    expect(upper['act-3']).toBeUndefined();
+    const old = loopLevels({ done: [...roomIds], area: 'square', focus: null, acts: 4 });
+    expect(actLayerIds.some((id) => old[id] !== undefined)).toBe(false);
+    expect(Object.hasOwn(loopLevels({ done: [], area: 'u1', focus: null }), 'act-1')).toBe(false);
+  });
+
+  it('tells a change in the layers from no change', () => {
+    expect(sameLevels({ 'act-1': 0.8 }, { 'act-1': 0.8 })).toBe(true);
+    expect(sameLevels({ 'act-1': 0.8 }, {})).toBe(false);
   });
 });

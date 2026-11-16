@@ -1,7 +1,7 @@
 import type { LairId } from '@/fight/types';
 
-/** The three fight upgrades (GDD, Automaton fights). */
-export type UpgradeId = 'fourth-die' | 'steam' | 'hull';
+/** The three fight upgrades (GDD, Automaton fights), and part 2's brackets. */
+export type UpgradeId = 'fourth-die' | 'steam' | 'hull' | 'brackets';
 
 /** The economy slice of the save (architecture, Data Architecture: `SaveV1.economy`). */
 export interface Economy {

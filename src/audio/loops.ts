@@ -5,7 +5,7 @@
 // like one machine-town band rather than noise. Pure: no Web Audio here.
 
 import { STEPS } from '@/audio/music';
-import type { RoomId } from '@/room/types';
+import { type RoomId, roomIds } from '@/room/types';
 
 /** What a loop's hit sounds like (audio/voices.ts). */
 export type VoiceKind =
@@ -153,4 +153,50 @@ export function noteAt(voice: Voice, index: number): number | null {
   const bar = Math.floor(index / STEPS);
   const hit = bar * perBar + before;
   return voice.notes[hit % voice.notes.length] ?? null;
+}
+
+/**
+ * Part 2's music (GDD, Art and audio: "one new music layer per act"): a layer for each act,
+ * on the same grid and in the same key as the machines, so it joins them as one band. In the
+ * upper district every act he has reached plays, so the music grows as the trail goes on.
+ */
+export const actLayerIds = ['act-1', 'act-2', 'act-3', 'act-4'] as const;
+export type ActLayerId = (typeof actLayerIds)[number];
+
+/** Everything the loop bus can play: a machine's loop or one of part 2's layers. */
+export type LoopId = RoomId | ActLayerId;
+
+export const loopIds: readonly LoopId[] = [...roomIds, ...actLayerIds];
+
+export const actLayers: Record<ActLayerId, Loop> = {
+  'act-1': {
+    sound: 'The search begins: a soft wooden walk on the beats, a bell asking at the half bar.',
+    voices: [
+      { kind: 'wood', steps: 'x...x...x...x...', notes: [0, 2, 4, 2], gain: 0.28 },
+      { kind: 'bell', steps: '........x.......', notes: [7, 9, 7, 11], gain: 0.16 },
+    ],
+  },
+  'act-2': {
+    sound: 'The newspaper and the thread: offbeat typebars, a little behind.',
+    voices: [{ kind: 'click', steps: '..x...x...x.x...', notes: [12, 11, 12, 14], gain: 0.22 }],
+  },
+  'act-3': {
+    sound: 'The convoy and the coat: a low pulse held long, a clank answering it.',
+    voices: [
+      { kind: 'hum', steps: 'x.......x.......', notes: [-5, -3], gain: 0.26, length: 6 },
+      { kind: 'clank', steps: '......x.......x.', notes: [3, 2], gain: 0.16 },
+    ],
+  },
+  'act-4': {
+    sound: 'The locks and the warm lamp: a rising whirr and a bell tune that almost resolves.',
+    voices: [
+      { kind: 'whirr', steps: 'x...............', notes: [5, 7], gain: 0.14, length: 12 },
+      { kind: 'bell', steps: 'x..x..x...x..x..', notes: [10, 12, 14, 12, 10, 9], gain: 0.13 },
+    ],
+  },
+};
+
+/** The loop to play for an id: a machine's, or a layer of part 2's music. */
+export function loopOf(id: LoopId): Loop {
+  return (actLayers as Record<string, Loop>)[id] ?? loops[id as RoomId];
 }

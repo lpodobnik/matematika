@@ -123,6 +123,9 @@ export function guideAllows(step: GuideStep, fight: FightState, action: FightAct
     }
     case 'fight/strike':
       return step === 'strike';
+    // The first fight is part 1's, before brackets exist.
+    case 'fight/form':
+      return false;
   }
 }
 

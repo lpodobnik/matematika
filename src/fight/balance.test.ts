@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LAIR_ORDER, lairs } from '@/content/lairs';
+import { lairs, PART_ONE_LAIRS } from '@/content/lairs';
 import type { UpgradeId } from '@/economy/types';
 import { startFight } from './fight';
 import { createRng, seedFrom } from './rng';
@@ -218,7 +218,40 @@ describe('fight balance against the GDD', () => {
     expectWin(simulate('lair-60', ALL_UPGRADES, reasoning, 3_000), 98);
   });
 
-  it('covers every lair, weakest first', () => {
-    expect(GDD.map((row) => row.lair)).toEqual(LAIR_ORDER);
+  it("covers every one of part 1's lairs, weakest first", () => {
+    expect(GDD.map((row) => row.lair)).toEqual(PART_ONE_LAIRS);
+  });
+});
+
+// Part 2's three lairs (GDD, Fights in part 2). The GDD's targets are with every upgrade he can
+// have by then: about 90%, 80% and 60% for a reasoning player, and at most 40%, 20% and 10% for
+// a random one. Brackets make a strike so much bigger that the GDD's starting armour 80, 100
+// and 120 came out far too easy, so the armour was set by this simulation: 70, before the coat
+// (part 1's three upgrades only), and 120 and 140 after it, when brackets are on sale.
+const PART_TWO: {
+  lair: LairId;
+  upgrades: UpgradeId[];
+  reasoning: number;
+  randomAtMost: number;
+}[] = [
+  { lair: 'lair-70', upgrades: ALL_UPGRADES, reasoning: 92, randomAtMost: 40 },
+  { lair: 'lair-120', upgrades: [...ALL_UPGRADES, 'brackets'], reasoning: 84, randomAtMost: 20 },
+  { lair: 'lair-140', upgrades: [...ALL_UPGRADES, 'brackets'], reasoning: 64, randomAtMost: 10 },
+];
+
+describe("part 2's lairs against the GDD's targets", () => {
+  PART_TWO.forEach((row, index) => {
+    const armour = lairs[row.lair].armour;
+    it(`armour ${armour}: a reasoning player wins about ${row.reasoning}%`, () => {
+      expectWin(simulate(row.lair, row.upgrades, reasoning, 4_000 + index), row.reasoning);
+    });
+    it(`armour ${armour}: a random player wins at most ${row.randomAtMost}%`, () => {
+      const measured = simulate(row.lair, row.upgrades, random, 5_000 + index);
+      expect(measured.win).toBeLessThanOrEqual(row.randomAtMost);
+    });
+  });
+
+  it('brackets, once bought, are what a reasoning player needs for the two after the coat', () => {
+    expect(simulate('lair-120', ALL_UPGRADES, reasoning, 6_000).win).toBeLessThan(5);
   });
 });

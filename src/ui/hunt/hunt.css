@@ -280,6 +280,71 @@
   transform-origin: 0 0;
 }
 
+/* Epic 11: its gear, its paint and its hat. */
+.little-one__hook path {
+  fill: none;
+  stroke: var(--iron);
+  stroke-width: 3;
+}
+
+.little-one__hook circle {
+  fill: none;
+  stroke: var(--wood);
+  stroke-width: 3;
+}
+
+.little-one__magnet path {
+  fill: none;
+  stroke: var(--iron);
+  stroke-width: 4;
+}
+
+.little-one__magnet .little-one__magnet-tip {
+  stroke: var(--jam);
+}
+
+.little-one[data-paint="paint-brass"] .little-one__boiler {
+  fill: var(--brass-light);
+}
+
+.little-one[data-paint="paint-red"] .little-one__boiler {
+  fill: var(--jam);
+}
+
+.little-one[data-paint="paint-blue"] .little-one__boiler {
+  fill: var(--water);
+}
+
+.little-one__hat path,
+.little-one__hat rect {
+  fill: var(--copper);
+}
+
+.little-one__hat[data-hat="top"] rect,
+.little-one__hat[data-hat="top"] path {
+  fill: var(--ink-deep);
+}
+
+.little-one__hat[data-hat="top"] .little-one__hat-band {
+  stroke: var(--jam);
+  stroke-width: 4;
+}
+
+.little-one__hat[data-hat="chef"] path {
+  fill: var(--sheet);
+}
+
+.little-one__glow {
+  fill: var(--lamp-wash);
+  stroke: var(--lamp);
+  stroke-width: 1.4;
+  opacity: 0.85;
+}
+
+.little-one[data-bright] .little-one__lamp {
+  fill: var(--lamp);
+}
+
 /* The zero guard, still dividing: it spins in its street for the rest of the game. */
 
 .town__zero-guard {

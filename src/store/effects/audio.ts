@@ -6,10 +6,13 @@
 import { type LoopLevels, loopLevels, sameLevels } from '@/audio/ambience';
 import type { AudioEngine, SoundId } from '@/audio/index';
 import type { AreaId } from '@/content/town';
+import { partTwoOn } from '@/hunt/switch';
+import { currentAct } from '@/hunt/trail';
 import { isRoomId } from '@/room/resume';
 import type { RoomId } from '@/room/types';
 import type { Effect } from '@/store/effects/types';
 import type { DomainEvent } from '@/store/events';
+import type { GameState } from '@/store/types';
 
 /** The effect an event plays, or null for a silent one. */
 export function soundOf(event: DomainEvent): SoundId | null {
@@ -76,11 +79,19 @@ export function createAudioEffect(engine: SoundOut): Effect {
     if (sound) engine.play(sound);
     focus = focusAfter(event, focus);
     if (event.type === 'TownAreaShown') area = event.area;
-    const next = loopLevels({ done: state.save.progress.roomsDone, area, focus });
+    const done = state.save.progress.roomsDone;
+    const next = loopLevels({ done, area, focus, acts: actsOf(state) });
     if (sameLevels(next, levels)) return;
     levels = next;
     engine.setLoops(next);
   };
+}
+
+/** Part 2's acts he has reached, for its music: none until he has the map, or with part 2 off. */
+function actsOf(state: GameState): number {
+  const { hunt } = state.save;
+  if (!partTwoOn(state.ui.preview) || !hunt.beats.includes('map-given')) return 0;
+  return Math.min(currentAct(hunt) + 1, 4);
 }
 
 /** The restarting room after an event: set by its restart, ended by the town or a room. */

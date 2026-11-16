@@ -1280,25 +1280,107 @@ Sve je napisao Claude, a nijedan izvorni govornik ovo nije pročitao. Prepravi �
 - `realVucetic.before.2`: Milkine kifle bile su jedino dobro u ovoj alatnici. Zapisano.
 - `realVucetic.after.1`: Dan 50.: Cijeli grad priča o tebi. I to sam zapisao.
 - `realVucetic.after.2`: Uzmi kiflu. Zapisano: dao sam ti kiflu.
+- `nikolaBot.name`: Nikolin automat
+- `nikolaBot.who`: drugi pokušaj
+- `nikolaBot.before.1`: KUC. KUC. KUC.
+- `nikolaBot.before.2`: Kuca u fontanu. Fontana se ne otvara.
+- `nikolaBot.after.1`: KUC. KUC.
+- `nikolaBot.after.2`: Kuca na vrata. Kriva vrata, ali vrata.
 
-## Stari poznanici u Dvorištu, nakon kaputa
+## Scene u ulicama drugog dijela (Vučetić, Nikola i njegov automat, Dvorište nakon kaputa)
 
 - `u1Vucetic.before.1`: Vrata su otvorena. Zapisano.
 - `u1Vucetic.before.2`: Evo karte. Što god nađeš, ja to zapišem.
 - `u1Vucetic.after.1`: Zapisano.
 - `u1Vucetic.after.2`: Sve sam zapisao.
+- `u1Nikola.before.1`: Ono na navijanje bilo je moje. Prvi pokušaj. Pobjeglo je.
+- `u1Nikola.before.2`: Ovo je drugi. Zna kucati. Samo još ne zna na što.
+- `u1Nikola.after.1`: Sad kuca na vrata! Na kriva, ali na vrata.
+- `u1Nikola.after.2`: Tvoj mali kucne, pa čeka. Moj ne čeka. Na tome radim.
+- `u1Bot.before.1`: KUC. KUC. KUC.
+- `u1Bot.before.2`: Kuca u fontanu. Fontana se ne otvara.
+- `u1Bot.after.1`: KUC. KUC.
+- `u1Bot.after.2`: Kuca na vrata. Kriva vrata, ali vrata.
+- `u1BotLate.before.1`: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10. 1, 2, 3 …
+- `u1BotLate.before.2`: Broji kuće. Samo do deset.
+- `u1BotLate.after.1`: ZAŠTO?
+- `u1BotLate.after.2`: Nikola ga je naučio zagrade. Sad gleda tvog malog, a mali se zatrese od sreće.
 - `u4Milka.before.1`: Vučetić je bio automat? Zato nikad nije jeo moje kifle!
 - `u4Milka.before.2`: Ja pečem kifle, a ne račune. Ali i račune znam.
 - `u4Milka.after.1`: Pravi Vučetić pojeo je sve kifle. Svih dvanaest.
 - `u4Milka.after.2`: Sutra mu nosim duplo.
 - `u4Nikola.before.1`: Ja sam se zabunio samo jednom. Automat svaki put isto.
 - `u4Nikola.before.2`: Prvo množenje i dijeljenje. To sad i ja znam.
-- `u4Nikola.after.1`: Ja samo pitam: kako je automat nosio kaput?
-- `u4Nikola.after.2`: Prvo množenje i dijeljenje. To sad i ja znam.
+- `u4Nikola.after.1`: Moj automat je ostao u Gornjoj ulici. Sad broji kuće, ali samo do deset.
+- `u4Nikola.after.2`: Kako tvoj mali zna kad je broj prevelik? Pokaži mi poslije.
 - `u4Zagorka.before.1`: Naslov: "AUTOMAT U KAPUTU!" Ovaj put ništa ne zaokružujem.
 - `u4Zagorka.before.2`: Zapisala sam svaki tvoj račun.
 - `u4Zagorka.after.1`: Naslov: "PRAVI VUČETIĆ LJUT, PO REDU."
 - `u4Zagorka.after.2`: Zapisala sam svaki tvoj račun.
+
+## Radionica: alat i izgled za malog, Kristijanovi papiri
+
+- `shop.head`: Za malog automata
+- `shop.line`: Kristijan je po gradu ostavljao znakove kredom. S pravim alatom mali dohvati ono što je iza njih.
+- `shop.gearHead`: Alat
+- `shop.looksHead`: Izgled
+- `shop.gear.lamp.name`: Jaka svjetiljka
+- `shop.gear.lamp.what`: Osvijetli tamni kut sa znakom kredom.
+- `shop.gear.magnet.name`: Magnet
+- `shop.gear.magnet.what`: Izvuče željezo iz pukotine sa znakom kredom.
+- `shop.gear.long-hook.name`: Duža kuka
+- `shop.gear.long-hook.what`: Dohvati visoku kuku sa znakom kredom.
+- `shop.looks.paint-brass`: Sjajna mjed
+- `shop.looks.paint-red`: Crvena boja
+- `shop.looks.paint-blue`: Plava boja
+- `shop.looks.hat-cap`: Kapa
+- `shop.looks.hat-top`: Cilindar
+- `shop.looks.hat-chef`: Kuharska kapa
+- `shop.wear`: Stavi
+- `shop.takeOff`: Skini
+- `secrets.label`: Znak kredom
+- `secrets.needs.lamp.1`: Znak kredom pokazuje u mrak. Ništa se ne vidi.
+- `secrets.needs.lamp.2`: Treba jača svjetiljka. Faust je prodaje u Radionici na Trgu.
+- `secrets.needs.magnet.1`: Znak kredom pokazuje u usku pukotinu. Unutra nešto zvecka, ali prsti ne dosegnu.
+- `secrets.needs.magnet.2`: Treba magnet. Faust ga prodaje u Radionici na Trgu.
+- `secrets.needs.long-hook.1`: Znak kredom pokazuje gore, na kuku visoko na zidu.
+- `secrets.needs.long-hook.2`: Treba duža kuka. Faust je prodaje u Radionici na Trgu.
+- `secrets.fetch.lamp`: Mali upali jaku svjetiljku i otkotrlja se u mrak.
+- `secrets.fetch.magnet`: Mali spusti magnet u pukotinu. Klik!
+- `secrets.fetch.long-hook`: Mali zabaci dužu kuku i povuče.
+- `secrets.found`: Mali donosi Kristijanov papir i {1} dijelova.
+- `secrets.keep`: Spremi u Radionicu
+- `secrets.done`: Ovdje je mali već bio. Papir je u Radionici.
+- `secrets.wall`: Kristijanovi papiri
+- `secrets.wallEmpty`: Još nijedan. Traži znakove kredom po gradu.
+- `secrets.count`: {1} od {2}
+- `secrets.papers.secret-1.title`: Nacrt malog automata
+- `secrets.papers.secret-1.line`: Tijelo od starog kotla, kotač od kolica za mlijeko. Ono najvažnije nisam ugradio: to mora naučiti.
+- `secrets.papers.secret-2.title`: Bilješka o koracima
+- `secrets.papers.secret-2.line`: Prvi Automat zna sve korake napamet. Ali ne zna zašto vrijede, pa ne vidi kad ne vrijede.
+- `secrets.papers.secret-3.title`: Nacrt valjka
+- `secrets.papers.secret-3.line`: Svaki valjak čuva jedno „zašto”. Sakrio sam ih po gradu, daleko od Prvog Automata.
+- `secrets.papers.secret-4.title`: Bilješka o kiflama
+- `secrets.papers.secret-4.line`: Milka mi svaki dan donosi kifle. Mali ih ne može jesti, ali ih voli nositi.
+- `secrets.papers.secret-5.title`: Nacrt ključa za navijanje
+- `secrets.papers.secret-5.line`: Rezervni ključ. Ako mali ikad stane, navij ga triput, polako.
+- `secrets.papers.secret-6.title`: Bilješka bez datuma
+- `secrets.papers.secret-6.line`: Ako ovo netko čita, mali je našao pravu osobu. Dobro je. Nastavi ga učiti.
+- `secrets.papers.secret-7.title`: Stara bilješka s kanala
+- `secrets.papers.secret-7.line`: Ovdje sam kao šegrt ispustio prvi zupčanik. Tražio sam ga tjedan dana.
+- `secrets.papers.secret-8.title`: Nacrt kliješta
+- `secrets.papers.secret-8.line`: Kliješta i uže, za vruće zupčanike. Ono što peče ne dira se rukom.
+
+## Borba: zagrade i novi automati
+
+- `shop.name`: Zagrade
+- `shop.what`: Udarac može biti a · (x + b): naboj ide u svaki udarac.
+- `form.label`: Kako udaraš
+- `form.caption`: sa zagradom naboj ide u svaki udarac
+- `guessWrongBrackets`: Nije. Prvo zbroji ono u zagradi, pa pomnoži.
+- `lairs.lair-70`: Automat 70
+- `lairs.lair-120`: Automat 120
+- `lairs.lair-140`: Automat 140
 
 ## Natpisi ulica
 

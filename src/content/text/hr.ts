@@ -337,6 +337,8 @@ export const hr = {
     leadDone: 'Riješeno',
     leadFirstTry: 'Iz prve',
     leadWrongDoors: 'Kriva vrata',
+    /** Part 2's caches found with bought gear: whether he goes back (GDD, Success signals). */
+    secrets: (found: number, all: number) => `Kristijanovi papiri: ${found} od ${all}`,
     fights: 'Borbe',
     fightsNone: 'Još nijedna borba.',
     lair: 'Automat',
@@ -387,6 +389,9 @@ export const hr = {
       'lair-30': 'Automat 30',
       'lair-45': 'Automat 40',
       'lair-60': 'Automat 60',
+      'lair-70': 'Automat 70',
+      'lair-120': 'Automat 120',
+      'lair-140': 'Automat 140',
       workshop: 'Radionica',
       foundry: 'Ljevaonica',
     },
@@ -620,6 +625,12 @@ export const hr = {
         ],
         after: ['Dimnjačar donosi sreću. Danas tebi.', 'Sad svaki račun provjerim dvaput.'],
       },
+      nikolaBot: {
+        name: 'Nikolin automat',
+        who: 'drugi pokušaj',
+        before: ['KUC. KUC. KUC.', 'Kuca u fontanu. Fontana se ne otvara.'],
+        after: ['KUC. KUC.', 'Kuca na vrata. Kriva vrata, ali vrata.'],
+      },
       realVucetic: {
         name: 'Vučetić',
         who: 'pravi stražar mosta',
@@ -635,6 +646,28 @@ export const hr = {
     },
     /** A person's lines in one street (content/town.ts, `scene`). */
     scenes: {
+      // Nikola and his own little automaton in Gornja ulica (epic 11).
+      u1Nikola: {
+        before: [
+          'Ono na navijanje bilo je moje. Prvi pokušaj. Pobjeglo je.',
+          'Ovo je drugi. Zna kucati. Samo još ne zna na što.',
+        ],
+        after: [
+          'Sad kuca na vrata! Na kriva, ali na vrata.',
+          'Tvoj mali kucne, pa čeka. Moj ne čeka. Na tome radim.',
+        ],
+      },
+      u1Bot: {
+        before: ['KUC. KUC. KUC.', 'Kuca u fontanu. Fontana se ne otvara.'],
+        after: ['KUC. KUC.', 'Kuca na vrata. Kriva vrata, ali vrata.'],
+      },
+      u1BotLate: {
+        before: ['1, 2, 3, 4, 5, 6, 7, 8, 9, 10. 1, 2, 3 …', 'Broji kuće. Samo do deset.'],
+        after: [
+          'ZAŠTO?',
+          'Nikola ga je naučio zagrade. Sad gleda tvog malog, a mali se zatrese od sreće.',
+        ],
+      },
       u4Milka: {
         before: [
           'Vučetić je bio automat? Zato nikad nije jeo moje kifle!',
@@ -648,8 +681,8 @@ export const hr = {
           'Prvo množenje i dijeljenje. To sad i ja znam.',
         ],
         after: [
-          'Ja samo pitam: kako je automat nosio kaput?',
-          'Prvo množenje i dijeljenje. To sad i ja znam.',
+          'Moj automat je ostao u Gornjoj ulici. Sad broji kuće, ali samo do deset.',
+          'Kako tvoj mali zna kad je broj prevelik? Pokaži mi poslije.',
         ],
       },
       u4Zagorka: {
@@ -998,6 +1031,11 @@ export const hr = {
     },
     /** For screen readers: an empty slot. */
     emptySlot: 'prazno',
+    /** Part 2's brackets upgrade: the strike's two forms, chosen each strike. */
+    form: {
+      label: 'Kako udaraš',
+      caption: 'sa zagradom naboj ide u svaki udarac',
+    },
     /** The tag before the dice are placed: tap a die, then a slot. */
     placeTag: 'Dodirni kocku, pa utor.',
     /** Story 3.5: with the 4th die, the one left out of the slots is discarded. */
@@ -1013,6 +1051,8 @@ export const hr = {
       change: 'Promijeni kockice',
       erase: 'Obriši zadnju znamenku',
       wrong: 'Nije. Prvo pomnoži, pa dodaj.',
+      /** With brackets: what's in them comes first. */
+      wrongBrackets: 'Nije. Prvo zbroji ono u zagradi, pa pomnoži.',
       right: (damage: number, armour: number) => `Točno: udarac je ${damage}, a oklop ${armour}.`,
     },
     /** Leaving: free before the first strike, a loss after it (story 3.2). */
@@ -1184,6 +1224,10 @@ export const hr = {
       },
       steam: { name: 'Para +3', what: 'Tri udarca više u svakoj borbi.' },
       hull: { name: 'Trup +1', what: 'Jedno udubljenje više prije poraza.' },
+      brackets: {
+        name: 'Zagrade',
+        what: 'Udarac može biti a · (x + b): naboj ide u svaki udarac.',
+      },
     },
     cost: (n: number) => `${n} ${partsWord(n)}`,
     buy: 'Kupi',

@@ -274,6 +274,52 @@ describe('setting blows on the dial', () => {
   });
 });
 
+describe('brackets (part 2)', () => {
+  const lair120 = lairs['lair-120'];
+
+  it('give a strike no form until they are bought', () => {
+    const fight = startFight(lair120, ['fourth-die'], 1);
+    expect(fight.form).toBeNull();
+    const placed = placeInOrder(rolled(fight, [6, 2, 3, 1]));
+    expect(reduceFight(placed, { type: 'fight/form', form: 'brackets' }).state).toBe(placed);
+  });
+
+  it('turn a · x + b into a · (x + b), so the charge goes into every blow', () => {
+    expect(strikeDamage(6, 3, 2, 'brackets')).toBe(30);
+    expect(strikeDamage(6, 3, 2)).toBe(20);
+    const fight = startFight(lair120, ['brackets'], 1);
+    expect(fight.form).toBe('plain');
+    const set = act(
+      placeInOrder(rolled(fight, [6, 2, 3])),
+      { type: 'fight/form', form: 'brackets' },
+      { type: 'fight/blows', x: 3 },
+    );
+    const struck = must(reduceFight(set, { type: 'fight/strike' }).state);
+    expect(struck.lastStrike).toMatchObject({ form: 'brackets', damage: 30, armourAfter: 90 });
+  });
+
+  it('keep the form he chose for the next strike, and can be put back', () => {
+    const fight = startFight(lair120, ['brackets'], 1);
+    const set = act(placeInOrder(rolled(fight, [6, 2, 3])), {
+      type: 'fight/form',
+      form: 'brackets',
+    });
+    const struck = act(set, { type: 'fight/strike' });
+    expect(struck.form).toBe('brackets');
+    const back = act(placeInOrder(rolled(struck, [6, 2, 3])), {
+      type: 'fight/form',
+      form: 'plain',
+    });
+    expect(back.form).toBe('plain');
+  });
+
+  it('may miss a clean cut that the plain form makes', () => {
+    // Armour 20 with 6, 2, 3: 6 · 3 + 2 is 20 exactly, 6 · (3 + 2) is 30.
+    expect(strikeDamage(6, 3, 2)).toBe(20);
+    expect(strikeDamage(6, 3, 2, 'brackets')).toBeGreaterThan(20);
+  });
+});
+
 describe('striking', () => {
   it('deals a · x + b, spends one steam per blow and shows the sum on the banner', () => {
     const fight = startFight(lair60, [], 1);
@@ -286,6 +332,7 @@ describe('striking', () => {
       blade: 6,
       charge: 2,
       blows: 3,
+      form: 'plain',
       damage: 20,
       armourBefore: 60,
       armourAfter: 40,

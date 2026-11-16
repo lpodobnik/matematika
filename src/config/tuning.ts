@@ -114,5 +114,19 @@ export const tuning = {
     'fourth-die': { cost: 30, dice: 1, steam: 0, hull: 0 },
     steam: { cost: 10, dice: 0, steam: 3, hull: 0 },
     hull: { cost: 20, dice: 0, steam: 0, hull: 1 },
+    /** Part 2 (GDD, Fights in part 2): a strike can be `a · (x + b)`, on sale after the coat. */
+    brackets: { cost: 30, dice: 0, steam: 0, hull: 0 },
   },
+  /** Part 2 (GDD, The little one; Economy in part 2): what Faust sells for the little one. */
+  gear: { lamp: 15, magnet: 25, 'long-hook': 20 },
+  looks: {
+    'paint-brass': 5,
+    'paint-red': 5,
+    'paint-blue': 5,
+    'hat-cap': 8,
+    'hat-top': 10,
+    'hat-chef': 12,
+  },
+  /** Parts in each of Kristijan's caches (GDD, Exploration: secrets). */
+  secretParts: 5,
 } as const;

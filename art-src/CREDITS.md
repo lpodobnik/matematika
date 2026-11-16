@@ -1,4 +1,4 @@
-images generated: 108/125
+images generated: 113/125
 
 # Art credits
 
@@ -1868,4 +1868,89 @@ nothing. Each names its source and the exact command.
 
   ```text
   Match the drawing style of image 1 exactly: the same ink linework, hatching, watercolour washes, palette and isometric camera. Do not copy its subject. The inside of an old tool room under a stone bridge, as a room of an adventure game. Low brick vaults and two thick stone pillars. The back wall is covered edge to edge with pinned sheets of blank paper, some joined by long strings, every sheet empty with no writing, no letters, no numbers and no drawings on it. Along the walls: a workbench with tools hanging on a pegboard, a narrow cot with a grey blanket, a small wooden table with a plate holding a few crescent rolls, an oil lamp, a stool, a bucket. A heavy wooden door at the bottom left is the way out. A small high barred window lets in daylight. Isometric game view: classic 2:1 dimetric projection looking down at about thirty degrees from the south, parallel lines with no vanishing point, like the map of a top-down adventure game. The picture is one complete rectangular scene: walls and stone floor reach all four edges of the picture, with no white or cream paper margin, no vignette, no torn or painted edge and nothing written in any corner. The flagstone floor is large open walkable space across the lower half. Everything is at one scale: the door is about a ninth of the picture's width. Everything is still: no people, no animals, no smoke, no steam; the door closed. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty.
+  ```
+
+### 109. `tests/automaton-70.t109.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 7001
+- Generated at 1440 × 1440 PNG; saved as WebP 1440 × 1440, quality 82, 227 KB
+- References: `automaton-60.webp`
+- Style block: v4
+- Date: 2026-11-16
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Part 2, the armour-70 automaton in Arhivska ulica (epic 11, new lairs).
+- Review: Used: src/ui/fight/art/automaton-clerk.webp, Automat 70 in Arhivska ulica, a clerk with blank sheets and a stamp. Its ground shadow was cut away with the pale wash near the feet.
+- Prompt:
+
+  ```text
+  Image 1 shows the design family: keep its ink and watercolour style, dark cast iron, round glass lens in a brass bezel, big brass wind-up key, riveted brass bands and punched-tape slot. Draw a new automaton of the same family, not a copy of image 1. A wind-up automaton character for a game, as tall as a child: a squat dark cast-iron body shaped like a round stove, ringed by two riveted brass bands, on six short jointed iron legs like a beetle. At the front, one large round glass lens in a brass bezel, its only face. A big brass wind-up key on its back. A slot in its front with a short strip of blank punched paper tape. Two thin arms: one holds a stack of blank paper sheets clipped together, the other a brass stamp with a blank face. A short copper chimney pipe on top. Busy and a little absurd, like a clerk, not scary. Three-quarter view from the front left, at the height of its body, with little perspective, facing left. The figure is drawn large, centred, filling most of the picture, with a clear margin on every side. At rest: no steam, no smoke, no glow, no motion lines. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 110. `tests/automaton-120.t110.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 7002
+- Generated at 1440 × 1440 PNG; saved as WebP 1440 × 1440, quality 82, 273 KB
+- References: `automaton-60.webp`
+- Style block: v4
+- Date: 2026-11-16
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Part 2, the armour-120 automaton in Ulica brava (epic 11, new lairs).
+- Review: Used: src/ui/fight/art/automaton-jailer.webp, Automat 120 in Ulica brava, a jailer with keys. A mark in the bottom-right corner was painted over before the cut.
+- Prompt:
+
+  ```text
+  Image 1 shows the design family: keep its ink and watercolour style, dark cast iron, round glass lens in a brass bezel, big brass wind-up key, riveted brass bands and punched-tape slot. Draw a new automaton of the same family, not a copy of image 1. A big wind-up automaton character for a game, twice as tall as a child: an upright dark cast-iron boiler body like a small locomotive standing on end, with a heavy riveted brass shield plate on its front, on two thick jointed iron legs with broad flat feet. A low iron dome head with one large round glass lens in a heavy brass bezel, its only face. A big brass wind-up key on its back. A slot in its chest with a short strip of blank punched paper tape. One arm ends in a huge brass key like a door key, the other in a ring of big iron keys. A tall copper chimney on one shoulder. Imposing but a little absurd, like a jailer, not scary. Three-quarter view from the front left, at the height of its body, with little perspective, facing left. The figure is drawn large, centred, filling most of the picture, with a clear margin on every side. At rest: no steam, no smoke, no glow, no motion lines. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 111. `tests/automaton-140.t111.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 7003
+- Generated at 1440 × 1440 PNG; saved as WebP 1440 × 1440, quality 82, 255 KB
+- References: `automaton-60.webp`
+- Style block: v4
+- Date: 2026-11-16
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Part 2, the armour-140 automaton in Pusta ulica, the strongest (epic 11, new lairs).
+- Review: Used: src/ui/fight/art/automaton-giant.webp, Automat 140 in Pusta ulica, three lenses and a crane arm. The paper inside the crane was cut out.
+- Prompt:
+
+  ```text
+  Image 1 shows the design family: keep its ink and watercolour style, dark cast iron, round glass lens in a brass bezel, big brass wind-up key, riveted brass bands and punched-tape slot. Draw a new automaton of the same family, not a copy of image 1. A huge wind-up automaton character for a game, twice as tall as a child and very wide: a massive dark cast-iron body shaped like a diving bell, covered in overlapping riveted brass armour plates, on four thick jointed iron legs with broad round feet. Three large round glass lenses in heavy brass bezels in a row across its front, its only face. Two big brass wind-up keys on its back. A wide slot in its chest with a short strip of blank punched paper tape. Two long crane arms ending in three-fingered claws. Two tall copper chimneys on its back. Imposing but still a little absurd, not scary. Three-quarter view from the front left, at the height of its body, with little perspective, facing left. The figure is drawn large, centred, filling most of the picture, with a clear margin on every side. At rest: no steam, no smoke, no glow, no motion lines. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 112. `tests/person-nikola-bot.t112.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max/edit`
+- Seed: 7004
+- Generated at 1024 × 1024 PNG; saved as WebP 1024 × 1024, quality 82, 80 KB
+- References: `automaton-20.webp`
+- Style block: v4
+- Date: 2026-11-16
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Part 2: Nikola's own little automaton, built badly by a boy (epic 11, story 11.5).
+- Review: Used: src/ui/town/art/nikola-bot.webp, Nikola’s own automaton in Gornja ulica. A signature in the bottom-right corner and a light streak at the top left were painted over before the cut; it holds its key rather than wearing it.
+- Prompt:
+
+  ```text
+  Match the drawing style of image 1 exactly: the same ink line weight, hatching, watercolour washes, paper colour and palette. Do not copy its subject. A small clumsy home-made wind-up automaton built by a ten-year-old boy, knee-high: its body is a dented tin kettle with the spout at the front, its head an old round alarm-clock bell with two mismatched buttons for eyes, one big and one small. Two legs made of wooden clothes pegs, one a little longer than the other. One arm is a bent tin spoon, the other a short brass rod with a cork on the end. A big brass wind-up key on its back, much too big for it. Held together with string, wire twists and a sticking plaster. Endearing, wobbly and proud, not scary. Three-quarter view from the front left, at the height of its body, with little perspective, facing left. The figure is drawn large, centred, filling about three quarters of the picture’s height, with a clear margin on every side. At rest, standing a little crooked: no steam, no motion lines. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Isolated on plain flat cream paper with no ground, no scenery and no shadow.
+  ```
+
+### 113. `tests/sketches-kristijan.t113.webp`
+
+- Model: FLUX.2 [max], fal.ai endpoint `fal-ai/flux-2-max`
+- Seed: 7005
+- Generated at 1536 × 1536 PNG; saved as WebP 1536 × 1536, quality 82, 189 KB
+- References: none
+- Style block: v4
+- Date: 2026-11-16
+- Origin and licence: AI-generated through the fal.ai API; used under fal.ai’s terms for model outputs
+- Notes: Part 2: four of Kristijan's sketches for his caches (epic 11, secrets), cut into four.
+- Review: Used: four of Kristijan’s papers, cut into src/ui/town/art/sketch-{cylinder,key,little,tongs}.webp. The fourth came out as tongs and rope, not a grappling hook, so that paper became his tongs.
+- Prompt:
+
+  ```text
+  Four separate small inventor's sketches drawn on one sheet, arranged in a two-by-two grid with wide empty cream space between them and nothing crossing between the four quarters. Top left: a brass cylinder with rows of little pins on it, like the drum of a music box, on a small axle. Top right: a large brass wind-up key with a coiled flat spring beside it. Bottom left: a small one-wheeled scrap automaton made from a round brass boiler, with two round eyes of different sizes, a tiny lamp on a stalk, a short arm and a single wheel underneath, no legs. Bottom right: a grappling hook with three iron prongs and a coiled rope. Each is drawn like a construction drawing, with a few faint construction lines and light washes of brass and iron. Each object seen in a calm three-quarter view, flat on the page. The four drawings are the same size, each centred in its own quarter of the square picture, with a wide clear margin around each. Still, no motion. Unsigned game art, hand-drawn in ink and watercolour like an inventor’s sketch come to life. Fine dark blue-grey ink linework (#3D4B5C) drawn with a technical pen: clean confident outer contours, thinner interior lines, light parallel hatching for shade, a few faint construction lines. Loose transparent watercolour washes inside the lines, flat and calm. Smooth flat cream ground (#F4EFE3) like hot-pressed paper, with no visible paper texture, grain, speckle or stains, and no border, frame or margin line. Palette: polished brass (#B8893A, highlights #E2C07A), warm copper (#B5603A), muted verdigris (#5E9C8F), dark iron (#59616B), weathered wood (#8A6A4A), pale limestone (#D8CFBF), terracotta roof tiles (#B9654A), everything else in soft greys of the ink; colours stay muted, and brass and copper are the most saturated colours in the picture. Soft even daylight from the upper left, gentle shading, no harsh or dramatic lighting. Gear-driven and steam-driven machines in a timeless Central European town with a Croatian character, before electricity: no wires, antennas, light bulbs, cars or other modern objects. Friendly and a little whimsical, like Machinarium, never grim. The image contains no text, no letters, no numbers, no labels, no logo and no clock faces; every dial, plate and sign is blank. No signature, initials, monogram or date anywhere; all four corners are empty. Plain flat cream paper with no ground, no scenery and no shadow, no frames or boxes around the drawings.
   ```

@@ -5,6 +5,7 @@ import { castDraft, produce } from 'immer';
 import { cleanName } from '@/city/character';
 import { tuning } from '@/config/tuning';
 import { leadSpecs, playedSpec } from '@/content/leads';
+import { secretSpec } from '@/content/secrets';
 import { earnParts } from '@/economy/parts';
 import { correctedBy, corrections, openCorrections } from '@/hunt/corrected';
 import {
@@ -27,6 +28,7 @@ import {
   newLeadPlay,
   playedScene,
 } from '@/hunt/lead';
+import { reachedMarks } from '@/hunt/marks';
 import { guideTold } from '@/hunt/scene';
 import type { LeadSpec } from '@/hunt/spec';
 import { partTwoOn } from '@/hunt/switch';
@@ -312,6 +314,27 @@ export function withHunt(inner: Reduce): Reduce {
       }
       case 'hunt/lead':
         return moveInLead(state, action.action, ctx.now);
+      case 'hunt/secret': {
+        // The little one fetches from a cache he can reach, once, with the gear it needs.
+        const { hunt, companion } = state.save;
+        const spec = secretSpec(action.secret);
+        const reachable =
+          partTwoOn(state.ui.preview) &&
+          companion !== null &&
+          spec !== undefined &&
+          !hunt.secrets.includes(spec.id) &&
+          companion.gear.includes(spec.needs) &&
+          reachedMarks(hunt).includes(spec.opensWith);
+        if (!reachable || !spec) return same(state);
+        const parts = tuning.secretParts;
+        return {
+          state: produce(state, (draft) => {
+            draft.save.hunt.secrets.push(spec.id);
+            draft.save.economy = castDraft(earnParts(state.save.economy, parts));
+          }),
+          events: [{ type: 'SecretFound', secret: spec.id, parts }, { type: 'SaveChanged' }],
+        };
+      }
       case 'hunt/leave':
         if (state.ui.screen !== 'hunt') return same(state);
         return {

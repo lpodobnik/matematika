@@ -23,6 +23,8 @@ export type PlayLogEvent = { at: string } /** The first event after 30 minutes o
   | { type: 'lead'; lead: string; action: 'start' | 'done'; firstTry?: boolean }
   /** Part 2: a door he knocked on. */
   | { type: 'door'; lead: string; door: number; right: boolean }
+  /** Part 2: one of Kristijan's caches, found with bought gear (GDD, Success signals: goes back). */
+  | { type: 'secret'; secret: string }
 );
 
 /** The domain events the log reads, by what they carry (store/events.ts). */
@@ -36,6 +38,7 @@ export type LoggedEvent =
   | { type: 'FightEnded'; lairId: string; won: boolean; parts: number }
   | { type: 'LeadPicked'; lead: string }
   | { type: 'LeadFinished'; lead: string; firstTry: boolean }
+  | { type: 'SecretFound'; secret: string; parts: number }
   | { type: 'DoorKnocked'; lead: string; door: number; right: boolean };
 
 /** A gap this long starts a new session. */
@@ -48,7 +51,15 @@ function isAuthoredRoom(id: string): id is RoomId {
   return /^r(0[1-9]|1[0-3])$/.test(id);
 }
 
-const lairIds: readonly LairId[] = ['lair-20', 'lair-30', 'lair-45', 'lair-60'];
+const lairIds: readonly LairId[] = [
+  'lair-20',
+  'lair-30',
+  'lair-45',
+  'lair-60',
+  'lair-70',
+  'lair-120',
+  'lair-140',
+];
 
 function isLair(id: unknown): id is LairId {
   return lairIds.includes(id as LairId);
@@ -79,6 +90,7 @@ function entryOf(event: LoggedEvent, at: string): PlayLogEvent | null {
   if (event.type === 'LeadFinished') {
     return { type: 'lead', lead: event.lead, action: 'done', firstTry: event.firstTry, at };
   }
+  if (event.type === 'SecretFound') return { type: 'secret', secret: event.secret, at };
   if (event.type === 'DoorKnocked') {
     return { type: 'door', lead: event.lead, door: event.door, right: event.right, at };
   }
@@ -158,6 +170,8 @@ export interface LogSummary {
    * at armour 45 or more.
    */
   afterLoss: { losses: number; thenHard: number };
+  /** Part 2: Kristijan's caches he has found, in the order he found them. */
+  secrets: { secret: string; at: string }[];
 }
 
 export const latestLines = 30;
@@ -216,7 +230,7 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
       if (event.won) lair.wins += 1;
       if (event.parts > 0) lair.partsWon += event.parts;
       if (event.parts < 0) lair.partsLost -= event.parts;
-      if (waiting && (event.lairId === 'lair-45' || event.lairId === 'lair-60')) {
+      if (waiting && event.lairId !== 'lair-20' && event.lairId !== 'lair-30') {
         thenHard += 1;
         waiting = false;
       }
@@ -245,6 +259,7 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
       }
       continue;
     }
+    if (event.type === 'secret') continue;
     if (!isAuthoredRoom(String((event as { roomId?: unknown }).roomId))) continue;
     const summary = room(event.roomId);
     if (event.type === 'room') {
@@ -269,5 +284,8 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
     fights: lairIds.flatMap((id) => fights.get(id) ?? []),
     afterLoss: { losses, thenHard },
     leads: [...leads.values()],
+    secrets: log.flatMap((event) =>
+      event.type === 'secret' ? [{ secret: event.secret, at: event.at }] : [],
+    ),
   };
 }

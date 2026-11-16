@@ -12,17 +12,25 @@
 // This rule reproduces the GDD's table. Planning across rounds does better: the strategy
 // that maximises the chance of winning wins 43.7% at armour 60, against the GDD's 39%, so
 // it is not what the GDD simulated (story file `ahead-fight-rules.md`, Calls Made).
+// With brackets bought, both forms of each strike are among the ways it looks at; the random
+// player picks a form at random too.
 
 import { tuning } from '@/config/tuning';
 import { fightReward } from '@/economy/rewards';
 import { blowsAffordable, reduceFight, SLOTS, strikeDamage } from './fight';
 import { type Rng, randomIndex } from './rng';
-import type { FightAction, FightState, Slot } from './types';
+import type { FightAction, FightState, Slot, StrikeForm } from './types';
 
-/** A placement of three dice (indices into `dice`) and the blows to strike with. */
+/** A placement of three dice (indices into `dice`), the blows, and with brackets the form. */
 export interface Choice {
   slots: Record<Slot, number>;
   blows: number;
+  form?: StrikeForm;
+}
+
+/** The forms a strike can take in this fight: plain, and brackets once bought. */
+export function formsOf(state: FightState): StrikeForm[] {
+  return state.form === null ? ['plain'] : ['plain', 'brackets'];
 }
 
 export type ScriptedPlayer = (state: FightState) => Choice;
@@ -58,25 +66,29 @@ export const reasoningPlayer: ScriptedPlayer = (state) => {
   let bestKillParts = -1;
   let bestHit: Choice | null = null;
   let bestHitDamage = -1;
+  const forms = formsOf(state);
   for (const slots of placements(state.dice.length)) {
     const blade = value(state, slots.blade);
     const charge = value(state, slots.charge);
     const most = maxBlows(state, slots.reach);
     for (let blows = 1; blows <= most; blows++) {
-      const damage = strikeDamage(blade, blows, charge);
-      if (damage >= state.armour) {
-        const steamLeft = state.steam - blows * tuning.fight.steamPerBlow;
-        const parts = fightReward(state.baseParts, steamLeft, damage === state.armour);
-        if (parts > bestKillParts) {
-          bestKillParts = parts;
-          bestKill = { slots, blows };
+      for (const form of forms) {
+        const damage = strikeDamage(blade, blows, charge, form);
+        const choice: Choice = state.form === null ? { slots, blows } : { slots, blows, form };
+        if (damage >= state.armour) {
+          const steamLeft = state.steam - blows * tuning.fight.steamPerBlow;
+          const parts = fightReward(state.baseParts, steamLeft, damage === state.armour);
+          if (parts > bestKillParts) {
+            bestKillParts = parts;
+            bestKill = choice;
+          }
+        } else if (
+          damage > bestHitDamage ||
+          (damage === bestHitDamage && bestHit !== null && blows < bestHit.blows)
+        ) {
+          bestHitDamage = damage;
+          bestHit = choice;
         }
-      } else if (
-        damage > bestHitDamage ||
-        (damage === bestHitDamage && bestHit !== null && blows < bestHit.blows)
-      ) {
-        bestHitDamage = damage;
-        bestHit = { slots, blows };
       }
     }
   }
@@ -85,13 +97,19 @@ export const reasoningPlayer: ScriptedPlayer = (state) => {
   return choice;
 };
 
-/** Places three of the dice at random and commits every blow the reach and steam allow. */
+/**
+ * Places three of the dice at random and commits every blow the reach and steam allow; with
+ * brackets bought, it picks the form at random too.
+ */
 export function randomPlayer(rng: Rng): ScriptedPlayer {
   return (state) => {
     const options = placements(state.dice.length);
     const slots = options[randomIndex(rng, options.length)];
     if (!slots) throw new Error('No placement for this roll');
-    return { slots, blows: maxBlows(state, slots.reach) };
+    const blows = maxBlows(state, slots.reach);
+    if (state.form === null) return { slots, blows };
+    const forms = formsOf(state);
+    return { slots, blows, form: forms[randomIndex(rng, forms.length)] ?? 'plain' };
   };
 }
 
@@ -107,9 +125,11 @@ export function playChoice(state: FightState, choice: Choice): FightState {
   for (const slot of SLOTS)
     next = act(next, { type: 'fight/place', die: choice.slots[slot], slot });
   next = act(next, { type: 'fight/blows', x: choice.blows });
+  if (choice.form) next = act(next, { type: 'fight/form', form: choice.form });
   if (next.phase !== 'set' || next.blows !== choice.blows) {
     throw new Error('The fight refused the placement or the blows');
   }
+  if (choice.form && next.form !== choice.form) throw new Error('The fight refused the form');
   return act(next, { type: 'fight/strike' });
 }
 

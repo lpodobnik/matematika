@@ -19,6 +19,7 @@ import type {
   LairSpec,
   LossReason,
   Slot,
+  StrikeForm,
   StrikeRecord,
 } from './types';
 
@@ -55,6 +56,7 @@ export function startFight(
     dice: [],
     slots: emptySlots(),
     blows: 0,
+    form: upgrades.includes('brackets') ? 'plain' : null,
     strikes: 0,
     lastStrike: null,
     outcome: null,
@@ -66,9 +68,14 @@ export function fightInProgress(state: FightState | null): state is FightState {
   return state !== null && state.phase !== 'won' && state.phase !== 'lost';
 }
 
-/** `a · x + b`: blade times blows plus charge. */
-export function strikeDamage(blade: number, blows: number, charge: number): number {
-  return blade * blows + charge;
+/** `a · x + b`: blade times blows plus charge; with brackets, `a · (x + b)`. */
+export function strikeDamage(
+  blade: number,
+  blows: number,
+  charge: number,
+  form: StrikeForm = 'plain',
+): number {
+  return form === 'brackets' ? blade * (blows + charge) : blade * blows + charge;
 }
 
 /** The most blows steam can pay for. */
@@ -113,6 +120,10 @@ export function reduceFight(state: FightState, action: FightAction): FightStep {
         : unchanged(state);
     case 'fight/blows':
       return state.phase === 'set' ? setBlows(state, action.x) : unchanged(state);
+    case 'fight/form':
+      return state.phase === 'place' || state.phase === 'set'
+        ? setForm(state, action.form)
+        : unchanged(state);
     case 'fight/strike':
       return state.phase === 'set' ? strike(state) : unchanged(state);
     case 'fight/leave':
@@ -164,6 +175,13 @@ function setBlows(state: FightState, x: number): FightStep {
   return x === state.blows ? unchanged(state) : { state: { ...state, blows: x }, events: [] };
 }
 
+/** Brackets or not, for the next strike: only with the upgrade, and kept for later rounds. */
+function setForm(state: FightState, form: StrikeForm): FightStep {
+  if (state.form === null || state.form === form) return unchanged(state);
+  if (form !== 'plain' && form !== 'brackets') return unchanged(state);
+  return { state: { ...state, form }, events: [] };
+}
+
 /**
  * Resolves a strike. Armour is checked first, so a strike that spends the last steam and
  * brings armour to 0 wins. Otherwise the automaton dents him, and he loses when the hull
@@ -176,7 +194,8 @@ function strike(state: FightState): FightStep {
   const blows = state.blows;
   if (blows < range.min || blows > range.max) return unchanged(state);
 
-  const damage = strikeDamage(blade, blows, charge);
+  const form = state.form ?? 'plain';
+  const damage = strikeDamage(blade, blows, charge, form);
   const steam = state.steam - blows * tuning.fight.steamPerBlow;
   const armourBefore = state.armour;
   const armour = Math.max(0, armourBefore - damage);
@@ -188,6 +207,7 @@ function strike(state: FightState): FightStep {
     blade,
     charge,
     blows,
+    form,
     damage,
     armourBefore,
     armourAfter: armour,

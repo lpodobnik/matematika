@@ -5,6 +5,9 @@ import automaton20 from '@/ui/fight/art/automaton-20.webp';
 import automaton30 from '@/ui/fight/art/automaton-30.webp';
 import automaton45 from '@/ui/fight/art/automaton-45.webp';
 import automaton60 from '@/ui/fight/art/automaton-60.webp';
+import automatonClerk from '@/ui/fight/art/automaton-clerk.webp';
+import automatonGiant from '@/ui/fight/art/automaton-giant.webp';
+import automatonJailer from '@/ui/fight/art/automaton-jailer.webp';
 
 /** Where the pips sit on a 60 × 60 face, for each number. */
 const pips: Record<number, [number, number][]> = {
@@ -54,12 +57,15 @@ export function DieFace({ value }: { value: number }) {
 }
 
 /** The automaton: a riveted body on legs, one round eye, a wind-up key and a blade arm. */
-/** Each lair's automaton, cut out of its picture (art-src/CREDITS.md, t09–t12). */
+/** Each lair's automaton, cut out of its picture (art-src/CREDITS.md, t09–t12, t109–t111). */
 const automatons: Record<number, string> = {
   20: automaton20,
   30: automaton30,
   40: automaton45,
   60: automaton60,
+  70: automatonClerk,
+  120: automatonJailer,
+  140: automatonGiant,
 };
 
 /** Every automaton picture, for the loading screen to fetch. */

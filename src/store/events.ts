@@ -5,7 +5,7 @@
 import type { AreaId } from '@/content/town';
 import type { UpgradeEvent } from '@/economy/upgrades';
 import type { FightEvent } from '@/fight/types';
-import type { LeadId, PlayId } from '@/hunt/ids';
+import type { GearId, LeadId, LookPieceId, PlayId, SecretId } from '@/hunt/ids';
 import type { RoomEvent } from '@/room/events';
 import type { RoomSpec } from '@/room/types';
 
@@ -32,7 +32,11 @@ export type StoreEvent =
   | { type: 'SceneOpened'; lead: PlayId }
   | { type: 'Unmasked'; lead: PlayId }
   | { type: 'TrapSprung'; lead: PlayId }
-  | { type: 'Caught'; lead: PlayId };
+  | { type: 'Caught'; lead: PlayId }
+  /** Part 2's growth: gear and looks bought at Faust's, a cache found with bought gear. */
+  | { type: 'GearBought'; gear: GearId; cost: number }
+  | { type: 'LookBought'; look: LookPieceId; cost: number }
+  | { type: 'SecretFound'; secret: SecretId; parts: number };
 
 export type DomainEvent = RoomEvent | StoreEvent | FightEvent | UpgradeEvent;
 export type DomainEventType = DomainEvent['type'];
@@ -55,6 +59,9 @@ const notRoom: ReadonlySet<DomainEventType> = new Set<DomainEventType>([
   'Unmasked',
   'TrapSprung',
   'Caught',
+  'GearBought',
+  'LookBought',
+  'SecretFound',
   'FightStarted',
   'FightLeft',
   'DiceRolled',

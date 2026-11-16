@@ -72,6 +72,115 @@
   font-size: 20px;
 }
 
+/* Part 2: the little one's half of the counter, and Kristijan's papers. */
+.shop__little {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shop__head-line {
+  margin: 12px 0 0;
+  font-size: 24px;
+}
+
+.shop__sub {
+  margin: 6px 0 0;
+  font-size: 20px;
+}
+
+.shop__little-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shop__little-figure {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+}
+
+.shop__icon--little {
+  display: block;
+  width: 56px;
+  height: 56px;
+}
+
+.shop__looks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shop__look {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border: 2px solid var(--rule);
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+.shop__look[data-worn="true"] {
+  border-color: var(--brass);
+}
+
+.shop__look-figure {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+
+.shop__look-name {
+  font-weight: 700;
+  text-align: center;
+}
+
+.papers__count {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.papers__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.papers__paper {
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+}
+
+.papers__sketch {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto 6px;
+}
+
+.papers__title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.papers__line {
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
 .shop__list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -31,6 +31,7 @@ import mill from '@/ui/town/art/mill.webp';
 import millRunning from '@/ui/town/art/mill-running.webp';
 import mlinar from '@/ui/town/art/mlinar.webp';
 import nikola from '@/ui/town/art/nikola.webp';
+import nikolaBot from '@/ui/town/art/nikola-bot.webp';
 import penkala from '@/ui/town/art/penkala.webp';
 import raznosac from '@/ui/town/art/raznosac.webp';
 import slagar from '@/ui/town/art/slagar.webp';
@@ -94,7 +95,11 @@ export const personFacing: Record<PersonId, 1 | -1> = {
   mlinar: -1,
   dimnjacar: 1,
   realVucetic: -1,
+  nikolaBot: -1,
 };
+
+/** People drawn smaller than him: Nikola's automaton is knee-high. */
+export const personScale: Partial<Record<PersonId, number>> = { nikolaBot: 0.5 };
 
 /** Each person's figure (t31 and t32). */
 export const personArt: Record<PersonId, string> = {
@@ -115,6 +120,7 @@ export const personArt: Record<PersonId, string> = {
   dimnjacar,
   // The real one looks just as the automaton did: that was the trick.
   realVucetic: vucetic,
+  nikolaBot,
 };
 
 /**

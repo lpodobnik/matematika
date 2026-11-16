@@ -6,10 +6,9 @@
 // Never imports React or the store: effects and the app shell drive it.
 
 import type { LoopLevels } from '@/audio/ambience';
-import { loops, noteAt } from '@/audio/loops';
+import { type LoopId, loopIds, loopOf, noteAt } from '@/audio/loops';
 import { nextBarAt, stepsBetween } from '@/audio/music';
 import { playSound, type SoundId, voice } from '@/audio/voices';
-import { type RoomId, roomIds } from '@/room/types';
 
 /** The whole game's loudness: modest, for a tablet's speaker or headphones. */
 export const MASTER_LEVEL = 0.55;
@@ -89,7 +88,7 @@ interface Graph {
   origin: number;
   /** The scheduler has put everything before this on the clock. */
   scheduledUntil: number;
-  playing: Map<RoomId, PlayingLoop>;
+  playing: Map<LoopId, PlayingLoop>;
 }
 
 export function createAudioEngine(options: EngineOptions = {}): AudioEngine {
@@ -156,7 +155,7 @@ export function createAudioEngine(options: EngineOptions = {}): AudioEngine {
         for (const [id, loop] of graph.playing) {
           if (step.time < loop.startAt) continue;
           if (loop.stopAt !== null && step.time >= loop.stopAt) continue;
-          for (const v of loops[id].voices) {
+          for (const v of loopOf(id).voices) {
             const degree = noteAt(v, step.index);
             if (degree === null) continue;
             voice(ctx, loop.gain, v.kind, degree, step.time, v.gain, v.length);
@@ -174,7 +173,7 @@ export function createAudioEngine(options: EngineOptions = {}): AudioEngine {
     if (!graph) return;
     const { ctx, playing, loopBus } = graph;
     const now = ctx.currentTime;
-    for (const id of roomIds) {
+    for (const id of loopIds) {
       const level = wanted[id] ?? 0;
       const loop = playing.get(id);
       if (level > 0 && (!loop || loop.stopAt !== null)) {

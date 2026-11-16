@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { tuning } from '@/config/tuning';
 import { createEconomy, earnParts } from './parts';
-import { buyUpgrade, UPGRADE_IDS, upgradeCost } from './upgrades';
+import { buyUpgrade, PART_ONE_UPGRADES, UPGRADE_IDS, upgradeCost } from './upgrades';
 
 describe('upgrades', () => {
   it('cost 30 for the 4th die, 10 for steam and 20 for hull, 60 in all', () => {
     expect(upgradeCost('fourth-die')).toBe(30);
     expect(upgradeCost('steam')).toBe(10);
     expect(upgradeCost('hull')).toBe(20);
-    expect(UPGRADE_IDS.reduce((sum, id) => sum + upgradeCost(id), 0)).toBe(60);
+    expect(PART_ONE_UPGRADES.reduce((sum, id) => sum + upgradeCost(id), 0)).toBe(60);
+  });
+
+  it("cost 30 for part 2's brackets", () => {
+    expect(upgradeCost('brackets')).toBe(30);
   });
 
   it('lists every upgrade in the tuning file', () => {
@@ -40,9 +44,9 @@ describe('upgrades', () => {
     expect(buyUpgrade(once.economy, 'hull')).toEqual({ ok: false, reason: 'owned' });
   });
 
-  it('buys all three for 60 parts', () => {
+  it("buys part 1's three for 60 parts", () => {
     let economy = earnParts(createEconomy(), 60);
-    for (const id of UPGRADE_IDS) {
+    for (const id of PART_ONE_UPGRADES) {
       const bought = buyUpgrade(economy, id);
       if (!bought.ok) throw new Error(`could not buy ${id}`);
       economy = bought.economy;

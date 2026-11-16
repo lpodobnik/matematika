@@ -8,6 +8,8 @@ import { castDraft, produce } from 'immer';
 import { nodeState } from '@/city/reach';
 import { districtMap } from '@/content/map';
 import { buyUpgrade } from '@/economy/upgrades';
+import { type Bought, bracketsOnSale, buyGear, buyLook, toggleLook } from '@/hunt/gear';
+import { partTwoOn } from '@/hunt/switch';
 import type { RoomSpec } from '@/room/types';
 import type { DomainEvent } from '@/store/events';
 import type { GameState, Reduce } from '@/store/types';
@@ -36,6 +38,21 @@ function toScreen(state: GameState, screen: 'shop' | 'map'): GameState {
   });
 }
 
+/** Part 2's half of the counter is there: part 2 is on and he has the little one. */
+function littleOneShop(state: GameState): boolean {
+  return state.ui.screen === 'shop' && partTwoOn(state.ui.preview) && state.save.companion !== null;
+}
+
+/** Gear or a look bought: parts spent, the little one changed, and the save written. */
+function bought(state: GameState, result: Bought, event: DomainEvent): Step {
+  if (!result.ok) return unchanged(state);
+  const next = produce(state, (draft) => {
+    draft.save.economy = castDraft(result.economy);
+    draft.save.companion = castDraft(result.companion);
+  });
+  return { state: next, events: [event, { type: 'SaveChanged' }] };
+}
+
 /** The room reducer (with fights) with the counter over it. */
 export function withShop(inner: Reduce, roomList: readonly RoomSpec[]): Reduce {
   const authored = roomList.map((room) => room.id);
@@ -52,12 +69,45 @@ export function withShop(inner: Reduce, roomList: readonly RoomSpec[]): Reduce {
           : unchanged(state);
       case 'shop/buy': {
         if (state.ui.screen !== 'shop') return unchanged(state);
+        // Brackets are part 2's, on sale only after the coat.
+        if (
+          action.upgrade === 'brackets' &&
+          !(partTwoOn(state.ui.preview) && bracketsOnSale(state.save.hunt.leadsDone))
+        ) {
+          return unchanged(state);
+        }
         const bought = buyUpgrade(state.save.economy, action.upgrade);
         if (!bought.ok) return unchanged(state);
         const next = produce(state, (draft) => {
           draft.save.economy = castDraft(bought.economy);
         });
         return { state: next, events: [...bought.events, { type: 'SaveChanged' }] };
+      }
+      case 'shop/buy-gear': {
+        const companion = state.save.companion;
+        if (!littleOneShop(state) || !companion) return unchanged(state);
+        const result = buyGear(state.save.economy, companion, action.gear);
+        const cost = result.ok ? result.cost : 0;
+        return bought(state, result, { type: 'GearBought', gear: action.gear, cost });
+      }
+      case 'shop/buy-look': {
+        const companion = state.save.companion;
+        if (!littleOneShop(state) || !companion) return unchanged(state);
+        const result = buyLook(state.save.economy, companion, action.look);
+        const cost = result.ok ? result.cost : 0;
+        return bought(state, result, { type: 'LookBought', look: action.look, cost });
+      }
+      case 'shop/wear': {
+        const companion = state.save.companion;
+        if (!littleOneShop(state) || !companion) return unchanged(state);
+        const next = toggleLook(companion, action.look);
+        if (next === companion) return unchanged(state);
+        return {
+          state: produce(state, (draft) => {
+            draft.save.companion = castDraft(next);
+          }),
+          events: [{ type: 'SaveChanged' }],
+        };
       }
     }
     return inner(state, action, ctx);

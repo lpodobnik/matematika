@@ -16,10 +16,8 @@ The whole chapter plays, from the foundry gate to the warm lamp.
 | 8: Clues and doors | Done | The new line language, Knock, "Dvije strane" |
 | 9: Other ways to play | Done | Sneak, Unmask, Little one alone, each with a first-time guide |
 | 10: The whole trail | Done, with the gaps below | 16 leads, 3 knots, the wandering-off, 4 rule guards, the black thread, the coat, the ending |
-| 11: Growth and fights | Not started | Gear to buy, secrets, new lairs, brackets, Nikola's automaton |
-| 12: Ready for him | Not started | Art, sound, your text review, paper test, opening it |
-
-I stopped at epic 11 on purpose. It should wait for what your son does with the first leads, and epic 12's art costs your credits.
+| 11: Growth and fights | Done (2026-11-16) | Gear and looks at Faust's, 8 caches, 3 new automatons, brackets, Nikola's automaton |
+| 12: Ready for him | Done but for you | Art, a music layer per act, the paper test, browser tests. Left for you: the text review and switching it on |
 
 ## Do clues look clearer than rooms?
 
@@ -71,9 +69,41 @@ I can't tell without him. Writing a line and seeing the doors change looks clear
 
 All new Croatian is mine and is on your review page.
 
+## Epics 11 and 12 on 2026-11-16
+
+- **Faust's counter** has a second half once he has the little one.
+  - Gear: the bright lamp (15), the magnet (25) and the longer hook (20).
+  - Six looks: three paints and three hats, 45 parts in all.
+  - The little one wears its look and shows its gear everywhere: the lamp glows, the magnet hangs from its hand, the hook is on its back.
+- **Kristijan's caches:** 8 chalk marks, in the six new streets plus the canal and the hill.
+  - Each mark is drawn with the gear it needs, so he can tell what to buy.
+  - Tapped without that gear, he hears what's needed and that Faust sells it.
+  - With it, the little one brings back one of Kristijan's papers (4 sketches, 4 notes) and 5 parts. The papers hang at the workshop.
+  - A content test checks that no lead mentions bought gear.
+- **Three new automatons,** set by simulation against the GDD's targets.
+  - Brackets roughly double what a strike can do, so the GDD's starting 80, 100 and 120 were far too easy.
+  - **Automat 70** in Arhivska ulica, before the coat: a reasoning player wins 92% with part 1's three upgrades, a random one 15%.
+  - **Automat 120** in Ulica brava and **Automat 140** in Pusta ulica, after the coat: with brackets, 84% and 64% for a reasoning player, under 3% for a random one.
+  - Without brackets, a reasoning player beats the 120 less than 5% of the time.
+- **Brackets** (30 parts) go on sale once the coat is done.
+  - He picks the strike's form each time: `a · x + b` or `a · (x + b)`.
+  - The formula, "Koliki će biti udarac?" and the banner follow the form. A wrong guess with brackets says "Prvo zbroji ono u zagradi, pa pomnoži."
+- **Nikola's own automaton** stands in Gornja ulica: a kettle with a clock for a head, the wind-up toy's successor.
+  - It knocks on the fountain, then on doors (the wrong ones).
+  - After Knot 3 it counts houses up to ten.
+  - At the end it prints "ZAŠTO?" at the little one.
+- **Music:** one layer per act plays in the upper district, on the machines' grid and in their key. It grows from one layer to four as the trail goes on.
+- **The paper test for part 2** is at `C:\Users\lpodobnik\Claude\matematika\_bmad-output\paper-test-drugi-dio.md`.
+  - It has a "Prije" and a "Poslije" version, plus a table of what each answer shows.
+  - A test checks that none of its items appears in a lead.
+- **Luka's view** counts Kristijan's papers found: the GDD's "goes back" signal.
+- **Art:** 5 images (t109–t113), credits at 113/125.
+  - The fourth sketch came out as tongs, not a grappling hook, so that paper became Kristijan's tongs.
+- **Not done:** switching part 2 on is yours. `tuning.part2.live` is still false, pinned by `src/hunt/switch.test.ts`. All the new Croatian is mine and is on your review page.
+
 ## What's not there
 
-- **Epics 11 and 12** (gear, secrets, new lairs, Nikola's automaton; then your text review, a paper test and switching it on).
+- **Your text review,** then switching it on.
 - **The finale** at the end of 5th grade.
 
 ## Calls I made

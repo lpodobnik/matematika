@@ -6,9 +6,10 @@ import { type MapView, mapView } from '@/city/reach';
 import type { NodeId } from '@/city/types';
 import { findPath, type Point } from '@/city/walk';
 import { tuning } from '@/config/tuning';
-import { lairs } from '@/content/lairs';
+import { lairs, partTwoLairOpens } from '@/content/lairs';
 import { districtMap } from '@/content/map';
 import { rooms } from '@/content/rooms';
+import { type SecretSpec, secretsIn } from '@/content/secrets';
 import { hr } from '@/content/text/hr';
 import {
   type AreaId,
@@ -26,7 +27,9 @@ import { asleepLairs } from '@/fight/settle';
 import type { LairId } from '@/fight/types';
 import { openCorrections } from '@/hunt/corrected';
 import { type GateState, gateState } from '@/hunt/gate';
-import type { CorrectionId, HuntStreetId, LeadId, PlayId } from '@/hunt/ids';
+import { anythingToBuy } from '@/hunt/gear';
+import type { CorrectionId, GearId, HuntStreetId, LeadId, PlayId, SecretId } from '@/hunt/ids';
+import { reachedMarks } from '@/hunt/marks';
 import { partTwoOn } from '@/hunt/switch';
 import { openTrail, type TrailId, threadTarget } from '@/hunt/trail';
 import { playersHash } from '@/lib/player';
@@ -35,11 +38,22 @@ import type { RoomId } from '@/room/types';
 import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
 import { Automaton } from '@/ui/fight/fight-art';
-import { LittleOneArt } from '@/ui/hunt/LittleOne';
+import { OurLittleOne } from '@/ui/hunt/LittleOne';
 import { TrailMap } from '@/ui/hunt/TrailMap';
 import { foundryArt, logbookArt, outroArt } from '@/ui/opening/art';
 import { OpeningPanels, StoryPanels } from '@/ui/opening/OpeningScreen';
-import { areaArt, areaChange, lookFacing, looks, personArt, personFacing } from '@/ui/town/art';
+import { Paper } from '@/ui/shop/LittleOneShop';
+import { upgradesOnSale } from '@/ui/shop/ShopScreen';
+import {
+  areaArt,
+  areaChange,
+  lookFacing,
+  looks,
+  personArt,
+  personFacing,
+  personScale,
+} from '@/ui/town/art';
+import { ChalkMark } from '@/ui/town/chalk';
 import { bloomMask, pct, place, rectStyle, sameRect } from '@/ui/town/town-geometry';
 import { type Bubble, ExitSign, MapOverlay, PlaceButton, SpeechBubble } from '@/ui/town/town-parts';
 import {
@@ -104,9 +118,11 @@ export function TownScreen() {
         return Math.max(1, Math.ceil((Date.parse(at) - Date.now()) / 60_000));
       }}
       beaten={(lair) => economy.lairs[lair] !== undefined}
-      canBuy={Object.entries(tuning.upgrades).some(
-        ([id, upgrade]) =>
-          !(economy.upgrades as readonly string[]).includes(id) && economy.parts >= upgrade.cost,
+      canBuy={anythingToBuy(
+        economy.parts,
+        economy.upgrades,
+        upgradesOnSale(partTwo, hunt.leadsDone),
+        partTwo ? companion : null,
       )}
       onTravel={(node) => dispatch({ type: 'map/travel', node })}
       partTwo={partTwo}
@@ -119,18 +135,7 @@ export function TownScreen() {
         partTwo,
       )}
       name={name ?? ''}
-      marks={
-        partTwo
-          ? [
-              ...hunt.beats,
-              ...hunt.guards,
-              ...hunt.leadsDone,
-              ...hunt.knotsDone,
-              ...(hunt.gateOpened ? ['gate'] : []),
-              ...(hunt.beats.includes('map-given') ? ['map'] : []),
-            ]
-          : []
-      }
+      marks={partTwo ? reachedMarks(hunt) : []}
       // While it has wandered off, it isn't there.
       hasLittleOne={partTwo && companion !== null && !openTrail(hunt).includes('w1')}
       littleName={companion?.name ?? ''}
@@ -142,6 +147,10 @@ export function TownScreen() {
       corrected={partTwo ? hunt.corrected : []}
       sealed={hunt.sealed}
       threadHeading={partTwo ? threadTarget(hunt) : null}
+      secretsOn={partTwo && companion !== null}
+      secretsFound={hunt.secrets}
+      gear={companion?.gear ?? []}
+      onSecret={(secret) => dispatch({ type: 'hunt/secret', secret })}
     />
   );
 }
@@ -179,6 +188,12 @@ interface BoardProps {
   threadHeading?: LeadId | null;
   /** His name, for where the story uses it. */
   name?: string;
+  /** Kristijan's chalk marks show: part 2 is on and he has the little one. */
+  secretsOn?: boolean;
+  secretsFound?: readonly SecretId[];
+  /** The little one's gear: what it can reach. */
+  gear?: readonly GearId[];
+  onSecret?(secret: SecretId): void;
 }
 
 /** What happens when he reaches where he was walking to. */
@@ -187,7 +202,8 @@ type Errand =
   | { kind: 'person'; person: TownPerson }
   | { kind: 'automaton'; at: Point }
   | { kind: 'exit'; exit: TownExit }
-  | { kind: 'spot'; spot: TownSpot };
+  | { kind: 'spot'; spot: TownSpot }
+  | { kind: 'secret'; secret: SecretSpec };
 
 /** The rooms that give the tools gates ask for (content/map.ts). */
 const toolRooms: Record<string, RoomId> = {
@@ -235,6 +251,10 @@ export function TownBoard({
   sealed = [],
   threadHeading = null,
   name = '',
+  secretsOn = false,
+  secretsFound = [],
+  gear = [],
+  onSecret,
 }: BoardProps) {
   // Rooms done and the hunt's marks: what ways and people wait on.
   const reached = useMemo<readonly string[]>(() => [...done, ...marks], [done, marks]);
@@ -270,6 +290,8 @@ export function TownBoard({
     return done.includes('r13') && beaten('lair-60') && !readOutroSeen() ? 'outro' : null;
   });
   const [met, setMet] = useState<PersonId[]>(readMet);
+  // A cache the little one has just fetched from: its paper, until he keeps it.
+  const [fetched, setFetched] = useState<SecretSpec | null>(null);
   const board = useRef<HTMLDivElement>(null);
   const lookRef = useRef(look);
   lookRef.current = look;
@@ -327,6 +349,21 @@ export function TownBoard({
         onLead?.(job.spot.lead);
         return;
       }
+      if (job.kind === 'secret') {
+        const { secret } = job;
+        const text = hr.hunt.growth.secrets;
+        if (secretsFound.includes(secret.id)) {
+          setBubble({ who: 'self', at: secret.mark, lines: [text.done], line: 0 });
+          return;
+        }
+        if (!gear.includes(secret.needs)) {
+          setBubble({ who: 'self', at: secret.mark, lines: text.needs[secret.needs], line: 0 });
+          return;
+        }
+        onSecret?.(secret.id);
+        setFetched(secret);
+        return;
+      }
       if (job.kind === 'place') {
         const node = nodes.get(job.place.node);
         // A machine he has fixed runs on; he doesn't go back in (the district map still can).
@@ -373,7 +410,9 @@ export function TownBoard({
         const id = lairHere.current;
         if (!id) return;
         const lair = nodes.get(id);
-        const seen = lair?.state === 'open' || lair?.state === 'winding';
+        // Part 2's stand off the district map, out whenever he can walk to them.
+        const seen =
+          partTwoLairOpens[id] !== undefined || lair?.state === 'open' || lair?.state === 'winding';
         const wait = wakesIn(id);
         if (seen && wait === null) {
           writeWhere(areaRef.current, meRef.current);
@@ -421,6 +460,9 @@ export function TownBoard({
       onGate,
       reached,
       onMapGiven,
+      secretsFound,
+      gear,
+      onSecret,
       onLead,
     ],
   );
@@ -643,6 +685,31 @@ export function TownBoard({
                 {place.node === 'workshop' && canBuy && <span className="town__sign-ask">!</span>}
               </span>
             ))}
+          {secretsOn &&
+            secretsIn(areaId)
+              .filter((secret) => reached.includes(secret.opensWith))
+              .map((secret) => (
+                <button
+                  key={secret.id}
+                  type="button"
+                  className="town__chalk"
+                  data-secret={secret.id}
+                  data-found={secretsFound.includes(secret.id)}
+                  data-needs={secret.needs}
+                  style={rectStyle(secret.area)}
+                  aria-label={hr.hunt.growth.secrets.label}
+                  onClick={() => walkTo(secret.stand, { kind: 'secret', secret })}
+                >
+                  <ChalkMark
+                    needs={secret.needs}
+                    found={secretsFound.includes(secret.id)}
+                    at={{
+                      x: ((secret.mark.x - secret.area.x) / secret.area.w) * 100,
+                      y: ((secret.mark.y - secret.area.y) / secret.area.h) * 100,
+                    }}
+                  />
+                </button>
+              ))}
           {openSpots.map((spot) => (
             <Fragment key={spot.lead}>
               <button
@@ -712,7 +779,7 @@ export function TownBoard({
               style={{
                 ...pct(person.at),
                 zIndex: Math.round(person.at.y),
-                height: `${(town.figure / town.height) * 100}%`,
+                height: `${((town.figure * (personScale[person.id] ?? 1)) / town.height) * 100}%`,
               }}
               aria-label={hr.town.people[person.id].name}
               onClick={() =>
@@ -761,7 +828,7 @@ export function TownBoard({
                 })
               }
             >
-              <LittleOneArt />
+              <OurLittleOne />
             </button>
           )}
           {areaId === 'u6' && reached.includes('rule-4') && (
@@ -802,7 +869,7 @@ export function TownBoard({
               className="town__figure town__figure--automaton"
               style={{
                 ...pct(area.patrol[0] as Point),
-                height: `${((town.figure * (area.lair === 'lair-60' ? 1.15 : 0.62)) / town.height) * 100}%`,
+                height: `${((town.figure * automatonScale(lairs[area.lair].armour)) / town.height) * 100}%`,
               }}
               aria-label={
                 pile > 0
@@ -913,6 +980,28 @@ export function TownBoard({
           </svg>
         </button>
       </main>
+      {fetched && (
+        // What the little one brought back from one of Kristijan's caches.
+        <div className="town__found-backdrop">
+          <div
+            className="town__found"
+            role="dialog"
+            aria-modal="true"
+            aria-label={hr.hunt.growth.secrets.papers[fetched.id].title}
+          >
+            <p className="town__found-fetch">{hr.hunt.growth.secrets.fetch[fetched.needs]}</p>
+            <div className="town__found-paper">
+              <Paper id={fetched.id} sketch={fetched.sketch} />
+            </div>
+            <p className="town__found-parts" role="status">
+              {hr.hunt.growth.secrets.found(tuning.secretParts)}
+            </p>
+            <button type="button" className="town__found-keep" onClick={() => setFetched(null)}>
+              {hr.hunt.growth.secrets.keep}
+            </button>
+          </div>
+        </div>
+      )}
       {showMap &&
         (reached.includes('map') && !oldMap ? (
           <TrailMap
@@ -968,6 +1057,12 @@ export function TownBoard({
 }
 
 /** A person's lines: before the room that changes them, or after. */
+/** An automaton's height in the street, against his: the boss and part 2's are bigger. */
+function automatonScale(armour: number): number {
+  const scales: Record<number, number> = { 60: 1.15, 70: 0.85, 120: 1.1, 140: 1.25 };
+  return scales[armour] ?? 0.62;
+}
+
 function personLines(person: TownPerson, reached: readonly string[]): readonly string[] {
   const text = person.scene ? hr.town.scenes[person.scene] : hr.town.people[person.id];
   return reached.includes(person.changesWith) ? text.after : text.before;

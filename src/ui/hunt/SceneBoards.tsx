@@ -19,7 +19,7 @@ import { formatNumber, formatStatementLine } from '@/math/format';
 import { readLine, type SLineToken, type SToken } from '@/math/statement-tokens';
 import { HintControl } from '@/ui/common/HintButton';
 import vuceticGears from '@/ui/hunt/art/vucetic-gears.webp';
-import { LittleOneArt } from '@/ui/hunt/LittleOne';
+import { OurLittleOne } from '@/ui/hunt/LittleOne';
 import { type HuntKey, StatementPad } from '@/ui/hunt/StatementPad';
 import { useHuntKeys } from '@/ui/hunt/use-hunt-keys';
 import { LineView } from '@/ui/notebook/LineView';
@@ -420,7 +420,7 @@ export function AloneBoardView({
           ))}
         </ol>
         <div className="alone__little" key={state.deadEnds} data-shake={state.deadEnds > 0}>
-          <LittleOneArt />
+          <OurLittleOne />
         </div>
         {junction && !state.opened && (
           <div className="alone__pipes" data-help={state.help >= 1 || undefined}>

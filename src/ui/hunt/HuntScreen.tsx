@@ -10,7 +10,7 @@ import { formatTokens } from '@/math/format';
 import { type Token, tokenFromChar } from '@/math/tokens';
 import { useGame } from '@/store/store';
 import { LeadScreen } from '@/ui/hunt/LeadScreen';
-import { LittleOneArt } from '@/ui/hunt/LittleOne';
+import { OurLittleOne } from '@/ui/hunt/LittleOne';
 import { NumberPad } from '@/ui/notebook/NumberPad';
 import { foundryArt } from '@/ui/opening/art';
 import { StoryPanels } from '@/ui/opening/OpeningScreen';
@@ -145,7 +145,7 @@ function NameLittleOne({ onDone }: { onDone(name: string): void }) {
     <main className="hunt hunt--name">
       <form className="hunt__name" onSubmit={confirm}>
         <div className="hunt__portrait">
-          <LittleOneArt />
+          <OurLittleOne />
         </div>
         <p className="hunt__ask">{hr.hunt.name.ask}</p>
         <label className="hunt__label">

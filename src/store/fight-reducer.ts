@@ -8,7 +8,7 @@
 
 import { castDraft, produce } from 'immer';
 import { nodeState, type Reach } from '@/city/reach';
-import { LAIR_ORDER, lairs } from '@/content/lairs';
+import { LAIR_ORDER, lairs, partTwoLairOpens } from '@/content/lairs';
 import { districtMap } from '@/content/map';
 import { fightInProgress, reduceFight, startFight } from '@/fight/fight';
 import {
@@ -22,6 +22,8 @@ import {
 import { seedFrom } from '@/fight/rng';
 import { asleepLairs, settleFight } from '@/fight/settle';
 import type { FightAction, FightState, LairId } from '@/fight/types';
+import { reachedMarks } from '@/hunt/marks';
+import { partTwoOn } from '@/hunt/switch';
 import type { RoomSpec } from '@/room/types';
 import type { Action } from '@/store/actions';
 import type { DomainEvent } from '@/store/events';
@@ -37,6 +39,7 @@ const fightActions: ReadonlySet<Action['type']> = new Set<Action['type']>([
   'fight/place',
   'fight/unplace',
   'fight/blows',
+  'fight/form',
   'fight/strike',
   'fight/leave',
 ]);
@@ -70,6 +73,17 @@ export function lairEnterable(
   now: number,
 ): boolean {
   if (state.ui.screen !== 'map' || fightInProgress(state.fight)) return false;
+  // Part 2's stand in the upper district, off the map: open with their street, once he has
+  // the little one, while part 2 is on.
+  const opensWith = partTwoLairOpens[lairId];
+  if (opensWith) {
+    return (
+      partTwoOn(state.ui.preview) &&
+      state.save.companion !== null &&
+      reachedMarks(state.save.hunt).includes(opensWith) &&
+      !asleepLairs(state.save.economy, now).includes(lairId)
+    );
+  }
   const node = districtMap.nodes.find((n) => n.id === lairId);
   if (!node) return false;
   const reach: Reach = {

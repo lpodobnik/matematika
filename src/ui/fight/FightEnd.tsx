@@ -19,7 +19,10 @@ export function StrikeBanner({
   return (
     <div className="fight__banner" role="status" data-clean={clean || undefined} {...mark}>
       <p className="fight__sum">
-        {blade} · {blows} + {charge} = <b>{formatNumber(damage)}</b>
+        {strike.form === 'brackets'
+          ? `${blade} · (${blows} + ${charge})`
+          : `${blade} · ${blows} + ${charge}`}{' '}
+        = <b>{formatNumber(damage)}</b>
       </p>
       <p className="fight__effect">
         {hr.fight.armourFell(armourBefore, armourAfter)}

@@ -2,9 +2,12 @@ import '@/ui/shop/shop.css';
 import type { ReactNode } from 'react';
 import { hr } from '@/content/text/hr';
 import type { Economy, UpgradeId } from '@/economy/types';
-import { UPGRADE_IDS, upgradeCost } from '@/economy/upgrades';
+import { PART_ONE_UPGRADES, upgradeCost } from '@/economy/upgrades';
+import { bracketsOnSale } from '@/hunt/gear';
+import { partTwoOn } from '@/hunt/switch';
 import { useGame } from '@/store/store';
 import { PartsCounterView } from '@/ui/common/PartsCounter';
+import { LittleOneShop } from '@/ui/shop/LittleOneShop';
 import { WorkshopWall } from '@/ui/workshop/WorkshopWall';
 
 /**
@@ -14,16 +17,38 @@ import { WorkshopWall } from '@/ui/workshop/WorkshopWall';
  */
 export function ShopScreen() {
   const economy = useGame((s) => s.save.economy);
+  const companion = useGame((s) => s.save.companion);
+  const hunt = useGame((s) => s.save.hunt);
+  const partTwo = useGame((s) => partTwoOn(s.ui.preview));
   const dispatch = useGame((s) => s.dispatch);
+  const upgrades = upgradesOnSale(partTwo, hunt.leadsDone);
   return (
     <ShopBoard
       economy={economy}
+      upgrades={upgrades}
       onBuy={(upgrade) => dispatch({ type: 'shop/buy', upgrade })}
       onClose={() => dispatch({ type: 'shop/close' })}
     >
+      {partTwo && companion && (
+        <LittleOneShop
+          parts={economy.parts}
+          companion={companion}
+          found={hunt.secrets}
+          onBuyGear={(gear) => dispatch({ type: 'shop/buy-gear', gear })}
+          onBuyLook={(look) => dispatch({ type: 'shop/buy-look', look })}
+          onWear={(look) => dispatch({ type: 'shop/wear', look })}
+        />
+      )}
       <WorkshopWall />
     </ShopBoard>
   );
+}
+
+/** Part 1's three upgrades, and part 2's brackets once the coat is done. */
+export function upgradesOnSale(partTwo: boolean, leadsDone: readonly string[]): UpgradeId[] {
+  return partTwo && bracketsOnSale(leadsDone)
+    ? [...PART_ONE_UPGRADES, 'brackets']
+    : [...PART_ONE_UPGRADES];
 }
 
 /** What an upgrade's button can do now. */
@@ -36,6 +61,8 @@ export function offerOf(economy: Pick<Economy, 'parts' | 'upgrades'>, id: Upgrad
 
 interface Props {
   economy: Pick<Economy, 'parts' | 'upgrades'>;
+  /** What's on sale: part 1's three, and brackets after part 2's coat. */
+  upgrades?: readonly UpgradeId[];
   onBuy(upgrade: UpgradeId): void;
   onClose(): void;
   /** Epic 5: the workshop's half of the counter, under the upgrades. */
@@ -43,7 +70,13 @@ interface Props {
 }
 
 /** The counter from props only. */
-export function ShopBoard({ economy, onBuy, onClose, children }: Props) {
+export function ShopBoard({
+  economy,
+  upgrades = PART_ONE_UPGRADES,
+  onBuy,
+  onClose,
+  children,
+}: Props) {
   return (
     <main className="shop" aria-label={hr.shop.title}>
       <header className="shop__head">
@@ -59,7 +92,7 @@ export function ShopBoard({ economy, onBuy, onClose, children }: Props) {
         <b>{hr.shop.speaker}:</b> {hr.shop.line}
       </p>
       <ul className="shop__list">
-        {UPGRADE_IDS.map((id) => {
+        {upgrades.map((id) => {
           const offer = offerOf(economy, id);
           const cost = upgradeCost(id);
           const label =
@@ -111,6 +144,13 @@ function UpgradeIcon({ id }: { id: UpgradeId }) {
         <g>
           <path d="M-14 24 V0 H14 V24 Z M-6 0 V-8 H6 V0" />
           <path d="M-10 -14 Q-16 -20 -10 -26 M0 -14 Q-6 -20 0 -26 M10 -14 Q4 -20 10 -26" />
+        </g>
+      )}
+      {id === 'brackets' && (
+        <g>
+          <path d="M-12 -26 C-26 -14 -26 14 -12 26" />
+          <path d="M12 -26 C26 -14 26 14 12 26" />
+          <circle cx="0" cy="0" r="6" className="shop__icon-new" />
         </g>
       )}
       {id === 'hull' && (

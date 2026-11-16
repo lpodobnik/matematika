@@ -25,7 +25,8 @@ export type PersonId =
   | 'zvonar'
   | 'mlinar'
   | 'dimnjacar'
-  | 'realVucetic';
+  | 'realVucetic'
+  | 'nikolaBot';
 
 export type AreaId =
   | 'square'
@@ -109,7 +110,10 @@ export type SceneId =
   | 'u1Vucetic'
   | 'u4Milka'
   | 'u4Nikola'
-  | 'u4Zagorka';
+  | 'u4Zagorka'
+  | 'u1Nikola'
+  | 'u1Bot'
+  | 'u1BotLate';
 
 /** Where a lead starts in a street (part 2): a tap area, and where he stands for it. */
 export interface TownSpot {
@@ -880,7 +884,8 @@ const hill: TownArea = {
       facing: -1,
       after: 'r12',
       changesWith: 'r13',
-      until: 'l11',
+      // Off to build his own automaton once the little one has wandered after his first.
+      until: 'w1',
       scene: 'hillNikola',
     },
   ],
@@ -1193,6 +1198,34 @@ const u1: TownArea = {
     },
     // House 17's night watchman, once his door has opened: he saw the cart.
     { id: 'watchman', at: { x: 290, y: 740 }, facing: 1, after: 'l02', changesWith: 'k1' },
+    // Nikola builds his own little automaton, badly (epic 11): the wind-up toy that ran off
+    // was his first try. He's here with it until the coat, then in the yard; it stays and learns.
+    {
+      id: 'nikola',
+      at: { x: 1200, y: 580 },
+      facing: -1,
+      after: 'w1',
+      changesWith: 'k2',
+      until: 'l11',
+      scene: 'u1Nikola',
+    },
+    {
+      id: 'nikolaBot',
+      at: { x: 1085, y: 610 },
+      facing: -1,
+      after: 'w1',
+      changesWith: 'k2',
+      until: 'k3',
+      scene: 'u1Bot',
+    },
+    {
+      id: 'nikolaBot',
+      at: { x: 1085, y: 610 },
+      facing: -1,
+      after: 'k3',
+      changesWith: 'l16',
+      scene: 'u1BotLate',
+    },
   ],
   lair: null,
   patrol: [],
@@ -1244,8 +1277,13 @@ const u2: TownArea = {
     // The tram driver, by his stop.
     { id: 'belusic', at: { x: 1150, y: 700 }, facing: -1, after: null, changesWith: 'l04' },
   ],
-  lair: null,
-  patrol: [],
+  // Part 2's first automaton, a clerk stamping blank sheets across the lower street (epic 11).
+  lair: 'lair-70',
+  patrol: [
+    { x: 1080, y: 935 },
+    { x: 1200, y: 905 },
+    { x: 1310, y: 870 },
+  ],
   lamps: [],
 };
 
@@ -1445,8 +1483,13 @@ const u5: TownArea = {
     { id: 'mlinar', at: { x: 480, y: 800 }, facing: -1, after: 'l13', changesWith: 'l16' },
     { id: 'dimnjacar', at: { x: 620, y: 760 }, facing: -1, after: 'l13', changesWith: 'l16' },
   ],
-  lair: null,
-  patrol: [],
+  // The jailer with his keys, in front of the hoist (epic 11).
+  lair: 'lair-120',
+  patrol: [
+    { x: 1000, y: 890 },
+    { x: 1150, y: 860 },
+    { x: 1300, y: 820 },
+  ],
   lamps: [],
 };
 
@@ -1489,8 +1532,13 @@ const u6: TownArea = {
     // The lamp-oil merchant, outside his shop.
     { id: 'hanaman', at: { x: 1060, y: 700 }, facing: 1, after: null, changesWith: 'l16' },
   ],
-  lair: null,
-  patrol: [],
+  // The strongest of them all, in the empty street's open cobbles (epic 11).
+  lair: 'lair-140',
+  patrol: [
+    { x: 560, y: 760 },
+    { x: 720, y: 700 },
+    { x: 880, y: 640 },
+  ],
   lamps: [],
 };
 

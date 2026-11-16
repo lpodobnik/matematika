@@ -5,7 +5,8 @@ import type { NodeId } from '@/city/types';
 import type { AreaId } from '@/content/town';
 import type { UpgradeId } from '@/economy/types';
 import type { FightAction, FightState } from '@/fight/types';
-import type { PlayId } from '@/hunt/ids';
+import type { ShopGearId } from '@/hunt/gear';
+import type { LookPieceId, PlayId, SecretId } from '@/hunt/ids';
 import type { JumpPlace } from '@/hunt/jump';
 import type { LeadAction } from '@/hunt/lead';
 import type { LinkOp } from '@/math/chain';
@@ -140,6 +141,11 @@ export type Action =
   | { type: 'shop/buy'; upgrade: UpgradeId }
   /** Story 3.5: off the counter, back to the map. */
   | { type: 'shop/close' }
+  /** Part 2: gear and looks for the little one, at the same counter (hunt/gear.ts). */
+  | { type: 'shop/buy-gear'; gear: ShopGearId }
+  | { type: 'shop/buy-look'; look: LookPieceId }
+  /** A look he owns goes on, or comes off. */
+  | { type: 'shop/wear'; look: LookPieceId }
   /** Off the end of a fight, back to the map (story 3.2). */
   | { type: 'fight/close' }
   /** The guided first fight's "Dalje": the next step, or the guide is over (fight/guide.ts). */
@@ -165,6 +171,8 @@ export type Action =
   | { type: 'hunt/map-given' }
   /** He walks up to a lead's place, or picks its pin. */
   | { type: 'hunt/lead-start'; lead: PlayId }
+  /** The little one fetches from one of Kristijan's caches (content/secrets.ts). */
+  | { type: 'hunt/secret'; secret: SecretId }
   /** A move in the lead in play (hunt/lead.ts). */
   | { type: 'hunt/lead'; action: LeadAction }
   /** The dev panel: part 2 as it would be on arriving there (hunt/jump.ts). */

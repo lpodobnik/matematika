@@ -611,3 +611,115 @@ button.town__sign {
   stroke-width: 2;
   stroke-linejoin: round;
 }
+
+/* Epic 11: Kristijan's chalk marks, over what he hid, and what the little one brings back. */
+.town__chalk {
+  position: absolute;
+  z-index: 2800;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.town__chalk-mark {
+  position: absolute;
+  width: max(44px, 4.5cqw);
+  aspect-ratio: 1;
+  overflow: visible;
+  transform: translate(-50%, -50%);
+  fill: none;
+  stroke: var(--sheet);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 1.5px var(--ink));
+  pointer-events: none;
+}
+
+.town__chalk-ring {
+  stroke-dasharray: 10 7;
+}
+
+.town__chalk[data-found="true"] .town__chalk-mark {
+  opacity: 0.55;
+}
+
+.town__chalk-cross {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.town__found-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--ink-deep) 45%, transparent);
+}
+
+.town__found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(92vw, 460px);
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: 18px 20px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--sheet);
+  text-align: center;
+}
+
+.town__found-fetch {
+  margin: 0;
+  font-style: italic;
+}
+
+.town__found-paper {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+}
+
+.town__found-paper .papers__sketch {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  max-height: 34dvh;
+  margin: 0 auto 6px;
+  object-fit: contain;
+}
+
+.town__found-paper .papers__title {
+  margin: 0;
+  font-size: 20px;
+}
+
+.town__found-paper .papers__line {
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+.town__found-parts {
+  margin: 0;
+  font-weight: 700;
+}
+
+.town__found-keep {
+  min-width: 160px;
+  min-height: 52px;
+  padding: 0 22px;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 20px;
+  font-weight: 700;
+}

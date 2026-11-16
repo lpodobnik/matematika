@@ -4,6 +4,7 @@
 import { act2Text } from '@/content/text/hunt-act2';
 import { act3Text } from '@/content/text/hunt-act3';
 import { act4Text } from '@/content/text/hunt-act4';
+import { growthText } from '@/content/text/hunt-growth';
 import {
   correctionText,
   huntUiText,
@@ -36,6 +37,7 @@ export const huntText = {
   guide: sceneGuideText,
   sealed: sealedText,
   correction: correctionText,
+  growth: growthText,
   ui: huntUiText,
   trail: trailText,
   gate: {

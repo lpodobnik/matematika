@@ -337,3 +337,30 @@ describe('the guided first fight on screen', () => {
     expect(text(html)).toContain(hr.fightGuide.steps.steam[1]);
   });
 });
+
+describe("part 2's brackets on the fight screen", () => {
+  const bracketed = act(
+    startFight(lairs['lair-120'], ['brackets'], 3),
+    { type: 'fight/roll' },
+    { type: 'fight/place', die: 0, slot: 'blade' },
+    { type: 'fight/place', die: 1, slot: 'charge' },
+    { type: 'fight/place', die: 2, slot: 'reach' },
+  );
+  const formulaOf = (fight: FightState) =>
+    text(board(fight).match(/<p class="fight__formula"[\s\S]*?<\/p>/)?.[0] ?? '');
+
+  it('offers the two forms only once brackets are bought', () => {
+    expect(board(set)).not.toContain('class="fight__forms"');
+    const html = board(bracketed);
+    expect(html).toContain('class="fight__forms"');
+    expect(html).toContain('data-form="plain" aria-pressed="true"');
+    expect(html).toContain('data-form="brackets" aria-pressed="false"');
+  });
+
+  it('shows the strike with brackets once he picks them', () => {
+    const [a, b] = bracketed.dice;
+    expect(formulaOf(bracketed)).toBe(`${a} · 1 + ${b}`);
+    const picked = act(bracketed, { type: 'fight/form', form: 'brackets' });
+    expect(formulaOf(picked)).toBe(`${a} · (1 + ${b})`);
+  });
+});

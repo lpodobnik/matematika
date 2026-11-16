@@ -1,5 +1,6 @@
 import '@/ui/luka/luka.css';
 import { useState } from 'react';
+import { secrets } from '@/content/secrets';
 import { hr } from '@/content/text/hr';
 import { dayOf, type LogSummary } from '@/playlog/log';
 import type { WayId } from '@/room/types';
@@ -136,6 +137,7 @@ export function LukaView({
               ))}
             </tbody>
           </table>
+          <p>{hr.luka.secrets(summary.secrets.length, secrets.length)}</p>
         </section>
       )}
 

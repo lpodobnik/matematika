@@ -4,7 +4,7 @@ import { lairs } from '@/content/lairs';
 import { hr } from '@/content/text/hr';
 import { blowRange, blowsAffordable, placedValues, SLOTS } from '@/fight/fight';
 import { type GuideStep, guideDice } from '@/fight/guide';
-import type { FightAction, FightState, Slot } from '@/fight/types';
+import type { FightAction, FightState, Slot, StrikeForm } from '@/fight/types';
 import { formatNumber } from '@/math/format';
 import type { FightEnd } from '@/store/fight-end';
 import { useGame } from '@/store/store';
@@ -206,6 +206,7 @@ export function FightBoard({
           blade={placedValues(fight).blade ?? 0}
           blows={fight.blows}
           charge={placedValues(fight).charge ?? 0}
+          form={fight.form ?? 'plain'}
           armour={fight.armour}
           onBack={() => setGuessing(false)}
           onStrike={() => onAction({ type: 'fight/strike' })}
@@ -314,6 +315,9 @@ export function FightBoard({
         {fight.phase !== 'strike' && (
           <>
             <Formula fight={fight} guide={guide} />
+            {fight.form !== null && (
+              <FormPick fight={fight} onForm={(form) => onAction({ type: 'fight/form', form })} />
+            )}
             <Blows
               fight={fight}
               guide={guide}
@@ -430,13 +434,52 @@ function Formula({ fight, guide }: { fight: FightState; guide: GuideStep | null 
   const set = fight.phase === 'set';
   const part = (value: number | null, letter: string) =>
     value === null ? <var>{letter}</var> : <b>{value}</b>;
+  const x = set ? <b>{fight.blows}</b> : <var>x</var>;
   return (
     <div className="fight__formula-box" {...guideMark(guide, 'formula')}>
       <p className="fight__formula" data-testid="formula">
-        {part(blade, 'a')} · {set ? <b>{fight.blows}</b> : <var>x</var>} + {part(charge, 'b')}
+        {fight.form === 'brackets' ? (
+          <>
+            {part(blade, 'a')} · ({x} + {part(charge, 'b')})
+          </>
+        ) : (
+          <>
+            {part(blade, 'a')} · {x} + {part(charge, 'b')}
+          </>
+        )}
       </p>
       <p className="fight__caption">{hr.fight.captions.formula}</p>
     </div>
+  );
+}
+
+/**
+ * Part 2's brackets: the strike as `a · x + b` or `a · (x + b)`, his choice each strike. The
+ * formula above shows the one chosen.
+ */
+function FormPick({ fight, onForm }: { fight: FightState; onForm(form: StrikeForm): void }) {
+  const forms: { form: StrikeForm; text: string }[] = [
+    { form: 'plain', text: 'a · x + b' },
+    { form: 'brackets', text: 'a · (x + b)' },
+  ];
+  return (
+    <fieldset className="fight__forms" aria-label={hr.fight.form.label}>
+      <Named name={hr.fight.form.label} caption={hr.fight.form.caption} />
+      <span className="fight__form-buttons">
+        {forms.map(({ form, text }) => (
+          <button
+            key={form}
+            type="button"
+            className="fight__form"
+            data-form={form}
+            aria-pressed={fight.form === form}
+            onClick={() => onForm(form)}
+          >
+            {text}
+          </button>
+        ))}
+      </span>
+    </fieldset>
   );
 }
 

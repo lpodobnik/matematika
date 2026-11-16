@@ -23,7 +23,7 @@ import type { UnmaskState } from '@/hunt/unmask';
 import { formatNumber, formatStatementLine } from '@/math/format';
 import { readLine, type SLineToken, type SToken } from '@/math/statement-tokens';
 import { HintControl } from '@/ui/common/HintButton';
-import { LittleOneArt } from '@/ui/hunt/LittleOne';
+import { OurLittleOne } from '@/ui/hunt/LittleOne';
 import {
   CartsBoardView,
   GuardBoardView,
@@ -195,7 +195,7 @@ function ShowBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: A
         {play.at === 0 && <span className="lesson__found">{spec.lesson.found}</span>}
         <span className="lesson__object">
           <span className="lesson__little">
-            <LittleOneArt />
+            <OurLittleOne />
           </span>
           <ObjectView object={step.object} />
         </span>
@@ -268,7 +268,7 @@ function TryBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: Ac
           <ObjectView object={task.object} />
         ) : (
           <div className="hunt__little">
-            <LittleOneArt />
+            <OurLittleOne />
           </div>
         )}
       </section>
@@ -315,7 +315,7 @@ function FixBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: Ac
           />
         ) : null}
         <div className="hunt__little" data-nod={play.fix === 'thanks'}>
-          <LittleOneArt />
+          <OurLittleOne />
         </div>
       </section>
       <section className="hunt__notebook">
@@ -361,7 +361,7 @@ function WriteBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: 
           <ObjectView object={task.object} />
         ) : (
           <div className="hunt__little hunt__little--big">
-            <LittleOneArt />
+            <OurLittleOne />
           </div>
         )}
       </section>
@@ -531,7 +531,7 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
             className="hunt__little knock__little"
             data-shake={state.shakes > 0}
           >
-            <LittleOneArt />
+            <OurLittleOne />
           </div>
         )}
         {state.shown && (

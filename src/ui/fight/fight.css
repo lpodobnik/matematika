@@ -162,7 +162,8 @@
 /* A stat's or control's name beside it, and its one-line caption under both, so the fight
    explains itself (what the number is for) without making the row any wider. */
 .fight__gauge,
-.fight__blows {
+.fight__blows,
+.fight__forms {
   display: grid;
   grid-template-columns: auto auto;
   justify-content: start;
@@ -380,6 +381,37 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* Part 2's brackets: the strike's two forms, side by side. */
+.fight__forms {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.fight__form-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fight__form {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fight__form[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .fight__notch {
@@ -714,8 +746,13 @@
   }
 
   .fight__gauge,
-  .fight__blows {
+  .fight__blows,
+  .fight__forms {
     gap: 0 6px;
+  }
+
+  .fight__form {
+    font-size: 16px;
   }
 
   .fight__notches {
