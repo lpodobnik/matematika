@@ -76,10 +76,10 @@
   background: var(--ink);
 }
 
+.opening__back,
 .opening__skip {
   position: absolute;
   top: 10px;
-  right: 10px;
   min-width: 48px;
   min-height: 48px;
   padding: 0 1em;
@@ -89,6 +89,15 @@
   color: var(--ink);
   font: inherit;
   cursor: pointer;
+}
+
+/* Right of the speaker, which takes the top-left corner over the story (mute-button.css). */
+.opening__back {
+  left: 72px;
+}
+
+.opening__skip {
+  right: 10px;
 }
 
 @keyframes opening-in {

@@ -337,6 +337,7 @@ export const hr = {
     leadDone: 'Riješeno',
     leadFirstTry: 'Iz prve',
     leadWrongDoors: 'Kriva vrata',
+    leadRestarts: 'Ispočetka',
     /** Part 2's caches found with bought gear: whether he goes back (GDD, Success signals). */
     secrets: (found: number, all: number) => `Kristijanovi papiri: ${found} od ${all}`,
     fights: 'Borbe',
@@ -422,6 +423,8 @@ export const hr = {
       'Na podu leži njegova bilježnica, puna pitanja. Ako popraviš strojeve, možda nađeš i Kristijana.',
     ],
     next: 'Dalje',
+    /** The picture before, to read it again. */
+    back: 'Natrag',
     skip: 'Preskoči',
     begin: 'Kreni',
   },

@@ -8,8 +8,8 @@ export const tuning = {
    * a deliberate change of two lines.
    */
   part2: { live: true },
-  /** Part 2's scenes: a showing's step, and an idle spell before help rises. */
-  hunt: { lessonStepMs: 11_000, idleMs: 60_000 },
+  /** Part 2's scenes: an idle spell before help rises. A showing waits for his Dalje. */
+  hunt: { idleMs: 60_000 },
   /** The little one following him (city/follow.ts): its gap, top speed and trail spacing. */
   follow: { gap: 96, speed: 400, spacing: 14, shyWithin: 240, beside: 72 },
   /** GDD, The scale: degrees of tilt per unit of difference between the sides. A stage

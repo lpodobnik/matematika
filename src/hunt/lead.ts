@@ -86,6 +86,8 @@ export interface LeadOutcome {
 
 export type LeadAction =
   | { kind: 'next' }
+  /** In the showing: the step before, to read it again. */
+  | { kind: 'back' }
   | { kind: 'move'; move: ObjectMove }
   | { kind: 'fix-tap'; line: number }
   | SceneAction;
@@ -147,6 +149,15 @@ export function playedScene(play: LeadPlay): SceneState | null {
 /** The play with this scene's state put back. */
 function withScene(play: LeadPlay, spec: SceneSpec, state: SceneState): LeadPlay {
   return { ...play, [spec.kind]: state };
+}
+
+/**
+ * The lead again from its first step, at his asking: the showing too, with his
+ * lines gone. A slip already made still counts, so "first try" stays honest, and what was paid
+ * stays paid (`paid` in the save).
+ */
+export function restartedLead(spec: LeadSpec, play: LeadPlay, facts: LeadFacts): LeadPlay {
+  return { ...newLeadPlay(spec, facts), clean: play.clean };
 }
 
 /** The lead from its first step: a knot has no showing, try or fix. */
@@ -352,6 +363,10 @@ export function leadStep(
   switch (action.kind) {
     case 'next':
       return next(spec, play, facts);
+    case 'back':
+      return play.step === 'show' && play.at > 0
+        ? { play: { ...play, at: play.at - 1 }, outcome: {} }
+        : same;
     case 'move': {
       if (!play.object) return same;
       const object = applyMove(play.object, action.move);

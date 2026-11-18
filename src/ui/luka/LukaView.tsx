@@ -124,6 +124,7 @@ export function LukaView({
                 <th>{hr.luka.leadDone}</th>
                 <th>{hr.luka.leadFirstTry}</th>
                 <th>{hr.luka.leadWrongDoors}</th>
+                <th>{hr.luka.leadRestarts}</th>
               </tr>
             </thead>
             <tbody>
@@ -133,6 +134,7 @@ export function LukaView({
                   <td>{lead.done ? '✓' : ''}</td>
                   <td>{lead.firstTry ? '✓' : ''}</td>
                   <td>{lead.wrongDoors}</td>
+                  <td>{lead.restarts}</td>
                 </tr>
               ))}
             </tbody>

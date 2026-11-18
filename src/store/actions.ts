@@ -179,6 +179,8 @@ export type Action =
   | { type: 'dev/hunt-jump'; to: JumpPlace }
   /** He leaves the scene for the town; it waits for him. */
   | { type: 'hunt/leave' }
+  /** The lead or knot in play, again from its first step, once he has said yes. */
+  | { type: 'hunt/restart' }
   /** He names the little one. */
   | { type: 'hunt/name'; name: string }
   /** This page load has `?dev`: part 2 is previewed (hunt/switch.ts). */

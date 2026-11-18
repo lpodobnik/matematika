@@ -338,7 +338,17 @@ export const huntUiText = {
   side: { odd: 'Neparna strana', even: 'Parna strana' },
   floor: 'kat',
   next: 'Dalje',
+  /** In the showing and in the story's pictures: the one before, to read it again. */
+  back: 'Natrag',
   skip: 'Preskoči',
+  /** The whole lead again from its first picture, once he has said yes. */
+  restart: {
+    button: 'Ispočetka',
+    ask: 'Sve ispočetka?',
+    warn: 'Ovaj trag kreće od prve slike, a tvoji redci nestaju.',
+    yes: 'Da, ispočetka',
+    no: 'Ne, ostavi',
+  },
   clues: 'Tragovi',
   yourLines: 'Tvoji redci',
   ok: 'U redu',

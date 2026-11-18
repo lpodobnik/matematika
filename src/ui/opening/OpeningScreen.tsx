@@ -21,7 +21,10 @@ export function OpeningPanels({ onDone }: { onDone(): void }) {
   return <StoryPanels panels={hr.opening.panels} art={openingArt} onDone={onDone} />;
 }
 
-/** Any of the story's panels, a tap on each to go on, and a skip: from props only. */
+/**
+ * Any of the story's panels, a tap on each to go on, "Natrag" to the one before (a stray tap
+ * mustn't lose a picture he hadn't read), and a skip: from props only.
+ */
 export function StoryPanels({
   panels,
   art: pictures,
@@ -62,6 +65,11 @@ export function StoryPanels({
           <span key={text} data-on={i === index} />
         ))}
       </div>
+      {index > 0 && (
+        <button type="button" className="opening__back" onClick={() => setIndex(index - 1)}>
+          {hr.opening.back}
+        </button>
+      )}
       {!last && (
         <button type="button" className="opening__skip" onClick={onDone}>
           {hr.opening.skip}

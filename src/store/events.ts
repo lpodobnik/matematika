@@ -27,6 +27,8 @@ export type StoreEvent =
   | { type: 'LineWritten'; lead: PlayId; line: string }
   | { type: 'DoorKnocked'; lead: PlayId; door: number; right: boolean }
   | { type: 'LeadFinished'; lead: PlayId; firstTry: boolean }
+  /** He started the lead or knot in play again from its first step. */
+  | { type: 'LeadRestarted'; lead: PlayId }
   /** Part 2's moments that only sound: a line in ink, a scene open, the cap off, a trap, caught. */
   | { type: 'LineInked'; lead: PlayId }
   | { type: 'SceneOpened'; lead: PlayId }
@@ -54,6 +56,7 @@ const notRoom: ReadonlySet<DomainEventType> = new Set<DomainEventType>([
   'LineWritten',
   'DoorKnocked',
   'LeadFinished',
+  'LeadRestarted',
   'LineInked',
   'SceneOpened',
   'Unmasked',

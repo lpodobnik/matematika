@@ -121,3 +121,20 @@ describe('fights in the play log (story 3.3)', () => {
     expect(summarize(noWon).afterLoss.losses).toBe(0);
   });
 });
+
+describe("part 2's leads in the log", () => {
+  it('counts how often he started a lead again, apart from its wrong doors', () => {
+    const log = [
+      ...logEntriesOf({ type: 'LeadPicked', lead: 'l01' }, at(0), null),
+      ...logEntriesOf({ type: 'DoorKnocked', lead: 'l01', door: 3, right: false }, at(1), at(0)),
+      ...logEntriesOf({ type: 'LeadRestarted', lead: 'l01' }, at(2), at(1)),
+      ...logEntriesOf({ type: 'LeadRestarted', lead: 'l01' }, at(3), at(2)),
+      ...logEntriesOf({ type: 'LeadFinished', lead: 'l01', firstTry: false }, at(4), at(3)),
+    ];
+    expect(log).toContainEqual({ type: 'lead', lead: 'l01', action: 'restart', at: at(2) });
+    const [lead] = summarize(log).leads;
+    expect(lead).toMatchObject({ lead: 'l01', restarts: 2, wrongDoors: 1, firstTry: false });
+    expect(lead?.started).toBe(at(0));
+    expect(lead?.done).toBe(at(4));
+  });
+});

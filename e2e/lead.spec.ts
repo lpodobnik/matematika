@@ -114,7 +114,7 @@ async function intoTheLead(page: Page) {
 
 async function throughTheShowingAndTheFix(page: Page) {
   await shot(page, '1-lesson');
-  for (let i = 0; i < 5; i += 1) await page.locator('.lesson').click();
+  for (let i = 0; i < 5; i += 1) await page.locator('.lesson__next').click();
 
   // Try: three more lamps, then two lines.
   await expect(page.locator('.pairs__sum')).toHaveText('2 · 2 = 4');

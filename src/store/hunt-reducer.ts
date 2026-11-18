@@ -27,6 +27,7 @@ import {
   leadStep,
   newLeadPlay,
   playedScene,
+  restartedLead,
 } from '@/hunt/lead';
 import { reachedMarks } from '@/hunt/marks';
 import { guideTold } from '@/hunt/scene';
@@ -333,6 +334,21 @@ export function withHunt(inner: Reduce): Reduce {
             draft.save.economy = castDraft(earnParts(state.save.economy, parts));
           }),
           events: [{ type: 'SecretFound', secret: spec.id, parts }, { type: 'SaveChanged' }],
+        };
+      }
+      case 'hunt/restart': {
+        const inPlay = state.ui.screen === 'hunt' ? leadInPlay(state) : null;
+        if (!inPlay) return same(state);
+        const { lead, spec, play } = inPlay;
+        const fresh = restartedLead(spec, play, {
+          taught: state.save.companion?.taught.map((entry) => entry.mistake) ?? [],
+          told: state.save.hunt.told,
+        });
+        return {
+          state: produce(state, (draft) => {
+            draft.save.hunt.scene = castDraft({ of: lead, index: 0, state: fresh });
+          }),
+          events: [{ type: 'LeadRestarted', lead }, { type: 'SaveChanged' }],
         };
       }
       case 'hunt/leave':

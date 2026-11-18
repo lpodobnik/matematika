@@ -123,7 +123,7 @@ async function pad(page: Page, keys: string[]) {
 const next = (page: Page) => page.locator('.hunt__next').first().click();
 
 async function showing(page: Page, steps: number) {
-  for (let i = 0; i < steps; i += 1) await page.locator('.lesson').click();
+  for (let i = 0; i < steps; i += 1) await page.locator('.lesson__next').click();
 }
 
 /** He walks to the lit stop, by the safe way, with real taps on the moves. */

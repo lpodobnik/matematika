@@ -7,6 +7,7 @@ import {
   leadPlayFrom,
   leadStep,
   newLeadPlay,
+  restartedLead,
 } from '@/hunt/lead';
 import type { SToken } from '@/math/statement-tokens';
 
@@ -99,6 +100,45 @@ describe('the steps of a lead', () => {
     ] as LeadAction[]) {
       expect(leadStep(l01, start, action, { taught: [], told: [] }).play).toBe(start);
     }
+  });
+});
+
+describe('reading the showing at his own pace', () => {
+  const back: LeadAction = { kind: 'back' };
+
+  it('goes back a step to read it again, and not before the first', () => {
+    const second = play(newLeadPlay(), [next]).state;
+    expect(second).toMatchObject({ step: 'show', at: 1 });
+    expect(play(second, [back]).state).toMatchObject({ step: 'show', at: 0 });
+    const first = newLeadPlay();
+    expect(leadStep(l01, first, back, { taught: [], told: [] }).play).toBe(first);
+  });
+
+  it('has no step back once the showing is over', () => {
+    const trying = play(newLeadPlay(), toTry).state;
+    expect(trying.step).toBe('try');
+    expect(leadStep(l01, trying, back, { taught: [], told: [] }).play).toBe(trying);
+  });
+});
+
+describe('starting a lead again', () => {
+  const facts = { taught: [], told: ['guide:knock'] };
+
+  it('goes back to the first picture of the showing, with his lines gone', () => {
+    const deep: LeadPlay = {
+      ...play(newLeadPlay(), toLift).state,
+      written: ['0 ∉ N'],
+      draft: ['1' as SToken],
+    };
+    expect(deep.step).toBe('play');
+    const again = restartedLead(l01, deep, facts);
+    expect(again).toMatchObject({ step: 'show', at: 0, written: [], draft: [] });
+    expect(again).toEqual({ ...newLeadPlay(l01, facts), clean: deep.clean });
+  });
+
+  it('keeps a slip he made, so "first try" stays true to what happened', () => {
+    const slipped: LeadPlay = { ...play(newLeadPlay(), toLift).state, clean: false };
+    expect(restartedLead(l01, slipped, facts).clean).toBe(false);
   });
 });
 

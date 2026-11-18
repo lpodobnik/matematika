@@ -20,7 +20,7 @@ export type PlayLogEvent = { at: string } /** The first event after 30 minutes o
    */
   | { type: 'fight'; lairId: LairId; won: boolean; parts: number }
   /** Part 2: a lead or knot begun or finished, and whether it went without a slip. */
-  | { type: 'lead'; lead: string; action: 'start' | 'done'; firstTry?: boolean }
+  | { type: 'lead'; lead: string; action: 'start' | 'restart' | 'done'; firstTry?: boolean }
   /** Part 2: a door he knocked on. */
   | { type: 'door'; lead: string; door: number; right: boolean }
   /** Part 2: one of Kristijan's caches, found with bought gear (GDD, Success signals: goes back). */
@@ -38,6 +38,7 @@ export type LoggedEvent =
   | { type: 'FightEnded'; lairId: string; won: boolean; parts: number }
   | { type: 'LeadPicked'; lead: string }
   | { type: 'LeadFinished'; lead: string; firstTry: boolean }
+  | { type: 'LeadRestarted'; lead: string }
   | { type: 'SecretFound'; secret: string; parts: number }
   | { type: 'DoorKnocked'; lead: string; door: number; right: boolean };
 
@@ -87,6 +88,9 @@ function entryOf(event: LoggedEvent, at: string): PlayLogEvent | null {
     return { type: 'fight', lairId: event.lairId, won: event.won, parts: event.parts, at };
   }
   if (event.type === 'LeadPicked') return { type: 'lead', lead: event.lead, action: 'start', at };
+  if (event.type === 'LeadRestarted') {
+    return { type: 'lead', lead: event.lead, action: 'restart', at };
+  }
   if (event.type === 'LeadFinished') {
     return { type: 'lead', lead: event.lead, action: 'done', firstTry: event.firstTry, at };
   }
@@ -151,6 +155,8 @@ export interface LeadSummary {
   /** Whether it went without a slip, once done. */
   firstTry: boolean | null;
   wrongDoors: number;
+  /** How often he started it again from its first step. */
+  restarts: number;
 }
 
 /** What Luka's view shows of the log. */
@@ -247,12 +253,15 @@ export function summarize(log: readonly PlayLogEvent[]): LogSummary {
         done: null,
         firstTry: null,
         wrongDoors: 0,
+        restarts: 0,
       };
       leads.set(event.lead, lead);
       if (event.type === 'door') {
         if (!event.right) lead.wrongDoors += 1;
       } else if (event.action === 'start') {
         lead.started ??= event.at;
+      } else if (event.action === 'restart') {
+        lead.restarts += 1;
       } else {
         lead.done ??= event.at;
         lead.firstTry ??= event.firstTry ?? null;

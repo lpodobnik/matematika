@@ -23,6 +23,7 @@ import type { UnmaskState } from '@/hunt/unmask';
 import { formatNumber, formatStatementLine } from '@/math/format';
 import { readLine, type SLineToken, type SToken } from '@/math/statement-tokens';
 import { HintControl } from '@/ui/common/HintButton';
+import { Lesson } from '@/ui/hunt/Lesson';
 import { OurLittleOne } from '@/ui/hunt/LittleOne';
 import {
   CartsBoardView,
@@ -181,31 +182,19 @@ export function LeadBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay;
   }
 }
 
-/** The cylinder plays: up to 60 seconds, and one tap speeds it up. It has no skip the first time. */
+/** The cylinder's showing, a step at a time, as fast as he reads. It has no skip the first time. */
 function ShowBoard({ spec, play, act }: { spec: LeadSpec; play: LeadPlay; act: Act }) {
   const step = spec.lesson.steps[play.at];
-  useEffect(() => {
-    const timer = window.setTimeout(() => act({ kind: 'next' }), tuning.hunt.lessonStepMs);
-    return () => window.clearTimeout(timer);
-  }, [act]);
   if (!step) return null;
   return (
     <main className="hunt hunt--full">
-      <button type="button" className="lesson" onClick={() => act({ kind: 'next' })}>
-        {play.at === 0 && <span className="lesson__found">{spec.lesson.found}</span>}
-        <span className="lesson__object">
-          <span className="lesson__little">
-            <OurLittleOne />
-          </span>
-          <ObjectView object={step.object} />
-        </span>
-        {step.say.map((line) => (
-          <span key={line} className="lesson__line">
-            {line}
-          </span>
-        ))}
-        <span className="lesson__next">{huntUiText.next}</span>
-      </button>
+      <Lesson
+        step={step}
+        found={play.at === 0 ? spec.lesson.found : undefined}
+        little
+        onNext={() => act({ kind: 'next' })}
+        onBack={play.at > 0 ? () => act({ kind: 'back' }) : undefined}
+      />
     </main>
   );
 }
