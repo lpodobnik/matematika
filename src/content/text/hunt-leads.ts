@@ -354,6 +354,9 @@ export const huntUiText = {
   ok: 'U redu',
   shake:
     'Mali automat vrti glavom i pokazuje na trag. Ako neki tvoj redak ne valja, dodirni ga i on će se prekrižiti.',
+  /** His lines leave no door together: one of them is wrong, and he finds it. */
+  disagree:
+    'Tvoji se redci ne slažu: nijedna vrata ne odgovaraju svima. Ako neki tvoj redak ne valja, dodirni ga i on će se prekrižiti.',
   across: 'Vrata koja tvoj redak pali su na drugoj strani ulice. Prijeđi cestu.',
   offTask: 'To je točno, ali nije ono što se traži. Pročitaj zadatak još jednom.',
   bounce: 'To nije točno. Pogledaj redak još jednom.',

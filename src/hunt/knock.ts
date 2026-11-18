@@ -341,10 +341,27 @@ export function knockEnter(spec: KnockSpec, state: KnockState): KnockState {
   }
   const line: KnockLine = { tokens, clue: clue.id, struck: false };
   const lines = [...state.lines, line];
-  // A line that leaves no door: the same shake, and it's struck through. Until he stands on the
-  // side a clue names, a door across the road is still a door: the line stays, and he's told to
-  // cross.
-  if (keep !== null && litDoors(spec.row, sideToJudge(spec, state), lines).length === 0) {
+  const judged = sideToJudge(spec, state);
+  // A line that leaves no door with his others but does on its own: it stays, unstruck, and no
+  // door is lit. It may be the right one: his son wrote 25 + 2 · 5 = 35 after a wrong line, and
+  // saw his right line struck as if it were wrong. He finds the line that's wrong and strikes it.
+  if (
+    keep !== null &&
+    litDoors(spec.row, judged, lines).length === 0 &&
+    litDoors(spec.row, judged, [line]).length > 0
+  ) {
+    return {
+      ...shake(state, spec),
+      pointAt: null,
+      lines,
+      draft: [],
+      clue: firstClue(spec, lines) ?? clue.id,
+    };
+  }
+  // A line that leaves no door by itself: the same shake, and it's struck through. Until he
+  // stands on the side a clue names, a door across the road is still a door: the line stays, and
+  // he's told to cross.
+  if (keep !== null && litDoors(spec.row, judged, lines).length === 0) {
     return {
       ...shake(state, spec),
       lines: [...state.lines, { ...line, struck: true }],
@@ -365,6 +382,19 @@ export function knockEnter(spec: KnockSpec, state: KnockState): KnockState {
     pointAt: null,
     // The row will scroll to what's lit.
   };
+}
+
+/**
+ * His lines disagree: each leaves a door, but no door is left for them all, on the side they're
+ * judged on. One of them is wrong, and he strikes it. Derived, so nothing new is saved.
+ */
+export function linesDisagree(spec: KnockSpec, state: KnockState): boolean {
+  const judged = sideToJudge(spec, state);
+  const keeping = active(state.lines).filter((line) => {
+    const statement = statementOf(line.tokens);
+    return statement !== null && lineKeeps(statement) !== null;
+  });
+  return keeping.length > 1 && litDoors(spec.row, judged, keeping).length === 0;
 }
 
 /** Tapping a line strikes it through, and tapping again restores it. */

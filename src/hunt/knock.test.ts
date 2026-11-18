@@ -16,6 +16,7 @@ import {
   knockStrike,
   knockType,
   lineStart,
+  linesDisagree,
   litDoors,
   newKnock,
 } from '@/hunt/knock';
@@ -119,11 +120,25 @@ describe('the doors', () => {
     expect(state.draft).toEqual([]);
   });
 
-  it('two lines that disagree leave no door', () => {
+  // His son wrote 25 + 2 · 5 = 35 after a wrong line, and saw his right line struck.
+  it('two lines that disagree leave no door, and neither is struck: he strikes the wrong one', () => {
     const crossed = knockCross(spec, newKnock(spec));
-    const state = write(spec, write(spec, crossed, '15'), '17');
-    expect(state.lines[1]?.struck).toBe(true);
-    expect(lit(spec, state)).toEqual([15]);
+    const wrongFirst = write(spec, crossed, '17');
+    const state = write(spec, wrongFirst, '15');
+    expect(state.lines.map((line) => line.struck)).toEqual([false, false]);
+    expect(lit(spec, state)).toEqual([]);
+    expect(linesDisagree(spec, state)).toBe(true);
+    expect(state.shakes).toBe(1);
+    expect(state.anyStruck).toBe(false);
+    const fixed = knockStrike(spec, state, 0);
+    expect(lit(spec, fixed)).toEqual([15]);
+    expect(linesDisagree(spec, fixed)).toBe(false);
+  });
+
+  it('the moment before: lines that agree don’t disagree', () => {
+    const crossed = knockCross(spec, newKnock(spec));
+    expect(linesDisagree(spec, write(spec, crossed, '15'))).toBe(false);
+    expect(linesDisagree(spec, write(spec, write(spec, crossed, '15'), '15'))).toBe(false);
   });
 
   it('striking a line relights what it ruled out, and tapping again restores it', () => {

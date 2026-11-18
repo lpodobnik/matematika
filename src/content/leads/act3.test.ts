@@ -15,6 +15,7 @@ import {
   knockPickClue,
   knockType,
   lineStart,
+  linesDisagree,
   litDoors,
   newKnock,
 } from '@/hunt/knock';
@@ -592,12 +593,12 @@ describe('the coat: the address', () => {
     expect(state.shown?.say).toBe(address.grumpy[0]);
   });
 
-  it('a number the clue rules out leaves no door, and is struck', () => {
+  it('a number the clue rules out leaves no door, and he strikes the line that’s wrong', () => {
     let state = knockPickClue(address, newKnock(address), 'past');
     state = write(address, state, 'x > 40');
     state = write(address, state, '25');
-    expect(state.lines[0]?.struck).toBe(false);
-    expect(state.lines[1]?.struck).toBe(true);
+    expect(state.lines.map((line) => line.struck)).toEqual([false, false]);
+    expect(linesDisagree(address, state)).toBe(true);
     expect(state.opened).toBe(false);
   });
 

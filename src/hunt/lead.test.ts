@@ -259,7 +259,7 @@ describe('the first Knock’s guide', () => {
   it('never forces a false line: he can always take a typo back', () => {
     // The first sum wrong, so that the right second one leaves no door.
     const stuck = firstTime([...toPlay, next, { kind: 'cross' }, ...types('13'), ...types('15')]);
-    expect(stuck.knock?.lines[1]?.struck).toBe(true);
+    expect(stuck.knock?.lines.map((line) => line.struck)).toEqual([false, false]);
     const undone = firstTime([
       ...toPlay,
       next,

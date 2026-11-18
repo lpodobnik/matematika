@@ -10,6 +10,7 @@ import {
   type KnockState,
   knockGuide,
   lineStart,
+  linesDisagree,
   litDoors,
 } from '@/hunt/knock';
 import { type LeadAction, type LeadPlay, playedScene } from '@/hunt/lead';
@@ -588,6 +589,7 @@ export function KnockBoard({ spec, state, act }: { spec: KnockSpec; state: Knock
           {state.marked !== null && <p className="hunt__note">{huntUiText.marked}</p>}
           {state.bounced && <p className="hunt__note">{huntUiText.bounce}</p>}
           {state.across && <p className="hunt__note">{huntUiText.across}</p>}
+          {linesDisagree(spec, state) && <p className="hunt__note">{huntUiText.disagree}</p>}
           {state.pointAt !== null && !state.bounced && (
             <p className="hunt__note">{huntUiText.shake}</p>
           )}

@@ -13,6 +13,7 @@ import {
   knockPickClue,
   knockStrike,
   knockType,
+  linesDisagree,
   litDoors,
   newKnock,
 } from '@/hunt/knock';
@@ -319,11 +320,12 @@ describe('the neighbours', () => {
     expect(early.lines[1]?.clue).toBe('above');
   });
 
-  it('a line that disagrees with the one before is struck, and leaves the door', () => {
+  it('a line that disagrees with the one before leaves no door, and he strikes the wrong one', () => {
     const one = write(street, newKnock(street), 'witness', '1000');
     const two = write(street, one, 'above', '999');
-    expect(two.lines[1]?.struck).toBe(true);
-    expect(lit(street, two)).toEqual([1000]);
+    expect(two.lines.map((line) => line.struck)).toEqual([false, false]);
+    expect(linesDisagree(street, two)).toBe(true);
+    expect(lit(street, knockStrike(street, two, 1))).toEqual([1000]);
   });
 
   it('its riddle answers 17, and the two near misses say why', () => {
@@ -390,12 +392,23 @@ describe('Knot 1', () => {
     expect(knockDoor(knock, state, 35).opened).toBe(true);
   });
 
-  it('a sum that disagrees with the line before is struck, and leaves the door', () => {
+  it('a sum that disagrees with the line before leaves no door, and he strikes the wrong one', () => {
     let state = knockCross(knock, newKnock(knock));
     state = write(knock, state, 'slip', '35');
     state = write(knock, state, 'tram', '45');
-    expect(state.lines[1]?.struck).toBe(true);
-    expect(lit(knock, state)).toEqual([35]);
+    expect(state.lines[1]?.struck).toBe(false);
+    expect(linesDisagree(knock, state)).toBe(true);
+    expect(lit(knock, knockStrike(knock, state, 1))).toEqual([35]);
+  });
+
+  // His son's report: a wrong slip first, then 25 + 2 · 5 = 35, and his right line was struck.
+  it('a right sum after a wrong one stays, unstruck, and striking the wrong one leaves its door', () => {
+    let state = knockCross(knock, newKnock(knock));
+    state = write(knock, state, 'slip', '53');
+    state = write(knock, state, 'tram', '35');
+    expect(state.lines.map((line) => line.struck)).toEqual([false, false]);
+    expect(lit(knock, state)).toEqual([]);
+    expect(lit(knock, knockStrike(knock, state, 0))).toEqual([35]);
   });
 });
 
@@ -454,9 +467,12 @@ describe('the witnesses', () => {
 
   it('< leaves door 234 out, and so no door at all', () => {
     const state = write(knock, twoIn, 'up-to', 'x < 234');
-    expect(state.lines[2]?.struck).toBe(true);
-    expect(state.anyStruck).toBe(true);
-    expect(lit(knock, state)).toEqual([234, 236, 238]);
+    expect(state.lines[2]?.struck).toBe(false);
+    expect(lit(knock, state)).toEqual([]);
+    expect(linesDisagree(knock, state)).toBe(true);
+    const struck = knockStrike(knock, state, 2);
+    expect(struck.anyStruck).toBe(true);
+    expect(lit(knock, struck)).toEqual([234, 236, 238]);
   });
 
   it('≤ keeps it in, and leaves one door', () => {
@@ -650,8 +666,10 @@ describe('Knot 2', () => {
     const state = write(knock, limits, 'note', '334');
     expect(lit(knock, state)).toEqual([334]);
     const both = write(knock, state, 'books', '332');
-    expect(both.lines[both.lines.length - 1]?.struck).toBe(true);
-    expect(lit(knock, both)).toEqual([334]);
+    // The true line stays: it's the note that's wrong, and he strikes it.
+    expect(both.lines[both.lines.length - 1]?.struck).toBe(false);
+    expect(lit(knock, both)).toEqual([]);
+    expect(linesDisagree(knock, both)).toBe(true);
   });
 
   it('copying the note leads to its door, and a polite notice', () => {
