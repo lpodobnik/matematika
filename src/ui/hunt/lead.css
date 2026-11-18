@@ -1111,24 +1111,26 @@
   display: flex;
   justify-content: center;
   gap: 2px;
-  min-height: 52px;
+  /* The figures grow with the screen: on a tablet the line has room to spare. */
+  min-height: clamp(52px, 13dvh, 120px);
   width: 100%;
 }
 
+/* He and the patrols, in their own pictures: his chosen look, and the automatons of the fights. */
 .stop__me {
-  width: 26px;
-  height: 46px;
-  background: var(--brass);
-  border: 3px solid var(--ink);
-  border-radius: 13px 13px 4px 4px;
+  height: clamp(52px, 13dvh, 120px);
+  width: auto;
 }
 
 .stop__patrol {
-  width: 30px;
-  height: 46px;
-  background: var(--iron);
-  border: 3px solid var(--ink);
-  border-radius: 4px;
+  display: flex;
+  align-items: flex-end;
+  height: clamp(52px, 13dvh, 120px);
+}
+
+.stop__patrol-art {
+  height: 100%;
+  width: auto;
 }
 
 .sneak__moves {

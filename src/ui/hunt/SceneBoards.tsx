@@ -17,13 +17,18 @@ import {
 import type { UnmaskSpec, UnmaskState } from '@/hunt/unmask';
 import { formatNumber, formatStatementLine } from '@/math/format';
 import { readLine, type SLineToken, type SToken } from '@/math/statement-tokens';
+import { useGame } from '@/store/store';
 import { HintControl } from '@/ui/common/HintButton';
+import { Automaton } from '@/ui/fight/fight-art';
 import vuceticGears from '@/ui/hunt/art/vucetic-gears.webp';
 import { OurLittleOne } from '@/ui/hunt/LittleOne';
 import { type HuntKey, StatementPad } from '@/ui/hunt/StatementPad';
 import { useHuntKeys } from '@/ui/hunt/use-hunt-keys';
 import { LineView } from '@/ui/notebook/LineView';
-import { personArt } from '@/ui/town/art';
+import { lookFacing, looks, personArt } from '@/ui/town/art';
+
+/** The automatons a sneak's patrols wear, one each, so he can tell them apart (fight-art.tsx). */
+const patrolArmours = [20, 30, 40] as const;
 
 type Act = (action: LeadAction) => void;
 
@@ -104,6 +109,7 @@ export function SneakBoardView({
   act: Act;
 }) {
   const board = spec.boards[state.board];
+  const look = useGame((s) => s.save.character.look) ?? 'look-1';
   const onKey = (key: HuntKey) => act(keyAction(key));
   useHuntKeys(onKey);
   useIdle(act, `${state.tick},${state.at},${state.draft.length},${state.help}`, state.opened);
@@ -133,7 +139,9 @@ export function SneakBoardView({
         <p className="knock__intro sneak__intro">{spec.intro}</p>
         <ol ref={row} className="stops">
           {stops.map((stop) => {
-            const patrols = board.patrols.filter((patrol) => patrolAt(patrol, state.tick) === stop);
+            const patrols = board.patrols.flatMap((patrol, index) =>
+              patrolAt(patrol, state.tick) === stop ? [{ patrol, index }] : [],
+            );
             const drawn =
               state.help >= 2 && board.patrols.some((patrol) => ahead(patrol).includes(stop));
             return (
@@ -155,11 +163,33 @@ export function SneakBoardView({
                 <span className="stop__tick" />
                 <span className="stop__who">
                   {at === stop && (
-                    <span className="stop__me" role="img" aria-label={huntUiText.me} />
+                    // He faces the way out, to the right.
+                    <img
+                      className="stop__me"
+                      src={looks[look]}
+                      alt={huntUiText.me}
+                      draggable={false}
+                      style={{ transform: `scaleX(${lookFacing[look]})` }}
+                    />
                   )}
-                  {patrols.length > 0 && (
-                    <span className="stop__patrol" role="img" aria-label={huntUiText.patrol} />
-                  )}
+                  {patrols.map(({ patrol, index }) => {
+                    // An automaton faces where it goes next: a picture faces left, as drawn.
+                    const next = patrolAt(patrol, state.tick + 1) - stop;
+                    return (
+                      <span
+                        key={index}
+                        className="stop__patrol"
+                        role="img"
+                        aria-label={huntUiText.patrol}
+                        style={next > 0 ? { transform: 'scaleX(-1)' } : undefined}
+                      >
+                        <Automaton
+                          className="stop__patrol-art"
+                          armour={patrolArmours[index % patrolArmours.length] ?? 20}
+                        />
+                      </span>
+                    );
+                  })}
                 </span>
               </li>
             );
