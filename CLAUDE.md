@@ -63,12 +63,12 @@ The son plays on a live save. Lair and room ids are stored in saves, so they sta
 
 ## Part 2
 
-Part 2 ("The Trail") is built and off for everyone: `tuning.part2.live` is false, pinned by `src/hunt/switch.test.ts`. `?dev` previews it, and the dev panel jumps to any lead. It writes the active player's real save, so use a second player (`#igraci`).
+Part 2 ("The Trail") is live: Luka switched it on for his son on 2026-11-18. `tuning.part2.live` is true, pinned by `src/hunt/switch.test.ts`. Tests that check the switch still shuts everything close it for one test with `withPartTwoClosed` (`src/hunt/closed-switch.ts`). The dev panel (`?dev`) jumps to any lead. It writes the active player's real save, which is now his live trail, so use a second player (`#igraci`).
 
 - Rules are in `src/hunt/`, pure. Leads are data in `src/content/leads/`, with Croatian in `src/content/text/hunt*.ts`. `hunt/solve.ts` proves each lead, and `src/store/hunt-playthrough.test.ts` plays the whole chapter through the store.
 - Each lead starts in its own street, u1 to u6, set in `spotPlaces` in `src/content/town.ts` (`streetOf`). Knot 3 starts at the tool room's door in the bridge's pier, and the tool room (`toolroom`) opens after it. Corrected streets (`hunt/corrected.ts`) grey u2 after w1 and u1 after k2, each won back with a Knock in `content/leads/corrections.ts`. A way opens with the find that leads there. To check a street's ground, doors and ways against its painting, draw them over it with `node art-src/tools/town-overlay.mjs <outDir> u1 u2 ...` while the dev server runs on 5290.
 - Luka's review page for part 2's text is `_bmad-output/tekst-drugi-dio-za-pregled.md`. Regenerate it after text changes with a temporary Vitest test that walks `huntText`.
-- Epics 11 and 12 are built: gear and looks at Faust's (`hunt/gear.ts`), Kristijan's caches (`content/secrets.ts`), `lair-70`, `lair-120` and `lair-140` (`content/lairs.ts`, set by `fight/balance.test.ts`), brackets as a per-strike `form`, Nikola's automaton in u1, a music layer per act, and the paper test (`_bmad-output/paper-test-drugi-dio.md`). Switching it on waits for Luka's text review.
+- Epics 11 and 12 are built: gear and looks at Faust's (`hunt/gear.ts`), Kristijan's caches (`content/secrets.ts`), `lair-70`, `lair-120` and `lair-140` (`content/lairs.ts`, set by `fight/balance.test.ts`), brackets as a per-strike `form`, Nikola's automaton in u1, a music layer per act, and the paper test (`_bmad-output/paper-test-drugi-dio.md`).
 - Where it stands: `_bmad-output/implementation-artifacts/part-2-morning-report.md`.
 
 ## Where things stand (2026-11-08)

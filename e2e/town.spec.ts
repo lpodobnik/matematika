@@ -708,9 +708,7 @@ for (const [look, mirrored] of [
   });
 }
 
-test('the district done: the foundry gate is marked, sealed, and to be continued', async ({
-  page,
-}) => {
+test('the district done: the foundry gate is marked, and opens onto part 2', async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
@@ -755,8 +753,10 @@ test('the district done: the foundry gate is marked, sealed, and to be continued
       room: null,
     });
   });
-  // The ending's panels come first, once.
-  for (let i = 0; i < 4; i += 1) await page.locator('.opening__panel').click();
+  // The ending's panels come first, once, and with part 2 open they don't say "to be continued".
+  for (let i = 0; i < 3; i += 1) await page.locator('.opening__panel').click();
+  await expect(page.locator('.opening__panel')).not.toContainText('Nastavak slijedi');
+  await page.locator('.opening__panel').click();
   await expect(page.locator('.opening__panel')).toHaveCount(0);
   const area = (id: string) => page.locator(`.town__board[data-area="${id}"]`);
   for (const to of ['canal', 'mill', 'yard']) {
@@ -765,9 +765,7 @@ test('the district done: the foundry gate is marked, sealed, and to be continued
   }
   await expect(page.locator('.town__next')).toBeVisible();
   await page.locator('.town__place[data-node="foundry"]').click();
-  await expect(page.locator('.town__bubble')).toContainText('5 · x = 40', { timeout: 8000 });
-  await page.locator('.town__bubble').click();
-  await expect(page.locator('.town__bubble')).toContainText('Nastavak slijedi');
+  await expect(page.locator('.gate__plate')).toHaveText('5 · x = 40', { timeout: 8000 });
   await shot(page, '15-foundry');
-  expect((await state(page)).ui.screen).toBe('map');
+  expect((await state(page)).ui.screen).toBe('hunt');
 });

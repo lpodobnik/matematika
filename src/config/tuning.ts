@@ -3,11 +3,11 @@
 
 export const tuning = {
   /**
-   * Part 2 (GDD, Part 2: The Trail) stays off until Luka opens it, because `main` deploys to his
-   * son's live save. `?dev` previews it. `hunt/switch.test.ts` pins this, so opening it is a
-   * deliberate change of two lines.
+   * Part 2 (GDD, Part 2: The Trail) is open: Luka switched it on for his son on 2026-11-18.
+   * `main` deploys to his live save, and `hunt/switch.test.ts` pins this, so closing it again is
+   * a deliberate change of two lines.
    */
-  part2: { live: false },
+  part2: { live: true },
   /** Part 2's scenes: a showing's step, and an idle spell before help rises. */
   hunt: { lessonStepMs: 11_000, idleMs: 60_000 },
   /** The little one following him (city/follow.ts): its gap, top speed and trail spacing. */

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { withPartTwoClosed } from '@/hunt/closed-switch';
 import type { JumpPlace } from '@/hunt/jump';
 import { newSave } from '@/store/persist';
 import { createGameStore } from '@/store/store';
@@ -15,7 +16,7 @@ function at(place: JumpPlace, { preview = true, parts = 0 } = {}) {
   store.getState().dispatch({ type: 'dev/hunt-jump', to: place });
   store.getState().dispatch({ type: 'dev/set-parts', parts });
   if (!preview) {
-    // The same save, opened without ?dev: part 2 is off.
+    // The same save, opened without ?dev.
     const off = createGameStore();
     off.getState().dispatch({ type: 'boot/start', save: store.getState().save, room: null });
     return off;
@@ -56,12 +57,14 @@ describe("Faust's counter in part 2", () => {
 
   it('sells nothing for the little one with part 2 off', () => {
     const store = at('l01', { parts: 40, preview: false });
-    dispatch(
-      store,
-      { type: 'map/travel', node: 'workshop' },
-      { type: 'shop/buy-gear', gear: 'lamp' },
-    );
-    expect(store.getState().save.companion?.gear).not.toContain('lamp');
+    withPartTwoClosed(() => {
+      dispatch(
+        store,
+        { type: 'map/travel', node: 'workshop' },
+        { type: 'shop/buy-gear', gear: 'lamp' },
+      );
+      expect(store.getState().save.companion?.gear).not.toContain('lamp');
+    });
   });
 
   it('keeps brackets off the counter until the coat is done', () => {
@@ -164,7 +167,9 @@ describe("part 2's automatons", () => {
 
   it('take no fight with part 2 off', () => {
     const store = at('l13', { preview: false });
-    dispatch(store, { type: 'map/travel', node: 'lair-70' });
-    expect(store.getState().ui.screen).not.toBe('fight');
+    withPartTwoClosed(() => {
+      dispatch(store, { type: 'map/travel', node: 'lair-70' });
+      expect(store.getState().ui.screen).not.toBe('fight');
+    });
   });
 });

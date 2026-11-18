@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { withPartTwoClosed } from '@/hunt/closed-switch';
 import { gateScene } from '@/hunt/gate';
 import type { Token } from '@/math/tokens';
 import { newSave } from '@/store/persist';
@@ -30,11 +31,19 @@ const write = (store: ReturnType<typeof started>, line: string) => {
 
 describe('the foundry gate, in the store', () => {
   it('stays shut with part 2 off, whatever he has done', () => {
+    withPartTwoClosed(() => {
+      const store = started(endOfPartOne(['r12', 'r13'], true), false);
+      const before = store.getState();
+      store.getState().dispatch({ type: 'hunt/gate-open' });
+      expect(store.getState().save).toBe(before.save);
+      expect(store.getState().ui.screen).toBe(before.ui.screen);
+    });
+  });
+
+  it('opens for him without ?dev now that part 2 is on', () => {
     const store = started(endOfPartOne(['r12', 'r13'], true), false);
-    const before = store.getState();
     store.getState().dispatch({ type: 'hunt/gate-open' });
-    expect(store.getState().save).toBe(before.save);
-    expect(store.getState().ui.screen).toBe(before.ui.screen);
+    expect(store.getState().ui.screen).toBe('hunt');
   });
 
   it('stays shut the moment before: the boss beaten, room 13 not done', () => {
@@ -89,7 +98,7 @@ describe('the foundry gate, in the store', () => {
     expect(on.getState().ui.screen).toBe('hunt');
 
     const off = createGameStore();
-    off.getState().dispatch({ type: 'boot/start', save, room: null });
+    withPartTwoClosed(() => off.getState().dispatch({ type: 'boot/start', save, room: null }));
     expect(off.getState().ui.screen).not.toBe('hunt');
   });
 

@@ -17,7 +17,7 @@ The whole chapter plays, from the foundry gate to the warm lamp.
 | 9: Other ways to play | Done | Sneak, Unmask, Little one alone, each with a first-time guide |
 | 10: The whole trail | Done, with the gaps below | 16 leads, 3 knots, the wandering-off, 4 rule guards, the black thread, the coat, the ending |
 | 11: Growth and fights | Done (2026-11-16) | Gear and looks at Faust's, 8 caches, 3 new automatons, brackets, Nikola's automaton |
-| 12: Ready for him | Done but for you | Art, a music layer per act, the paper test, browser tests. Left for you: the text review and switching it on |
+| 12: Ready for him | Done, live on 2026-11-18 | Art, a music layer per act, the paper test, browser tests, switched on. Left for you: the text review |
 
 ## Do clues look clearer than rooms?
 
@@ -99,11 +99,11 @@ All new Croatian is mine and is on your review page.
 - **Luka's view** counts Kristijan's papers found: the GDD's "goes back" signal.
 - **Art:** 5 images (t109–t113), credits at 113/125.
   - The fourth sketch came out as tongs, not a grappling hook, so that paper became Kristijan's tongs.
-- **Not done:** switching part 2 on is yours. `tuning.part2.live` is still false, pinned by `src/hunt/switch.test.ts`. All the new Croatian is mine and is on your review page.
+- **Switched on on 2026-11-18,** at Luka's word, before his text review. `tuning.part2.live` is true, pinned by `src/hunt/switch.test.ts`. A save that saw part 1's ending while part 2 was off goes straight to the gate (`e2e/hunt.spec.ts`). All the new Croatian is mine and is on your review page.
 
 ## What's not there
 
-- **Your text review,** then switching it on.
+- **Your text review.** Your edits go in as you give them; he may already have read the lines.
 - **The finale** at the end of 5th grade.
 
 ## Calls I made

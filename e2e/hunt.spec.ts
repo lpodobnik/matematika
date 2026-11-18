@@ -1,7 +1,8 @@
 // Story 7.6: part 2's way in, as he would meet it. With `?dev`, from the end of part 1 through the
 // foundry gate, the empty foundry, naming the little one and into the first new street. Without
-// it, the game he plays today: the gate stays sealed and nothing of part 2 shows. Seeded from the
-// real path, including the moment before the gate opens. Real taps throughout.
+// it, as he plays it since Luka opened part 2: a save that saw part 1's ending before then goes
+// straight to the gate. Seeded from the real path, including the moment before the gate opens.
+// Real taps throughout.
 
 import { expect, type Page, test } from '@playwright/test';
 import type { GameState } from '../src/store/types';
@@ -36,12 +37,26 @@ const closeDevPanel = (page: Page) =>
   page.getByRole('button', { name: 'close', exact: true }).click();
 
 /** A fresh game seeded at the end of part 1, on `url`. */
-async function endOfPartOne(page: Page, url: string, rooms: string[], bossBeaten: boolean) {
+async function endOfPartOne(
+  page: Page,
+  url: string,
+  rooms: string[],
+  bossBeaten: boolean,
+  { outroSeen = false } = {},
+) {
   await page.goto(url);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await hook(page);
   if (url.includes('dev')) await closeDevPanel(page);
+  if (outroSeen) {
+    // He saw part 1's ending while part 2 was still off.
+    await page.evaluate(async () => {
+      const path = '/src/ui/town/town-storage.ts';
+      const m = await import(/* @vite-ignore */ path);
+      m.writeOutroSeen();
+    });
+  }
   await page.evaluate(
     ({ rooms, bossBeaten }) => {
       const g = window as unknown as Game;
@@ -102,20 +117,19 @@ async function pad(page: Page, keys: string[]) {
       .dispatchEvent('pointerdown', { button: 0, isPrimary: true });
 }
 
-test('part 2 off: the gate stays sealed, and nothing of part 2 shows', async ({ page }) => {
+test('without ?dev, as he plays it: part 1 ended before part 2 opened, and the gate opens', async ({
+  page,
+}) => {
   test.setTimeout(120_000);
-  await endOfPartOne(page, '/', allRooms, true);
-  for (let i = 0; i < 3; i += 1) await page.locator('.opening__panel').click();
-  // The last panel promises what comes next, as it always has.
-  await expect(page.locator('.opening__panel')).toContainText('Nastavak slijedi');
-  await page.locator('.opening__panel').click();
+  await endOfPartOne(page, '/', allRooms, true, { outroSeen: true });
+  // The ending he has seen doesn't come again.
+  await expect(page.locator('.opening__panel')).toHaveCount(0);
   await toTheYard(page);
-  await expect(page.locator('.town__figure--little')).toHaveCount(0);
-  await expect(page.locator('.town__sign[data-sign="u1"]')).toHaveCount(0);
+  await expect(page.locator('.town__next')).toBeVisible();
   await page.locator('.town__place[data-node="foundry"]').click();
-  await expect(page.locator('.town__bubble')).toContainText('5 · x = 40', { timeout: 8000 });
-  expect((await state(page)).ui.screen).toBe('map');
-  expect((await state(page)).save.hunt.gateOpened).toBe(false);
+  await expect(page.locator('.gate__plate')).toHaveText('5 · x = 40', { timeout: 8000 });
+  expect((await state(page)).ui.screen).toBe('hunt');
+  await shot(page, '0-gate-live');
 });
 
 test('part 2 on: the moment before, with room 13 still to do, the gate waits', async ({ page }) => {

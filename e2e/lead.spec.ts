@@ -1,6 +1,6 @@
 // Stories 8.3 to 8.9: the first lead, "Two sides", from the trail map to the written line, with
-// the wrong door included. Seeded from the real path: the gate open and the map given. With
-// part 2 off, none of it is reachable. Real taps throughout.
+// the wrong door included. Seeded from the real path: the gate open and the map given. Without
+// ?dev it is there too, since Luka opened part 2. Real taps throughout.
 
 import { expect, type Page, test } from '@playwright/test';
 import type { GameState } from '../src/store/types';
@@ -243,12 +243,17 @@ test('part 2 on: right the first time pays its parts, once', async ({ page }) =>
   expect((await state(page)).save.economy.parts).toBe(2);
 });
 
-test('part 2 off: the lead’s spot is nowhere, even with a save that has gone this far', async ({
+test('without ?dev, as he plays it: the little one is with him and the lead starts', async ({
   page,
 }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   await atTheFirstStreet(page, '/');
-  expect((await state(page)).ui.screen).toBe('map');
-  await expect(page.locator('.town__sign[data-sign="l01"]')).toHaveCount(0);
-  await expect(page.locator('.town__figure--little')).toHaveCount(0);
+  const panels = page.locator('.opening__panel');
+  for (let i = 0; i < 4; i += 1) {
+    if (await panels.count()) await panels.click();
+  }
+  await expect(page.locator('.town__board[data-area="u1"]')).toBeVisible({ timeout: 12_000 });
+  await expect(page.locator('.town__figure--little')).toBeVisible();
+  await intoTheLead(page);
+  expect((await state(page)).ui.screen).toBe('hunt');
 });
