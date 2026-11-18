@@ -41,14 +41,16 @@ export function startFight(
   lair: LairSpec,
   upgrades: readonly UpgradeId[],
   seed: number,
+  level = 1,
 ): FightState {
   const limits = fightLimits(upgrades);
   return {
     lairId: lair.id,
     baseParts: lair.baseParts,
+    level,
     phase: 'roll',
     limits,
-    armour: lair.armour,
+    armour: armourAt(lair, level),
     hull: limits.hull,
     steam: limits.steam,
     round: 0,
@@ -68,14 +70,26 @@ export function fightInProgress(state: FightState | null): state is FightState {
   return state !== null && state.phase !== 'won' && state.phase !== 'lost';
 }
 
-/** `a · x + b`: blade times blows plus charge; with brackets, `a · (x + b)`. */
+/** An automaton's armour at a level: its own at level 1, then its squared and cubed fights'. */
+export function armourAt(lair: LairSpec, level: number): number {
+  if (level <= 1) return lair.armour;
+  return lair.levels[Math.min(level, 3) - 2] ?? lair.armour;
+}
+
+/**
+ * `a · x + b`: blade times blows plus charge; with brackets, `a · (x + b)`. At a higher level
+ * blade and charge are raised to it first: `a² · x + b²`.
+ */
 export function strikeDamage(
   blade: number,
   blows: number,
   charge: number,
   form: StrikeForm = 'plain',
+  level = 1,
 ): number {
-  return form === 'brackets' ? blade * (blows + charge) : blade * blows + charge;
+  const a = blade ** level;
+  const b = charge ** level;
+  return form === 'brackets' ? a * (blows + b) : a * blows + b;
 }
 
 /** The most blows steam can pay for. */
@@ -195,7 +209,7 @@ function strike(state: FightState): FightStep {
   if (blows < range.min || blows > range.max) return unchanged(state);
 
   const form = state.form ?? 'plain';
-  const damage = strikeDamage(blade, blows, charge, form);
+  const damage = strikeDamage(blade, blows, charge, form, state.level);
   const steam = state.steam - blows * tuning.fight.steamPerBlow;
   const armourBefore = state.armour;
   const armour = Math.max(0, armourBefore - damage);
@@ -208,6 +222,7 @@ function strike(state: FightState): FightStep {
     charge,
     blows,
     form,
+    level: state.level,
     damage,
     armourBefore,
     armourAfter: armour,
@@ -225,7 +240,9 @@ function strike(state: FightState): FightStep {
   };
   if (!dented) {
     next.phase = 'won';
-    next.outcome = { won: true, clean, reward: fightReward(state.baseParts, steam, clean) };
+    // A level up pays that many times over (tuning.fight.levels).
+    const reward = fightReward(state.baseParts, steam, clean) * state.level;
+    next.outcome = { won: true, clean, reward };
   } else {
     const reason: LossReason | null =
       hull <= 0 ? 'hull' : blowsAffordable(steam) < 1 ? 'steam' : null;

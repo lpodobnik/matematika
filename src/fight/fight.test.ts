@@ -56,6 +56,7 @@ function round(state: FightState, dice: [number, number, number], blows: number)
 const testLair = (armour: number, baseParts = 3): LairSpec => ({
   id: 'lair-20',
   armour,
+  levels: [armour * 5, armour * 25],
   baseParts,
   page: null,
 });
@@ -333,6 +334,7 @@ describe('striking', () => {
       charge: 2,
       blows: 3,
       form: 'plain',
+      level: 1,
       damage: 20,
       armourBefore: 60,
       armourAfter: 40,

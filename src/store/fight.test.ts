@@ -387,8 +387,22 @@ describe('a fight that ends (stories 3.2, 3.3)', () => {
     expect(types(g.seen)).toContain('TornPageReturned');
     g.act({ type: 'fight/close' });
     g.clock.now += 5 * minute;
+    // The win brought it back a level up: its dice squared, and armour to match.
     g.act({ type: 'map/travel', node: 'lair-30' });
-    // The dev seed still holds, so the same dice win again.
+    expect(g.fight().level).toBe(2);
+    expect(g.fight().armour).toBe(300);
+    g.act({ type: 'fight/leave' });
+    // Brought back to level 1, as a loss there would: the dev seed still holds, so the same dice
+    // win again, and return no page.
+    g.store.setState((s) => {
+      const { save } = s as GameState;
+      const record = save.economy.lairs['lair-30'];
+      if (!record) throw new Error('the win left no record');
+      const lairs = { ...save.economy.lairs, 'lair-30': { ...record, level: 1 } };
+      return { save: { ...save, economy: { ...save.economy, lairs } } };
+    });
+    g.act({ type: 'map/travel', node: 'lair-30' });
+    expect(g.fight().level).toBe(1);
     playOut(g, true);
     expect(g.fight().phase).toBe('won');
     expect(g.state().ui.fightEnd?.page).toBeNull();

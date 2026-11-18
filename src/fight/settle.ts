@@ -51,6 +51,15 @@ export function lairAwake(economy: Economy, lairId: LairId, now: number): boolea
   return !(at > now) || at - now > tuning.fight.lairRewindMinutes * minute;
 }
 
+/**
+ * The level of his next fight at a lair (tuning.fight.levels): 1 until he beats it, then one up
+ * with each win and one down with each loss, so it stays near what he can do.
+ */
+export function nextLevel(economy: Economy, lairId: LairId): number {
+  const level = economy.lairs[lairId]?.level ?? 1;
+  return Math.min(Math.max(level, 1), tuning.fight.levels);
+}
+
 /** The lairs whose automaton is still winding down at `now` (ADR-13). */
 export function asleepLairs(economy: Economy, now: number): LairId[] {
   return (Object.keys(economy.lairs) as LairId[]).filter((id) => !lairAwake(economy, id, now));
@@ -78,7 +87,13 @@ export function settleFight(
     const next: Economy = {
       ...earnParts(economy, outcome.reward + pile),
       piles,
-      lairs: { ...economy.lairs, [lair.id]: { rewindsAt: rewindsAt(now) } },
+      lairs: {
+        ...economy.lairs,
+        [lair.id]: {
+          rewindsAt: rewindsAt(now),
+          level: Math.min(fight.level + 1, tuning.fight.levels),
+        },
+      },
     };
     const page = lair.page !== null && !ledger.tornPages.includes(lair.page) ? lair.page : null;
     const events: FightEvent[] = [
@@ -97,7 +112,7 @@ export function settleFight(
 
   // The boss takes nothing: he has to be beaten to finish, so trying again must never cost.
   const dropped = lair.id === 'lair-60' ? 0 : droppedParts(economy.parts);
-  const next: Economy =
+  const dropping: Economy =
     dropped === 0
       ? economy
       : {
@@ -105,6 +120,15 @@ export function settleFight(
           parts: economy.parts - dropped,
           piles: { ...economy.piles, [lair.id]: pile + dropped },
         };
+  // A loss above level 1 brings the automaton's next fight a level down.
+  const record = economy.lairs[lair.id];
+  const next: Economy =
+    record && fight.level > 1
+      ? {
+          ...dropping,
+          lairs: { ...economy.lairs, [lair.id]: { ...record, level: fight.level - 1 } },
+        }
+      : dropping;
   return {
     ledger: { economy: next, tornPages: ledger.tornPages },
     events: [{ type: 'FightEnded', lairId: lair.id, won: false, parts: 0 - dropped }],

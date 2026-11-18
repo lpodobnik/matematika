@@ -108,6 +108,13 @@ export const tuning = {
     pileDivisor: 4,
     /** A beaten automaton rewinds this long after the win (ADR-13). */
     lairRewindMinutes: 5,
+    /**
+     * Each win against an automaton brings it back a level up, to this one (Luka, 2026-11-18:
+     * his son grinds them). The level is the power the blade and charge dice are raised to:
+     * level 2 squares them, `a² · x + b²`, level 3 cubes them. Armour per level is the lair's
+     * (content/lairs.ts, set by simulation), and a win pays its reward times the level.
+     */
+    levels: 3,
   },
   /** GDD, Automaton fights: the three upgrades, their costs in parts and what they add. */
   upgrades: {

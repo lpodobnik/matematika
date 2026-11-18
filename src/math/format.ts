@@ -18,6 +18,12 @@ function groupDigits(digits: string): string {
 }
 
 /** A whole number in school notation: `5905` → `5 905`, `999` → `999`. */
+/** The small number a power is written with: `²` for 2. 1 writes nothing. */
+export function powerMark(power: number): string {
+  if (power <= 1) return '';
+  return [...String(power)].map((digit) => '⁰¹²³⁴⁵⁶⁷⁸⁹'[Number(digit)]).join('');
+}
+
 export function formatNumber(value: number | bigint): string {
   assert(typeof value === 'bigint' || Number.isSafeInteger(value), `not a whole number: ${value}`);
   const big = BigInt(value);

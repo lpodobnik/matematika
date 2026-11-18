@@ -37,6 +37,7 @@ describe('winning', () => {
     expect(result.ledger.economy.parts).toBe(17);
     expect(result.ledger.economy.lairs['lair-20']).toEqual({
       rewindsAt: '2026-11-05T20:05:00.000Z',
+      level: 2,
     });
     expect(result.reward).toBe(12);
     expect(result.events).toEqual([

@@ -73,7 +73,7 @@ export const reasoningPlayer: ScriptedPlayer = (state) => {
     const most = maxBlows(state, slots.reach);
     for (let blows = 1; blows <= most; blows++) {
       for (const form of forms) {
-        const damage = strikeDamage(blade, blows, charge, form);
+        const damage = strikeDamage(blade, blows, charge, form, state.level);
         const choice: Choice = state.form === null ? { slots, blows } : { slots, blows, form };
         if (damage >= state.armour) {
           const steamLeft = state.steam - blows * tuning.fight.steamPerBlow;

@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { hr } from '@/content/text/hr';
 import { strikeDamage } from '@/fight/fight';
 import type { StrikeForm } from '@/fight/types';
+import { powerMark } from '@/math/format';
 
-const MAX_DIGITS = 3;
+// Level 3 with brackets runs to five digits.
+const MAX_DIGITS = 6;
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
 
 /** Where he is: still working it out, just got it wrong, or got it right. */
@@ -19,6 +21,7 @@ export function StrikeGuess({
   blows,
   charge,
   form = 'plain',
+  level = 1,
   armour,
   onStrike,
   onBack,
@@ -28,11 +31,20 @@ export function StrikeGuess({
   charge: number;
   /** With part 2's brackets, `a · (x + b)`. */
   form?: StrikeForm;
+  /** The automaton's level: the power blade and charge are raised to. */
+  level?: number;
   armour: number;
   onStrike(): void;
   onBack(): void;
 }) {
-  const damage = strikeDamage(blade, blows, charge, form);
+  const damage = strikeDamage(blade, blows, charge, form, level);
+  const power = powerMark(level);
+  const raised = (value: number) => (
+    <>
+      <b>{value}</b>
+      {power && <sup className="fight__power">{power}</sup>}
+    </>
+  );
   const [typed, setTyped] = useState('');
   const [stage, setStage] = useState<Stage>('asking');
 
@@ -58,11 +70,11 @@ export function StrikeGuess({
         <p className="fight__formula" data-testid="guess-formula">
           {form === 'brackets' ? (
             <>
-              <b>{blade}</b> · (<b>{blows}</b> + <b>{charge}</b>) ={' '}
+              {raised(blade)} · (<b>{blows}</b> + {raised(charge)}) ={' '}
             </>
           ) : (
             <>
-              <b>{blade}</b> · <b>{blows}</b> + <b>{charge}</b> ={' '}
+              {raised(blade)} · <b>{blows}</b> + {raised(charge)} ={' '}
             </>
           )}
           <output className="fight__guess-answer">{typed === '' ? '?' : typed}</output>
@@ -85,7 +97,13 @@ export function StrikeGuess({
           <>
             {stage === 'wrong' && (
               <p className="fight__guess-note" role="status">
-                {form === 'brackets' ? hr.fight.guess.wrongBrackets : hr.fight.guess.wrong}
+                {level > 1
+                  ? form === 'brackets'
+                    ? hr.fight.guess.wrongPowerBrackets
+                    : hr.fight.guess.wrongPower
+                  : form === 'brackets'
+                    ? hr.fight.guess.wrongBrackets
+                    : hr.fight.guess.wrong}
               </p>
             )}
             <div className="fight__guess-pad">

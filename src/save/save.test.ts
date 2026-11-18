@@ -156,6 +156,22 @@ describe('decodeSave', () => {
   });
 });
 
+describe('automaton levels in a save (tuning.fight.levels)', () => {
+  const lairsOf = (lairs: unknown) =>
+    decodeSave({ ...sample, economy: { ...sample.economy, lairs } }, now)?.economy.lairs;
+
+  it('reads an automaton beaten before levels as level 2 next, since he beat it', () => {
+    expect(lairsOf({ 'lair-20': { rewindsAt: now } })).toEqual({
+      'lair-20': { rewindsAt: now, level: 2 },
+    });
+  });
+
+  it('keeps a level it knows, and reads one it doesn’t as level 2', () => {
+    expect(lairsOf({ 'lair-30': { rewindsAt: now, level: 3 } })?.['lair-30']?.level).toBe(3);
+    expect(lairsOf({ 'lair-30': { rewindsAt: now, level: 7 } })?.['lair-30']?.level).toBe(2);
+  });
+});
+
 describe('migrate', () => {
   it('has no migrations yet: v1 is the first version', () => {
     expect(currentVersion).toBe(1);

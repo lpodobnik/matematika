@@ -123,6 +123,7 @@ describe('the guided first fight (fight/guide.ts)', () => {
         charge: 1,
         blows: 1,
         form: 'plain',
+        level: 1,
         damage: 2,
         armourBefore: 20,
         armourAfter: dented ? 18 : 0,

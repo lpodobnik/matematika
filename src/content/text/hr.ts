@@ -1034,6 +1034,15 @@ export const hr = {
     },
     /** For screen readers: an empty slot. */
     emptySlot: 'prazno',
+    /**
+     * Levels (tuning.fight.levels): each win brings an automaton back a level up, its blade and
+     * charge dice squared and then cubed. The note teaches the power where he meets it.
+     */
+    level: (n: number) => `Razina ${n}`,
+    levelNote: (n: number) =>
+      n === 2
+        ? 'Oštrica i naboj idu na kvadrat. Kvadrat je umnožak dva ista broja: 5² = 5 · 5 = 25.'
+        : 'Oštrica i naboj idu na kub. Kub je umnožak tri ista broja: 5³ = 5 · 5 · 5 = 125.',
     /** Part 2's brackets upgrade: the strike's two forms, chosen each strike. */
     form: {
       label: 'Kako udaraš',
@@ -1056,6 +1065,9 @@ export const hr = {
       wrong: 'Nije. Prvo pomnoži, pa dodaj.',
       /** With brackets: what's in them comes first. */
       wrongBrackets: 'Nije. Prvo zbroji ono u zagradi, pa pomnoži.',
+      /** At a level: the powers come first. */
+      wrongPower: 'Nije. Prvo izračunaj potencije, pa pomnoži, pa dodaj.',
+      wrongPowerBrackets: 'Nije. Prvo izračunaj potencije, pa zbroji ono u zagradi, pa pomnoži.',
       right: (damage: number, armour: number) => `Točno: udarac je ${damage}, a oklop ${armour}.`,
     },
     /** Leaving: free before the first strike, a loss after it (story 3.2). */

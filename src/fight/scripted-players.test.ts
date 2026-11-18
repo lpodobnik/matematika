@@ -15,6 +15,7 @@ import type { FightState, LairSpec } from './types';
 const lair = (armour: number, baseParts = 3): LairSpec => ({
   id: 'lair-20',
   armour,
+  levels: [armour * 5, armour * 25],
   baseParts,
   page: null,
 });

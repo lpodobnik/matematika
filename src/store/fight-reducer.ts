@@ -20,7 +20,7 @@ import {
   guideTalks,
 } from '@/fight/guide';
 import { seedFrom } from '@/fight/rng';
-import { asleepLairs, settleFight } from '@/fight/settle';
+import { asleepLairs, nextLevel, settleFight } from '@/fight/settle';
 import type { FightAction, FightState, LairId } from '@/fight/types';
 import { reachedMarks } from '@/hunt/marks';
 import { partTwoOn } from '@/hunt/switch';
@@ -100,7 +100,12 @@ function enterLair(state: GameState, lairId: LairId, authored: readonly string[]
   if (!lairEnterable(state, lairId, authored, ctx.now)) return unchanged(state);
   // A seed left by walking out before a strike comes back, so the dice do too.
   const seed = state.ui.fightSeed ?? state.save.economy.seeds[lairId] ?? seedFrom(ctx.rng);
-  const fight = startFight(lairs[lairId], state.save.economy.upgrades, seed);
+  const fight = startFight(
+    lairs[lairId],
+    state.save.economy.upgrades,
+    seed,
+    nextLevel(state.save.economy, lairId),
+  );
   const next = produce(state, (draft) => {
     draft.fight = castDraft(fight);
     draft.save.economy.seeds[lairId] = seed;

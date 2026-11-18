@@ -13,7 +13,11 @@ export interface Economy {
   /** Parts dropped at each automaton by losing to it. */
   piles: Partial<Record<LairId, number>>;
   /** Automatons winding down after a win, until `rewindsAt` (ISO 8601). */
-  lairs: Partial<Record<LairId, { rewindsAt: string }>>;
+  /**
+   * And the level of his next fight there (tuning.fight.levels): a win raises it, a loss lowers
+   * it. Missing is level 1.
+   */
+  lairs: Partial<Record<LairId, { rewindsAt: string; level?: number }>>;
   /**
    * The seed of a fight he walked into and left before striking (story 3.1 review): the
    * next fight there starts from it, so leaving and walking back in never re-rolls the

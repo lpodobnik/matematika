@@ -22,8 +22,10 @@ export type PageId = 'page-1' | 'page-2' | 'page-3';
 /** One lair as content data (`src/content/lairs.ts`). */
 export interface LairSpec {
   id: LairId;
-  /** Armour the automaton starts with. */
+  /** Armour the automaton starts with, at level 1. */
   armour: number;
+  /** Its armour at levels 2 and 3, when its dice are squared and then cubed. */
+  levels: readonly [number, number];
   /** Parts a win pays before unspent steam is added. */
   baseParts: number;
   /** The torn page this automaton carries, returned on the first win; null if none. */
@@ -55,6 +57,8 @@ export interface StrikeRecord {
   blows: number;
   /** `a · x + b`, or `a · (x + b)`. */
   form: StrikeForm;
+  /** The automaton's level: the power blade and charge were raised to. */
+  level: number;
   /** What the form came to. */
   damage: number;
   armourBefore: number;
@@ -81,6 +85,11 @@ export interface FightState {
   lairId: LairId;
   /** Copied from the lair at the start, so a saved fight needs no content to finish. */
   baseParts: number;
+  /**
+   * The automaton's level, 1 the first time: each win against it raises the next fight's. Blade
+   * and charge are raised to it, so level 2 is `a² · x + b²`.
+   */
+  level: number;
   phase: FightPhase;
   limits: FightLimits;
   /** Armour left. */

@@ -112,7 +112,10 @@ function decodeEconomy(value: unknown): Economy {
   if (isObject(value.lairs)) {
     for (const [lair, state] of Object.entries(value.lairs)) {
       if (isLair(lair) && isObject(state) && typeof state.rewindsAt === 'string') {
-        lairs[lair] = { rewindsAt: state.rewindsAt };
+        // A save from before levels has none: it was beaten, so its next fight is level 2.
+        const { level } = state;
+        const known = Number.isInteger(level) && Number(level) >= 1 && Number(level) <= 3;
+        lairs[lair] = { rewindsAt: state.rewindsAt, level: known ? Number(level) : 2 };
       }
     }
   }

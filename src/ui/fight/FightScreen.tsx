@@ -2,10 +2,10 @@ import '@/ui/fight/fight.css';
 import { type ReactNode, useEffect, useState } from 'react';
 import { lairs } from '@/content/lairs';
 import { hr } from '@/content/text/hr';
-import { blowRange, blowsAffordable, placedValues, SLOTS } from '@/fight/fight';
+import { armourAt, blowRange, blowsAffordable, placedValues, SLOTS } from '@/fight/fight';
 import { type GuideStep, guideDice } from '@/fight/guide';
 import type { FightAction, FightState, Slot, StrikeForm } from '@/fight/types';
-import { formatNumber } from '@/math/format';
+import { formatNumber, powerMark } from '@/math/format';
 import type { FightEnd } from '@/store/fight-end';
 import { useGame } from '@/store/store';
 import { PartsCounterView, partsFlightMs } from '@/ui/common/PartsCounter';
@@ -166,6 +166,7 @@ export function FightBoard({
           </button>
         )}
         {fight.round > 0 && <p className="fight__round">{hr.fight.round(fight.round)}</p>}
+        {fight.level > 1 && <p className="fight__level">{hr.fight.level(fight.level)}</p>}
         <Automaton
           armour={lair.armour}
           className={
@@ -173,7 +174,7 @@ export function FightBoard({
           }
         />
         {fight.phase === 'won' && <PunchedTape className="fight__tape" />}
-        <Armour armour={fight.armour} full={lair.armour} guide={guide} />
+        <Armour armour={fight.armour} full={armourAt(lair, fight.level)} guide={guide} />
         {pile > 0 && <p className="fight__pile">{hr.fight.pileHere(pile)}</p>}
         {guide && <FightGuide step={guide} onNext={() => onAction({ type: 'fight/guide-next' })} />}
       </section>
@@ -207,6 +208,7 @@ export function FightBoard({
           blows={fight.blows}
           charge={placedValues(fight).charge ?? 0}
           form={fight.form ?? 'plain'}
+          level={fight.level}
           armour={fight.armour}
           onBack={() => setGuessing(false)}
           onStrike={() => onAction({ type: 'fight/strike' })}
@@ -432,8 +434,13 @@ function Gauges({ fight, guide }: { fight: FightState; guide: GuideStep | null }
 function Formula({ fight, guide }: { fight: FightState; guide: GuideStep | null }) {
   const { blade, charge } = placedValues(fight);
   const set = fight.phase === 'set';
-  const part = (value: number | null, letter: string) =>
-    value === null ? <var>{letter}</var> : <b>{value}</b>;
+  const power = powerMark(fight.level);
+  const part = (value: number | null, letter: string) => (
+    <>
+      {value === null ? <var>{letter}</var> : <b>{value}</b>}
+      {power && <sup className="fight__power">{power}</sup>}
+    </>
+  );
   const x = set ? <b>{fight.blows}</b> : <var>x</var>;
   return (
     <div className="fight__formula-box" {...guideMark(guide, 'formula')}>
@@ -449,6 +456,7 @@ function Formula({ fight, guide }: { fight: FightState; guide: GuideStep | null 
         )}
       </p>
       <p className="fight__caption">{hr.fight.captions.formula}</p>
+      {fight.level > 1 && <p className="fight__level-note">{hr.fight.levelNote(fight.level)}</p>}
     </div>
   );
 }
@@ -458,9 +466,10 @@ function Formula({ fight, guide }: { fight: FightState; guide: GuideStep | null 
  * formula above shows the one chosen.
  */
 function FormPick({ fight, onForm }: { fight: FightState; onForm(form: StrikeForm): void }) {
+  const p = powerMark(fight.level);
   const forms: { form: StrikeForm; text: string }[] = [
-    { form: 'plain', text: 'a · x + b' },
-    { form: 'brackets', text: 'a · (x + b)' },
+    { form: 'plain', text: `a${p} · x + b${p}` },
+    { form: 'brackets', text: `a${p} · (x + b${p})` },
   ];
   return (
     <fieldset className="fight__forms" aria-label={hr.fight.form.label}>

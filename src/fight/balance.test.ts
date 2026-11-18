@@ -77,27 +77,29 @@ function simulate(
   upgrades: UpgradeId[],
   makePlayer: (seed: number) => ScriptedPlayer,
   seed: number,
+  level = 1,
+  fights = FIGHTS,
 ): Measured {
   const seeds = createRng(seed);
   const player = makePlayer(seedFrom(seeds));
   let wins = 0;
   let parts = 0;
   let partsSquared = 0;
-  for (let i = 0; i < FIGHTS; i++) {
-    const end = playFight(startFight(lairs[lairId], upgrades, seedFrom(seeds)), player);
+  for (let i = 0; i < fights; i++) {
+    const end = playFight(startFight(lairs[lairId], upgrades, seedFrom(seeds), level), player);
     if (end.outcome?.won) {
       wins++;
       parts += end.outcome.reward;
       partsSquared += end.outcome.reward ** 2;
     }
   }
-  const p = wins / FIGHTS;
-  const mean = parts / FIGHTS;
+  const p = wins / fights;
+  const mean = parts / fights;
   return {
     win: 100 * p,
     parts: mean,
-    winError: 100 * Math.sqrt((p * (1 - p)) / FIGHTS),
-    partsError: Math.sqrt((partsSquared / FIGHTS - mean ** 2) / FIGHTS),
+    winError: 100 * Math.sqrt((p * (1 - p)) / fights),
+    partsError: Math.sqrt((partsSquared / fights - mean ** 2) / fights),
   };
 }
 
@@ -253,5 +255,43 @@ describe("part 2's lairs against the GDD's targets", () => {
 
   it('brackets, once bought, are what a reasoning player needs for the two after the coat', () => {
     expect(simulate('lair-120', ALL_UPGRADES, reasoning, 6_000).win).toBeLessThan(5);
+  });
+});
+
+// Levels (tuning.fight.levels; Luka, 2026-11-18): each win brings an automaton back a level up,
+// its blade and charge dice squared and then cubed, with armour to match (content/lairs.ts). Set
+// by simulation for a reasoning player with every upgrade he could own by then, so that each
+// automaton is harder than the one before and each level harder than the last. Brackets make
+// powers so much bigger that part 2's need ten times the armour.
+const LEVELS: { lair: LairId; upgrades: UpgradeId[]; win: [number, number] }[] = [
+  { lair: 'lair-20', upgrades: ALL_UPGRADES, win: [98.5, 94] },
+  { lair: 'lair-30', upgrades: ALL_UPGRADES, win: [95.5, 91.7] },
+  { lair: 'lair-45', upgrades: ALL_UPGRADES, win: [93, 85.1] },
+  { lair: 'lair-60', upgrades: ALL_UPGRADES, win: [87.1, 75.8] },
+  { lair: 'lair-70', upgrades: [...ALL_UPGRADES, 'brackets'], win: [92.6, 88.4] },
+  { lair: 'lair-120', upgrades: [...ALL_UPGRADES, 'brackets'], win: [79.3, 73.1] },
+  { lair: 'lair-140', upgrades: [...ALL_UPGRADES, 'brackets'], win: [58.6, 54.6] },
+];
+
+describe('levels 2 and 3, squared and cubed', () => {
+  LEVELS.forEach((row, index) => {
+    ([2, 3] as const).forEach((level) => {
+      const armour = lairs[row.lair].levels[level - 2];
+      const expected = row.win[level - 2] ?? 0;
+      it(`${row.lair} at level ${level}, armour ${armour}: a reasoning player wins about ${expected}%`, () => {
+        const seed = 7_000 + 10 * index + level;
+        expectWin(simulate(row.lair, row.upgrades, reasoning, seed, level, 10_000), expected);
+      });
+    });
+  });
+
+  it('makes each level harder than the last, and each automaton harder than the one before', () => {
+    for (const row of LEVELS) expect(row.win[0]).toBeGreaterThan(row.win[1]);
+    for (const part of [LEVELS.slice(0, 4), LEVELS.slice(4)]) {
+      for (let i = 1; i < part.length; i++) {
+        expect(part[i]?.win[0]).toBeLessThan(part[i - 1]?.win[0] ?? 0);
+        expect(part[i]?.win[1]).toBeLessThan(part[i - 1]?.win[1] ?? 0);
+      }
+    }
   });
 });

@@ -49,6 +49,7 @@ node scripts/ci-status.mjs
 - A lair's map node stays `closed` until a neighbouring room is done. An automaton holds a machine only once it is out (`lairIsOut` in `src/ui/town/TownScreen.tsx`).
 - Order at the end: room 12 (Kotlovnica), then Nikola announces the boss, then the boss `lair-60` appears Pod tornjem, then room 13 (Toranj) opens once he is beaten, then the ending panels.
 - Once any automaton has been beaten, "Udari" first asks how big the strike will be (`src/ui/fight/StrikeGuess.tsx`). A wrong answer costs nothing. It exists because the son mashed dice without thinking.
+- Automatons have levels (`tuning.fight.levels`): a win sends one up a level, a loss down. Level 2 squares the blade and charge dice, level 3 cubes them. Armour per level is `levels` in `src/content/lairs.ts`, pinned by `src/fight/balance.test.ts`. The next level is stored per lair in `economy.lairs[id].level`.
 - Timers and prices are in `src/config/tuning.ts`.
 
 ## Saves and links must keep working

@@ -5,6 +5,7 @@
 // whole rather than half-read: he is then on the map, as before he walked into the lair.
 // Nothing here throws.
 
+import { tuning } from '@/config/tuning';
 import { LAIR_ORDER } from '@/content/lairs';
 import { blowsAffordable, SLOTS, strikeDamage } from '@/fight/fight';
 import type { FightPhase, FightState, LairId, Slot, StrikeForm, StrikeRecord } from '@/fight/types';
@@ -21,11 +22,18 @@ function whole(value: unknown, min: number, max: number): value is number {
 
 /** Far past anything a fight reaches: 4 dice, 13 steam, 4 hull, armour 120. */
 const limitCap = 99;
-const armourCap = 999;
+// Level 3 cubes the dice, so armour runs to thousands.
+const armourCap = 9_999_999;
 const roundCap = 999;
 
 /** Phases a fight can be saved in: a finished fight is settled and never saved (ADR-8). */
 const savedPhases: readonly FightPhase[] = ['roll', 'place', 'set', 'strike'];
+
+/** An automaton's level: a save from before levels has none, and was level 1. */
+function decodeLevel(value: unknown): number | null {
+  if (value === undefined) return 1;
+  return whole(value, 1, tuning.fight.levels) ? value : null;
+}
 
 /** A strike's form: a save from before brackets has none, and was plain. */
 function decodeForm(value: unknown): StrikeForm | null {
@@ -37,10 +45,10 @@ function decodeStrike(value: unknown): StrikeRecord | null {
   if (!isObject(value)) return null;
   const { round, blade, charge, blows, damage, armourBefore, armourAfter, clean, dented } = value;
   const form = decodeForm(value.form);
+  const level = decodeLevel(value.level);
   if (!whole(round, 1, roundCap) || !whole(blade, 1, 6) || !whole(charge, 1, 6)) return null;
-  if (!form || !whole(blows, 1, 6) || damage !== strikeDamage(blade, blows, charge, form)) {
-    return null;
-  }
+  if (!form || level === null || !whole(blows, 1, 6)) return null;
+  if (damage !== strikeDamage(blade, blows, charge, form, level)) return null;
   if (!whole(armourBefore, 1, armourCap) || armourAfter !== Math.max(0, armourBefore - damage)) {
     return null;
   }
@@ -51,6 +59,7 @@ function decodeStrike(value: unknown): StrikeRecord | null {
     charge,
     blows,
     form,
+    level,
     damage,
     armourBefore,
     armourAfter,
@@ -115,12 +124,15 @@ export function decodeFight(value: unknown): FightState | null {
   } else {
     blows = value.blows;
   }
+  const level = decodeLevel(value.level);
+  if (level === null || (lastStrike !== null && lastStrike.level !== level)) return null;
   // Without the brackets upgrade there is no form; a save from before it has none either.
   const form = value.form === undefined || value.form === null ? null : decodeForm(value.form);
   if (value.form !== undefined && value.form !== null && form === null) return null;
   return {
     lairId: lairId as LairId,
     baseParts,
+    level,
     phase: phase as FightPhase,
     limits: { dice: diceLimit, hull: hullLimit, steam: steamLimit },
     armour,

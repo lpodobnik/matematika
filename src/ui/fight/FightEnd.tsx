@@ -1,6 +1,6 @@
 import { hr } from '@/content/text/hr';
 import type { FightState, StrikeRecord } from '@/fight/types';
-import { formatNumber } from '@/math/format';
+import { formatNumber, powerMark } from '@/math/format';
 import type { FightEnd } from '@/store/fight-end';
 
 /**
@@ -15,13 +15,17 @@ export function StrikeBanner({
   strike: StrikeRecord;
   mark?: { 'data-focus'?: true; 'data-dim'?: true };
 }) {
-  const { blade, blows, charge, damage, armourBefore, armourAfter, clean, dented } = strike;
+  const { blades, blows, charges, damage, armourBefore, armourAfter, clean, dented } = {
+    ...strike,
+    blades: `${strike.blade}${powerMark(strike.level)}`,
+    charges: `${strike.charge}${powerMark(strike.level)}`,
+  };
   return (
     <div className="fight__banner" role="status" data-clean={clean || undefined} {...mark}>
       <p className="fight__sum">
         {strike.form === 'brackets'
-          ? `${blade} · (${blows} + ${charge})`
-          : `${blade} · ${blows} + ${charge}`}{' '}
+          ? `${blades} · (${blows} + ${charges})`
+          : `${blades} · ${blows} + ${charges}`}{' '}
         = <b>{formatNumber(damage)}</b>
       </p>
       <p className="fight__effect">

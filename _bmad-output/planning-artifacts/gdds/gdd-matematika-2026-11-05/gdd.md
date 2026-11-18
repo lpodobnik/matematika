@@ -203,6 +203,20 @@ Simulated with 40,000 fights per setting and scripted players, one reasoning per
 
 With all three upgrades, the reasoning player wins 98% at armour 60. At armour 20 and 30 a wrong idea mostly costs parts, which gives an easy start. From armour 45 it costs the fight.
 
+**Levels** (added 2026-11-18, after he started grinding the automatons). Each win brings an automaton back a level up, to level 3, and each loss brings it a level down, to level 1, so a fight stays near what he can do. The level is the power the blade and charge dice are raised to: level 2 is `a² · x + b²` (for example `6² · 4 + 5² = 169`), level 3 `a³ · x + b³`. With brackets, `a² · (x + b²)`. Powers come first, and the fight says how to work them out: "Kvadrat je umnožak dva ista broja: 5² = 5 · 5 = 25." A win pays its reward times the level. A save from before levels starts every automaton he has beaten at level 2.
+
+Armour per level, set by simulation for a reasoning player with every upgrade he could own by then (brackets for the three after the coat), so that each automaton is harder than the one before and each level harder than the last. The dice cap what anyone can win, so the armour can't simply grow tenfold per level: at ten times, the armour 60 automaton is never beaten at level 2.
+
+| Automaton | Level 1 | Level 2 | Level 3 | Reasoning wins at levels 1, 2, 3 |
+|---|---|---|---|---|
+| 20 | 20 | 250 | 1 500 | 100%, 98.5%, 94% |
+| 30 | 30 | 300 | 1 600 | 100%, 95.5%, 91.7% |
+| 40 | 40 | 320 | 1 800 | 100%, 93%, 85.1% |
+| 60 | 60 | 350 | 2 000 | 98.6%, 87.1%, 75.8% |
+| 70 | 70 | 1 400 | 30 000 | 99.8%, 92.6%, 88.4% |
+| 120 | 120 | 1 900 | 45 000 | 84.1%, 79.3%, 73.1% |
+| 140 | 140 | 2 400 | 60 000 | 63.5%, 58.6%, 54.6% |
+
 #### Room builder
 
 | Element | Spec |

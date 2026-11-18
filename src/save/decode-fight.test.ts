@@ -79,3 +79,37 @@ describe('decodeFight (story 3.1; ADR-8)', () => {
     expect(roundTrip(set)?.outcome).toBeNull();
   });
 });
+
+// Levels (tuning.fight.levels): blade and charge raised to the automaton's level.
+describe('levels in a save', () => {
+  it('reads a fight saved before levels as level 1', () => {
+    const saved = JSON.parse(JSON.stringify(startFight(lairs['lair-20'], [], 1))) as Record<
+      string,
+      unknown
+    >;
+    delete saved.level;
+    expect(decodeFight(saved)?.level).toBe(1);
+  });
+
+  it('reads back a level 2 fight after a strike, its damage checked with the powers', () => {
+    const rolled = reduceFight(startFight(lairs['lair-60'], [], 3, 2), {
+      type: 'fight/roll',
+    }).state;
+    if (!rolled) throw new Error('no fight');
+    const placed = [0, 1, 2].reduce<FightState>(
+      (state, die) =>
+        reduceFight(state, {
+          type: 'fight/place',
+          die,
+          slot: (['blade', 'charge', 'reach'] as const)[die] ?? 'blade',
+        }).state ?? state,
+      rolled,
+    );
+    const struck = reduceFight(placed, { type: 'fight/strike' }).state;
+    if (struck?.phase !== 'strike') throw new Error('expected armour left');
+    expect(decodeFight(JSON.parse(JSON.stringify(struck)))).toEqual(struck);
+    // A strike whose damage doesn't fit its level doesn't hang together.
+    const forged = { ...struck, level: 1 };
+    expect(decodeFight(JSON.parse(JSON.stringify(forged)))).toBeNull();
+  });
+});
