@@ -2,7 +2,7 @@
 // leads, so that rooms keep refusing all of it. Parsing never throws: a line that doesn't read
 // comes back as a refusal, as `parse` does for rooms.
 
-import { isSDigit, type SToken } from '@/math/statement-tokens';
+import { asWritten, isSDigit, type SToken } from '@/math/statement-tokens';
 
 /** He can write up to 15 digits: they fit a safe integer. Longer numbers are only read. */
 export const maxStatementDigits = 15;
@@ -227,7 +227,8 @@ function readPoint(tokens: readonly SToken[]): Statement | null {
 }
 
 /** A line of tokens as a statement, or why not. Never throws. */
-export function parseStatement(tokens: readonly SToken[]): StatementResult {
+export function parseStatement(typed: readonly SToken[]): StatementResult {
+  const tokens = asWritten(typed);
   if (tokens.length === 0) return refused('empty');
   try {
     const shaped =

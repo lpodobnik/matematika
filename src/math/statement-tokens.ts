@@ -98,6 +98,29 @@ export function readLine(text: string): SLineToken[] | null {
   return tokens;
 }
 
+/**
+ * The line as it reads on the page. A power sign with no small digit after it writes nothing
+ * (format.ts), and one pressed again inside a power keeps the digits small, so neither may
+ * count: his son pressed ⁿ again to leave the small number, and a line that looked right on the
+ * page was refused as unreadable.
+ */
+export function asWritten(tokens: readonly SToken[]): SToken[] {
+  const out: SToken[] = [];
+  let inPower = false;
+  tokens.forEach((token, i) => {
+    if (token === '^') {
+      if (!inPower && isSDigit(tokens[i + 1])) {
+        out.push(token);
+        inPower = true;
+      }
+      return;
+    }
+    if (!isSDigit(token)) inPower = false;
+    out.push(token);
+  });
+  return out;
+}
+
 /** A line of content text that has no blank in it, as tokens, or null. */
 export function readTokens(text: string): SToken[] | null {
   const tokens = readLine(text);

@@ -46,6 +46,121 @@ describe('a line he has to write', () => {
     expect(verdict('0 ∉ N', '0 ∈ N₀')).toBe('off-task');
   });
 
+  // His son, at 34 072: ⁿ pressed again after the small digit, or twice, writes nothing on the
+  // page, so the line he saw was right, and must be taken as it reads.
+  it.each([
+    [
+      'ⁿ pressed again after the small digit',
+      [
+        '3',
+        '·',
+        '1',
+        '0',
+        '^',
+        '4',
+        '^',
+        '+',
+        '4',
+        '·',
+        '1',
+        '0',
+        '^',
+        '3',
+        '^',
+        '+',
+        '7',
+        '·',
+        '1',
+        '0',
+        '+',
+        '2',
+      ],
+    ],
+    [
+      'ⁿ pressed twice',
+      [
+        '3',
+        '·',
+        '1',
+        '0',
+        '^',
+        '^',
+        '4',
+        '+',
+        '4',
+        '·',
+        '1',
+        '0',
+        '^',
+        '3',
+        '+',
+        '7',
+        '·',
+        '1',
+        '0',
+        '+',
+        '2',
+      ],
+    ],
+    [
+      'ⁿ pressed at the end',
+      [
+        '3',
+        '·',
+        '1',
+        '0',
+        '^',
+        '4',
+        '+',
+        '4',
+        '·',
+        '1',
+        '0',
+        '^',
+        '3',
+        '+',
+        '7',
+        '·',
+        '1',
+        '0',
+        '+',
+        '2',
+        '^',
+      ],
+    ],
+  ] as const)('takes a line as it reads on the page: %s', (_, typed) => {
+    const accepts = ['34 072 = 3 · 10⁴ + 4 · 10³ + 7 · 10 + 2'];
+    expect(judgeLine('34 072 =', accepts, typed as unknown as SToken[]).verdict).toBe('right');
+  });
+
+  it('still bounces a false line with a stray ⁿ in it', () => {
+    const typed = [
+      '3',
+      '·',
+      '1',
+      '0',
+      '^',
+      '4',
+      '^',
+      '+',
+      '4',
+      '·',
+      '1',
+      '0',
+      '^',
+      '2',
+      '+',
+      '7',
+      '·',
+      '1',
+      '0',
+      '+',
+      '2',
+    ];
+    const accepts = ['34 072 = 3 · 10⁴ + 4 · 10³ + 7 · 10 + 2'];
+    expect(judgeLine('34 072 =', accepts, typed as SToken[]).verdict).toBe('false');
+  });
+
   it('refuses what doesn’t read', () => {
     expect(verdict('7 · 2 + 1 = 15', '7 · =')).toBe('unreadable');
   });

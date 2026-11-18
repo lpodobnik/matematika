@@ -3,7 +3,14 @@
 // bounces. A true line that isn't what's asked isn't called unreadable, because it isn't.
 
 import { parseStatement } from '@/math/statement';
-import { fillLine, isSDigit, readLine, readTokens, type SToken } from '@/math/statement-tokens';
+import {
+  asWritten,
+  fillLine,
+  isSDigit,
+  readLine,
+  readTokens,
+  type SToken,
+} from '@/math/statement-tokens';
 import { isTrue, type TruthContext } from '@/math/truth';
 
 export type LineVerdict = 'right' | 'false' | 'off-task' | 'unreadable';
@@ -42,7 +49,7 @@ export function judgeLine(
   draft: readonly SToken[],
   context?: TruthContext,
 ): { verdict: LineVerdict; tokens: SToken[] } {
-  const tokens = fillLine(readLine(start) ?? [], draft);
+  const tokens = asWritten(fillLine(readLine(start) ?? [], draft));
   const wanted = accepts.flatMap((line) => readTokens(line) ?? []);
   const exact = accepts.some((line) => {
     const accepted = readTokens(line);
